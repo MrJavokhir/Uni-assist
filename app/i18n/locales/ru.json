@@ -1,0 +1,59 @@
+{
+  "common.skip": "⏭ Заполню позже",
+  "common.done": "✅ Готово",
+  "common.invalid_number": "Пожалуйста, введите корректное число.",
+  "common.cancelled": "Отменено.",
+
+  "start.choose_language": "Tilni tanlang / Выберите язык / Choose your language:",
+  "start.welcome": "Привет, {name}! 👋\n\nЯ помогу подобрать университет и грант для учёбы за рубежом.\n\n/profile — заполнить профиль\n/match — посмотреть подходящие программы\n/gpa — конвертер GPA",
+
+  "profile.intro": "Заполним профиль. На любом шаге можно нажать «⏭ Заполню позже» — профиль сохранится даже неполным.",
+  "profile.degree_level.prompt": "На какую степень хотите поступать?",
+  "profile.degree_level.bachelor": "🎓 Бакалавриат",
+  "profile.degree_level.master": "🎓 Магистратура",
+  "profile.degree_level.phd": "🎓 PhD",
+
+  "profile.major.prompt": "Укажите ваше направление (специальность):",
+
+  "profile.gpa.scale_prompt": "В какой системе ваш средний балл?",
+  "profile.gpa.scale_5": "5-балльная",
+  "profile.gpa.scale_100": "100-балльная",
+  "profile.gpa.scale_4": "4.0 (GPA)",
+  "profile.gpa.value_prompt": "Введите ваш балл числом (например: 4.4 или 87):",
+  "profile.gpa.value_invalid": "Некорректное значение. Введите положительное число.",
+  "profile.gpa.result_title": "📊 Результат конвертации:",
+  "profile.gpa.result_us4": "• US GPA (шкала 4.0): {value}",
+  "profile.gpa.result_ects": "• Оценка ECTS: {value}",
+  "profile.gpa.result_bavarian": "• Германия (Баварская формула): {value}",
+  "profile.gpa.disclaimer": "⚠️ Это приблизительный расчёт. Итоговый GPA определяет университет или орган признания (WES, Uni-Assist, ANABIN). Не полагайтесь полностью на это число при официальной подаче документов.",
+
+  "profile.lang_cert.type_prompt": "Есть ли у вас языковой сертификат? Выберите тип:",
+  "profile.lang_cert.IELTS": "IELTS",
+  "profile.lang_cert.TOEFL": "TOEFL",
+  "profile.lang_cert.other": "Другой",
+  "profile.lang_cert.none": "Нет / ещё не сдавал(а)",
+  "profile.lang_cert.score_prompt": "Введите ваш балл {cert}:",
+  "profile.lang_cert.score_invalid": "Некорректный балл. Попробуйте ещё раз.",
+
+  "profile.countries.prompt": "В каких странах хотите учиться? Можно выбрать несколько, затем нажмите «✅ Готово».",
+  "profile.countries.empty": "Пока в базе нет стран. Попробуйте позже.",
+  "profile.countries.selected": "Выбрано: {names}",
+
+  "profile.budget.prompt": "Какой у вас примерный годовой бюджет (USD)?",
+  "profile.budget.invalid": "Некорректная сумма. Введите положительное число.",
+
+  "profile.age.prompt": "Введите ваш возраст:",
+  "profile.age.invalid": "Некорректный возраст. Введите число.",
+
+  "profile.completed": "Ваш профиль сохранён! ✅\n\nЧтобы увидеть подходящие программы, отправьте /match.",
+
+  "match.no_target_countries_hint": "Примечание: страна не выбрана, поэтому поиск шёл по всем странам. Для более точного результата выберите страну через /profile.",
+  "match.no_programs": "Пока подходящих программ не найдено.",
+  "match.title": "🔎 Подходящие вам программы",
+  "match.green_header": "\n🟢 Подходит ({count})",
+  "match.yellow_header": "\n🟡 Почти подходит — не хватает 1-2 требований ({count})",
+  "match.summary": "\n\nВсего: 🟢 {green} подходящих, 🟡 {yellow} почти подходящих программ.",
+  "match.item": "• {program} — {university}, {country}",
+  "match.item_missing": " (не хватает: {missing})",
+  "match.empty": "Подходящих программ не найдено. Заполните профиль (/profile) или попробуйте позже."
+}

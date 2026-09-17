@@ -1,0 +1,63 @@
+{% extends "sqladmin/layout.html" %}
+{% block content %}
+<div class="col-12">
+  <div class="row row-deck row-cards mb-3">
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-muted">Jami foydalanuvchilar</div>
+          <div class="h1 mb-0">{{ total_users }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-muted">Saqlangan dasturlar</div>
+          <div class="h1 mb-0">{{ total_saved }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-muted">Ko'rib chiqilmagan signallar</div>
+          <div class="h1 mb-0">{{ open_reports }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Foydalanuvchilar eng ko'p tanlagan davlatlar</h3>
+    </div>
+    <div class="card-body text-muted pb-0">
+      Hozircha foydalanuvchi profilidagi "maqsad davlatlar" bo'yicha hisoblanadi.
+      Botda qidiruv jurnali paydo bo'lgach (2-bosqich), bu haqiqiy qidiruv statistikasiga almashtiriladi.
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Davlat</th>
+            <th>Foydalanuvchilar soni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, count in country_rows %}
+          <tr>
+            <td>{{ name }}</td>
+            <td>{{ count }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="2" class="text-muted">Hali ma'lumot yo'q</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

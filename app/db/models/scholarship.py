@@ -1,0 +1,84 @@
+import enum
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Numeric, String, Table, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.db.base import Base, TimestampMixin, VerificationMixin, str_enum
+from app.db.models.program import DeadlineType, deadline_type_enum
+
+if TYPE_CHECKING:
+    from app.db.models.program import Program
+
+program_scholarship = Table(
+    "program_scholarship",
+    Base.metadata,
+    Column("program_id", ForeignKey("programs.id", ondelete="CASCADE"), primary_key=True),
+    Column("scholarship_id", ForeignKey("scholarships.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+class CoverageType(str, enum.Enum):
+    FULL = "full"
+    PARTIAL = "partial"
+    CONTRACT_ONLY = "contract_only"
+
+
+class UniversityChoiceType(str, enum.Enum):
+    ASSIGNED_BY_SCHOLARSHIP = "assigned_by_scholarship"
+    USER_CHOOSES = "user_chooses"
+
+
+class Scholarship(TimestampMixin, VerificationMixin, Base):
+    __tablename__ = "scholarships"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    coverage_type: Mapped[CoverageType] = mapped_column(
+        str_enum(CoverageType, "coverage_type"), nullable=False
+    )
+    coverage_percent: Mapped[int | None] = mapped_column(nullable=True)
+    stipend_amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
+
+    extras_flight: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    extras_insurance: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    extras_dormitory: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    extras_language_course: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    age_limit: Mapped[int | None] = mapped_column(nullable=True)
+    citizenship_eligible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    university_choice: Mapped[UniversityChoiceType] = mapped_column(
+        str_enum(UniversityChoiceType, "university_choice_type"), nullable=False
+    )
+    application_linked_to_program: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
+
+    programs: Mapped[list["Program"]] = relationship(
+        secondary=program_scholarship, back_populates="scholarships"
+    )
+    deadlines: Mapped[list["ScholarshipDeadline"]] = relationship(
+        back_populates="scholarship", cascade="all, delete-orphan"
+    )
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ScholarshipDeadline(Base):
+    __tablename__ = "scholarship_deadlines"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scholarship_id: Mapped[int] = mapped_column(ForeignKey("scholarships.id", ondelete="CASCADE"))
+    type: Mapped[DeadlineType] = mapped_column(deadline_type_enum, nullable=False)
+    date_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    intake_term: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    scholarship: Mapped["Scholarship"] = relationship(back_populates="deadlines")
+
+    def __str__(self) -> str:
+        return f"{self.type.value} — {self.date_utc:%Y-%m-%d}"

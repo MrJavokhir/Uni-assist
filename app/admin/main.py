@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 
 from app.admin.auth import AdminAuth
@@ -22,10 +23,15 @@ from app.admin.views import (
 )
 from app.config import settings
 from app.db.session import engine
+from app.webapp.api import router as webapp_api_router
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+WEBAPP_STATIC_DIR = Path(__file__).parent.parent / "webapp" / "static"
 
-app = FastAPI(title="Uni Assist — Admin panel")
+app = FastAPI(title="Uni Assist")
+
+app.include_router(webapp_api_router, prefix="/api/webapp", tags=["webapp"])
+app.mount("/webapp", StaticFiles(directory=str(WEBAPP_STATIC_DIR), html=True), name="webapp")
 
 admin = Admin(
     app,

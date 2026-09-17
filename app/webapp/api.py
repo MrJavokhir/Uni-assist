@@ -1,0 +1,285 @@
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, Header, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.db.models import (
+    Country,
+    DegreeLevel,
+    GpaScale,
+    LanguageCertType,
+    Program,
+    SavedProgram,
+    SavedProgramStatus,
+    UiLanguage,
+    University,
+    User,
+)
+from app.db.session import get_session
+from app.services.gpa_converter import convert as convert_gpa
+from app.services.matching_service import MatchLevel, find_matches
+from app.services.timezone_utils import format_tashkent
+from app.services.user_service import (
+    get_or_create_user,
+    set_target_countries,
+    upsert_language_certificate,
+)
+from app.webapp.auth import InitDataError, validate_init_data
+from app.webapp.schemas import (
+    CountryOut,
+    GpaConvertOut,
+    LanguageCertOut,
+    MatchProgramOut,
+    ProfileIn,
+    ProfileOut,
+    SavedOut,
+    SavedStatusIn,
+)
+
+router = APIRouter()
+
+
+async def get_current_user(
+    x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-Data"),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    try:
+        result = validate_init_data(x_telegram_init_data)
+    except InitDataError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+    tg_user = result["user"]
+    return await get_or_create_user(session, tg_user["id"], tg_user.get("username"))
+
+
+@router.get("/me", response_model=ProfileOut)
+async def get_me(user: User = Depends(get_current_user)) -> ProfileOut:
+    return ProfileOut(
+        ui_language=user.ui_language.value,
+        degree_level=user.degree_level.value if user.degree_level else None,
+        major=user.major,
+        gpa_raw=float(user.gpa_raw) if user.gpa_raw is not None else None,
+        gpa_scale=user.gpa_scale.value if user.gpa_scale else None,
+        budget_max=float(user.budget_max) if user.budget_max is not None else None,
+        budget_currency=user.budget_currency,
+        age=user.age,
+        target_country_ids=[c.id for c in user.target_countries],
+        language_certificates=[
+            LanguageCertOut(type=c.type.value, score=float(c.score)) for c in user.language_certificates
+        ],
+    )
+
+
+@router.patch("/me", response_model=ProfileOut)
+async def update_me(
+    payload: ProfileIn,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ProfileOut:
+    if payload.ui_language is not None:
+        try:
+            user.ui_language = UiLanguage(payload.ui_language)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Noto'g'ri til") from exc
+
+    if payload.degree_level is not None:
+        try:
+            user.degree_level = DegreeLevel(payload.degree_level)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Noto'g'ri daraja") from exc
+
+    if payload.major is not None:
+        user.major = payload.major.strip() or None
+
+    if payload.gpa_raw is not None and payload.gpa_scale is not None:
+        try:
+            user.gpa_scale = GpaScale(payload.gpa_scale)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Noto'g'ri GPA shkalasi") from exc
+        user.gpa_raw = payload.gpa_raw
+
+    if payload.budget_max is not None:
+        user.budget_max = payload.budget_max
+        user.budget_currency = "USD"
+
+    if payload.age is not None:
+        user.age = payload.age
+
+    await session.commit()
+
+    if payload.target_country_ids is not None:
+        await set_target_countries(session, user, payload.target_country_ids)
+
+    if payload.language_cert_type is not None and payload.language_cert_score is not None:
+        try:
+            cert_type = LanguageCertType(payload.language_cert_type)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Noto'g'ri sertifikat turi") from exc
+        await upsert_language_certificate(session, user, cert_type, payload.language_cert_score)
+
+    # session'da expire_on_commit=False bo'lgani uchun `user`dagi allaqachon
+    # yuklangan relationship'lar (target_countries/language_certificates)
+    # commit'lardan keyin o'zi yangilanmaydi — javobdan oldin qo'lda yangilaymiz.
+    await session.refresh(user, attribute_names=["target_countries", "language_certificates"])
+    return await get_me(user)
+
+
+@router.get("/gpa/convert", response_model=GpaConvertOut)
+async def gpa_convert(value: float, scale: str) -> GpaConvertOut:
+    try:
+        gpa_scale = GpaScale(scale)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Noto'g'ri GPA shkalasi") from exc
+
+    result = convert_gpa(value, gpa_scale)
+    return GpaConvertOut(
+        us4=result.us4,
+        ects=result.ects,
+        bavarian=result.bavarian,
+        disclaimer=(
+            "Bu — taxminiy hisob-kitob. Yakuniy GPA'ni universitet yoki tan olish idorasi "
+            "(WES, Uni-Assist, ANABIN) belgilaydi. Rasmiy ariza uchun shu raqamga to'liq tayanmang."
+        ),
+    )
+
+
+@router.get("/countries", response_model=list[CountryOut])
+async def list_countries(session: AsyncSession = Depends(get_session)) -> list[CountryOut]:
+    countries = (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
+    return [
+        CountryOut(id=c.id, name_uz=c.name_uz, name_ru=c.name_ru, name_en=c.name_en, iso_code=c.iso_code)
+        for c in countries
+    ]
+
+
+@router.get("/match", response_model=list[MatchProgramOut])
+async def get_matches(
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+) -> list[MatchProgramOut]:
+    results = await find_matches(session, user)
+    saved_ids = {sp.program_id for sp in user.saved_programs}
+
+    output = []
+    for result in results:
+        if result.level == MatchLevel.RED:
+            continue
+        program = result.program
+        output.append(
+            MatchProgramOut(
+                id=program.id,
+                name=program.name,
+                university=program.university.name,
+                country=program.university.country.name_uz,
+                degree_level=program.degree_level.value,
+                level=result.level.value,
+                missing=result.missing,
+                saved=program.id in saved_ids,
+            )
+        )
+    return output
+
+
+@router.post("/saved/{program_id}", status_code=201)
+async def save_program(
+    program_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    stmt = select(SavedProgram).where(
+        SavedProgram.user_id == user.id, SavedProgram.program_id == program_id
+    )
+    existing = (await session.execute(stmt)).scalar_one_or_none()
+    if existing is None:
+        program_exists = await session.get(Program, program_id)
+        if program_exists is None:
+            raise HTTPException(status_code=404, detail="Dastur topilmadi")
+        session.add(
+            SavedProgram(
+                user_id=user.id,
+                program_id=program_id,
+                status=SavedProgramStatus.PLANNING,
+                reminders_active=True,
+            )
+        )
+        await session.commit()
+    return {"saved": True}
+
+
+@router.get("/saved", response_model=list[SavedOut])
+async def list_saved(
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+) -> list[SavedOut]:
+    stmt = (
+        select(SavedProgram)
+        .where(SavedProgram.user_id == user.id)
+        .options(
+            selectinload(SavedProgram.program)
+            .selectinload(Program.university)
+            .selectinload(University.country),
+            selectinload(SavedProgram.program).selectinload(Program.deadlines),
+        )
+        .order_by(SavedProgram.created_at.desc())
+    )
+    saved_programs = (await session.execute(stmt)).scalars().all()
+
+    output = []
+    for saved in saved_programs:
+        program = saved.program
+        now = datetime.now(UTC)
+        upcoming = [d for d in program.deadlines if d.date_utc >= now]
+        candidates = upcoming or list(program.deadlines)
+        nearest = min(candidates, key=lambda d: d.date_utc) if candidates else None
+
+        output.append(
+            SavedOut(
+                id=saved.id,
+                program_id=program.id,
+                program_name=program.name,
+                university=program.university.name,
+                country=program.university.country.name_uz,
+                status=saved.status.value,
+                reminders_active=saved.reminders_active,
+                nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
+            )
+        )
+    return output
+
+
+@router.patch("/saved/{saved_id}")
+async def update_saved_status(
+    saved_id: int,
+    payload: SavedStatusIn,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    stmt = select(SavedProgram).where(SavedProgram.id == saved_id, SavedProgram.user_id == user.id)
+    saved = (await session.execute(stmt)).scalar_one_or_none()
+    if saved is None:
+        raise HTTPException(status_code=404, detail="Topilmadi")
+
+    try:
+        saved.status = SavedProgramStatus(payload.status)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="Noto'g'ri holat") from exc
+
+    if saved.status == SavedProgramStatus.APPLIED:
+        saved.reminders_active = False
+
+    await session.commit()
+    return {"status": saved.status.value}
+
+
+@router.delete("/saved/{saved_id}")
+async def delete_saved(
+    saved_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    stmt = select(SavedProgram).where(SavedProgram.id == saved_id, SavedProgram.user_id == user.id)
+    saved = (await session.execute(stmt)).scalar_one_or_none()
+    if saved is not None:
+        await session.delete(saved)
+        await session.commit()
+    return {"deleted": True}

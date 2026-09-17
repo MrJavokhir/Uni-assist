@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     redis_url_override: str | None = Field(default=None, alias="REDIS_URL")
 
     bot_token: str = ""
+    webapp_url: str = "https://example.com/webapp/"
 
     admin_username: str = "admin"
     admin_password: str = "change-me"

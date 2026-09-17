@@ -17,6 +17,9 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "itsdangerous>=2.2.0",
     "babel>=2.16.0",
+    # Windows'da va ba'zi minimal Linux image'larda tizim IANA tz bazasi
+    # bo'lmasligi mumkin — zoneinfo shu paket orqali ishlaydi (Asia/Tashkent va h.k.).
+    "tzdata>=2024.2",
 ]
 
 [dependency-groups]
@@ -24,9 +27,10 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "ruff>=0.7.0",
-    # Docker o'rnatmasdan mahalliy ishlash uchun (scripts/dev_postgres.py) —
-    # production'da ishlatilmaydi, u yerda docker-compose.yml'dagi haqiqiy Postgres bor.
+    # Docker o'rnatmasdan mahalliy ishlash uchun (scripts/dev_postgres.py, scripts/dev_redis.py) —
+    # production'da ishlatilmaydi, u yerda docker-compose.yml'dagi haqiqiy Postgres/Redis bor.
     "pgserver>=0.1.4",
+    "fakeredis>=2.38.0",
 ]
 
 [tool.ruff]
@@ -38,7 +42,9 @@ extend-exclude = ["migrations/versions"]
 # RUF012: SQLAdmin ModelView'lar column_list/form_columns kabi konfiguratsiya
 # maydonlarini oddiy list class-attribute sifatida kutadi (kutubxonaning o'zi
 # shunday hujjatlashtirgan) — bu yerda haqiqiy "mutable shared state" xatosi emas.
-ignore = ["RUF012"]
+# B008: FastAPI'ning Depends(...) argument default'da chaqirilishi — bu FastAPI'ning
+# hujjatlashtirilgan, qasddan ishlatiladigan dependency-injection uslubi.
+ignore = ["RUF012", "B008"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

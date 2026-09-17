@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Uni Assist</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">🎓 Uni Assist</div>
+    <select id="lang-switch" class="lang-switch">
+      <option value="uz">O'zbekcha</option>
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+    </select>
+  </header>
+
+  <main id="views">
+    <section id="view-profile" class="view"></section>
+    <section id="view-match" class="view" hidden></section>
+    <section id="view-saved" class="view" hidden></section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-tab="profile" class="tab active">
+      <span class="tab-icon">👤</span><span class="tab-label" data-i18n="nav.profile"></span>
+    </button>
+    <button data-tab="match" class="tab">
+      <span class="tab-icon">🔎</span><span class="tab-label" data-i18n="nav.match"></span>
+    </button>
+    <button data-tab="saved" class="tab">
+      <span class="tab-icon">💼</span><span class="tab-label" data-i18n="nav.saved"></span>
+    </button>
+  </nav>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

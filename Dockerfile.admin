@@ -15,4 +15,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.admin.main:app --host 0.0.0.0 --port 8000"]
+# $PORT — Railway/Render kabi platformalar konteynerga dinamik port beradi;
+# mahalliy docker-compose'da o'rnatilmagani uchun 8000 ga tushadi.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.admin.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

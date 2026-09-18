@@ -38,12 +38,10 @@
           </div>
           <div class="col-md-6">
             <label class="form-label">Universitetni kim tanlaydi</label>
+            {# Ko'p uchraydigan holat birinchi (standart) turadi #}
             <select name="university_choice" class="form-select">
-              {% for choice in university_choices %}
-              <option value="{{ choice.value }}">
-                {{ {'user_chooses': 'Talabaning o\'zi tanlaydi', 'assigned_by_scholarship': 'Grant tayinlaydi'}[choice.value] }}
-              </option>
-              {% endfor %}
+              <option value="user_chooses">Talabaning o'zi tanlaydi</option>
+              <option value="assigned_by_scholarship">Grant tayinlaydi</option>
             </select>
             <label class="form-check form-switch mt-3">
               <input class="form-check-input" type="checkbox" name="citizenship_eligible" checked>

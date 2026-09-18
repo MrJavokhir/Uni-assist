@@ -1,3 +1,6 @@
+import time
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
@@ -8,6 +11,18 @@ from app.i18n import t
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
+
+# Telegram Mini App'ning statik fayllarini agressiv keshlaydi va yangi deploy
+# foydalanuvchiga yetib bormaydi. Har ishga tushishda URL'ga yangi "v" qo'shamiz —
+# Telegram uchun bu butunlay yangi manzil, shuning uchun kesh chetlab o'tiladi.
+_BUILD_ID = str(int(time.time()))
+
+
+def webapp_url() -> str:
+    parts = urlparse(settings.webapp_url)
+    query = dict(parse_qsl(parts.query))
+    query["v"] = _BUILD_ID
+    return urlunparse(parts._replace(query=urlencode(query)))
 
 
 @router.message(CommandStart())
@@ -20,7 +35,7 @@ async def cmd_start(message: Message, session: AsyncSession) -> None:
             [
                 InlineKeyboardButton(
                     text=t("start.open_app", lang),
-                    web_app=WebAppInfo(url=settings.webapp_url),
+                    web_app=WebAppInfo(url=webapp_url()),
                 )
             ]
         ]

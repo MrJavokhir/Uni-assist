@@ -74,6 +74,13 @@ class SavedStatusIn(BaseModel):
     status: str
 
 
+class ScholarshipDeadlineOut(BaseModel):
+    type: str
+    date: str
+    days_left: int | None
+    intake_term: str
+
+
 class ScholarshipOut(BaseModel):
     id: int
     name: str
@@ -88,6 +95,10 @@ class ScholarshipOut(BaseModel):
     extras_language_course: bool
     citizenship_eligible: bool
     countries: list[str]
+    age_limit: int | None
+    university_choice: str
+    application_linked_to_program: bool
     source_url: str
     nearest_deadline: str | None
     nearest_deadline_days_left: int | None
+    deadlines: list[ScholarshipDeadlineOut]

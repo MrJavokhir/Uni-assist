@@ -120,6 +120,27 @@ const I18N = {
     "scholarships.extra_language": "Til kursi",
     "scholarships.deadline": "Muddat: {date}",
     "scholarships.details": "Batafsil",
+    "scholarships.official_site": "Rasmiy saytga o'tish",
+    "scholarships.about": "Grant haqida",
+    "scholarships.conditions": "Shartlar",
+    "scholarships.deadlines": "Muddatlar",
+    "scholarships.covers": "Qamrov",
+    "scholarships.stipend": "Stipendiya",
+    "scholarships.age_limit": "Yosh chegarasi",
+    "scholarships.uni_choice": "Universitetni kim tanlaydi",
+    "scholarships.uni_choice.user_chooses": "Talabaning o'zi",
+    "scholarships.uni_choice.assigned_by_scholarship": "Grant tayinlaydi",
+    "scholarships.separate_application": "Alohida ariza kerak",
+    "scholarships.for_uzbekistan": "O'zbekiston fuqarolari uchun",
+    "scholarships.yes": "Ha",
+    "scholarships.no": "Yo'q",
+    "scholarships.not_specified": "Ko'rsatilmagan",
+    "scholarships.days_left": "{days} kun qoldi",
+    "scholarships.deadline_passed": "Muddat o'tgan",
+    "deadline.application_open": "Ariza ochilishi",
+    "deadline.application_close": "Ariza yopilishi",
+    "deadline.document": "Hujjat topshirish",
+    "deadline.visa": "Viza",
 
     "saved.empty_title": "Hozircha bo'sh",
     "saved.empty_text": "Dasturlar bo'limidan yoqqanini saqlang — men muddatlarini kuzatib boraman.",
@@ -201,6 +222,27 @@ const I18N = {
     "scholarships.extra_language": "Языковой курс",
     "scholarships.deadline": "Дедлайн: {date}",
     "scholarships.details": "Подробнее",
+    "scholarships.official_site": "Перейти на официальный сайт",
+    "scholarships.about": "О гранте",
+    "scholarships.conditions": "Условия",
+    "scholarships.deadlines": "Дедлайны",
+    "scholarships.covers": "Покрытие",
+    "scholarships.stipend": "Стипендия",
+    "scholarships.age_limit": "Возрастное ограничение",
+    "scholarships.uni_choice": "Кто выбирает университет",
+    "scholarships.uni_choice.user_chooses": "Сам студент",
+    "scholarships.uni_choice.assigned_by_scholarship": "Назначает грант",
+    "scholarships.separate_application": "Нужна отдельная заявка",
+    "scholarships.for_uzbekistan": "Для граждан Узбекистана",
+    "scholarships.yes": "Да",
+    "scholarships.no": "Нет",
+    "scholarships.not_specified": "Не указано",
+    "scholarships.days_left": "осталось {days} дн.",
+    "scholarships.deadline_passed": "Срок прошёл",
+    "deadline.application_open": "Открытие приёма",
+    "deadline.application_close": "Закрытие приёма",
+    "deadline.document": "Подача документов",
+    "deadline.visa": "Виза",
 
     "saved.empty_title": "Пока пусто",
     "saved.empty_text": "Сохраните программы из раздела «Программы» — я буду следить за дедлайнами.",
@@ -282,6 +324,27 @@ const I18N = {
     "scholarships.extra_language": "Language course",
     "scholarships.deadline": "Deadline: {date}",
     "scholarships.details": "Details",
+    "scholarships.official_site": "Open official website",
+    "scholarships.about": "About this grant",
+    "scholarships.conditions": "Conditions",
+    "scholarships.deadlines": "Deadlines",
+    "scholarships.covers": "Coverage",
+    "scholarships.stipend": "Stipend",
+    "scholarships.age_limit": "Age limit",
+    "scholarships.uni_choice": "Who picks the university",
+    "scholarships.uni_choice.user_chooses": "The student",
+    "scholarships.uni_choice.assigned_by_scholarship": "The scholarship",
+    "scholarships.separate_application": "Separate application required",
+    "scholarships.for_uzbekistan": "Open to Uzbekistan citizens",
+    "scholarships.yes": "Yes",
+    "scholarships.no": "No",
+    "scholarships.not_specified": "Not specified",
+    "scholarships.days_left": "{days} day(s) left",
+    "scholarships.deadline_passed": "Deadline passed",
+    "deadline.application_open": "Applications open",
+    "deadline.application_close": "Applications close",
+    "deadline.document": "Document submission",
+    "deadline.visa": "Visa",
 
     "saved.empty_title": "Nothing here yet",
     "saved.empty_text": "Save programs from the Programs tab — I'll track their deadlines for you.",
@@ -582,6 +645,11 @@ async function renderScholarships() {
       await renderScholarships();
     });
   });
+
+  const byId = new Map(items.map((s) => [String(s.id), s]));
+  el.querySelectorAll(".details-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openScholarshipSheet(byId.get(btn.dataset.id)));
+  });
 }
 
 function scholarshipCard(s) {
@@ -623,11 +691,142 @@ function scholarshipCard(s) {
         </div>
       </div>
       <div class="card-actions">
-        <a class="btn btn-soft" href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener">
+        <button type="button" class="btn btn-soft details-btn" data-id="${s.id}">
           ${icon("chevron")}${t("scholarships.details")}
-        </a>
+        </button>
       </div>
     </div>`;
+}
+
+// ---- Tafsilot oynasi: avval ilova ichida ko'rsatiladi, rasmiy saytga
+// ---- o'tish esa alohida tugma orqali (ilgari darhol tashqariga chiqib ketardi).
+
+function ensureSheet() {
+  let backdrop = document.querySelector(".sheet-backdrop");
+  if (backdrop) return backdrop;
+
+  backdrop = document.createElement("div");
+  backdrop.className = "sheet-backdrop";
+  const sheet = document.createElement("div");
+  sheet.className = "sheet";
+  document.body.append(backdrop, sheet);
+  backdrop.addEventListener("click", closeSheet);
+  return backdrop;
+}
+
+function closeSheet() {
+  document.querySelector(".sheet-backdrop")?.classList.remove("open");
+  document.querySelector(".sheet")?.classList.remove("open");
+  document.body.style.overflow = "";
+  try {
+    tg?.BackButton?.hide();
+  } catch (e) {
+    /* eski klientlar */
+  }
+}
+
+function openScholarshipSheet(s) {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+
+  const yesNo = (value) => (value ? t("scholarships.yes") : t("scholarships.no"));
+  const row = (label, value) =>
+    `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
+
+  const stipend =
+    s.stipend_amount !== null
+      ? `${s.stipend_amount} ${escapeHtml(s.currency)}`
+      : t("scholarships.not_specified");
+
+  const deadlines = s.deadlines.length
+    ? s.deadlines
+        .map((d) => {
+          const left =
+            d.days_left !== null && d.days_left >= 0
+              ? t("scholarships.days_left", { days: d.days_left })
+              : t("scholarships.deadline_passed");
+          return row(
+            t("deadline." + d.type),
+            `${escapeHtml(d.date.split(" ")[0])}<br><span class="card-sub">${left}</span>`
+          );
+        })
+        .join("")
+    : `<div class="card-sub">${t("scholarships.not_specified")}</div>`;
+
+  const extras = [
+    [s.extras_flight, "plane", "scholarships.extra_flight"],
+    [s.extras_insurance, "shield", "scholarships.extra_insurance"],
+    [s.extras_dormitory, "bed", "scholarships.extra_dormitory"],
+    [s.extras_language_course, "lang", "scholarships.extra_language"],
+  ]
+    .filter(([on]) => on)
+    .map(([, ic, key]) => `<span class="pill">${icon(ic)}${t(key)}</span>`)
+    .join("");
+
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${escapeHtml(s.name)}</div>
+    <div class="meta-row">
+      <span class="pill ${s.coverage_type === "full" ? "green" : "amber"}">${icon("award")}${t(
+        "scholarships.coverage." + s.coverage_type
+      )}</span>
+      ${s.countries.map((c) => `<span class="pill">${icon("globe")}${escapeHtml(c)}</span>`).join("")}
+    </div>
+    ${extras ? `<div class="meta-row">${extras}</div>` : ""}
+
+    ${
+      s.description
+        ? `<div class="sheet-section">
+             <div class="sheet-section-title">${t("scholarships.about")}</div>
+             <div class="sheet-text">${escapeHtml(s.description)}</div>
+           </div>`
+        : ""
+    }
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("scholarships.conditions")}</div>
+      ${row(t("scholarships.stipend"), stipend)}
+      ${row(
+        t("scholarships.age_limit"),
+        s.age_limit !== null ? s.age_limit : t("scholarships.not_specified")
+      )}
+      ${row(t("scholarships.uni_choice"), t("scholarships.uni_choice." + s.university_choice))}
+      ${row(t("scholarships.separate_application"), yesNo(s.application_linked_to_program))}
+      ${row(t("scholarships.for_uzbekistan"), yesNo(s.citizenship_eligible))}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("scholarships.deadlines")}</div>
+      ${deadlines}
+    </div>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-accent btn-block" id="sheet-open-site">
+        ${t("scholarships.official_site")}
+      </button>
+    </div>
+  `;
+
+  document.getElementById("sheet-open-site").addEventListener("click", () => {
+    haptic("light");
+    // Telegram ichida tashqi havolani to'g'ri ochish usuli.
+    if (tg && typeof tg.openLink === "function") tg.openLink(s.source_url);
+    else window.open(s.source_url, "_blank", "noopener");
+  });
+
+  document.querySelector(".sheet-backdrop").classList.add("open");
+  sheet.classList.add("open");
+  document.body.style.overflow = "hidden";
+
+  try {
+    if (tg?.BackButton) {
+      tg.BackButton.show();
+      tg.BackButton.onClick(closeSheet);
+    }
+  } catch (e) {
+    /* eski klientlar */
+  }
 }
 
 // ============ Saved ============

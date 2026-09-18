@@ -1,0 +1,212 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  <form method="post" class="ua-wizard">
+
+    {# ---------- 1-qadam: asosiy ma'lumot ---------- #}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><span class="ua-step">1</span> Grant haqida</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label required">Grant nomi</label>
+            <input type="text" name="name" class="form-control" required placeholder="masalan: DAAD">
+            <small class="form-hint">Xuddi shu nomli grant bo'lsa, u yangilanadi.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label required">Rasmiy manba havolasi</label>
+            <input type="url" name="source_url" class="form-control" required placeholder="https://...">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Tavsif</label>
+            <textarea name="description" class="form-control" rows="4"
+                      placeholder="Nimalarni qoplaydi, kimlar ariza bera oladi, qanday talablar bor..."></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Qaysi davlat(lar)ga tegishli</label>
+            <select name="country_ids" class="form-select" multiple size="8">
+              {% for country in countries %}
+              <option value="{{ country.id }}">{{ country.name_uz }}</option>
+              {% endfor %}
+            </select>
+            <small class="form-hint">Bir nechtasini tanlash uchun Ctrl (Mac'da Cmd) bilan bosing.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Universitetni kim tanlaydi</label>
+            <select name="university_choice" class="form-select">
+              {% for choice in university_choices %}
+              <option value="{{ choice.value }}">
+                {{ {'user_chooses': 'Talabaning o\'zi tanlaydi', 'assigned_by_scholarship': 'Grant tayinlaydi'}[choice.value] }}
+              </option>
+              {% endfor %}
+            </select>
+            <label class="form-check form-switch mt-3">
+              <input class="form-check-input" type="checkbox" name="citizenship_eligible" checked>
+              <span class="form-check-label">O'zbekiston fuqarolari ariza bera oladi</span>
+            </label>
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="application_linked_to_program">
+              <span class="form-check-label">Grantga alohida ariza kerak</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---------- 2-qadam: moliyaviy qamrov ---------- #}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><span class="ua-step">2</span> Moliyaviy qamrov</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Qamrov turi</label>
+            <select name="coverage_type" class="form-select">
+              {% for coverage in coverage_types %}
+              <option value="{{ coverage.value }}">
+                {{ {'full': 'To\'liq', 'partial': 'Qisman', 'contract_only': 'Faqat kontrakt'}[coverage.value] }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Qamrov (%)</label>
+            <input type="number" name="coverage_percent" class="form-control" placeholder="qisman bo'lsa">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Stipendiya (oyiga)</label>
+            <input type="number" step="0.01" name="stipend_amount" class="form-control">
+            <small class="form-hint">Aniq bilmasangiz bo'sh qoldiring.</small>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Valyuta</label>
+            <input type="text" name="currency" class="form-control" value="USD" maxlength="3">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Yosh chegarasi</label>
+            <input type="number" name="age_limit" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Qo'shimcha imtiyozlar</label>
+            <div class="d-flex flex-wrap gap-4">
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras_flight">
+                <span class="form-check-label">Aviachipta</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras_insurance">
+                <span class="form-check-label">Sug'urta</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras_dormitory">
+                <span class="form-check-label">Yotoqxona</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="extras_language_course">
+                <span class="form-check-label">Til kursi</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---------- 3-qadam: muddatlar ---------- #}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><span class="ua-step">3</span> Muddatlar</h3>
+        <div class="card-actions">
+          <button type="button" class="btn btn-sm btn-primary" id="add-deadline">+ Muddat qo'shish</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="deadlines"></div>
+        <div class="ua-empty" id="deadlines-empty">Muddat qo'shilmagan (ixtiyoriy).</div>
+      </div>
+    </div>
+
+    {# ---------- 4-qadam ---------- #}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Kim tekshirdi</label>
+            <input type="text" name="verified_by" class="form-control" value="admin">
+          </div>
+          <div class="col-md-8 text-end">
+            <button type="submit" class="btn btn-primary">Grantni saqlash</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+</div>
+
+<template id="deadline-template">
+  <div class="ua-program-block" data-index="__i__">
+    <div class="ua-program-head">
+      <strong class="ua-program-title">Muddat #__n__</strong>
+      <button type="button" class="btn btn-sm btn-ghost-danger remove-deadline">O'chirish</button>
+    </div>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label class="form-label">Turi</label>
+        <select name="d__i___type" class="form-select">
+          {% for deadline in deadline_types %}
+          <option value="{{ deadline.value }}">
+            {{ {'application_open': 'Ariza ochilishi', 'application_close': 'Ariza yopilishi', 'document': 'Hujjat topshirish', 'visa': 'Viza'}[deadline.value] }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Sana</label>
+        <input type="date" name="d__i___date" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Qabul davri</label>
+        <input type="text" name="d__i___intake" class="form-control" placeholder="2026 Fall">
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  (function () {
+    const list = document.getElementById("deadlines");
+    const empty = document.getElementById("deadlines-empty");
+    const template = document.getElementById("deadline-template").innerHTML;
+    const maxDeadlines = {{ max_deadlines }};
+    let index = 0;
+
+    function addDeadline() {
+      if (index >= maxDeadlines) return;
+      const html = template.replaceAll("__i__", index).replaceAll("__n__", index + 1);
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = html;
+      list.appendChild(wrapper.firstElementChild);
+      index += 1;
+      empty.hidden = true;
+      if (index >= maxDeadlines) document.getElementById("add-deadline").disabled = true;
+    }
+
+    document.getElementById("add-deadline").addEventListener("click", addDeadline);
+
+    list.addEventListener("click", function (event) {
+      if (!event.target.classList.contains("remove-deadline")) return;
+      event.target.closest(".ua-program-block").remove();
+      if (!list.querySelector(".ua-program-block")) empty.hidden = false;
+      document.getElementById("add-deadline").disabled = false;
+    });
+  })();
+</script>
+{% endblock %}

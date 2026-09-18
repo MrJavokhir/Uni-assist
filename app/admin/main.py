@@ -22,6 +22,7 @@ from app.admin.views import (
     UserLanguageCertificateAdmin,
     UserOtherTestAdmin,
 )
+from app.admin.wizards import ScholarshipWizard, UniversityWizard
 from app.config import settings
 from app.db.session import engine
 from app.webapp.api import router as webapp_api_router
@@ -57,6 +58,10 @@ admin = Admin(
 )
 
 admin.add_base_view(StatsView)  # yon menyuda birinchi bo'lib turadi
+# Sehrgarlar o'z bo'limlarining eng tepasida tursin — kundalik ish shulardan
+# boshlanadi, alohida CRUD sahifalari esa tahrirlash uchun qoladi.
+admin.add_base_view(UniversityWizard)
+admin.add_base_view(ScholarshipWizard)
 
 for view in (
     CountryAdmin,

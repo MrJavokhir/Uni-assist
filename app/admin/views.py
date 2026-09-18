@@ -87,6 +87,10 @@ def _labels(**extra: str) -> dict[str, str]:
     return {**_COMMON_LABELS, **extra}
 
 CATALOG = "Katalog"
+# Dastur talablari/xarajatlari/muddatlari odatda "Universitet qo'shish"
+# sehrgari orqali kiritiladi — ular alohida bo'limga ajratildi, shunda
+# asosiy "Katalog" menyusi sodda qoladi.
+PROGRAM_DETAILS = "Dastur tafsilotlari"
 GRANTS = "Grantlar"
 USERS = "Foydalanuvchilar"
 QUALITY = "Ma'lumot sifati"
@@ -207,7 +211,7 @@ class ProgramRequirementAdmin(ModelView, model=ProgramRequirement):
     name = "Talab"
     name_plural = "Dastur talablari"
     icon = "fa-solid fa-list-check"
-    category = CATALOG
+    category = PROGRAM_DETAILS
 
     column_list = [
         ProgramRequirement.id,
@@ -246,7 +250,7 @@ class ProgramCostAdmin(ModelView, model=ProgramCost):
     name = "Xarajat"
     name_plural = "Dastur xarajatlari"
     icon = "fa-solid fa-money-bill-wave"
-    category = CATALOG
+    category = PROGRAM_DETAILS
 
     column_list = [
         ProgramCost.id,
@@ -279,7 +283,7 @@ class DeadlineAdmin(ModelView, model=Deadline):
     name = "Muddat"
     name_plural = "Dastur muddatlari"
     icon = "fa-solid fa-calendar-days"
-    category = CATALOG
+    category = PROGRAM_DETAILS
 
     column_list = [Deadline.id, Deadline.program, Deadline.type, Deadline.date_utc, Deadline.intake_term]
     column_sortable_list = [Deadline.date_utc]

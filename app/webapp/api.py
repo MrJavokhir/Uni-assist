@@ -37,6 +37,7 @@ from app.webapp.schemas import (
     ProfileOut,
     SavedOut,
     SavedStatusIn,
+    ScholarshipDeadlineOut,
     ScholarshipOut,
 )
 
@@ -204,11 +205,23 @@ async def list_scholarships(
                 extras_language_course=scholarship.extras_language_course,
                 citizenship_eligible=scholarship.citizenship_eligible,
                 countries=[c.name_uz for c in scholarship.countries],
+                age_limit=scholarship.age_limit,
+                university_choice=scholarship.university_choice.value,
+                application_linked_to_program=scholarship.application_linked_to_program,
                 source_url=scholarship.source_url,
                 nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
                 nearest_deadline_days_left=(
                     (nearest.date_utc.date() - now.date()).days if nearest else None
                 ),
+                deadlines=[
+                    ScholarshipDeadlineOut(
+                        type=d.type.value,
+                        date=format_tashkent(d.date_utc),
+                        days_left=(d.date_utc.date() - now.date()).days,
+                        intake_term=d.intake_term,
+                    )
+                    for d in sorted(scholarship.deadlines, key=lambda d: d.date_utc)
+                ],
             )
         )
     return output

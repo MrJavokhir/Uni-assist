@@ -652,6 +652,90 @@ body {
 .tab.active { color: var(--accent); }
 .tab.active .tab-ico { filter: drop-shadow(0 3px 8px rgba(99, 91, 255, 0.35)); }
 
+/* ============ Tafsilot oynasi (sheet) ============ */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(10, 12, 22, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.sheet.open { transform: none; }
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hint);
+  opacity: 0.35;
+  margin: 2px auto 14px;
+}
+
+.sheet-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.sheet-section {
+  margin-top: 18px;
+}
+
+.sheet-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--hint);
+  margin-bottom: 8px;
+}
+
+.sheet-text {
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.sheet-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--separator);
+  font-size: 14px;
+}
+.sheet-row:last-child { border-bottom: none; }
+.sheet-row-label { color: var(--hint); }
+.sheet-row-value { font-weight: 600; text-align: right; }
+
+.sheet-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 16px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 22%);
+}
+
 /* ============ Toast ============ */
 
 .toast {

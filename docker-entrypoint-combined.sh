@@ -8,6 +8,16 @@ set -e
 
 alembic upgrade head
 
+# Seed skriptlarini ishga tushirish — ixtiyoriy. Railway Postgres'i tashqaridan
+# ochiq emas, shuning uchun katalogni to'ldirishning eng oson yo'li: RUN_SEEDS=1
+# o'zgaruvchisini qo'yib qayta deploy qilish, so'ng uni o'chirish.
+# Skriptlar idempotent, ya'ni tasodifan yoqilgan holda ham dublikat yaratmaydi.
+if [ "${RUN_SEEDS:-0}" = "1" ]; then
+  echo "RUN_SEEDS=1 — seed skriptlari ishga tushirilmoqda..."
+  python scripts/seed_scholarships.py
+  python scripts/seed_top_destinations.py
+fi
+
 # --proxy-headers + --forwarded-allow-ips: Railway TLS'ni o'z proxy'sida tugatib,
 # konteynerga oddiy HTTP bilan uzatadi. Busiz url_for() "http://" havolalar
 # yasaydi va brauzer ularni "mixed content" deb bloklaydi (admin panel CSS'siz

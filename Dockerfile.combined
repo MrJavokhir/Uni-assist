@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY app ./app
+COPY migrations ./migrations
+COPY alembic.ini ./
+COPY docker-entrypoint-combined.sh ./
+RUN chmod +x docker-entrypoint-combined.sh
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+EXPOSE 8000
+
+# Admin panel (+ Mini App) va bot bitta konteynerda birga ishlaydi —
+# docker-entrypoint-combined.sh'ga qarang (bitta-servisli deploy uchun).
+CMD ["./docker-entrypoint-combined.sh"]

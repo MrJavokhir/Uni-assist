@@ -4,12 +4,29 @@ if (tg) {
   tg.expand();
 }
 const INIT_DATA = (tg && tg.initData) || "";
+const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 const I18N = {
   uz: {
+    "nav.home": "Bosh sahifa",
     "nav.profile": "Profil",
-    "nav.match": "Mos dasturlar",
-    "nav.saved": "Saqlanganlar",
+    "nav.match": "Dasturlar",
+    "nav.saved": "Saqlangan",
+
+    "home.greeting": "Salom, {name}! 👋",
+    "home.tagline": "Chet elda o'qish safaringiz shu yerdan boshlanadi.",
+    "home.profile_complete": "Profil to'ldirilgan",
+    "home.complete_profile": "✏️ Profilni to'ldirish",
+    "home.stat_green": "🟢 Mos dasturlar",
+    "home.stat_yellow": "🟡 Yaqin dasturlar",
+    "home.stat_saved": "💼 Saqlangan",
+    "home.stat_profile": "✅ Profil",
+    "home.section_overview": "Qisqacha",
+    "home.alert_title": "⏰ Yaqinlashayotgan muddat",
+    "home.alert_body": "{program} — {days} kun qoldi ({date})",
+    "home.section_shortcuts": "Tezkor amallar",
+    "home.shortcut_match": "Mos dasturlarni ko'rish",
+    "home.shortcut_saved": "Saqlanganlarni ko'rish",
 
     "profile.degree_level": "Daraja",
     "profile.degree_level.bachelor": "Bakalavr",
@@ -37,8 +54,8 @@ const I18N = {
     "profile.section_language": "Til",
     "profile.section_preferences": "Afzalliklar",
 
-    "match.loading": "Yuklanmoqda...",
     "match.empty": "Hech qanday mos dastur topilmadi. Profilingizni to'ldiring.",
+    "match.empty_icon": "🔍",
     "match.save": "💾 Saqlash",
     "match.saved": "✅ Saqlangan",
     "match.missing": "Yetishmayapti",
@@ -46,9 +63,11 @@ const I18N = {
     "match.yellow": "Yaqin",
 
     "saved.empty": "Hozircha saqlangan dasturingiz yo'q.",
+    "saved.empty_icon": "💼",
     "saved.status": "Holat",
     "saved.deadline": "Yaqin muddat",
     "saved.no_deadline": "ko'rsatilmagan",
+    "saved.days_left": "{days} kun qoldi",
     "saved.remove": "🗑 Olib tashlash",
     "saved.status.planning": "rejalashtirilmoqda",
     "saved.status.applied": "ariza berildi",
@@ -56,9 +75,25 @@ const I18N = {
     "saved.status.accepted": "qabul qilindi",
   },
   ru: {
+    "nav.home": "Главная",
     "nav.profile": "Профиль",
     "nav.match": "Программы",
     "nav.saved": "Сохранённые",
+
+    "home.greeting": "Привет, {name}! 👋",
+    "home.tagline": "Ваш путь к учёбе за рубежом начинается здесь.",
+    "home.profile_complete": "Профиль заполнен",
+    "home.complete_profile": "✏️ Заполнить профиль",
+    "home.stat_green": "🟢 Подходящие",
+    "home.stat_yellow": "🟡 Почти подходящие",
+    "home.stat_saved": "💼 Сохранённые",
+    "home.stat_profile": "✅ Профиль",
+    "home.section_overview": "Обзор",
+    "home.alert_title": "⏰ Приближающийся срок",
+    "home.alert_body": "{program} — осталось {days} дн. ({date})",
+    "home.section_shortcuts": "Быстрые действия",
+    "home.shortcut_match": "Смотреть подходящие программы",
+    "home.shortcut_saved": "Смотреть сохранённые",
 
     "profile.degree_level": "Степень",
     "profile.degree_level.bachelor": "Бакалавриат",
@@ -86,8 +121,8 @@ const I18N = {
     "profile.section_language": "Язык",
     "profile.section_preferences": "Предпочтения",
 
-    "match.loading": "Загрузка...",
     "match.empty": "Подходящих программ не найдено. Заполните профиль.",
+    "match.empty_icon": "🔍",
     "match.save": "💾 Сохранить",
     "match.saved": "✅ Сохранено",
     "match.missing": "Не хватает",
@@ -95,9 +130,11 @@ const I18N = {
     "match.yellow": "Почти",
 
     "saved.empty": "Пока нет сохранённых программ.",
+    "saved.empty_icon": "💼",
     "saved.status": "Статус",
     "saved.deadline": "Ближайший дедлайн",
     "saved.no_deadline": "не указан",
+    "saved.days_left": "осталось {days} дн.",
     "saved.remove": "🗑 Убрать",
     "saved.status.planning": "в планах",
     "saved.status.applied": "подана заявка",
@@ -105,9 +142,25 @@ const I18N = {
     "saved.status.accepted": "принят(а)",
   },
   en: {
+    "nav.home": "Home",
     "nav.profile": "Profile",
     "nav.match": "Programs",
     "nav.saved": "Saved",
+
+    "home.greeting": "Hi, {name}! 👋",
+    "home.tagline": "Your journey to studying abroad starts here.",
+    "home.profile_complete": "Profile completed",
+    "home.complete_profile": "✏️ Complete your profile",
+    "home.stat_green": "🟢 Matching programs",
+    "home.stat_yellow": "🟡 Close programs",
+    "home.stat_saved": "💼 Saved",
+    "home.stat_profile": "✅ Profile",
+    "home.section_overview": "Overview",
+    "home.alert_title": "⏰ Upcoming deadline",
+    "home.alert_body": "{program} — {days} day(s) left ({date})",
+    "home.section_shortcuts": "Quick actions",
+    "home.shortcut_match": "See matching programs",
+    "home.shortcut_saved": "See saved programs",
 
     "profile.degree_level": "Degree",
     "profile.degree_level.bachelor": "Bachelor's",
@@ -135,8 +188,8 @@ const I18N = {
     "profile.section_language": "Language",
     "profile.section_preferences": "Preferences",
 
-    "match.loading": "Loading...",
     "match.empty": "No matching programs found. Fill in your profile.",
+    "match.empty_icon": "🔍",
     "match.save": "💾 Save",
     "match.saved": "✅ Saved",
     "match.missing": "Missing",
@@ -144,9 +197,11 @@ const I18N = {
     "match.yellow": "Close",
 
     "saved.empty": "No saved programs yet.",
+    "saved.empty_icon": "💼",
     "saved.status": "Status",
     "saved.deadline": "Nearest deadline",
     "saved.no_deadline": "not set",
+    "saved.days_left": "{days} day(s) left",
     "saved.remove": "🗑 Remove",
     "saved.status.planning": "planning",
     "saved.status.applied": "applied",
@@ -155,7 +210,7 @@ const I18N = {
   },
 };
 
-let lang = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) || "uz";
+let lang = (TG_USER && TG_USER.language_code) || "uz";
 if (!I18N[lang]) lang = "uz";
 
 function t(key, vars) {
@@ -194,6 +249,10 @@ function showToast(message) {
   setTimeout(() => el.classList.remove("show"), 1800);
 }
 
+function skeletonHtml(count) {
+  return Array.from({ length: count }, () => `<div class="skeleton"></div>`).join("");
+}
+
 let profile = null;
 let countries = [];
 
@@ -204,6 +263,108 @@ async function loadProfile() {
 
 async function loadCountries() {
   countries = await api("/countries");
+}
+
+function profileCompleteness() {
+  const checks = [
+    !!profile.degree_level,
+    !!profile.major,
+    profile.gpa_raw !== null && profile.gpa_scale !== null,
+    profile.language_certificates.length > 0,
+    profile.target_country_ids.length > 0,
+    profile.budget_max !== null,
+    profile.age !== null,
+  ];
+  const done = checks.filter(Boolean).length;
+  return Math.round((done / checks.length) * 100);
+}
+
+// ---------- Home view ----------
+
+async function renderHome() {
+  const el = document.getElementById("view-home");
+  const firstName = (TG_USER && TG_USER.first_name) || "";
+  const pct = profileCompleteness();
+
+  el.innerHTML = `
+    <div class="hero">
+      <div class="hero-greeting">${t("home.greeting", { name: firstName || "👋" })}</div>
+      <div class="hero-sub">${t("home.tagline")}</div>
+      <div class="hero-progress-wrap">
+        <div class="hero-progress-label"><span>${t("home.profile_complete")}</span><span>${pct}%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      ${pct < 100 ? `<button class="hero-cta" id="home-complete-profile">${t("home.complete_profile")}</button>` : ""}
+    </div>
+
+    <div id="home-alert"></div>
+
+    <div class="section-title">${t("home.section_overview")}</div>
+    <div class="stat-grid" id="home-stats">${skeletonHtml(4)}</div>
+
+    <div class="section-title">${t("home.section_shortcuts")}</div>
+    <div class="card" id="home-shortcut-match" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:22px;">🔎</span>
+      <div class="card-title" style="margin:0;">${t("home.shortcut_match")}</div>
+    </div>
+    <div class="card" id="home-shortcut-saved" style="cursor:pointer;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:22px;">💼</span>
+      <div class="card-title" style="margin:0;">${t("home.shortcut_saved")}</div>
+    </div>
+  `;
+
+  document.getElementById("home-complete-profile")?.addEventListener("click", () => switchTab("profile"));
+  document.getElementById("home-shortcut-match").addEventListener("click", () => switchTab("match"));
+  document.getElementById("home-shortcut-saved").addEventListener("click", () => switchTab("saved"));
+
+  const [matches, saved] = await Promise.all([api("/match"), api("/saved")]);
+
+  const green = matches.filter((m) => m.level === "green").length;
+  const yellow = matches.filter((m) => m.level === "yellow").length;
+
+  document.getElementById("home-stats").innerHTML = `
+    <div class="stat-tile" data-tab="match">
+      <div class="stat-tile-value" style="color:var(--green)">${green}</div>
+      <div class="stat-tile-label">${t("home.stat_green")}</div>
+    </div>
+    <div class="stat-tile" data-tab="match">
+      <div class="stat-tile-value" style="color:var(--yellow)">${yellow}</div>
+      <div class="stat-tile-label">${t("home.stat_yellow")}</div>
+    </div>
+    <div class="stat-tile" data-tab="saved">
+      <div class="stat-tile-value">${saved.length}</div>
+      <div class="stat-tile-label">${t("home.stat_saved")}</div>
+    </div>
+    <div class="stat-tile" data-tab="profile">
+      <div class="stat-tile-value">${pct}%</div>
+      <div class="stat-tile-label">${t("home.stat_profile")}</div>
+    </div>
+  `;
+  document.querySelectorAll("#home-stats .stat-tile").forEach((tile) => {
+    tile.addEventListener("click", () => switchTab(tile.dataset.tab));
+  });
+
+  const withDeadline = saved
+    .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
+    .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left);
+
+  if (withDeadline.length > 0) {
+    const nearest = withDeadline[0];
+    const urgent = nearest.nearest_deadline_days_left <= 7;
+    document.getElementById("home-alert").innerHTML = `
+      <div class="alert ${urgent ? "urgent" : ""}">
+        <span class="alert-icon">⏰</span>
+        <div>
+          <div class="alert-title">${t("home.alert_title")}</div>
+          <div class="alert-body">${t("home.alert_body", {
+            program: nearest.program_name,
+            days: nearest.nearest_deadline_days_left,
+            date: nearest.nearest_deadline,
+          })}</div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 // ---------- Profile view ----------
@@ -401,11 +562,11 @@ async function saveProfile() {
 
 async function renderMatch() {
   const el = document.getElementById("view-match");
-  el.innerHTML = `<div class="empty-state">${t("match.loading")}</div>`;
+  el.innerHTML = skeletonHtml(4);
 
   const matches = await api("/match");
   if (matches.length === 0) {
-    el.innerHTML = `<div class="empty-state">${t("match.empty")}</div>`;
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">${t("match.empty_icon")}</span>${t("match.empty")}</div>`;
     return;
   }
 
@@ -443,22 +604,32 @@ async function renderMatch() {
 
 async function renderSaved() {
   const el = document.getElementById("view-saved");
+  el.innerHTML = skeletonHtml(3);
   const items = await api("/saved");
 
   if (items.length === 0) {
-    el.innerHTML = `<div class="empty-state">${t("saved.empty")}</div>`;
+    el.innerHTML = `<div class="empty-state"><span class="empty-icon">${t("saved.empty_icon")}</span>${t("saved.empty")}</div>`;
     return;
   }
 
   const statuses = ["planning", "applied", "rejected", "accepted"];
 
   el.innerHTML = items
-    .map(
-      (s) => `
+    .map((s) => {
+      const days = s.nearest_deadline_days_left;
+      const deadlineText = s.nearest_deadline
+        ? days !== null && days >= 0
+          ? `${s.nearest_deadline} · ${t("saved.days_left", { days })}`
+          : s.nearest_deadline
+        : t("saved.no_deadline");
+      const soonClass = days !== null && days >= 0 && days <= 7 ? "soon" : "";
+
+      return `
         <div class="card" data-saved-id="${s.id}">
           <div class="card-title">${s.program_name}</div>
           <div class="card-sub">${s.university}, ${s.country}</div>
-          <div class="field" style="margin-top:10px;margin-bottom:6px;">
+          <div class="deadline-pill ${soonClass}">📅 ${t("saved.deadline")}: ${deadlineText}</div>
+          <div class="field" style="margin-top:12px;margin-bottom:6px;">
             <label>${t("saved.status")}</label>
             <select class="status-select" data-id="${s.id}">
               ${statuses
@@ -466,13 +637,12 @@ async function renderSaved() {
                 .join("")}
             </select>
           </div>
-          <div class="card-sub">${t("saved.deadline")}: ${s.nearest_deadline || t("saved.no_deadline")}</div>
           <div class="card-actions">
             <button class="btn-secondary remove-saved-btn" data-id="${s.id}">${t("saved.remove")}</button>
           </div>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 
   el.querySelectorAll(".status-select").forEach((select) => {
@@ -489,7 +659,7 @@ async function renderSaved() {
       await api(`/saved/${btn.dataset.id}`, { method: "DELETE" });
       btn.closest(".card").remove();
       if (!el.querySelector(".card")) {
-        el.innerHTML = `<div class="empty-state">${t("saved.empty")}</div>`;
+        el.innerHTML = `<div class="empty-state"><span class="empty-icon">${t("saved.empty_icon")}</span>${t("saved.empty")}</div>`;
       }
     });
   });
@@ -503,13 +673,20 @@ function updateNavLabels() {
   });
 }
 
+const TAB_RENDERERS = {
+  home: renderHome,
+  match: renderMatch,
+  saved: renderSaved,
+  profile: renderProfile,
+};
+
 async function switchTab(tabName) {
   document.querySelectorAll(".tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.tab === tabName));
   document.querySelectorAll(".view").forEach((view) => {
     view.hidden = view.id !== `view-${tabName}`;
   });
-  if (tabName === "match") await renderMatch();
-  if (tabName === "saved") await renderSaved();
+  const renderer = TAB_RENDERERS[tabName];
+  if (renderer) await renderer();
 }
 
 function bindTabs() {
@@ -525,7 +702,8 @@ function bindLangSwitch() {
     lang = select.value;
     await api("/me", { method: "PATCH", body: JSON.stringify({ ui_language: lang }) });
     updateNavLabels();
-    renderProfile();
+    const activeTab = document.querySelector(".tab.active")?.dataset.tab || "home";
+    await switchTab(activeTab);
   });
 }
 
@@ -540,9 +718,9 @@ async function init() {
   await loadCountries();
 
   updateNavLabels();
-  renderProfile();
   bindTabs();
   bindLangSwitch();
+  await renderHome();
 }
 
 init().catch((err) => {

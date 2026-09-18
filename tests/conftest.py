@@ -7,7 +7,7 @@ from app.db.base import Base
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",
-    "postgresql+asyncpg://uniassist:change-me@127.0.0.1:12532/uniassist_test",
+    "postgresql+asyncpg://uniassist:change-me@127.0.0.1:9294/uniassist_test",
 )
 
 

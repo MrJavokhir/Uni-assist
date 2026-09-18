@@ -231,6 +231,7 @@ async def list_saved(
         upcoming = [d for d in program.deadlines if d.date_utc >= now]
         candidates = upcoming or list(program.deadlines)
         nearest = min(candidates, key=lambda d: d.date_utc) if candidates else None
+        days_left = (nearest.date_utc.date() - now.date()).days if nearest else None
 
         output.append(
             SavedOut(
@@ -242,6 +243,7 @@ async def list_saved(
                 status=saved.status.value,
                 reminders_active=saved.reminders_active,
                 nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
+                nearest_deadline_days_left=days_left,
             )
         )
     return output

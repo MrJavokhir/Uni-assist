@@ -67,6 +67,7 @@ class SavedOut(BaseModel):
     status: str
     reminders_active: bool
     nearest_deadline: str | None
+    nearest_deadline_days_left: int | None
 
 
 class SavedStatusIn(BaseModel):

@@ -3,15 +3,59 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <title>Uni Assist</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10.2 12 3l9 7.2"/><path d="M5 9.6V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.6"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+  </symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1z"/>
+  </symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="4"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/>
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.4 2"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m4.5 12.5 5 5 10-11"/>
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7h16M9.5 7V5h5v2M6.5 7l.8 13h9.4l.8-13"/>
+  </symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9 5 7 7-7 7"/>
+  </symbol>
+  <symbol id="i-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m12 4 10 5-10 5L2 9l10-5z"/><path d="M6 11.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/>
+  </symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>
+  </symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5 10.1 12.8 4.5 10.9 10.1 9z"/>
+  </symbol>
+</svg>
+
 <div id="app">
   <header class="topbar">
-    <div class="brand">🎓 Uni Assist</div>
-    <select id="lang-switch" class="lang-switch">
+    <div class="brand">
+      <span class="brand-mark"><svg class="ico"><use href="#i-cap"/></svg></span>
+      <span>Uni Assist</span>
+    </div>
+    <select id="lang-switch" class="lang-switch" aria-label="Language">
       <option value="uz">UZ</option>
       <option value="ru">RU</option>
       <option value="en">EN</option>
@@ -26,20 +70,24 @@
   </main>
 
   <nav class="tabbar">
-    <button data-tab="home" class="tab active">
-      <span class="tab-icon">🏠</span><span class="tab-label" data-i18n="nav.home"></span>
+    <button type="button" data-tab="home" class="tab active" aria-label="Home">
+      <svg class="tab-ico"><use href="#i-home"/></svg>
+      <span class="tab-label" data-i18n="nav.home"></span>
     </button>
-    <button data-tab="match" class="tab">
-      <span class="tab-icon">🔎</span><span class="tab-label" data-i18n="nav.match"></span>
+    <button type="button" data-tab="match" class="tab" aria-label="Programs">
+      <svg class="tab-ico"><use href="#i-search"/></svg>
+      <span class="tab-label" data-i18n="nav.match"></span>
     </button>
-    <button data-tab="saved" class="tab">
-      <span class="tab-icon">💼</span><span class="tab-label" data-i18n="nav.saved"></span>
+    <button type="button" data-tab="saved" class="tab" aria-label="Saved">
+      <svg class="tab-ico"><use href="#i-bookmark"/></svg>
+      <span class="tab-label" data-i18n="nav.saved"></span>
     </button>
-    <button data-tab="profile" class="tab">
-      <span class="tab-icon">👤</span><span class="tab-label" data-i18n="nav.profile"></span>
+    <button type="button" data-tab="profile" class="tab" aria-label="Profile">
+      <svg class="tab-ico"><use href="#i-user"/></svg>
+      <span class="tab-label" data-i18n="nav.profile"></span>
     </button>
   </nav>
 </div>
-<script src="app.js"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

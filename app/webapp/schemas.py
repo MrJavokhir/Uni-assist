@@ -72,3 +72,22 @@ class SavedOut(BaseModel):
 
 class SavedStatusIn(BaseModel):
     status: str
+
+
+class ScholarshipOut(BaseModel):
+    id: int
+    name: str
+    description: str | None
+    coverage_type: str
+    coverage_percent: int | None
+    stipend_amount: float | None
+    currency: str
+    extras_flight: bool
+    extras_insurance: bool
+    extras_dormitory: bool
+    extras_language_course: bool
+    citizenship_eligible: bool
+    countries: list[str]
+    source_url: str
+    nearest_deadline: str | None
+    nearest_deadline_days_left: int | None

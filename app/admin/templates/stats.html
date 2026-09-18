@@ -74,6 +74,40 @@
     </div>
   </div>
 
+  {# ---------- To'ldirilishi kerak bo'lgan dasturlar ---------- #}
+  {% if incomplete_total %}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Talab yoki xarajat ma'lumoti yo'q dasturlar</h3>
+      <div class="card-actions"><span class="badge bg-warning-lt">{{ incomplete_total }} ta</span></div>
+    </div>
+    <div class="card-body text-muted pb-0 small">
+      Bu dasturlarda minimal GPA/IELTS yoki kontrakt narxi kiritilmagan — filtr
+      (🟢/🟡) ular uchun to'liq ishlamaydi. Rasmiy saytdan tekshirib to'ldiring.
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr><th>Dastur</th><th>Daraja</th><th>Universitet</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for program in incomplete_programs %}
+          <tr>
+            <td>{{ program.name }}</td>
+            <td><span class="badge bg-secondary-lt">{{ degree_labels.get(program.degree_level, program.degree_level.value) }}</span></td>
+            <td class="text-muted">{{ program.university }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-primary" href="/admin/program-requirement/create">Talab qo'shish</a>
+              <a class="btn btn-sm btn-secondary" href="/admin/program-cost/create">Xarajat qo'shish</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
   {# ---------- Jadvallar ---------- #}
   <div class="row row-cards">
     <div class="col-12 col-lg-7">

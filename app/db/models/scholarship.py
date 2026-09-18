@@ -9,6 +9,7 @@ from app.db.base import Base, TimestampMixin, VerificationMixin, str_enum
 from app.db.models.program import DeadlineType, deadline_type_enum
 
 if TYPE_CHECKING:
+    from app.db.models.country import Country
     from app.db.models.program import Program
 
 program_scholarship = Table(
@@ -16,6 +17,17 @@ program_scholarship = Table(
     Base.metadata,
     Column("program_id", ForeignKey("programs.id", ondelete="CASCADE"), primary_key=True),
     Column("scholarship_id", ForeignKey("scholarships.id", ondelete="CASCADE"), primary_key=True),
+)
+
+# Davlat stipendiyalari (DAAD, Chevening, Erasmus Mundus va h.k.) aniq bitta
+# dasturga emas, butun davlatga tegishli bo'ladi. Many-to-many tanlandi, chunki
+# Erasmus Mundus kabi grantlar bir nechta davlatni qamrab oladi — nullable FK
+# buni ifodalay olmasdi.
+scholarship_country = Table(
+    "scholarship_country",
+    Base.metadata,
+    Column("scholarship_id", ForeignKey("scholarships.id", ondelete="CASCADE"), primary_key=True),
+    Column("country_id", ForeignKey("countries.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
@@ -60,6 +72,9 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
 
     programs: Mapped[list["Program"]] = relationship(
         secondary=program_scholarship, back_populates="scholarships"
+    )
+    countries: Mapped[list["Country"]] = relationship(
+        secondary=scholarship_country, back_populates="scholarships"
     )
     deadlines: Mapped[list["ScholarshipDeadline"]] = relationship(
         back_populates="scholarship", cascade="all, delete-orphan"

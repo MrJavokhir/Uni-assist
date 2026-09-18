@@ -13,6 +13,7 @@ from app.db.models import (
     Program,
     SavedProgram,
     SavedProgramStatus,
+    Scholarship,
     UiLanguage,
     University,
     User,
@@ -36,6 +37,7 @@ from app.webapp.schemas import (
     ProfileOut,
     SavedOut,
     SavedStatusIn,
+    ScholarshipOut,
 )
 
 router = APIRouter()
@@ -152,6 +154,64 @@ async def list_countries(session: AsyncSession = Depends(get_session)) -> list[C
         CountryOut(id=c.id, name_uz=c.name_uz, name_ru=c.name_ru, name_en=c.name_en, iso_code=c.iso_code)
         for c in countries
     ]
+
+
+@router.get("/scholarships", response_model=list[ScholarshipOut])
+async def list_scholarships(
+    country_id: int | None = None,
+    session: AsyncSession = Depends(get_session),
+) -> list[ScholarshipOut]:
+    """Davlat stipendiyalari — dasturga bog'liq bo'lmagan holda.
+
+    `country_id` berilsa, faqat shu davlatga tegishli grantlar qaytariladi.
+    """
+    stmt = (
+        select(Scholarship)
+        .options(
+            selectinload(Scholarship.countries),
+            selectinload(Scholarship.deadlines),
+        )
+        .order_by(Scholarship.name)
+    )
+    if country_id is not None:
+        stmt = stmt.where(Scholarship.countries.any(Country.id == country_id))
+
+    scholarships = (await session.execute(stmt)).scalars().all()
+
+    now = datetime.now(UTC)
+    output = []
+    for scholarship in scholarships:
+        upcoming = [d for d in scholarship.deadlines if d.date_utc >= now]
+        candidates = upcoming or list(scholarship.deadlines)
+        nearest = min(candidates, key=lambda d: d.date_utc) if candidates else None
+
+        output.append(
+            ScholarshipOut(
+                id=scholarship.id,
+                name=scholarship.name,
+                description=scholarship.description,
+                coverage_type=scholarship.coverage_type.value,
+                coverage_percent=scholarship.coverage_percent,
+                stipend_amount=(
+                    float(scholarship.stipend_amount)
+                    if scholarship.stipend_amount is not None
+                    else None
+                ),
+                currency=scholarship.currency,
+                extras_flight=scholarship.extras_flight,
+                extras_insurance=scholarship.extras_insurance,
+                extras_dormitory=scholarship.extras_dormitory,
+                extras_language_course=scholarship.extras_language_course,
+                citizenship_eligible=scholarship.citizenship_eligible,
+                countries=[c.name_uz for c in scholarship.countries],
+                source_url=scholarship.source_url,
+                nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
+                nearest_deadline_days_left=(
+                    (nearest.date_utc.date() - now.date()).days if nearest else None
+                ),
+            )
+        )
+    return output
 
 
 @router.get("/match", response_model=list[MatchProgramOut])

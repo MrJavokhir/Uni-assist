@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin
 
 if TYPE_CHECKING:
+    from app.db.models.scholarship import Scholarship
     from app.db.models.university import University
 
 
@@ -20,6 +21,11 @@ class Country(TimestampMixin, Base):
 
     universities: Mapped[list["University"]] = relationship(
         back_populates="country", cascade="all, delete-orphan"
+    )
+    # Davlat stipendiyalari (DAAD, Chevening...) — secondary satr ko'rinishida,
+    # aylanma importni oldini olish uchun (Program.scholarships bilan bir uslubda).
+    scholarships: Mapped[list["Scholarship"]] = relationship(
+        secondary="scholarship_country", back_populates="countries"
     )
 
     def __str__(self) -> str:

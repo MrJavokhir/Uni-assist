@@ -16,6 +16,7 @@ from app.db.models.scholarship import (
     ScholarshipDeadline,
     UniversityChoiceType,
     program_scholarship,
+    scholarship_country,
 )
 from app.db.models.university import University
 from app.db.models.user import (
@@ -56,5 +57,6 @@ __all__ = [
     "UserLanguageCertificate",
     "UserOtherTest",
     "program_scholarship",
+    "scholarship_country",
     "user_target_country",
 ]

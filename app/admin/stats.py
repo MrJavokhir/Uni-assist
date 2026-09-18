@@ -2,14 +2,17 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from sqladmin import BaseView, expose
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
 from app.admin.formatters import VERIFIED_STALE_DAYS
+from app.admin.views import _DEGREE_LABELS
 from app.db.models import (
     Country,
     Program,
+    ProgramCost,
+    ProgramRequirement,
     Report,
     ReportStatus,
     SavedProgram,
@@ -22,6 +25,7 @@ from app.db.session import async_session_factory
 USER_CHART_DAYS = 14
 STALE_LIST_LIMIT = 8
 REPORT_LIST_LIMIT = 5
+INCOMPLETE_LIST_LIMIT = 8
 
 
 @dataclass
@@ -157,6 +161,30 @@ class StatsView(BaseView):
 
             stale_records = await _stale_records(session, stale_cutoff, now)
 
+            # Talab yoki xarajat ma'lumoti yo'q dasturlar — seed orqali kiritilgan
+            # yozuvlar aynan shu holatda bo'ladi va qo'lda to'ldirilishi kerak.
+            incomplete_stmt = (
+                select(
+                    Program.id,
+                    Program.name,
+                    Program.degree_level,
+                    University.name.label("university"),
+                )
+                .join(University, University.id == Program.university_id)
+                .outerjoin(ProgramRequirement, ProgramRequirement.program_id == Program.id)
+                .outerjoin(ProgramCost, ProgramCost.program_id == Program.id)
+                .where(or_(ProgramRequirement.id.is_(None), ProgramCost.id.is_(None)))
+                .order_by(Program.id)
+            )
+            incomplete_total = (
+                await session.execute(
+                    select(func.count()).select_from(incomplete_stmt.subquery())
+                )
+            ).scalar_one()
+            incomplete_programs = (
+                await session.execute(incomplete_stmt.limit(INCOMPLETE_LIST_LIMIT))
+            ).all()
+
         signups = {row.day: row[1] for row in signup_rows}
         chart_labels = []
         chart_values = []
@@ -185,5 +213,8 @@ class StatsView(BaseView):
                 "country_values": [row[1] for row in country_rows],
                 "stale_records": stale_records,
                 "recent_reports": recent_reports,
+                "incomplete_total": incomplete_total,
+                "incomplete_programs": incomplete_programs,
+                "degree_labels": _DEGREE_LABELS,
             },
         )

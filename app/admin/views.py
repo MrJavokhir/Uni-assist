@@ -1,6 +1,7 @@
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
 
+from app.admin.filters import RelationshipFilter
 from app.admin.formatters import enum_label, format_bool, format_verified_at
 from app.db.models import (
     Country,
@@ -299,6 +300,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     column_list = [
         Scholarship.id,
         Scholarship.name,
+        Scholarship.countries,
         Scholarship.coverage_type,
         Scholarship.citizenship_eligible,
         Scholarship.verified_at,
@@ -306,6 +308,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     column_details_list = [
         Scholarship.id,
         Scholarship.name,
+        Scholarship.countries,
         Scholarship.description,
         Scholarship.coverage_type,
         Scholarship.coverage_percent,
@@ -328,6 +331,9 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     column_searchable_list = [Scholarship.name]
     column_sortable_list = [Scholarship.name, Scholarship.verified_at]
     column_filters = [
+        RelationshipFilter(
+            Scholarship.countries, Country, Country.name_uz, title="Davlat", parameter_name="country"
+        ),
         StaticValuesFilter(
             Scholarship.coverage_type, values=_choices(_COVERAGE_LABELS), title="Qamrov"
         ),
@@ -335,6 +341,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     ]
     form_columns = [
         Scholarship.name,
+        Scholarship.countries,
         Scholarship.description,
         Scholarship.coverage_type,
         Scholarship.coverage_percent,
@@ -355,6 +362,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     ]
     column_labels = _labels(
         name="Grant nomi",
+        countries="Davlat",
         description="Tavsif",
         coverage_type="Qamrov turi",
         coverage_percent="Qamrov (%)",

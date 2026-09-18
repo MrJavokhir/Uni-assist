@@ -30,9 +30,11 @@ function icon(name, cls) {
 }
 
 function initials(text) {
+  // Qavs/tinish belgilari bilan boshlanadigan so'zlar ("(Buyuk") initsialga
+  // tushmasligi uchun faqat harf/raqamdan boshlanadigan so'zlarni olamiz.
   return (text || "")
-    .split(/\s+/)
-    .filter(Boolean)
+    .split(/[\s(),.—-]+/)
+    .filter((w) => /^[\p{L}\p{N}]/u.test(w))
     .slice(0, 2)
     .map((w) => w[0])
     .join("")
@@ -53,6 +55,7 @@ const I18N = {
   uz: {
     "nav.home": "Bosh sahifa",
     "nav.match": "Dasturlar",
+    "nav.scholarships": "Grantlar",
     "nav.saved": "Saqlangan",
     "nav.profile": "Profil",
 
@@ -105,6 +108,19 @@ const I18N = {
     "match.yellow": "Yaqin",
     "match.saved_toast": "Dastur saqlandi",
 
+    "scholarships.empty_title": "Grant topilmadi",
+    "scholarships.empty_text": "Hozircha bazada davlat stipendiyalari yo'q yoki tanlangan davlat bo'yicha topilmadi.",
+    "scholarships.all_countries": "Barcha davlatlar",
+    "scholarships.coverage.full": "To'liq qoplaydi",
+    "scholarships.coverage.partial": "Qisman qoplaydi",
+    "scholarships.coverage.contract_only": "Faqat kontrakt",
+    "scholarships.extra_flight": "Aviachipta",
+    "scholarships.extra_insurance": "Sug'urta",
+    "scholarships.extra_dormitory": "Yotoqxona",
+    "scholarships.extra_language": "Til kursi",
+    "scholarships.deadline": "Muddat: {date}",
+    "scholarships.details": "Batafsil",
+
     "saved.empty_title": "Hozircha bo'sh",
     "saved.empty_text": "Dasturlar bo'limidan yoqqanini saqlang — men muddatlarini kuzatib boraman.",
     "saved.deadline": "Muddat",
@@ -120,6 +136,7 @@ const I18N = {
   ru: {
     "nav.home": "Главная",
     "nav.match": "Программы",
+    "nav.scholarships": "Гранты",
     "nav.saved": "Сохранённые",
     "nav.profile": "Профиль",
 
@@ -172,6 +189,19 @@ const I18N = {
     "match.yellow": "Почти",
     "match.saved_toast": "Программа сохранена",
 
+    "scholarships.empty_title": "Гранты не найдены",
+    "scholarships.empty_text": "Пока в базе нет государственных стипендий или по выбранной стране ничего не найдено.",
+    "scholarships.all_countries": "Все страны",
+    "scholarships.coverage.full": "Полное покрытие",
+    "scholarships.coverage.partial": "Частичное покрытие",
+    "scholarships.coverage.contract_only": "Только контракт",
+    "scholarships.extra_flight": "Авиабилет",
+    "scholarships.extra_insurance": "Страховка",
+    "scholarships.extra_dormitory": "Общежитие",
+    "scholarships.extra_language": "Языковой курс",
+    "scholarships.deadline": "Дедлайн: {date}",
+    "scholarships.details": "Подробнее",
+
     "saved.empty_title": "Пока пусто",
     "saved.empty_text": "Сохраните программы из раздела «Программы» — я буду следить за дедлайнами.",
     "saved.deadline": "Дедлайн",
@@ -187,6 +217,7 @@ const I18N = {
   en: {
     "nav.home": "Home",
     "nav.match": "Programs",
+    "nav.scholarships": "Grants",
     "nav.saved": "Saved",
     "nav.profile": "Profile",
 
@@ -238,6 +269,19 @@ const I18N = {
     "match.green": "Match",
     "match.yellow": "Close",
     "match.saved_toast": "Program saved",
+
+    "scholarships.empty_title": "No grants found",
+    "scholarships.empty_text": "There are no government scholarships in the database yet, or none for the selected country.",
+    "scholarships.all_countries": "All countries",
+    "scholarships.coverage.full": "Full coverage",
+    "scholarships.coverage.partial": "Partial coverage",
+    "scholarships.coverage.contract_only": "Tuition only",
+    "scholarships.extra_flight": "Flight",
+    "scholarships.extra_insurance": "Insurance",
+    "scholarships.extra_dormitory": "Dormitory",
+    "scholarships.extra_language": "Language course",
+    "scholarships.deadline": "Deadline: {date}",
+    "scholarships.details": "Details",
 
     "saved.empty_title": "Nothing here yet",
     "saved.empty_text": "Save programs from the Programs tab — I'll track their deadlines for you.",
@@ -493,6 +537,97 @@ async function renderMatch() {
       showToast(t("match.saved_toast"));
     });
   });
+}
+
+// ============ Scholarships (davlat stipendiyalari) ============
+
+let scholarshipCountryId = null; // null — barcha davlatlar
+
+async function renderScholarships() {
+  const el = document.getElementById("view-scholarships");
+  el.innerHTML = skeletons(4);
+
+  const query = scholarshipCountryId ? `?country_id=${scholarshipCountryId}` : "";
+  const items = await api(`/scholarships${query}`);
+
+  const chips = `
+    <div class="chip-group" id="scholarship-country-chips" style="margin-bottom:14px;">
+      <div class="chip ${scholarshipCountryId === null ? "active" : ""}" data-value="">${t(
+        "scholarships.all_countries"
+      )}</div>
+      ${countries
+        .map(
+          (c) =>
+            `<div class="chip ${String(scholarshipCountryId) === String(c.id) ? "active" : ""}" data-value="${
+              c.id
+            }">${escapeHtml(c.name_uz)}</div>`
+        )
+        .join("")}
+    </div>`;
+
+  const cards = items.length
+    ? items.map(scholarshipCard).join("")
+    : `<div class="empty">
+         <div class="empty-ico">${icon("award")}</div>
+         <div class="empty-title">${t("scholarships.empty_title")}</div>
+         <div class="empty-text">${t("scholarships.empty_text")}</div>
+       </div>`;
+
+  el.innerHTML = chips + cards;
+
+  el.querySelectorAll("#scholarship-country-chips .chip").forEach((chip) => {
+    chip.addEventListener("click", async () => {
+      haptic("light");
+      scholarshipCountryId = chip.dataset.value ? Number(chip.dataset.value) : null;
+      await renderScholarships();
+    });
+  });
+}
+
+function scholarshipCard(s) {
+  const coverageTone = s.coverage_type === "full" ? "green" : "amber";
+  const extras = [
+    [s.extras_flight, "plane", "scholarships.extra_flight"],
+    [s.extras_insurance, "shield", "scholarships.extra_insurance"],
+    [s.extras_dormitory, "bed", "scholarships.extra_dormitory"],
+    [s.extras_language_course, "lang", "scholarships.extra_language"],
+  ]
+    .filter(([enabled]) => enabled)
+    .map(([, iconName, key]) => `<span class="pill">${icon(iconName)}${t(key)}</span>`)
+    .join("");
+
+  const countryPills = s.countries
+    .map((name) => `<span class="pill">${icon("globe")}${escapeHtml(name)}</span>`)
+    .join("");
+
+  const deadline = s.nearest_deadline
+    ? `<span class="pill ${
+        s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left <= 30 ? "red" : ""
+      }">${icon("clock")}${t("scholarships.deadline", { date: escapeHtml(s.nearest_deadline) })}</span>`
+    : "";
+
+  return `
+    <div class="card">
+      <div class="card-top">
+        <div class="avatar">${escapeHtml(initials(s.name))}</div>
+        <div class="card-body">
+          <div class="card-title">${escapeHtml(s.name)}</div>
+          <div class="meta-row">
+            <span class="pill ${coverageTone}">${icon("award")}${t(
+              "scholarships.coverage." + s.coverage_type
+            )}</span>
+            ${countryPills}
+            ${deadline}
+          </div>
+          ${extras ? `<div class="meta-row">${extras}</div>` : ""}
+        </div>
+      </div>
+      <div class="card-actions">
+        <a class="btn btn-soft" href="${escapeHtml(s.source_url)}" target="_blank" rel="noopener">
+          ${icon("chevron")}${t("scholarships.details")}
+        </a>
+      </div>
+    </div>`;
 }
 
 // ============ Saved ============
@@ -771,7 +906,13 @@ async function saveProfile() {
 
 // ============ Navigation ============
 
-const RENDERERS = { home: renderHome, match: renderMatch, saved: renderSaved, profile: renderProfile };
+const RENDERERS = {
+  home: renderHome,
+  match: renderMatch,
+  scholarships: renderScholarships,
+  saved: renderSaved,
+  profile: renderProfile,
+};
 
 function updateNavLabels() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {

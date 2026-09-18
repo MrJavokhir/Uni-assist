@@ -8,7 +8,12 @@ set -e
 
 alembic upgrade head
 
-uvicorn app.admin.main:app --host 0.0.0.0 --port "${PORT:-8000}" &
+# --proxy-headers + --forwarded-allow-ips: Railway TLS'ni o'z proxy'sida tugatib,
+# konteynerga oddiy HTTP bilan uzatadi. Busiz url_for() "http://" havolalar
+# yasaydi va brauzer ularni "mixed content" deb bloklaydi (admin panel CSS'siz
+# qoladi). Konteyner faqat Railway proxy orqali ochiq, shuning uchun "*" xavfsiz.
+uvicorn app.admin.main:app --host 0.0.0.0 --port "${PORT:-8000}" \
+  --proxy-headers --forwarded-allow-ips="*" &
 ADMIN_PID=$!
 
 python -m app.bot.main &

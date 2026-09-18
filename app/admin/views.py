@@ -1,12 +1,14 @@
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
 
-from app.admin.formatters import format_verified_at
+from app.admin.formatters import enum_label, format_bool, format_verified_at
 from app.db.models import (
     Country,
     CoverageType,
     Deadline,
+    DeadlineType,
     DegreeLevel,
+    LanguageCertType,
     Program,
     ProgramCost,
     ProgramRequirement,
@@ -16,6 +18,7 @@ from app.db.models import (
     SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
+    UiLanguage,
     University,
     User,
     UserLanguageCertificate,
@@ -45,10 +48,42 @@ _REPORT_STATUS_LABELS = {
     ReportStatus.REVIEWED: "Ko'rib chiqilgan",
     ReportStatus.RESOLVED: "Hal qilingan",
 }
+_DEADLINE_LABELS = {
+    DeadlineType.APPLICATION_OPEN: "Ariza ochilishi",
+    DeadlineType.APPLICATION_CLOSE: "Ariza yopilishi",
+    DeadlineType.DOCUMENT: "Hujjat topshirish",
+    DeadlineType.VISA: "Viza",
+}
+_UI_LANG_LABELS = {
+    UiLanguage.UZ: "O'zbekcha",
+    UiLanguage.RU: "Ruscha",
+    UiLanguage.EN: "Inglizcha",
+}
+_CERT_LABELS = {
+    LanguageCertType.IELTS: "IELTS",
+    LanguageCertType.TOEFL: "TOEFL",
+    LanguageCertType.DELE: "DELE",
+    LanguageCertType.TESTDAF: "TestDaF",
+    LanguageCertType.OTHER: "Boshqa",
+}
+
+# Ko'p jadvalda takrorlanadigan ustun nomlari
+_COMMON_LABELS = {
+    "id": "ID",
+    "created_at": "Yaratilgan",
+    "updated_at": "Yangilangan",
+    "verified_at": "Tekshirilgan",
+    "verified_by": "Kim tekshirgan",
+    "source_url": "Manba havolasi",
+}
 
 
 def _choices(labels: dict) -> list[tuple[str, str]]:
     return [(member.value, label) for member, label in labels.items()]
+
+
+def _labels(**extra: str) -> dict[str, str]:
+    return {**_COMMON_LABELS, **extra}
 
 CATALOG = "Katalog"
 GRANTS = "Grantlar"
@@ -66,6 +101,9 @@ class CountryAdmin(ModelView, model=Country):
     column_searchable_list = [Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
     column_sortable_list = [Country.name_uz, Country.iso_code]
     form_columns = [Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
+    column_labels = _labels(
+        name_uz="Nomi (uz)", name_ru="Nomi (ru)", name_en="Nomi (en)", iso_code="ISO kodi"
+    )
 
 
 class UniversityAdmin(ModelView, model=University):
@@ -84,6 +122,9 @@ class UniversityAdmin(ModelView, model=University):
         University.website,
         University.timezone,
     ]
+    column_labels = _labels(
+        name="Nomi", country="Davlat", city="Shahar", website="Veb-sayt", timezone="Vaqt zonasi"
+    )
 
 
 class ProgramAdmin(ModelView, model=Program):
@@ -137,8 +178,28 @@ class ProgramAdmin(ModelView, model=Program):
         Program.verified_at,
         Program.verified_by,
     ]
-    column_formatters = {Program.verified_at: format_verified_at}
-    column_formatters_detail = {Program.verified_at: format_verified_at}
+    column_labels = _labels(
+        name="Dastur nomi",
+        university="Universitet",
+        degree_level="Daraja",
+        field_of_study="Yo'nalish",
+        language_of_instruction="O'qitish tili",
+        duration_years="Davomiyligi (yil)",
+        intake_term="Qabul davri",
+        notes="Izoh",
+        requirement="Talablar",
+        cost="Xarajat",
+        deadlines="Muddatlar",
+        scholarships="Grantlar",
+    )
+    column_formatters = {
+        Program.verified_at: format_verified_at,
+        Program.degree_level: enum_label(_DEGREE_LABELS),
+    }
+    column_formatters_detail = {
+        Program.verified_at: format_verified_at,
+        Program.degree_level: enum_label(_DEGREE_LABELS),
+    }
 
 
 class ProgramRequirementAdmin(ModelView, model=ProgramRequirement):
@@ -166,6 +227,18 @@ class ProgramRequirementAdmin(ModelView, model=ProgramRequirement):
         ProgramRequirement.prereq_major,
         ProgramRequirement.age_limit,
     ]
+    column_labels = _labels(
+        program="Dastur",
+        gpa_min="Minimal GPA",
+        gpa_scale="GPA tizimi",
+        ielts_min="Minimal IELTS",
+        toefl_min="Minimal TOEFL",
+        gre_required="GRE talab qilinadi",
+        gre_min="Minimal GRE",
+        prereq_major="Kerakli yo'nalish",
+        age_limit="Yosh chegarasi",
+    )
+    column_formatters = {ProgramRequirement.gre_required: format_bool}
 
 
 class ProgramCostAdmin(ModelView, model=ProgramCost):
@@ -191,6 +264,14 @@ class ProgramCostAdmin(ModelView, model=ProgramCost):
         ProgramCost.living_cost_monthly,
         ProgramCost.last_checked,
     ]
+    column_labels = _labels(
+        program="Dastur",
+        tuition_amount="Kontrakt",
+        currency="Valyuta",
+        visa_proof_amount="Viza uchun isbot summasi",
+        living_cost_monthly="Yashash (oyiga)",
+        last_checked="Oxirgi tekshiruv",
+    )
 
 
 class DeadlineAdmin(ModelView, model=Deadline):
@@ -202,6 +283,11 @@ class DeadlineAdmin(ModelView, model=Deadline):
     column_list = [Deadline.id, Deadline.program, Deadline.type, Deadline.date_utc, Deadline.intake_term]
     column_sortable_list = [Deadline.date_utc]
     form_columns = [Deadline.program, Deadline.type, Deadline.date_utc, Deadline.intake_term]
+    column_labels = _labels(
+        program="Dastur", type="Muddat turi", date_utc="Sana (UTC)", intake_term="Qabul davri"
+    )
+    column_formatters = {Deadline.type: enum_label(_DEADLINE_LABELS)}
+    column_formatters_detail = {Deadline.type: enum_label(_DEADLINE_LABELS)}
 
 
 class ScholarshipAdmin(ModelView, model=Scholarship):
@@ -267,8 +353,31 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
         Scholarship.verified_at,
         Scholarship.verified_by,
     ]
-    column_formatters = {Scholarship.verified_at: format_verified_at}
-    column_formatters_detail = {Scholarship.verified_at: format_verified_at}
+    column_labels = _labels(
+        name="Grant nomi",
+        description="Tavsif",
+        coverage_type="Qamrov turi",
+        coverage_percent="Qamrov (%)",
+        stipend_amount="Stipendiya",
+        currency="Valyuta",
+        extras_flight="Aviachipta",
+        extras_insurance="Sug'urta",
+        extras_dormitory="Yotoqxona",
+        extras_language_course="Til kursi",
+        age_limit="Yosh chegarasi",
+        citizenship_eligible="O'zbekiston uchun ochiq",
+        university_choice="Universitetni kim tanlaydi",
+        application_linked_to_program="Alohida ariza kerak",
+        programs="Dasturlar",
+        deadlines="Muddatlar",
+    )
+    _scholarship_formatters = {
+        Scholarship.verified_at: format_verified_at,
+        Scholarship.coverage_type: enum_label(_COVERAGE_LABELS),
+        Scholarship.citizenship_eligible: format_bool,
+    }
+    column_formatters = _scholarship_formatters
+    column_formatters_detail = _scholarship_formatters
 
 
 class ScholarshipDeadlineAdmin(ModelView, model=ScholarshipDeadline):
@@ -291,6 +400,11 @@ class ScholarshipDeadlineAdmin(ModelView, model=ScholarshipDeadline):
         ScholarshipDeadline.date_utc,
         ScholarshipDeadline.intake_term,
     ]
+    column_labels = _labels(
+        scholarship="Grant", type="Muddat turi", date_utc="Sana (UTC)", intake_term="Qabul davri"
+    )
+    column_formatters = {ScholarshipDeadline.type: enum_label(_DEADLINE_LABELS)}
+    column_formatters_detail = {ScholarshipDeadline.type: enum_label(_DEADLINE_LABELS)}
 
 
 class UserAdmin(ModelView, model=User):
@@ -340,6 +454,28 @@ class UserAdmin(ModelView, model=User):
         User.age,
         User.target_countries,
     ]
+    column_labels = _labels(
+        telegram_id="Telegram ID",
+        username="Username",
+        ui_language="Til",
+        gpa_raw="GPA",
+        gpa_scale="GPA tizimi",
+        degree_level="Daraja",
+        major="Yo'nalish",
+        budget_max="Byudjet",
+        budget_currency="Valyuta",
+        age="Yosh",
+        target_countries="Maqsad davlatlar",
+        language_certificates="Til sertifikatlari",
+        other_tests="Boshqa testlar",
+        saved_programs="Saqlangan dasturlar",
+    )
+    _user_formatters = {
+        User.ui_language: enum_label(_UI_LANG_LABELS),
+        User.degree_level: enum_label(_DEGREE_LABELS),
+    }
+    column_formatters = _user_formatters
+    column_formatters_detail = _user_formatters
 
 
 class UserLanguageCertificateAdmin(ModelView, model=UserLanguageCertificate):
@@ -362,6 +498,10 @@ class UserLanguageCertificateAdmin(ModelView, model=UserLanguageCertificate):
         UserLanguageCertificate.score,
         UserLanguageCertificate.exam_date,
     ]
+    column_labels = _labels(
+        user="Foydalanuvchi", type="Sertifikat turi", score="Ball", exam_date="Imtihon sanasi"
+    )
+    column_formatters = {UserLanguageCertificate.type: enum_label(_CERT_LABELS)}
 
 
 class UserOtherTestAdmin(ModelView, model=UserOtherTest):
@@ -373,6 +513,9 @@ class UserOtherTestAdmin(ModelView, model=UserOtherTest):
 
     column_list = [UserOtherTest.id, UserOtherTest.user, UserOtherTest.type, UserOtherTest.score]
     form_columns = [UserOtherTest.user, UserOtherTest.type, UserOtherTest.score, UserOtherTest.exam_date]
+    column_labels = _labels(
+        user="Foydalanuvchi", type="Test turi", score="Ball", exam_date="Imtihon sanasi"
+    )
 
 
 class SavedProgramAdmin(ModelView, model=SavedProgram):
@@ -397,6 +540,18 @@ class SavedProgramAdmin(ModelView, model=SavedProgram):
         BooleanFilter(SavedProgram.reminders_active, title="Eslatmalar yoqilgan"),
     ]
     form_columns = [SavedProgram.status, SavedProgram.reminders_active]
+    column_labels = _labels(
+        user="Foydalanuvchi",
+        program="Dastur",
+        status="Ariza holati",
+        reminders_active="Eslatmalar yoqilgan",
+    )
+    _saved_formatters = {
+        SavedProgram.status: enum_label(_SAVED_STATUS_LABELS),
+        SavedProgram.reminders_active: format_bool,
+    }
+    column_formatters = _saved_formatters
+    column_formatters_detail = _saved_formatters
 
 
 class ReportAdmin(ModelView, model=Report):
@@ -422,3 +577,12 @@ class ReportAdmin(ModelView, model=Report):
         StaticValuesFilter(Report.status, values=_choices(_REPORT_STATUS_LABELS), title="Holat")
     ]
     form_columns = [Report.status]
+    column_labels = _labels(
+        program="Dastur",
+        scholarship="Grant",
+        user="Kim yubordi",
+        comment="Izoh",
+        status="Holat",
+    )
+    column_formatters = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
+    column_formatters_detail = {Report.status: enum_label(_REPORT_STATUS_LABELS)}

@@ -1,17 +1,22 @@
 {% extends "sqladmin/layout.html" %}
 
 {% block content %}
+{# SQLAdmin layout kontentni `row row-deck` ichiga joylaydi, u esa har bir
+   `col-*` ni display:flex qiladi. Shuning uchun ichkarida bitta to'liq
+   kenglikdagi konteyner bo'lishi kerak — aks holda bo'limlar yonma-yon tizilib
+   ketadi. #}
 <div class="col-12">
+<div class="ua-page">
 
   {# ---------- KPI kartalari ---------- #}
   <div class="row row-cards mb-3">
     {% set kpis = [
-      ("/admin/user/list", "accent", "fa-solid fa-users", total_users, "Foydalanuvchilar"),
-      ("/admin/program/list", "accent", "fa-solid fa-graduation-cap", total_programs, "Dasturlar"),
-      ("/admin/university/list", "accent", "fa-solid fa-building-columns", total_universities, "Universitetlar"),
-      ("/admin/scholarship/list", "green", "fa-solid fa-hand-holding-dollar", total_scholarships, "Grantlar"),
-      ("/admin/saved-program/list", "green", "fa-solid fa-bookmark", total_saved, "Saqlangan dasturlar"),
-      ("/admin/report/list", "red" if open_reports else "amber", "fa-solid fa-triangle-exclamation", open_reports, "Yangi signallar")
+      ("/admin/user/list", "accent", "fa-solid fa-users", total_users, "Foydalanuvchi"),
+      ("/admin/program/list", "accent", "fa-solid fa-graduation-cap", total_programs, "Dastur"),
+      ("/admin/university/list", "accent", "fa-solid fa-building-columns", total_universities, "Universitet"),
+      ("/admin/scholarship/list", "green", "fa-solid fa-hand-holding-dollar", total_scholarships, "Grant"),
+      ("/admin/saved-program/list", "green", "fa-solid fa-bookmark", total_saved, "Saqlangan"),
+      ("/admin/report/list", "red" if open_reports else "amber", "fa-solid fa-triangle-exclamation", open_reports, "Signal")
     ] %}
     {% for url, tone, icon, value, label in kpis %}
     <div class="col-6 col-lg-2">
@@ -141,6 +146,7 @@
     </div>
   </div>
 
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

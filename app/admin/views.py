@@ -1,14 +1,19 @@
 from sqladmin import ModelView
+from sqladmin.filters import BooleanFilter, StaticValuesFilter
 
 from app.admin.formatters import format_verified_at
 from app.db.models import (
     Country,
+    CoverageType,
     Deadline,
+    DegreeLevel,
     Program,
     ProgramCost,
     ProgramRequirement,
     Report,
+    ReportStatus,
     SavedProgram,
+    SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
     University,
@@ -16,6 +21,34 @@ from app.db.models import (
     UserLanguageCertificate,
     UserOtherTest,
 )
+
+# Enum ustunlar bazada `.value` sifatida saqlanadi (str_enum), shuning uchun
+# filtr qiymatlari ham aynan shu qiymatlar bo'lishi kerak.
+_DEGREE_LABELS = {
+    DegreeLevel.BACHELOR: "Bakalavr",
+    DegreeLevel.MASTER: "Magistratura",
+    DegreeLevel.PHD: "PhD",
+}
+_COVERAGE_LABELS = {
+    CoverageType.FULL: "To'liq",
+    CoverageType.PARTIAL: "Qisman",
+    CoverageType.CONTRACT_ONLY: "Faqat kontrakt",
+}
+_SAVED_STATUS_LABELS = {
+    SavedProgramStatus.PLANNING: "Rejalashtirilmoqda",
+    SavedProgramStatus.APPLIED: "Ariza berilgan",
+    SavedProgramStatus.REJECTED: "Rad etilgan",
+    SavedProgramStatus.ACCEPTED: "Qabul qilingan",
+}
+_REPORT_STATUS_LABELS = {
+    ReportStatus.NEW: "Yangi",
+    ReportStatus.REVIEWED: "Ko'rib chiqilgan",
+    ReportStatus.RESOLVED: "Hal qilingan",
+}
+
+
+def _choices(labels: dict) -> list[tuple[str, str]]:
+    return [(member.value, label) for member, label in labels.items()]
 
 CATALOG = "Katalog"
 GRANTS = "Grantlar"
@@ -88,7 +121,9 @@ class ProgramAdmin(ModelView, model=Program):
     ]
     column_searchable_list = [Program.name, Program.field_of_study]
     column_sortable_list = [Program.name, Program.verified_at]
-    column_filters = [Program.degree_level]
+    column_filters = [
+        StaticValuesFilter(Program.degree_level, values=_choices(_DEGREE_LABELS), title="Daraja")
+    ]
     form_columns = [
         Program.university,
         Program.name,
@@ -206,7 +241,12 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     ]
     column_searchable_list = [Scholarship.name]
     column_sortable_list = [Scholarship.name, Scholarship.verified_at]
-    column_filters = [Scholarship.coverage_type, Scholarship.citizenship_eligible]
+    column_filters = [
+        StaticValuesFilter(
+            Scholarship.coverage_type, values=_choices(_COVERAGE_LABELS), title="Qamrov"
+        ),
+        BooleanFilter(Scholarship.citizenship_eligible, title="O'zbekiston fuqarolari uchun"),
+    ]
     form_columns = [
         Scholarship.name,
         Scholarship.description,
@@ -350,7 +390,12 @@ class SavedProgramAdmin(ModelView, model=SavedProgram):
         SavedProgram.reminders_active,
         SavedProgram.created_at,
     ]
-    column_filters = [SavedProgram.status, SavedProgram.reminders_active]
+    column_filters = [
+        StaticValuesFilter(
+            SavedProgram.status, values=_choices(_SAVED_STATUS_LABELS), title="Holat"
+        ),
+        BooleanFilter(SavedProgram.reminders_active, title="Eslatmalar yoqilgan"),
+    ]
     form_columns = [SavedProgram.status, SavedProgram.reminders_active]
 
 
@@ -373,5 +418,7 @@ class ReportAdmin(ModelView, model=Report):
         Report.created_at,
     ]
     column_default_sort = [(Report.created_at, True)]
-    column_filters = [Report.status]
+    column_filters = [
+        StaticValuesFilter(Report.status, values=_choices(_REPORT_STATUS_LABELS), title="Holat")
+    ]
     form_columns = [Report.status]

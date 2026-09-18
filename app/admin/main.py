@@ -27,7 +27,9 @@ from app.db.session import engine
 from app.webapp.api import router as webapp_api_router
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
+ADMIN_STATIC_DIR = Path(__file__).parent / "static"
 WEBAPP_STATIC_DIR = Path(__file__).parent.parent / "webapp" / "static"
+
 
 class NoCacheStaticFiles(StaticFiles):
     """Telegram Mini App'lar statik fayllarni agressiv keshlaydi va yangilanish
@@ -44,6 +46,7 @@ app = FastAPI(title="Uni Assist")
 
 app.include_router(webapp_api_router, prefix="/api/webapp", tags=["webapp"])
 app.mount("/webapp", NoCacheStaticFiles(directory=str(WEBAPP_STATIC_DIR), html=True), name="webapp")
+app.mount("/admin-assets", NoCacheStaticFiles(directory=str(ADMIN_STATIC_DIR)), name="admin-assets")
 
 admin = Admin(
     app,
@@ -52,6 +55,8 @@ admin = Admin(
     authentication_backend=AdminAuth(secret_key=settings.admin_secret_key),
     templates_dir=str(TEMPLATES_DIR),
 )
+
+admin.add_base_view(StatsView)  # yon menyuda birinchi bo'lib turadi
 
 for view in (
     CountryAdmin,
@@ -69,8 +74,6 @@ for view in (
     ReportAdmin,
 ):
     admin.add_view(view)
-
-admin.add_base_view(StatsView)
 
 
 @app.get("/health")

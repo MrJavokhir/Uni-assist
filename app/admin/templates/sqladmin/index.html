@@ -1,0 +1,15 @@
+{# SQLAdmin'ning bo'sh bosh sahifasi o'rniga boshqaruv paneliga o'tkazamiz. #}
+{% extends "sqladmin/layout.html" %}
+
+{% block head_tail %}
+{{ super() }}
+<meta http-equiv="refresh" content="0; url=statistics">
+{% endblock %}
+
+{% block content %}
+<div class="col-12">
+  <div class="ua-empty">
+    Boshqaruv paneliga o'tilmoqda… <a href="statistics">Agar ochilmasa, shu yerni bosing</a>.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,277 @@
+/* Uni Assist admin — Tabler ustiga qo'yiladigan maxsus tema.
+   Mini App bilan bir xil brend ranglari (indigo → binafsha). */
+
+:root,
+body {
+  --ua-accent: #635bff;
+  --ua-accent-2: #9b5cf6;
+  --ua-accent-soft: rgba(99, 91, 255, 0.1);
+  --ua-green: #16a34a;
+  --ua-amber: #d97706;
+  --ua-red: #dc2626;
+
+  --tblr-primary: #635bff;
+  --tblr-primary-rgb: 99, 91, 255;
+  --tblr-link-color: #635bff;
+  --tblr-link-hover-color: #4f46e5;
+  --tblr-border-radius: 12px;
+  --tblr-font-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background: #f6f7fb;
+  font-feature-settings: "cv02", "cv03", "cv04";
+}
+
+/* ---------- Sidebar ---------- */
+
+.navbar-vertical.navbar-dark {
+  background: linear-gradient(180deg, #171735 0%, #10102a 100%);
+  border-right: none;
+  box-shadow: 2px 0 20px rgba(16, 16, 42, 0.12);
+}
+
+.navbar-vertical .navbar-brand h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: 1.05rem;
+  background: linear-gradient(120deg, #ffffff, #c3bdff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.navbar-vertical .nav-link {
+  border-radius: 10px;
+  margin: 1px 8px;
+  padding: 8px 12px !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.navbar-vertical .nav-link:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff !important;
+}
+
+.navbar-vertical .nav-link.active,
+.navbar-vertical .nav-item.active > .nav-link {
+  background: linear-gradient(120deg, var(--ua-accent), var(--ua-accent-2));
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(99, 91, 255, 0.35);
+}
+
+.navbar-vertical .nav-link-icon {
+  opacity: 0.9;
+  width: 1.4rem;
+}
+
+/* ---------- Page header ---------- */
+
+.page-title {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #16162e;
+}
+
+.page-pretitle {
+  color: #7b7f95;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- Cards & tables ---------- */
+
+.card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(16, 20, 40, 0.05), 0 8px 24px rgba(16, 20, 40, 0.05);
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(120, 124, 148, 0.13);
+  padding: 14px 18px;
+}
+
+.card-title {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  font-size: 0.95rem;
+}
+
+.table thead th {
+  background: #fafaff;
+  color: #6b7089;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(120, 124, 148, 0.16);
+  white-space: nowrap;
+}
+
+.table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--ua-accent-soft) !important;
+}
+
+.table td {
+  vertical-align: middle;
+  border-color: rgba(120, 124, 148, 0.1);
+}
+
+/* Row click affordance on list pages */
+.table tbody tr[data-ua-href] {
+  cursor: pointer;
+}
+
+/* ---------- Buttons & badges ---------- */
+
+.btn {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: linear-gradient(120deg, var(--ua-accent), var(--ua-accent-2));
+  border: none;
+  box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(120deg, #574fe8, #8b4ce6);
+}
+
+.badge {
+  border-radius: 999px;
+  font-weight: 700;
+  padding: 0.32em 0.7em;
+}
+
+/* ---------- Forms ---------- */
+
+.form-control,
+.form-select {
+  border-radius: 10px;
+  border-color: rgba(120, 124, 148, 0.25);
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--ua-accent);
+  box-shadow: 0 0 0 3px var(--ua-accent-soft);
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: #545a75;
+}
+
+/* ---------- Dashboard widgets ---------- */
+
+.ua-kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+.ua-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  flex-shrink: 0;
+  font-size: 19px;
+}
+
+.ua-kpi-icon.accent { background: var(--ua-accent-soft); color: var(--ua-accent); }
+.ua-kpi-icon.green { background: rgba(22, 163, 74, 0.12); color: var(--ua-green); }
+.ua-kpi-icon.amber { background: rgba(217, 119, 6, 0.13); color: var(--ua-amber); }
+.ua-kpi-icon.red { background: rgba(220, 38, 38, 0.12); color: var(--ua-red); }
+
+.ua-kpi-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #16162e;
+}
+
+.ua-kpi-label {
+  font-size: 0.78rem;
+  color: #7b7f95;
+  font-weight: 500;
+}
+
+.ua-kpi-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+  transition: transform 0.14s ease;
+}
+
+.ua-kpi-link:hover {
+  transform: translateY(-2px);
+  color: inherit;
+}
+
+.ua-chart-wrap {
+  position: relative;
+  height: 260px;
+  padding: 8px 4px 0;
+}
+
+.ua-empty {
+  text-align: center;
+  padding: 34px 16px;
+  color: #8b8fa3;
+  font-size: 0.87rem;
+}
+
+.ua-stale {
+  color: var(--ua-red);
+  font-weight: 700;
+}
+
+.ua-fresh {
+  color: var(--ua-green);
+  font-weight: 600;
+}
+
+.ua-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Fade-in for page content */
+.page-body {
+  animation: ua-fade 0.25s ease;
+}
+
+@keyframes ua-fade {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 768px) {
+  .ua-kpi-value { font-size: 1.35rem; }
+  .ua-chart-wrap { height: 220px; }
+}

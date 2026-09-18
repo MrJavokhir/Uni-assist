@@ -1,63 +1,211 @@
 {% extends "sqladmin/layout.html" %}
+
 {% block content %}
 <div class="col-12">
-  <div class="row row-deck row-cards mb-3">
-    <div class="col-sm-6 col-lg-4">
-      <div class="card">
+
+  {# ---------- KPI kartalari ---------- #}
+  <div class="row row-cards mb-3">
+    {% set kpis = [
+      ("/admin/user/list", "accent", "fa-solid fa-users", total_users, "Foydalanuvchilar"),
+      ("/admin/program/list", "accent", "fa-solid fa-graduation-cap", total_programs, "Dasturlar"),
+      ("/admin/university/list", "accent", "fa-solid fa-building-columns", total_universities, "Universitetlar"),
+      ("/admin/scholarship/list", "green", "fa-solid fa-hand-holding-dollar", total_scholarships, "Grantlar"),
+      ("/admin/saved-program/list", "green", "fa-solid fa-bookmark", total_saved, "Saqlangan dasturlar"),
+      ("/admin/report/list", "red" if open_reports else "amber", "fa-solid fa-triangle-exclamation", open_reports, "Yangi signallar")
+    ] %}
+    {% for url, tone, icon, value, label in kpis %}
+    <div class="col-6 col-lg-2">
+      <a class="ua-kpi-link" href="{{ url }}">
+        <div class="card h-100">
+          <div class="ua-kpi">
+            <div class="ua-kpi-icon {{ tone }}"><i class="{{ icon }}"></i></div>
+            <div>
+              <div class="ua-kpi-value">{{ value }}</div>
+              <div class="ua-kpi-label">{{ label }}</div>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ---------- Ma'lumot sifati ogohlantirishi ---------- #}
+  {% if stale_total %}
+  <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+    <i class="fa-solid fa-clock-rotate-left me-3 fs-3"></i>
+    <div>
+      <strong>{{ stale_total }} ta yozuv {{ stale_days }} kundan beri tekshirilmagan.</strong>
+      <div class="text-muted small">Eskirgan ma'lumot foydalanuvchini noto'g'ri qarorga olib kelishi mumkin — quyidagi ro'yxatdan yangilang.</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ---------- Grafiklar ---------- #}
+  <div class="row row-cards mb-3">
+    <div class="col-12 col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Yangi foydalanuvchilar (so'nggi 14 kun)</h3>
+        </div>
         <div class="card-body">
-          <div class="text-muted">Jami foydalanuvchilar</div>
-          <div class="h1 mb-0">{{ total_users }}</div>
+          <div class="ua-chart-wrap"><canvas id="chart-signups"></canvas></div>
         </div>
       </div>
     </div>
-    <div class="col-sm-6 col-lg-4">
-      <div class="card">
-        <div class="card-body">
-          <div class="text-muted">Saqlangan dasturlar</div>
-          <div class="h1 mb-0">{{ total_saved }}</div>
+    <div class="col-12 col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Dasturlar davlatlar bo'yicha</h3>
         </div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-      <div class="card">
         <div class="card-body">
-          <div class="text-muted">Ko'rib chiqilmagan signallar</div>
-          <div class="h1 mb-0">{{ open_reports }}</div>
+          {% if country_labels %}
+          <div class="ua-chart-wrap"><canvas id="chart-countries"></canvas></div>
+          {% else %}
+          <div class="ua-empty">Hali dastur kiritilmagan.</div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h3 class="card-title">Foydalanuvchilar eng ko'p tanlagan davlatlar</h3>
+  {# ---------- Jadvallar ---------- #}
+  <div class="row row-cards">
+    <div class="col-12 col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Tekshiruv talab qiladigan yozuvlar</h3>
+        </div>
+        {% if stale_records %}
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <thead>
+              <tr>
+                <th>Tur</th>
+                <th>Nomi</th>
+                <th>Oxirgi tekshiruv</th>
+                <th>Kim</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for record in stale_records %}
+              <tr>
+                <td><span class="badge bg-secondary-lt">{{ record.kind }}</span></td>
+                <td>{{ record.name }}</td>
+                <td class="ua-stale">{{ record.verified_at.strftime('%Y-%m-%d') }} · {{ record.days_old }} kun</td>
+                <td class="text-muted">{{ record.verified_by }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-primary" href="{{ record.edit_url }}">Yangilash</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="ua-empty">
+          <i class="fa-solid fa-circle-check fs-2 d-block mb-2 ua-fresh"></i>
+          Barcha yozuvlar so'nggi {{ stale_days }} kun ichida tekshirilgan.
+        </div>
+        {% endif %}
+      </div>
     </div>
-    <div class="card-body text-muted pb-0">
-      Hozircha foydalanuvchi profilidagi "maqsad davlatlar" bo'yicha hisoblanadi.
-      Botda qidiruv jurnali paydo bo'lgach (2-bosqich), bu haqiqiy qidiruv statistikasiga almashtiriladi.
-    </div>
-    <div class="table-responsive">
-      <table class="table table-vcenter card-table">
-        <thead>
-          <tr>
-            <th>Davlat</th>
-            <th>Foydalanuvchilar soni</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for name, count in country_rows %}
-          <tr>
-            <td>{{ name }}</td>
-            <td>{{ count }}</td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="2" class="text-muted">Hali ma'lumot yo'q</td>
-          </tr>
+
+    <div class="col-12 col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Foydalanuvchi signallari</h3>
+          <div class="card-actions"><a href="/admin/report/list" class="text-muted small">Barchasi</a></div>
+        </div>
+        {% if recent_reports %}
+        <div class="list-group list-group-flush">
+          {% for report in recent_reports %}
+          <a class="list-group-item list-group-item-action" href="/admin/report/edit/{{ report.id }}">
+            <div class="d-flex align-items-start">
+              <span class="ua-dot" style="background: var(--ua-red)"></span>
+              <div class="flex-fill">
+                <div class="fw-bold">{{ report.program_name or report.scholarship_name or "Noma'lum obyekt" }}</div>
+                <div class="text-muted small">{{ report.comment or "Izohsiz" }}</div>
+                <div class="text-muted small mt-1">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+              </div>
+            </div>
+          </a>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+        {% else %}
+        <div class="ua-empty">
+          <i class="fa-solid fa-circle-check fs-2 d-block mb-2 ua-fresh"></i>
+          Yangi signal yo'q.
+        </div>
+        {% endif %}
+      </div>
     </div>
   </div>
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    if (typeof Chart === "undefined") return;
+    Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    Chart.defaults.color = "#7b7f95";
+
+    var signupCanvas = document.getElementById("chart-signups");
+    if (signupCanvas) {
+      var ctx = signupCanvas.getContext("2d");
+      var fill = ctx.createLinearGradient(0, 0, 0, 240);
+      fill.addColorStop(0, "rgba(99, 91, 255, 0.35)");
+      fill.addColorStop(1, "rgba(99, 91, 255, 0)");
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: {{ chart_labels | tojson }},
+          datasets: [{
+            data: {{ chart_values | tojson }},
+            borderColor: "#635bff",
+            backgroundColor: fill,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointRadius: 3,
+            pointBackgroundColor: "#635bff",
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(120,124,148,0.12)" } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    var countryCanvas = document.getElementById("chart-countries");
+    if (countryCanvas) {
+      new Chart(countryCanvas, {
+        type: "doughnut",
+        data: {
+          labels: {{ country_labels | tojson }},
+          datasets: [{
+            data: {{ country_values | tojson }},
+            backgroundColor: ["#635bff", "#9b5cf6", "#22a565", "#e8912a", "#e5484d", "#0ea5e9", "#f43f5e"],
+            borderWidth: 0,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "62%",
+          plugins: { legend: { position: "bottom", labels: { boxWidth: 10, usePointStyle: true, pointStyle: "circle" } } }
+        }
+      });
+    }
+  })();
+</script>
 {% endblock %}

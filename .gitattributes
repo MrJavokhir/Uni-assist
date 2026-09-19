@@ -1,0 +1,6 @@
+# Linux konteynerda ishlaydigan fayllar HAR DOIM LF bilan saqlanadi.
+# Windows'dan commit qilinganda CRLF kirib qolsa, Docker build'da bash
+# `\r` belgisidan yiqiladi ("bad interpreter") va deploy buziladi.
+*.sh text eol=lf
+Dockerfile* text eol=lf
+docker-entrypoint-* text eol=lf

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -43,6 +43,12 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
 
     if user.degree_level is not None:
         stmt = stmt.where(Program.degree_level == user.degree_level)
+
+    # Yo'nalish profilda katalogdagi qiymatlardan tanlanadi, shuning uchun
+    # qat'iy (registrga sezgir bo'lmagan) tenglik xavfsiz. Ilgari `major`
+    # saqlanardi-yu, moslik qidiruvida umuman ishlatilmasdi.
+    if user.major:
+        stmt = stmt.where(func.lower(Program.field_of_study) == user.major.strip().lower())
 
     result = await session.execute(stmt)
     programs = result.unique().scalars().all()

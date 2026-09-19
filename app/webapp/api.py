@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from sqlalchemy import select
+from sqlalchemy import distinct, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -173,6 +173,26 @@ async def list_countries(session: AsyncSession = Depends(get_session)) -> list[C
     ]
 
 
+@router.get("/majors", response_model=list[str])
+async def list_majors(
+    degree_level: str | None = None,
+    session: AsyncSession = Depends(get_session),
+) -> list[str]:
+    """Katalogda mavjud yo'nalishlar ro'yxati.
+
+    Profilda foydalanuvchi yo'nalishni qo'lda yozmaydi — shu ro'yxatdan
+    tanlaydi. Aks holda "Kompyuter injiniringi" kabi erkin matn hech qaysi
+    dasturga to'g'ri kelmay, moslik qidiruvi bo'sh natija berardi.
+    """
+    stmt = select(distinct(Program.field_of_study)).order_by(Program.field_of_study)
+    if degree_level:
+        try:
+            stmt = stmt.where(Program.degree_level == DegreeLevel(degree_level))
+        except ValueError:
+            pass
+    return list((await session.execute(stmt)).scalars().all())
+
+
 @router.get("/scholarships", response_model=list[ScholarshipOut])
 async def list_scholarships(
     country_id: int | None = None,
@@ -220,7 +240,16 @@ async def list_scholarships(
                 extras_dormitory=scholarship.extras_dormitory,
                 extras_language_course=scholarship.extras_language_course,
                 citizenship_eligible=scholarship.citizenship_eligible,
-                countries=[c.name_uz for c in scholarship.countries],
+                countries=[
+                    CountryOut(
+                        id=c.id,
+                        name_uz=c.name_uz,
+                        name_ru=c.name_ru,
+                        name_en=c.name_en,
+                        iso_code=c.iso_code,
+                    )
+                    for c in scholarship.countries
+                ],
                 age_limit=scholarship.age_limit,
                 university_choice=scholarship.university_choice.value,
                 application_linked_to_program=scholarship.application_linked_to_program,

@@ -97,7 +97,9 @@ class ScholarshipOut(BaseModel):
     extras_dormitory: bool
     extras_language_course: bool
     citizenship_eligible: bool
-    countries: list[str]
+    # To'liq obyekt (faqat nom emas): Mini App bayroq chiqarishi uchun
+    # iso_code, foydalanuvchi tilida ko'rsatishi uchun esa uchala nom kerak.
+    countries: list[CountryOut]
     age_limit: int | None
     university_choice: str
     application_linked_to_program: bool

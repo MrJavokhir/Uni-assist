@@ -860,3 +860,114 @@ body {
   vertical-align: middle;
   letter-spacing: 0.02em;
 }
+
+/* ============ Yo'nalish tanlagich ============ */
+
+.select-input {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 38px 12px 14px;
+  /* O'ng tomondagi ochiluvchi ko'rsatkich (data: URI — tashqi so'rovsiz) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.select-input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--hint);
+}
+
+/* ============ Davlatlar ro'yxati (bayroq bilan) ============ */
+
+.country-list {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.country-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 11px 13px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+.country-row + .country-row { border-top: 1px solid var(--separator); }
+.country-row:active { background: var(--accent-soft); }
+.country-row.active { background: var(--accent-soft); font-weight: 600; }
+
+/* Windows'da bayroq emojilari (regional indicator) umuman chizilmaydi —
+   o'rniga "US", "GB" kabi ikkita harf ko'rinadi. Shuning uchun bu quticha
+   ikkala holatda ham tartibli ko'rinadigan qilib o'lchamlanadi. */
+.country-flag {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  flex: none;
+  font-size: 21px;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.country-name { flex: 1; min-width: 0; }
+
+.country-check {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  flex: none;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.country-check .ico { width: 13px; height: 13px; }
+.country-row.active .country-check { opacity: 1; transform: none; }
+
+/* ============ Bir qatorli filtr lentasi ============ */
+
+.filter-scroll {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-scroll::-webkit-scrollbar { display: none; }
+.filter-scroll .chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.chip-flag { font-size: 15px; line-height: 1; }
+.pill .chip-flag { font-size: 13px; }

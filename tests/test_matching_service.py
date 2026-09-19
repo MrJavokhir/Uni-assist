@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import (
@@ -25,25 +26,39 @@ async def _make_program(
     session: AsyncSession,
     *,
     country_name: str = "Turkiya",
+    field_of_study: str = "Computer Science",
     gpa_min: float | None = 70,
     gpa_scale: GpaScale | None = GpaScale.SCALE_100,
     ielts_min: float | None = 6.0,
     age_limit: int | None = None,
     deadline_close: datetime | None = None,
 ) -> Program:
-    country = Country(name_uz=country_name, name_ru=country_name, name_en=country_name, iso_code="TR")
-    session.add(country)
-    await session.flush()
+    # `iso_code` unikal — bir testda bir nechta dastur yaratilganda davlat
+    # qayta ishlatiladi, aks holda unikal cheklov buziladi.
+    country = (
+        await session.execute(select(Country).where(Country.name_uz == country_name))
+    ).scalar_one_or_none()
+    if country is None:
+        country = Country(
+            name_uz=country_name,
+            name_ru=country_name,
+            name_en=country_name,
+            iso_code=country_name[:2].upper(),
+        )
+        session.add(country)
+        await session.flush()
 
-    university = University(country_id=country.id, name="Test University", city="Istanbul", timezone="UTC")
+    university = University(
+        country_id=country.id, name=f"{country_name} University", city="Istanbul", timezone="UTC"
+    )
     session.add(university)
     await session.flush()
 
     program = Program(
         university_id=university.id,
-        name="Computer Science",
+        name=field_of_study,
         degree_level=DegreeLevel.BACHELOR,
-        field_of_study="Computer Science",
+        field_of_study=field_of_study,
         language_of_instruction="English",
         duration_years=4,
         intake_term="2026 Fall",
@@ -177,3 +192,43 @@ async def test_country_filter_excludes_other_countries(session: AsyncSession):
 
     assert len(results) == 1
     assert results[0].program.id == program_tr.id
+
+
+async def test_major_filter_excludes_other_fields(session: AsyncSession):
+    """Profildagi yo'nalish endi qidiruvni chegaralaydi.
+
+    Ilgari `major` saqlanardi-yu, `find_matches` uni umuman hisobga olmasdi —
+    foydalanuvchi "Engineering" tanlasa ham unga barcha yo'nalishlar chiqardi.
+    """
+    cs = await _make_program(session, field_of_study="Computer Science")
+    await _make_program(session, country_name="Polsha", field_of_study="Engineering")
+
+    user = await _make_user(session)
+    user.major = "Computer Science"
+    await session.commit()
+
+    results = await find_matches(session, user)
+
+    assert [r.program.id for r in results] == [cs.id]
+
+
+async def test_major_filter_is_case_insensitive(session: AsyncSession):
+    cs = await _make_program(session, field_of_study="Computer Science")
+
+    user = await _make_user(session)
+    user.major = "  computer science  "
+    await session.commit()
+
+    results = await find_matches(session, user)
+
+    assert [r.program.id for r in results] == [cs.id]
+
+
+async def test_no_major_means_no_field_filter(session: AsyncSession):
+    await _make_program(session, field_of_study="Computer Science")
+    await _make_program(session, country_name="Polsha", field_of_study="Engineering")
+
+    user = await _make_user(session)
+    await session.commit()
+
+    assert len(await find_matches(session, user)) == 2

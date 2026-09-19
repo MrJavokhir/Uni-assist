@@ -249,6 +249,7 @@ class UniversityWizard(BaseView):
             "university_name": university.name,
             "city": university.city,
             "website": university.website or "",
+            "logo_url": university.logo_url or "",
             "timezone": university.timezone,
             "programs": programs,
         }
@@ -283,6 +284,7 @@ class UniversityWizard(BaseView):
         university.country_id = country_id
         university.city = _text(form, "city") or "—"
         university.website = _text(form, "website")
+        university.logo_url = _text(form, "logo_url")
         university.timezone = _text(form, "timezone") or "UTC"
         if existing is None:
             session.add(university)

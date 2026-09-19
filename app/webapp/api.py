@@ -35,6 +35,10 @@ from app.webapp.schemas import (
     MatchProgramOut,
     ProfileIn,
     ProfileOut,
+    ProgramCostOut,
+    ProgramDeadlineOut,
+    ProgramDetailOut,
+    ProgramRequirementOut,
     SavedOut,
     SavedStatusIn,
     ScholarshipDeadlineOut,
@@ -42,6 +46,34 @@ from app.webapp.schemas import (
 )
 
 router = APIRouter()
+
+
+def _country_out(country: Country) -> CountryOut:
+    return CountryOut(
+        id=country.id,
+        name_uz=country.name_uz,
+        name_ru=country.name_ru,
+        name_en=country.name_en,
+        iso_code=country.iso_code,
+    )
+
+
+def _logo_url(university: University) -> str | None:
+    """Universitet logotipi.
+
+    Admin `logo_url` kiritgan bo'lsa — o'sha. Bo'lmasa rasmiy sayt domenidan
+    Google favicon xizmati orqali avtomatik olinadi: shunda 78 ta universitet
+    uchun ham qo'lda rasm yuklash shart emas. Rasm yuklanmasa Mini App
+    universitet nomining bosh harflarini chizadi.
+    """
+    if university.logo_url:
+        return university.logo_url
+    if not university.website:
+        return None
+    domain = university.website.split("//")[-1].split("/")[0].strip()
+    if not domain:
+        return None
+    return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
 
 
 async def get_current_user(
@@ -133,6 +165,32 @@ async def update_me(
     return await get_me(user)
 
 
+@router.post("/me/reset", response_model=ProfileOut)
+async def reset_me(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ProfileOut:
+    """Profilni tozalaydi — saqlangan dasturlarga tegmaydi.
+
+    Interfeys tili ham saqlanib qoladi: uni tozalash foydalanuvchini birdan
+    boshqa tilga o'tkazib yuborardi.
+    """
+    user.degree_level = None
+    user.major = None
+    user.gpa_raw = None
+    user.gpa_scale = None
+    user.budget_max = None
+    user.age = None
+
+    for certificate in list(user.language_certificates):
+        await session.delete(certificate)
+    await session.commit()
+
+    await set_target_countries(session, user, [])
+    await session.refresh(user, attribute_names=["target_countries", "language_certificates"])
+    return await get_me(user)
+
+
 @router.get("/gpa/convert", response_model=GpaConvertOut)
 async def gpa_convert(value: float, scale: str) -> GpaConvertOut:
     try:
@@ -179,6 +237,93 @@ async def list_majors(
         except ValueError:
             pass
     return list((await session.execute(stmt)).scalars().all())
+
+
+@router.get("/programs/{program_id}", response_model=ProgramDetailOut)
+async def get_program(
+    program_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ProgramDetailOut:
+    """Dastur kartasi bosilganda ochiladigan to'liq ma'lumot."""
+    program = (
+        await session.execute(
+            select(Program)
+            .options(
+                selectinload(Program.university).selectinload(University.country),
+                selectinload(Program.requirement),
+                selectinload(Program.cost),
+                selectinload(Program.deadlines),
+            )
+            .where(Program.id == program_id)
+        )
+    ).scalar_one_or_none()
+    if program is None:
+        raise HTTPException(status_code=404, detail="Dastur topilmadi")
+
+    now = datetime.now(UTC)
+    requirement = program.requirement
+    cost = program.cost
+
+    return ProgramDetailOut(
+        id=program.id,
+        name=program.name,
+        abbreviation=program.abbreviation,
+        university=program.university.name,
+        university_website=program.university.website,
+        university_logo=_logo_url(program.university),
+        city=program.university.city,
+        country=_country_out(program.university.country),
+        degree_level=program.degree_level.value,
+        field_of_study=program.field_of_study,
+        language_of_instruction=program.language_of_instruction,
+        duration_years=float(program.duration_years),
+        intake_term=program.intake_term,
+        notes=program.notes,
+        requirement=(
+            ProgramRequirementOut(
+                gpa_min=float(requirement.gpa_min) if requirement.gpa_min is not None else None,
+                gpa_scale=requirement.gpa_scale.value if requirement.gpa_scale else None,
+                ielts_min=float(requirement.ielts_min)
+                if requirement.ielts_min is not None
+                else None,
+                toefl_min=requirement.toefl_min,
+                gre_required=requirement.gre_required,
+                gre_min=requirement.gre_min,
+                prereq_major=requirement.prereq_major,
+                age_limit=requirement.age_limit,
+            )
+            if requirement
+            else None
+        ),
+        cost=(
+            ProgramCostOut(
+                tuition_amount=float(cost.tuition_amount),
+                currency=cost.currency,
+                visa_proof_amount=float(cost.visa_proof_amount)
+                if cost.visa_proof_amount is not None
+                else None,
+                living_cost_monthly=float(cost.living_cost_monthly)
+                if cost.living_cost_monthly is not None
+                else None,
+                last_checked=cost.last_checked.isoformat(),
+            )
+            if cost
+            else None
+        ),
+        deadlines=[
+            ProgramDeadlineOut(
+                type=d.type.value,
+                date=format_tashkent(d.date_utc),
+                days_left=(d.date_utc.date() - now.date()).days,
+                intake_term=d.intake_term,
+            )
+            for d in sorted(program.deadlines, key=lambda d: d.date_utc)
+        ],
+        source_url=program.source_url,
+        verified_at=program.verified_at.date().isoformat(),
+        saved=any(sp.program_id == program.id for sp in user.saved_programs),
+    )
 
 
 @router.get("/scholarships", response_model=list[ScholarshipOut])
@@ -278,7 +423,8 @@ async def get_matches(
                 name=program.name,
                 abbreviation=program.abbreviation,
                 university=program.university.name,
-                country=program.university.country.name_uz,
+                university_logo=_logo_url(program.university),
+                country=_country_out(program.university.country),
                 degree_level=program.degree_level.value,
                 level=result.level.value,
                 missing=result.missing,
@@ -346,7 +492,8 @@ async def list_saved(
                 program_id=program.id,
                 program_name=program.name,
                 university=program.university.name,
-                country=program.university.country.name_uz,
+                university_logo=_logo_url(program.university),
+                country=_country_out(program.university.country),
                 status=saved.status.value,
                 reminders_active=saved.reminders_active,
                 nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,

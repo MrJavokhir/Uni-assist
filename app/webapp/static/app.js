@@ -107,6 +107,10 @@ const I18N = {
     "profile.lang_cert_none": "Yo'q",
     "profile.lang_cert_score": "Ball",
     "profile.countries": "Maqsad davlatlar",
+    "profile.countries_all": "Barchasi",
+    "profile.reset": "Hammasini tozalash",
+    "profile.reset_confirm": "Profildagi barcha tanlovlar o'chiriladi. Saqlangan dasturlarga tegilmaydi. Davom etamizmi?",
+    "profile.reset_toast": "Profil tozalandi",
     "profile.budget": "Yillik byudjet (USD)",
     "profile.age": "Yosh",
     "profile.save": "Saqlash",
@@ -120,6 +124,30 @@ const I18N = {
     "match.green": "Mos",
     "match.yellow": "Yaqin",
     "match.saved_toast": "Dastur saqlandi",
+    "match.details": "Batafsil",
+
+    "program.about": "Dastur haqida",
+    "program.field": "Yo'nalish",
+    "program.language": "O'qitish tili",
+    "program.intake": "Qabul davri",
+    "program.years": "yil",
+    "program.requirements": "Talablar",
+    "program.gpa_min": "Min. GPA",
+    "program.ielts_min": "Min. IELTS",
+    "program.toefl_min": "Min. TOEFL",
+    "program.gre": "GRE",
+    "program.age_limit": "Yosh chegarasi",
+    "program.prereq": "Oldingi ta'lim",
+    "program.no_requirements": "Talablar kiritilmagan.",
+    "program.costs": "Xarajatlar",
+    "program.tuition": "Kontrakt (yiliga)",
+    "program.visa_proof": "Viza uchun isbot",
+    "program.living": "Yashash (oyiga)",
+    "program.no_costs": "Xarajatlar kiritilmagan.",
+    "program.cost_disclaimer": "Taxminiy raqamlar, oxirgi tekshiruv: {date}. Aniq summani universitet saytidan tasdiqlang.",
+    "program.no_deadlines": "Muddatlar kiritilmagan.",
+    "program.official_page": "Dastur sahifasiga o'tish",
+    "program.verified_at": "Ma'lumot {date} sanasida tekshirilgan.",
 
     "scholarships.empty_title": "Grant topilmadi",
     "scholarships.empty_text": "Hozircha bazada davlat stipendiyalari yo'q yoki tanlangan davlat bo'yicha topilmadi.",
@@ -210,6 +238,10 @@ const I18N = {
     "profile.lang_cert_none": "Нет",
     "profile.lang_cert_score": "Балл",
     "profile.countries": "Целевые страны",
+    "profile.countries_all": "Все страны",
+    "profile.reset": "Очистить всё",
+    "profile.reset_confirm": "Все данные профиля будут удалены. Сохранённые программы не тронем. Продолжить?",
+    "profile.reset_toast": "Профиль очищен",
     "profile.budget": "Годовой бюджет (USD)",
     "profile.age": "Возраст",
     "profile.save": "Сохранить",
@@ -223,6 +255,30 @@ const I18N = {
     "match.green": "Подходит",
     "match.yellow": "Почти",
     "match.saved_toast": "Программа сохранена",
+    "match.details": "Подробнее",
+
+    "program.about": "О программе",
+    "program.field": "Направление",
+    "program.language": "Язык обучения",
+    "program.intake": "Период набора",
+    "program.years": "г.",
+    "program.requirements": "Требования",
+    "program.gpa_min": "Мин. GPA",
+    "program.ielts_min": "Мин. IELTS",
+    "program.toefl_min": "Мин. TOEFL",
+    "program.gre": "GRE",
+    "program.age_limit": "Возрастной предел",
+    "program.prereq": "Предыдущее образование",
+    "program.no_requirements": "Требования не указаны.",
+    "program.costs": "Расходы",
+    "program.tuition": "Контракт (в год)",
+    "program.visa_proof": "Подтверждение для визы",
+    "program.living": "Проживание (в месяц)",
+    "program.no_costs": "Расходы не указаны.",
+    "program.cost_disclaimer": "Приблизительные суммы, последняя проверка: {date}. Уточните на сайте университета.",
+    "program.no_deadlines": "Сроки не указаны.",
+    "program.official_page": "Открыть страницу программы",
+    "program.verified_at": "Данные проверены {date}.",
 
     "scholarships.empty_title": "Гранты не найдены",
     "scholarships.empty_text": "Пока в базе нет государственных стипендий или по выбранной стране ничего не найдено.",
@@ -313,6 +369,10 @@ const I18N = {
     "profile.lang_cert_none": "None",
     "profile.lang_cert_score": "Score",
     "profile.countries": "Target countries",
+    "profile.countries_all": "All countries",
+    "profile.reset": "Reset everything",
+    "profile.reset_confirm": "All profile choices will be cleared. Saved programs stay untouched. Continue?",
+    "profile.reset_toast": "Profile cleared",
     "profile.budget": "Annual budget (USD)",
     "profile.age": "Age",
     "profile.save": "Save",
@@ -326,6 +386,30 @@ const I18N = {
     "match.green": "Match",
     "match.yellow": "Close",
     "match.saved_toast": "Program saved",
+    "match.details": "Details",
+
+    "program.about": "About the program",
+    "program.field": "Field",
+    "program.language": "Language of instruction",
+    "program.intake": "Intake",
+    "program.years": "yr",
+    "program.requirements": "Requirements",
+    "program.gpa_min": "Min. GPA",
+    "program.ielts_min": "Min. IELTS",
+    "program.toefl_min": "Min. TOEFL",
+    "program.gre": "GRE",
+    "program.age_limit": "Age limit",
+    "program.prereq": "Prior degree",
+    "program.no_requirements": "No requirements recorded.",
+    "program.costs": "Costs",
+    "program.tuition": "Tuition (per year)",
+    "program.visa_proof": "Visa proof of funds",
+    "program.living": "Living (per month)",
+    "program.no_costs": "No costs recorded.",
+    "program.cost_disclaimer": "Approximate figures, last checked {date}. Confirm on the university site.",
+    "program.no_deadlines": "No deadlines recorded.",
+    "program.official_page": "Open program page",
+    "program.verified_at": "Data verified on {date}.",
 
     "scholarships.empty_title": "No grants found",
     "scholarships.empty_text": "There are no government scholarships in the database yet, or none for the selected country.",
@@ -585,8 +669,8 @@ async function renderMatch() {
         : "";
       return `
         <div class="card">
-          <div class="card-top">
-            <div class="avatar">${escapeHtml(initials(m.university))}</div>
+          <div class="card-top program-open" data-id="${m.id}" role="button" tabindex="0">
+            ${avatar(m.university, m.university_logo)}
             <div class="card-body">
               <div class="card-title">${escapeHtml(m.name)}${
                 m.abbreviation ? `<span class="abbr">${escapeHtml(m.abbreviation)}</span>` : ""
@@ -596,12 +680,18 @@ async function renderMatch() {
                 <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${
                   isGreen ? t("match.green") : t("match.yellow")
                 }</span>
-                <span class="pill">${icon("globe")}${escapeHtml(m.country)}</span>
+                <span class="pill"><span class="chip-flag">${flag(
+                  m.country.iso_code
+                )}</span>${escapeHtml(countryName(m.country))}</span>
                 ${missing}
               </div>
             </div>
+            <span class="card-chevron">${icon("chevron")}</span>
           </div>
           <div class="card-actions">
+            <button type="button" class="btn btn-soft program-open" data-id="${m.id}">
+              ${icon("search")}${t("match.details")}
+            </button>
             <button type="button" class="btn ${m.saved ? "btn-done" : "btn-soft"} save-btn" data-id="${m.id}" ${
               m.saved ? "disabled" : ""
             }>
@@ -623,6 +713,30 @@ async function renderMatch() {
       showToast(t("match.saved_toast"));
     });
   });
+
+  bindProgramOpeners(el);
+}
+
+function bindProgramOpeners(root) {
+  root.querySelectorAll(".program-open").forEach((node) => {
+    node.addEventListener("click", () => openProgramSheet(node.dataset.id));
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openProgramSheet(node.dataset.id);
+      }
+    });
+  });
+}
+
+function avatar(name, logoUrl) {
+  // Logotip yuklanmasa (domen favicon bermasa) `onerror` uni olib tashlaydi
+  // va ostidagi bosh harflar ko'rinadi.
+  const fallback = escapeHtml(initials(name));
+  if (!logoUrl) return `<div class="avatar">${fallback}</div>`;
+  return `<div class="avatar">${fallback}<img src="${escapeHtml(
+    logoUrl
+  )}" alt="" loading="lazy" onerror="this.remove()"></div>`;
 }
 
 // ============ Scholarships (davlat stipendiyalari) ============
@@ -741,6 +855,10 @@ function ensureSheet() {
   sheet.className = "sheet";
   document.body.append(backdrop, sheet);
   backdrop.addEventListener("click", closeSheet);
+  // Tepadagi "tutqich" yopish belgisiga o'xshaydi — uni bosganda ham yopilsin.
+  sheet.addEventListener("click", (event) => {
+    if (event.target.classList.contains("sheet-handle")) closeSheet();
+  });
   return backdrop;
 }
 
@@ -752,6 +870,162 @@ function closeSheet() {
     tg?.BackButton?.hide();
   } catch (e) {
     /* eski klientlar */
+  }
+}
+
+function showSheet(html, sheet) {
+  sheet.innerHTML = html;
+  document.querySelector(".sheet-backdrop").classList.add("open");
+  sheet.classList.add("open");
+  document.body.style.overflow = "hidden";
+  try {
+    if (tg?.BackButton) {
+      tg.BackButton.show();
+      tg.BackButton.onClick(closeSheet);
+    }
+  } catch (e) {
+    /* eski klientlar */
+  }
+}
+
+async function openProgramSheet(programId) {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+
+  showSheet(
+    `<div class="sheet-handle"></div>${skeletons(4)}`,
+    sheet
+  );
+
+  const p = await api(`/programs/${programId}`);
+
+  const row = (label, value) =>
+    `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
+  const dash = t("scholarships.not_specified");
+  const money = (amount, currency) =>
+    amount === null || amount === undefined
+      ? dash
+      : `${Number(amount).toLocaleString()} ${escapeHtml(currency)}`;
+
+  const req = p.requirement;
+  const requirements = req
+    ? row(t("program.gpa_min"), req.gpa_min !== null ? `${req.gpa_min}${
+        req.gpa_scale ? ` / ${req.gpa_scale}` : ""
+      }` : dash) +
+      row(t("program.ielts_min"), req.ielts_min !== null ? req.ielts_min : dash) +
+      row(t("program.toefl_min"), req.toefl_min !== null ? req.toefl_min : dash) +
+      row(
+        t("program.gre"),
+        req.gre_required
+          ? (req.gre_min !== null ? `${t("scholarships.yes")} (${req.gre_min})` : t("scholarships.yes"))
+          : t("scholarships.no")
+      ) +
+      row(t("program.age_limit"), req.age_limit !== null ? req.age_limit : dash) +
+      (req.prereq_major ? row(t("program.prereq"), escapeHtml(req.prereq_major)) : "")
+    : `<div class="sheet-empty">${t("program.no_requirements")}</div>`;
+
+  const cost = p.cost;
+  const costs = cost
+    ? row(t("program.tuition"), money(cost.tuition_amount, cost.currency)) +
+      row(t("program.visa_proof"), money(cost.visa_proof_amount, cost.currency)) +
+      row(t("program.living"), money(cost.living_cost_monthly, cost.currency)) +
+      `<div class="sheet-note">${t("program.cost_disclaimer", {
+        date: escapeHtml(cost.last_checked),
+      })}</div>`
+    : `<div class="sheet-empty">${t("program.no_costs")}</div>`;
+
+  const deadlines = p.deadlines.length
+    ? p.deadlines
+        .map((d) => {
+          const left =
+            d.days_left >= 0
+              ? t("scholarships.days_left", { days: d.days_left })
+              : t("scholarships.deadline_passed");
+          return row(
+            t("deadline." + d.type),
+            `${escapeHtml(d.date)} <span class="sheet-muted">· ${left}</span>`
+          );
+        })
+        .join("")
+    : `<div class="sheet-empty">${t("program.no_deadlines")}</div>`;
+
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      ${avatar(p.university, p.university_logo)}
+      <div>
+        <div class="sheet-title">${escapeHtml(p.name)}${
+          p.abbreviation ? `<span class="abbr">${escapeHtml(p.abbreviation)}</span>` : ""
+        }</div>
+        <div class="sheet-sub">${escapeHtml(p.university)} · ${escapeHtml(p.city)}</div>
+      </div>
+    </div>
+    <div class="meta-row">
+      <span class="pill"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
+        countryName(p.country)
+      )}</span>
+      <span class="pill">${icon("cap")}${t("profile.degree_level." + p.degree_level)}</span>
+      <span class="pill">${icon("clock")}${p.duration_years} ${t("program.years")}</span>
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("program.about")}</div>
+      ${row(t("program.field"), escapeHtml(p.field_of_study))}
+      ${row(t("program.language"), escapeHtml(p.language_of_instruction))}
+      ${row(t("program.intake"), escapeHtml(p.intake_term))}
+      ${p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : ""}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("program.requirements")}</div>
+      ${requirements}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("program.costs")}</div>
+      ${costs}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("scholarships.deadlines")}</div>
+      ${deadlines}
+    </div>
+
+    <div class="sheet-actions">
+      <button type="button" class="btn ${
+        p.saved ? "btn-done" : "btn-accent"
+      } btn-block" id="sheet-save" ${p.saved ? "disabled" : ""}>
+        ${p.saved ? icon("check") + t("match.saved") : icon("plus") + t("match.save")}
+      </button>
+      <button type="button" class="btn btn-soft btn-block" id="sheet-open-site">
+        ${t("program.official_page")}
+      </button>
+      <div class="sheet-note">${t("program.verified_at", { date: escapeHtml(p.verified_at) })}</div>
+    </div>
+  `,
+    sheet
+  );
+
+  document.getElementById("sheet-open-site").addEventListener("click", () => {
+    haptic("light");
+    const url = p.source_url || p.university_website;
+    if (tg && typeof tg.openLink === "function") tg.openLink(url);
+    else window.open(url, "_blank", "noopener");
+  });
+
+  const saveBtn = document.getElementById("sheet-save");
+  if (!p.saved) {
+    saveBtn.addEventListener("click", async () => {
+      haptic("light");
+      await api(`/saved/${p.id}`, { method: "POST" });
+      saveBtn.disabled = true;
+      saveBtn.className = "btn btn-done btn-block";
+      saveBtn.innerHTML = icon("check") + t("match.saved");
+      haptic("success");
+      showToast(t("match.saved_toast"));
+    });
   }
 }
 
@@ -897,13 +1171,16 @@ async function renderSaved() {
 
       return `
         <div class="card" data-saved-id="${s.id}">
-          <div class="card-top">
-            <div class="avatar">${escapeHtml(initials(s.university))}</div>
+          <div class="card-top program-open" data-id="${s.program_id}" role="button" tabindex="0">
+            ${avatar(s.university, s.university_logo)}
             <div class="card-body">
               <div class="card-title">${escapeHtml(s.program_name)}</div>
-              <div class="card-sub">${escapeHtml(s.university)}, ${escapeHtml(s.country)}</div>
+              <div class="card-sub">${escapeHtml(s.university)}, ${flag(
+                s.country.iso_code
+              )} ${escapeHtml(countryName(s.country))}</div>
               <div class="meta-row">${deadlinePill}</div>
             </div>
+            <span class="card-chevron">${icon("chevron")}</span>
           </div>
           <div class="seg" data-id="${s.id}">
             ${SAVED_STATUSES.map(
@@ -918,6 +1195,8 @@ async function renderSaved() {
         </div>`;
     })
     .join("");
+
+  bindProgramOpeners(el);
 
   el.querySelectorAll(".seg").forEach((seg) => {
     seg.querySelectorAll(".seg-item").forEach((item) => {
@@ -1037,6 +1316,11 @@ function renderProfile() {
       <div class="field">
         <label>${t("profile.countries")}</label>
         <div class="country-list" id="country-list">
+          <button type="button" class="country-row country-all" id="country-all">
+            <span class="country-flag">${icon("globe")}</span>
+            <span class="country-name">${escapeHtml(t("profile.countries_all"))}</span>
+            <span class="country-check">${icon("check")}</span>
+          </button>
           ${countries
             .map((c) => {
               const active = profile.target_country_ids.map(String).includes(String(c.id));
@@ -1061,6 +1345,9 @@ function renderProfile() {
     </div>
 
     <button type="button" class="btn btn-accent btn-block" id="save-profile-btn">${t("profile.save")}</button>
+    <button type="button" class="btn btn-danger-soft btn-block" id="reset-profile-btn">
+      ${icon("trash")}${t("profile.reset")}
+    </button>
   `;
 
   bindChips("gpa-scale-chips", updateGpaPreview);
@@ -1068,12 +1355,33 @@ function renderProfile() {
     document.getElementById("cert-score-field").hidden = !value;
   });
 
-  document.querySelectorAll("#country-list .country-row").forEach((row) => {
+  // Diqqat: "Barchasi" qatorida `data-value` yo'q — tanlangan davlatlarni
+  // yig'ishda u chetlab o'tilishi uchun hamma joyda `[data-value]` ishlatiladi.
+  const countryRows = () =>
+    Array.from(document.querySelectorAll("#country-list .country-row[data-value]"));
+  const allRow = document.getElementById("country-all");
+
+  const syncAllRow = () => {
+    const rows = countryRows();
+    allRow.classList.toggle("active", rows.length > 0 && rows.every((r) => r.classList.contains("active")));
+  };
+
+  countryRows().forEach((row) => {
     row.addEventListener("click", () => {
       haptic("light");
       row.classList.toggle("active");
+      syncAllRow();
     });
   });
+
+  allRow.addEventListener("click", () => {
+    haptic("light");
+    const turnOn = !allRow.classList.contains("active");
+    countryRows().forEach((r) => r.classList.toggle("active", turnOn));
+    allRow.classList.toggle("active", turnOn);
+  });
+
+  syncAllRow();
 
   // Daraja o'zgarsa, yo'nalishlar ro'yxati ham o'sha darajadagilarga
   // qisqaradi — aks holda bakalavrga faqat PhD'da bor yo'nalish ko'rinardi.
@@ -1095,6 +1403,7 @@ function renderProfile() {
 
   document.getElementById("gpa-value-input").addEventListener("input", updateGpaPreview);
   document.getElementById("save-profile-btn").addEventListener("click", saveProfile);
+  document.getElementById("reset-profile-btn").addEventListener("click", resetProfile);
 
   updateGpaPreview();
 }
@@ -1154,7 +1463,7 @@ async function updateGpaPreview() {
 
 async function saveProfile() {
   const selectedCountries = Array.from(
-    document.querySelectorAll("#country-list .country-row.active")
+    document.querySelectorAll("#country-list .country-row[data-value].active")
   ).map((row) => Number(row.dataset.value));
   const payload = { ui_language: lang, target_country_ids: selectedCountries };
 
@@ -1185,6 +1494,24 @@ async function saveProfile() {
   profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
   haptic("success");
   showToast(t("profile.saved_toast"));
+}
+
+async function resetProfile() {
+  haptic("warning");
+  // Telegram'ning o'z tasdiq oynasi; eski klientlarda `confirm` ishlaydi.
+  const confirmed = await new Promise((resolve) => {
+    if (tg && typeof tg.showConfirm === "function") tg.showConfirm(t("profile.reset_confirm"), resolve);
+    else resolve(window.confirm(t("profile.reset_confirm")));
+  });
+  if (!confirmed) return;
+
+  profile = await api("/me/reset", { method: "POST" });
+  // Yo'nalishlar ro'yxati darajaga bog'liq edi — daraja tozalangach uni
+  // to'liq ro'yxatga qaytaramiz.
+  await loadMajors(null);
+  renderProfile();
+  haptic("success");
+  showToast(t("profile.reset_toast"));
 }
 
 // ============ Navigation ============

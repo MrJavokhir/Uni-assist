@@ -685,6 +685,7 @@ body {
 .sheet.open { transform: none; }
 
 .sheet-handle {
+  cursor: pointer;
   width: 40px;
   height: 4px;
   border-radius: 999px;
@@ -877,3 +878,82 @@ body {
 
 /* Ilova tayyor bo'lmaguncha tab bosilmaydi (app.js `init` qo'yadi/oladi). */
 .tabbar[aria-busy="true"] { pointer-events: none; opacity: 0.55; }
+
+/* ============ Universitet logotipi ============ */
+
+.avatar { position: relative; overflow: hidden; }
+/* Rasm bosh harflar ustiga tushadi; yuklanmasa `onerror` uni olib tashlaydi
+   va ostidagi harflar ko'rinib qoladi. */
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  padding: 5px;
+}
+
+/* ============ Bosiladigan dastur kartasi ============ */
+
+.card-top.program-open { cursor: pointer; }
+.card-top.program-open:active { opacity: 0.75; }
+
+.card-chevron {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  flex: none;
+  color: var(--hint);
+}
+/* `#i-chevron` allaqachon o'ngga qaragan — burish shart emas. */
+.card-chevron .ico { width: 16px; height: 16px; }
+
+/* ============ Dastur tafsilot oynasi ============ */
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.sheet-head > div { min-width: 0; }
+
+.sheet-sub {
+  font-size: 13px;
+  color: var(--hint);
+  margin-top: 2px;
+}
+
+.sheet-empty {
+  padding: 10px 0;
+  font-size: 13.5px;
+  color: var(--hint);
+}
+
+.sheet-note {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--hint);
+}
+
+.sheet-muted { color: var(--hint); font-weight: 500; }
+
+.sheet-actions .btn + .btn { margin-top: 8px; }
+
+/* ============ Profilni tozalash ============ */
+
+.btn-danger-soft {
+  margin-top: 8px;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+/* "Barchasi" qatori qolganlaridan ajralib tursin */
+.country-row.country-all {
+  font-weight: 700;
+  border-bottom: 1px solid var(--separator);
+}
+.country-all .country-flag .ico { width: 19px; height: 19px; color: var(--hint); }
+.country-all.active .country-flag .ico { color: var(--accent); }

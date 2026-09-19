@@ -54,10 +54,62 @@ class MatchProgramOut(BaseModel):
     # shu bo'yicha taniydi.
     abbreviation: str | None = None
     university: str
-    country: str
+    university_logo: str | None = None
+    country: CountryOut
     degree_level: str
     level: str
     missing: list[str]
+    saved: bool
+
+
+class ProgramRequirementOut(BaseModel):
+    gpa_min: float | None
+    gpa_scale: str | None
+    ielts_min: float | None
+    toefl_min: int | None
+    gre_required: bool
+    gre_min: int | None
+    prereq_major: str | None
+    age_limit: int | None
+
+
+class ProgramCostOut(BaseModel):
+    tuition_amount: float
+    currency: str
+    visa_proof_amount: float | None
+    living_cost_monthly: float | None
+    last_checked: str
+
+
+class ProgramDeadlineOut(BaseModel):
+    type: str
+    date: str
+    days_left: int
+    intake_term: str
+
+
+class ProgramDetailOut(BaseModel):
+    """Dastur kartasi bosilganda ochiladigan to'liq ma'lumot."""
+
+    id: int
+    name: str
+    abbreviation: str | None
+    university: str
+    university_website: str | None
+    university_logo: str | None
+    city: str
+    country: CountryOut
+    degree_level: str
+    field_of_study: str
+    language_of_instruction: str
+    duration_years: float
+    intake_term: str
+    notes: str | None
+    requirement: ProgramRequirementOut | None
+    cost: ProgramCostOut | None
+    deadlines: list[ProgramDeadlineOut]
+    source_url: str
+    verified_at: str
     saved: bool
 
 
@@ -66,7 +118,8 @@ class SavedOut(BaseModel):
     program_id: int
     program_name: str
     university: str
-    country: str
+    university_logo: str | None = None
+    country: CountryOut
     status: str
     reminders_active: bool
     nearest_deadline: str | None

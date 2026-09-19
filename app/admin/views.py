@@ -142,13 +142,23 @@ class UniversityAdmin(ModelView, model=University):
         University.name,
         University.city,
         University.website,
+        University.logo_url,
         University.timezone,
     ]
+    form_args = {
+        "logo_url": {
+            "description": (
+                "Bo'sh qoldiring — logotip rasmiy sayt domenidan avtomatik olinadi. "
+                "Boshqa rasm kerak bo'lsagina to'g'ridan-to'g'ri havolasini kiriting."
+            )
+        }
+    }
     column_labels = _labels(
         name="Nomi",
         country="Davlat",
         city="Shahar",
         website="Veb-sayt",
+        logo_url="Logotip havolasi",
         timezone="Vaqt zonasi",
         programs="Dasturlar",
     )

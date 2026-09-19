@@ -18,6 +18,10 @@ class University(TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     website: Mapped[str] = mapped_column(String(500), nullable=True)
+    # Logotip havolasi. Bo'sh bo'lsa Mini App uni `website` domenidan
+    # avtomatik oladi (Google favicon xizmati), u ham bo'lmasa universitet
+    # nomining bosh harflarini chizadi.
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # Universitet joylashgan hudud vaqt zonasi (masalan "Europe/Berlin") —
     # deadline'larni foydalanuvchiga Toshkent vaqtida ko'rsatish uchun kerak.
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="UTC")

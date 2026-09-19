@@ -50,6 +50,12 @@
             <input type="url" name="website" class="form-control" placeholder="https://..."
                    value="{{ prefill.website if prefill else '' }}">
           </div>
+          <div class="col-md-4">
+            <label class="form-label">Logotip havolasi</label>
+            <input type="url" name="logo_url" class="form-control" placeholder="bo'sh qoldiring"
+                   value="{{ prefill.logo_url if prefill else '' }}">
+            <small class="form-hint">Bo'sh bo'lsa saytdan avtomatik olinadi.</small>
+          </div>
           <div class="col-md-3">
             <label class="form-label">Vaqt zonasi</label>
             <input type="text" name="timezone" class="form-control"

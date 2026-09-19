@@ -957,3 +957,19 @@ body {
 }
 .country-all .country-flag .ico { width: 19px; height: 19px; color: var(--hint); }
 .country-all.active .country-flag .ico { color: var(--accent); }
+
+/* Diplom qisqartmasi (MBA, LLM, B.Sc.) — dastur nomi yonida.
+   DIQQAT: bu blok ilgari obuna ekrani uslublari bilan birga tasodifan
+   o'chib ketgan edi (ikki belgi orasidagi hamma narsa kesilgan). */
+.abbr {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}

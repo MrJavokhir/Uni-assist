@@ -1,10 +1,15 @@
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject
+from aiogram import BaseMiddleware, Bot
+from aiogram.types import CallbackQuery, Message, TelegramObject
 
+from app.bot.keyboards import SUBSCRIPTION_CHECK_CALLBACK, subscription_keyboard
 from app.db.session import async_session_factory
+from app.i18n import t
+from app.services.redis_client import redis_client
+from app.services.subscription_service import missing_channels
+from app.services.user_service import get_or_create_user
 
 
 class DbSessionMiddleware(BaseMiddleware):
@@ -19,3 +24,52 @@ class DbSessionMiddleware(BaseMiddleware):
         async with async_session_factory() as session:
             data["session"] = session
             return await handler(event, data)
+
+
+class SubscriptionMiddleware(BaseMiddleware):
+    """Majburiy kanal obunasi tekshiruvi.
+
+    Admin panelda faol kanal bo'lmasa — hech narsa qilmaydi. Bo'lsa va
+    foydalanuvchi obuna bo'lmagan bo'lsa, handler'ga o'tkazmasdan obuna
+    so'rovi xabarini ko'rsatadi.
+    """
+
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: dict[str, Any],
+    ) -> Any:
+        tg_user = data.get("event_from_user")
+        session = data.get("session")
+        bot: Bot | None = data.get("bot")
+        if tg_user is None or session is None or bot is None:
+            return await handler(event, data)
+
+        # "Tekshirish" tugmasi tekshiruvdan o'tmaydi, aks holda foydalanuvchi
+        # obuna bo'lgach ham holatini yangilay olmay qoladi.
+        raw_event = event.event if hasattr(event, "event") else event
+        if isinstance(raw_event, CallbackQuery) and (raw_event.data or "").startswith(
+            SUBSCRIPTION_CHECK_CALLBACK
+        ):
+            return await handler(event, data)
+
+        missing = await missing_channels(bot, session, redis_client, tg_user.id)
+        if not missing:
+            return await handler(event, data)
+
+        user = await get_or_create_user(session, tg_user.id, tg_user.username)
+        lang = user.ui_language.value
+        text = (
+            t("subscription.required", lang)
+            + "\n\n"
+            + "\n".join(f"• {channel.title}" for channel in missing)
+        )
+        keyboard = subscription_keyboard(missing, lang)
+
+        if isinstance(raw_event, CallbackQuery):
+            await raw_event.answer(t("subscription.short", lang), show_alert=True)
+            await raw_event.message.answer(text, reply_markup=keyboard)
+        elif isinstance(raw_event, Message):
+            await raw_event.answer(text, reply_markup=keyboard)
+        return None

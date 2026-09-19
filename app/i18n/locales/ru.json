@@ -2,6 +2,12 @@
   "start.welcome": "Привет, {name}! 👋\n\nЯ помогу подобрать университет и грант для учёбы за рубежом.\n\nЧтобы заполнить профиль, найти подходящие программы и сохранить их, нажмите кнопку ниже 👇",
   "start.open_app": "🌐 Открыть Uni Assist",
 
+  "subscription.required": "🔒 Чтобы пользоваться ботом, подпишитесь на канал(ы):",
+  "subscription.short": "Сначала подпишитесь на канал 🔒",
+  "subscription.check_button": "✅ Я подписался, проверить",
+  "subscription.still_missing": "Вы подписались не на все каналы. Пожалуйста, проверьте и попробуйте снова.",
+  "subscription.thanks": "Спасибо! Теперь бот доступен полностью 🎉",
+
   "deadline.type.application_open": "Открытие приёма заявок",
   "deadline.type.application_close": "Закрытие приёма заявок",
   "deadline.type.document": "Подача документов",

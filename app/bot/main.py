@@ -5,8 +5,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from app.bot.handlers import reminders, start
-from app.bot.middlewares import DbSessionMiddleware
+from app.bot.handlers import reminders, start, subscription
+from app.bot.middlewares import DbSessionMiddleware, SubscriptionMiddleware
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services.redis_client import redis_client
@@ -23,8 +23,12 @@ def create_dispatcher() -> Dispatcher:
     # (app/webapp) amalga oshiriladi — bot faqat uni ochish tugmasini va
     # deadline eslatmalarini (push xabar sifatida) beradi.
     dispatcher = Dispatcher()
+    # Tartib muhim: avval DB sessiyasi ochiladi, keyin obuna tekshiruvi undan
+    # foydalanadi. Majburiy kanal sozlanmagan bo'lsa middleware shaffof ishlaydi.
     dispatcher.update.middleware(DbSessionMiddleware())
+    dispatcher.update.middleware(SubscriptionMiddleware())
 
+    dispatcher.include_router(subscription.router)
     dispatcher.include_router(start.router)
     dispatcher.include_router(reminders.router)
 

@@ -1,4 +1,5 @@
 from app.db.base import Base
+from app.db.models.channel import RequiredChannel
 from app.db.models.country import Country
 from app.db.models.program import (
     Deadline,
@@ -46,6 +47,7 @@ __all__ = [
     "ProgramRequirement",
     "Report",
     "ReportStatus",
+    "RequiredChannel",
     "SavedProgram",
     "SavedProgramStatus",
     "Scholarship",

@@ -2,6 +2,12 @@
   "start.welcome": "Hi, {name}! 👋\n\nI help you find universities and scholarships to study abroad.\n\nTap the button below to fill in your profile, find matching programs, and save them 👇",
   "start.open_app": "🌐 Open Uni Assist",
 
+  "subscription.required": "🔒 To use the bot, please join the channel(s) below:",
+  "subscription.short": "Please join the channel first 🔒",
+  "subscription.check_button": "✅ I joined, check now",
+  "subscription.still_missing": "You haven't joined every channel yet. Please check and try again.",
+  "subscription.thanks": "Thanks! You now have full access to the bot 🎉",
+
   "deadline.type.application_open": "Application opens",
   "deadline.type.application_close": "Application closes",
   "deadline.type.document": "Document submission",

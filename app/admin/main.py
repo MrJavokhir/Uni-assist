@@ -14,6 +14,7 @@ from app.admin.views import (
     ProgramCostAdmin,
     ProgramRequirementAdmin,
     ReportAdmin,
+    RequiredChannelAdmin,
     SavedProgramAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
@@ -77,6 +78,7 @@ for view in (
     UserOtherTestAdmin,
     SavedProgramAdmin,
     ReportAdmin,
+    RequiredChannelAdmin,
 ):
     admin.add_view(view)
 

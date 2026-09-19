@@ -2,6 +2,12 @@
   "start.welcome": "Salom, {name}! 👋\n\nMen chet elda o'qish uchun universitet va grant tanlashda yordam beraman.\n\nProfilingizni to'ldirish, mos dasturlarni topish va saqlash uchun quyidagi tugmani bosing 👇",
   "start.open_app": "🌐 Uni Assist'ni ochish",
 
+  "subscription.required": "🔒 Botdan foydalanish uchun quyidagi kanal(lar)ga a'zo bo'ling:",
+  "subscription.short": "Avval kanalga a'zo bo'ling 🔒",
+  "subscription.check_button": "✅ A'zo bo'ldim, tekshirish",
+  "subscription.still_missing": "Hali hamma kanalga a'zo bo'lmadingiz. Iltimos, tekshirib qayta urinib ko'ring.",
+  "subscription.thanks": "Rahmat! Endi botdan to'liq foydalanishingiz mumkin 🎉",
+
   "deadline.type.application_open": "Ariza ochilishi",
   "deadline.type.application_close": "Ariza yopilishi",
   "deadline.type.document": "Hujjat topshirish",

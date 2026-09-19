@@ -1,5 +1,6 @@
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
+from starlette.requests import Request
 
 from app.admin.filters import RelationshipFilter
 from app.admin.formatters import enum_label, format_bool, format_verified_at
@@ -15,6 +16,7 @@ from app.db.models import (
     ProgramRequirement,
     Report,
     ReportStatus,
+    RequiredChannel,
     SavedProgram,
     SavedProgramStatus,
     Scholarship,
@@ -25,6 +27,8 @@ from app.db.models import (
     UserLanguageCertificate,
     UserOtherTest,
 )
+from app.services.redis_client import redis_client
+from app.services.subscription_service import clear_all_cache, derive_chat_id
 
 # Enum ustunlar bazada `.value` sifatida saqlanadi (str_enum), shuning uchun
 # filtr qiymatlari ham aynan shu qiymatlar bo'lishi kerak.
@@ -94,6 +98,7 @@ PROGRAM_DETAILS = "Dastur tafsilotlari"
 GRANTS = "Grantlar"
 USERS = "Foydalanuvchilar"
 QUALITY = "Ma'lumot sifati"
+SETTINGS = "Sozlamalar"
 
 
 class CountryAdmin(ModelView, model=Country):
@@ -598,3 +603,82 @@ class ReportAdmin(ModelView, model=Report):
     )
     column_formatters = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
     column_formatters_detail = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
+
+
+class RequiredChannelAdmin(ModelView, model=RequiredChannel):
+    """Botdan foydalanish uchun majburiy obuna kanallari.
+
+    Bu yerga kanal havolasini kiritish kifoya — ochiq kanallar uchun
+    `chat_id` (@username) havoladan avtomatik aniqlanadi. Yopiq kanallarda
+    (t.me/+...) havoladan username chiqmaydi, shuning uchun raqamli chat_id
+    (masalan -1001234567890) ni qo'lda kiritish kerak.
+
+    MUHIM: tekshiruv ishlashi uchun bot kanalda administrator bo'lishi shart.
+    """
+
+    name = "Majburiy kanal"
+    name_plural = "Majburiy kanallar"
+    icon = "fa-solid fa-bullhorn"
+    category = SETTINGS
+
+    column_list = [
+        RequiredChannel.id,
+        RequiredChannel.title,
+        RequiredChannel.invite_url,
+        RequiredChannel.chat_id,
+        RequiredChannel.is_active,
+    ]
+    column_searchable_list = [RequiredChannel.title, RequiredChannel.invite_url]
+    column_default_sort = [(RequiredChannel.id, False)]
+    column_filters = [BooleanFilter(RequiredChannel.is_active, title="Faol")]
+    form_columns = [
+        RequiredChannel.title,
+        RequiredChannel.invite_url,
+        RequiredChannel.chat_id,
+        RequiredChannel.is_active,
+    ]
+    column_labels = _labels(
+        title="Kanal nomi",
+        invite_url="Kanal havolasi",
+        chat_id="Chat ID (@username yoki -100...)",
+        is_active="Faol",
+    )
+    form_args = {
+        "invite_url": {"description": "Masalan: https://t.me/uniassist_uz"},
+        "chat_id": {
+            "description": (
+                "Bo'sh qoldiring — ochiq kanal uchun havoladan avtomatik olinadi. "
+                "Yopiq kanal uchun raqamli ID kiriting (-1001234567890)."
+            )
+        },
+        "is_active": {"description": "O'chirilsa, bu kanalga obuna talab qilinmaydi."},
+    }
+    column_formatters = {RequiredChannel.is_active: format_bool}
+    column_formatters_detail = {RequiredChannel.is_active: format_bool}
+
+    async def on_model_change(
+        self, data: dict, model: RequiredChannel, is_created: bool, request: Request
+    ) -> None:
+        url = (data.get("invite_url") or "").strip()
+        chat_id = (data.get("chat_id") or "").strip()
+
+        if not chat_id:
+            derived = derive_chat_id(url)
+            if not derived:
+                raise ValueError(
+                    "Bu yopiq kanal havolasiga o'xshaydi — havoladan @username aniqlanmadi. "
+                    "Iltimos, kanalning raqamli Chat ID sini (-100... ko'rinishida) kiriting."
+                )
+            chat_id = derived
+
+        data["invite_url"] = url
+        data["chat_id"] = chat_id
+
+    async def after_model_change(
+        self, data: dict, model: RequiredChannel, is_created: bool, request: Request
+    ) -> None:
+        # Kanallar ro'yxati o'zgardi — eski "obuna bo'lgan" keshi bekor qilinadi.
+        await clear_all_cache(redis_client)
+
+    async def after_model_delete(self, model: RequiredChannel, request: Request) -> None:
+        await clear_all_cache(redis_client)

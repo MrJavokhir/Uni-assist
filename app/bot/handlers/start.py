@@ -25,12 +25,9 @@ def webapp_url() -> str:
     return urlunparse(parts._replace(query=urlencode(query)))
 
 
-@router.message(CommandStart())
-async def cmd_start(message: Message, session: AsyncSession) -> None:
-    user = await get_or_create_user(session, message.from_user.id, message.from_user.username)
-    lang = user.ui_language.value
-
-    keyboard = InlineKeyboardMarkup(
+def start_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Mini App'ni ochish tugmasi (obuna tasdiqlangach ham shu ko'rsatiladi)."""
+    return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
@@ -40,7 +37,14 @@ async def cmd_start(message: Message, session: AsyncSession) -> None:
             ]
         ]
     )
+
+
+@router.message(CommandStart())
+async def cmd_start(message: Message, session: AsyncSession) -> None:
+    user = await get_or_create_user(session, message.from_user.id, message.from_user.username)
+    lang = user.ui_language.value
+
     await message.answer(
         t("start.welcome", lang, name=message.from_user.full_name),
-        reply_markup=keyboard,
+        reply_markup=start_keyboard(lang),
     )

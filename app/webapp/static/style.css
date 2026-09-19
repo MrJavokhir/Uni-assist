@@ -136,6 +136,9 @@ body {
 }
 
 .view[hidden] { display: none; }
+
+/* `display: flex` ustunligi tufayli `hidden` atributi o'zi yetarli emas. */
+[hidden] { display: none !important; }
 .view { animation: enter 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
 
 @keyframes enter {
@@ -760,3 +763,86 @@ body {
 }
 .toast.show { opacity: 0.96; transform: translate(-50%, 0); }
 .toast .ico { width: 15px; height: 15px; }
+
+/* ============ Majburiy obuna ekrani ============ */
+
+.gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 24px var(--pad);
+}
+
+.gate-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 22px 22px;
+  border-radius: var(--r-xl);
+  background: var(--card);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.gate-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.gate-mark .ico { width: 26px; height: 26px; }
+
+.gate-title {
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.gate-text {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--hint);
+}
+
+.gate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.gate-channel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 15px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.gate-channel:active { transform: scale(0.98); }
+
+.gate-join {
+  flex: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+}

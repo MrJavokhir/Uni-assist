@@ -4,6 +4,10 @@ Admin panelda kanal havolasi kiritiladi, bot esa foydalanuvchi o'sha kanal(lar)g
 a'zo ekanini `getChatMember` orqali tekshiradi. Har bir so'rovda Telegram API'ga
 murojaat qilmaslik uchun natija Redis'da qisqa muddatga keshlanadi.
 
+Tekshiruv FAQAT bot tomonida (app/bot/middlewares.py) bo'ladi: /start bosilganda
+obuna so'raladi, Mini App tugmasi esa undan keyin beriladi. Mini App ichida
+qayta to'sib turish foydalanuvchini ikki marta to'xtatardi.
+
 MUHIM: tekshiruv ishlashi uchun bot kanalda administrator bo'lishi shart. Agar
 bot kanalga kira olmasa (admin emas, kanal o'chirilgan, chat_id noto'g'ri), biz
 foydalanuvchini BLOKLAMAYMIZ — noto'g'ri sozlama hammani ichkariga kirita
@@ -127,27 +131,3 @@ async def missing_channels(
             logger.exception("Obuna keshini yozishda xatolik")
 
     return missing
-
-
-# Mini App (FastAPI) bot bilan bir xil jarayonda ishlamaydi, shuning uchun
-# tekshiruv uchun o'ziga alohida Bot ulanishi kerak bo'ladi. U birinchi
-# so'rovda yaratiladi va uvicorn jarayoni davomida qayta ishlatiladi.
-_api_bot: Bot | None = None
-
-
-async def missing_subscriptions(session: AsyncSession, telegram_id: int) -> list[ChannelInfo]:
-    """`missing_channels` ning Mini App API uchun qulay o'ramchasi."""
-    global _api_bot
-
-    if not await active_channels(session):
-        return []
-
-    from app.config import settings
-    from app.services.redis_client import redis_client
-
-    if not settings.bot_token:
-        return []
-    if _api_bot is None:
-        _api_bot = Bot(token=settings.bot_token)
-
-    return await missing_channels(_api_bot, session, redis_client, telegram_id)

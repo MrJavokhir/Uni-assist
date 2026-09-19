@@ -21,7 +21,6 @@ from app.db.models import (
 from app.db.session import get_session
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
-from app.services.subscription_service import missing_subscriptions
 from app.services.timezone_utils import format_tashkent
 from app.services.user_service import (
     get_or_create_user,
@@ -54,23 +53,12 @@ async def get_current_user(
     except InitDataError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
+    # Majburiy kanal obunasi ATAYLAB faqat bot tomonida tekshiriladi (/start):
+    # Mini App'ga kirish tugmasi o'sha tekshiruvdan keyin beriladi, shuning
+    # uchun ilova ichida yana to'sib turish foydalanuvchini ikki marta
+    # to'xtatardi. Qarang: app/bot/middlewares.py
     tg_user = result["user"]
-    user = await get_or_create_user(session, tg_user["id"], tg_user.get("username"))
-
-    # Majburiy kanal obunasi bot tomonida ham tekshiriladi, lekin Mini App URL'i
-    # qo'lga tushib qolsa bot chetlab o'tilardi — shuning uchun API ham tekshiradi.
-    missing = await missing_subscriptions(session, tg_user["id"])
-    if missing:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": "subscription_required",
-                "channels": [
-                    {"title": channel.title, "url": channel.invite_url} for channel in missing
-                ],
-            },
-        )
-    return user
+    return await get_or_create_user(session, tg_user["id"], tg_user.get("username"))
 
 
 @router.get("/me", response_model=ProfileOut)

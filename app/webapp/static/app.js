@@ -166,10 +166,6 @@ const I18N = {
     "saved.status.applied": "Topshirdim",
     "saved.status.rejected": "Rad etildi",
     "saved.status.accepted": "Qabul",
-    "gate.title": "Avval kanalga a'zo bo'ling",
-    "gate.text": "Uni Assist'dan foydalanish uchun quyidagi kanal(lar)ga a'zo bo'ling.",
-    "gate.join": "A'zo bo'lish",
-    "gate.check": "A'zo bo'ldim, tekshirish",
   },
   ru: {
     "nav.home": "Главная",
@@ -273,10 +269,6 @@ const I18N = {
     "saved.status.applied": "Подал",
     "saved.status.rejected": "Отказ",
     "saved.status.accepted": "Принят",
-    "gate.title": "Сначала подпишитесь на канал",
-    "gate.text": "Чтобы пользоваться Uni Assist, подпишитесь на канал(ы) ниже.",
-    "gate.join": "Подписаться",
-    "gate.check": "Я подписался, проверить",
   },
   en: {
     "nav.home": "Home",
@@ -380,10 +372,6 @@ const I18N = {
     "saved.status.applied": "Applied",
     "saved.status.rejected": "Rejected",
     "saved.status.accepted": "Accepted",
-    "gate.title": "Join the channel first",
-    "gate.text": "To use Uni Assist, please join the channel(s) below.",
-    "gate.join": "Join",
-    "gate.check": "I joined, check now",
   },
 };
 
@@ -406,66 +394,12 @@ async function api(path, opts) {
       ...(opts.headers || {}),
     },
   });
-  if (res.status === 403) {
-    // Majburiy kanal obunasi — butun ekranni obuna so'rovi bilan almashtiramiz.
-    const payload = await res.json().catch(() => null);
-    const detail = payload && payload.detail;
-    if (detail && detail.error === "subscription_required") {
-      renderSubscriptionGate(detail.channels || []);
-      throw new Error("subscription_required");
-    }
-  }
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`API ${res.status}: ${body}`);
   }
   if (res.status === 204) return null;
   return res.json();
-}
-
-function renderSubscriptionGate(channels) {
-  let gate = document.querySelector(".gate");
-  if (!gate) {
-    gate = document.createElement("div");
-    gate.className = "gate";
-    document.getElementById("app").appendChild(gate);
-  }
-  const views = document.getElementById("views");
-  if (views) views.hidden = true;
-  const tabbar = document.querySelector(".tabbar");
-  if (tabbar) tabbar.hidden = true;
-
-  gate.innerHTML = `
-    <div class="gate-card">
-      <span class="gate-mark">${icon("shield")}</span>
-      <h2 class="gate-title">${escapeHtml(t("gate.title"))}</h2>
-      <p class="gate-text">${escapeHtml(t("gate.text"))}</p>
-      <div class="gate-list">
-        ${channels
-          .map(
-            (c) =>
-              `<button type="button" class="gate-channel" data-url="${escapeHtml(c.url)}">
-                 <span>${escapeHtml(c.title)}</span>
-                 <span class="gate-join">${escapeHtml(t("gate.join"))}</span>
-               </button>`
-          )
-          .join("")}
-      </div>
-      <button type="button" class="btn btn-accent btn-block gate-check">${escapeHtml(t("gate.check"))}</button>
-    </div>`;
-
-  gate.querySelectorAll(".gate-channel").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      haptic("light");
-      const url = btn.dataset.url;
-      if (tg && typeof tg.openTelegramLink === "function") tg.openTelegramLink(url);
-      else window.open(url, "_blank");
-    });
-  });
-  gate.querySelector(".gate-check").addEventListener("click", () => {
-    haptic("medium");
-    window.location.reload();
-  });
 }
 
 function showToast(message) {
@@ -1311,6 +1245,12 @@ async function init() {
     return;
   }
 
+  // Tab paneli statik HTML'da, ya'ni ma'lumot yuklanguncha ham bosiladi.
+  // Tayyor bo'lmaguncha bosishni to'xtatamiz — aks holda tez bosilgan tab
+  // hech narsa qilmay, foydalanuvchiga "ishlamadi" bo'lib ko'rinardi.
+  const tabbar = document.querySelector(".tabbar");
+  tabbar.setAttribute("aria-busy", "true");
+
   await loadProfile();
   await loadCountries();
   await loadMajors();
@@ -1319,13 +1259,12 @@ async function init() {
   bindTabs();
   bindLangSwitch();
   await renderHome();
+
+  tabbar.removeAttribute("aria-busy");
 }
 
 init().catch((err) => {
   console.error(err);
-  // Majburiy obuna ekrani allaqachon chizilgan — uni umumiy xatolik
-  // qutisi bilan almashtirib yubormaymiz.
-  if (err && err.message === "subscription_required") return;
   document.getElementById("app").innerHTML = `
     <div class="empty">
       <div class="empty-ico">${icon("clock")}</div>

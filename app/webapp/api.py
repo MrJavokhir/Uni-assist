@@ -259,6 +259,7 @@ async def get_matches(
             MatchProgramOut(
                 id=program.id,
                 name=program.name,
+                abbreviation=program.abbreviation,
                 university=program.university.name,
                 country=program.university.country.name_uz,
                 degree_level=program.degree_level.value,

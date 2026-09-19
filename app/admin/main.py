@@ -9,19 +9,13 @@ from app.admin.auth import AdminAuth
 from app.admin.stats import StatsView
 from app.admin.views import (
     CountryAdmin,
-    DeadlineAdmin,
     ProgramAdmin,
-    ProgramCostAdmin,
-    ProgramRequirementAdmin,
     ReportAdmin,
     RequiredChannelAdmin,
-    SavedProgramAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     UniversityAdmin,
     UserAdmin,
-    UserLanguageCertificateAdmin,
-    UserOtherTestAdmin,
 )
 from app.admin.wizards import ScholarshipWizard, UniversityWizard
 from app.config import settings
@@ -58,25 +52,21 @@ admin = Admin(
     templates_dir=str(TEMPLATES_DIR),
 )
 
-admin.add_base_view(StatsView)  # yon menyuda birinchi bo'lib turadi
-# Sehrgarlar o'z bo'limlarining eng tepasida tursin — kundalik ish shulardan
-# boshlanadi, alohida CRUD sahifalari esa tahrirlash uchun qoladi.
+# Yon menyu tartibi shu qo'shilish tartibidan kelib chiqadi va u ataylab
+# tekis (bo'limlarsiz): sehrgar -> katalog -> grantlar -> qolgani.
+admin.add_base_view(StatsView)
+# "Universitet qo'shish" — universitetni dasturlari, talablari, xarajatlari va
+# muddatlari bilan kiritish/tahrirlashning yagona joyi.
 admin.add_base_view(UniversityWizard)
-admin.add_base_view(ScholarshipWizard)
 
+for view in (CountryAdmin, UniversityAdmin, ProgramAdmin):
+    admin.add_view(view)
+
+admin.add_base_view(ScholarshipWizard)
 for view in (
-    CountryAdmin,
-    UniversityAdmin,
-    ProgramAdmin,
-    ProgramRequirementAdmin,
-    ProgramCostAdmin,
-    DeadlineAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     UserAdmin,
-    UserLanguageCertificateAdmin,
-    UserOtherTestAdmin,
-    SavedProgramAdmin,
     ReportAdmin,
     RequiredChannelAdmin,
 ):

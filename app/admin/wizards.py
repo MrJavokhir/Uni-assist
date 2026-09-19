@@ -90,6 +90,20 @@ def _checked(form: FormData, key: str) -> bool:
     return form.get(key) is not None
 
 
+def _as_str(value: Any) -> str:
+    """Decimal/int/None ni forma maydoniga tushadigan matnga aylantiradi.
+
+    Decimal("4.00") -> "4", Decimal("6.50") -> "6.5" — ortiqcha nollar
+    <input type="number"> da chalkash ko'rinadi.
+    """
+    if value is None:
+        return ""
+    text = f"{value}"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text or "0"
+
+
 def _enum(form: FormData, key: str, enum_cls: Any) -> Any | None:
     value = _text(form, key)
     if value is None:
@@ -107,10 +121,14 @@ class UniversityWizard(BaseView):
     name = "Universitet qo'shish"
     identity = "university-wizard"
     icon = "fa-solid fa-wand-magic-sparkles"
-    category = "Katalog"
 
     @expose("/university-wizard", methods=["GET", "POST"])
     async def wizard(self, request: Request):
+        # `?university_id=` bo'lsa forma mavjud universitet bilan to'ldiriladi —
+        # tahrirlash va yangi dastur qo'shish shu yerdan bajariladi.
+        university_id = request.query_params.get("university_id")
+        university_id = int(university_id) if (university_id or "").isdigit() else None
+
         async with async_session_factory() as session:
             if request.method == "POST":
                 form = await request.form()
@@ -121,30 +139,119 @@ class UniversityWizard(BaseView):
                     await session.rollback()
                     Flash.error(request, f"Saqlashda xatolik: {exc}")
                 else:
-                    Flash.success(
-                        request,
+                    message = (
                         f"'{created['university']}' saqlandi — {created['programs']} ta dastur "
                         f"({created['new_programs']} tasi yangi), {created['requirements']} ta talab, "
-                        f"{created['costs']} ta xarajat, {created['deadlines']} ta muddat.",
+                        f"{created['costs']} ta xarajat, {created['deadlines']} ta muddat."
                     )
-                    return RedirectResponse(request.url.path, status_code=303)
+                    if created.get("removed_programs"):
+                        message += f" {created['removed_programs']} ta dastur o'chirildi."
+                    Flash.success(request, message)
+                    # Saqlagandan keyin ham tahrirlash rejimida qolamiz, shunda
+                    # admin darhol yana dastur qo'sha oladi.
+                    return RedirectResponse(
+                        f"{request.url.path}?university_id={created['id']}", status_code=303
+                    )
 
             countries = (
                 (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
             )
+            prefill = await self._load(session, university_id) if university_id else None
 
+        editing = prefill is not None
         return await self.templates.TemplateResponse(
             request,
             "wizard_university.html",
             {
-                "title": "Universitet qo'shish",
-                "subtitle": "Davlat, universitet va uning dasturlari — bitta formada",
+                "title": (
+                    f"{prefill['university_name']} — tahrirlash"
+                    if editing
+                    else "Universitet qo'shish"
+                ),
+                "subtitle": (
+                    "Mavjud dasturlarni o'zgartiring yoki yangisini qo'shing"
+                    if editing
+                    else "Davlat, universitet va uning dasturlari — bitta formada"
+                ),
                 "countries": countries,
                 "degree_levels": list(DegreeLevel),
                 "gpa_scales": list(GpaScale),
                 "max_programs": MAX_PROGRAMS,
+                "prefill": prefill,
+                "editing": editing,
+                # "Yangi universitet qo'shish" havolasi uchun — sehrgarning
+                # o'z manzili, query'siz.
+                "wizard_path": request.url.path,
             },
         )
+
+    async def _load(self, session: Any, university_id: int) -> dict[str, Any] | None:
+        """Universitetni dasturlari bilan formaga tushadigan ko'rinishda o'qiydi."""
+        university = (
+            await session.execute(
+                select(University)
+                .options(
+                    selectinload(University.programs).selectinload(Program.requirement),
+                    selectinload(University.programs).selectinload(Program.cost),
+                    selectinload(University.programs).selectinload(Program.deadlines),
+                )
+                .where(University.id == university_id)
+            )
+        ).scalar_one_or_none()
+        if university is None:
+            return None
+
+        programs = []
+        for program in sorted(university.programs, key=lambda p: (p.degree_level.value, p.name)):
+            requirement = program.requirement
+            cost = program.cost
+            close = next(
+                (
+                    d
+                    for d in program.deadlines
+                    if d.type == DeadlineType.APPLICATION_CLOSE
+                ),
+                None,
+            )
+            programs.append(
+                {
+                    # Kalitlar forma maydoni suffikslariga (p<i>_<kalit>) mos
+                    # bo'lishi shart — shablondagi JS shu bo'yicha to'ldiradi.
+                    "name": program.name,
+                    "abbr": program.abbreviation or "",
+                    "degree": program.degree_level.value,
+                    "field": program.field_of_study,
+                    "language": program.language_of_instruction,
+                    "duration": _as_str(program.duration_years),
+                    "intake": program.intake_term,
+                    "source_url": program.source_url or "",
+                    "gpa_min": _as_str(requirement.gpa_min) if requirement else "",
+                    "gpa_scale": (
+                        requirement.gpa_scale.value
+                        if requirement and requirement.gpa_scale
+                        else ""
+                    ),
+                    "ielts": _as_str(requirement.ielts_min) if requirement else "",
+                    "toefl": _as_str(requirement.toefl_min) if requirement else "",
+                    "age_limit": _as_str(requirement.age_limit) if requirement else "",
+                    "gre_required": bool(requirement and requirement.gre_required),
+                    "tuition": _as_str(cost.tuition_amount) if cost else "",
+                    "currency": cost.currency if cost else "USD",
+                    "visa_proof": _as_str(cost.visa_proof_amount) if cost else "",
+                    "living": _as_str(cost.living_cost_monthly) if cost else "",
+                    "deadline_close": close.date_utc.strftime("%Y-%m-%d") if close else "",
+                }
+            )
+
+        return {
+            "id": university.id,
+            "country_id": university.country_id,
+            "university_name": university.name,
+            "city": university.city,
+            "website": university.website or "",
+            "timezone": university.timezone,
+            "programs": programs,
+        }
 
     async def _save(self, session: Any, form: FormData) -> dict[str, Any]:
         country_id = _integer(form, "country_id")
@@ -158,13 +265,21 @@ class UniversityWizard(BaseView):
         verified_by = _text(form, "verified_by") or "admin"
         now = datetime.now(UTC)
 
-        # Universitet nomi bo'yicha qayta ishlatiladi — bir xil universitetni
-        # ikki marta kiritib yubormaslik uchun.
-        existing = (
-            await session.execute(select(University).where(University.name == university_name))
-        ).scalar_one_or_none()
+        # Tahrirlash rejimida universitet ID bo'yicha topiladi, shunda nomini
+        # o'zgartirish yangi yozuv yaratmaydi. Yangi kiritishda esa nom bo'yicha
+        # qidiriladi — bir xil universitet ikki marta kiritilmasin.
+        university_id = _integer(form, "university_id")
+        if university_id is not None:
+            existing = (
+                await session.execute(select(University).where(University.id == university_id))
+            ).scalar_one_or_none()
+        else:
+            existing = (
+                await session.execute(select(University).where(University.name == university_name))
+            ).scalar_one_or_none()
 
         university = existing or University(name=university_name)
+        university.name = university_name
         university.country_id = country_id
         university.city = _text(form, "city") or "—"
         university.website = _text(form, "website")
@@ -174,6 +289,7 @@ class UniversityWizard(BaseView):
         await session.flush()
 
         counters = {
+            "id": university.id,
             "university": university_name,
             "programs": 0,  # formada kiritilgan dasturlar (yangi + yangilangan)
             "new_programs": 0,
@@ -194,6 +310,7 @@ class UniversityWizard(BaseView):
             .scalars()
             .all()
         }
+        submitted_keys: set[tuple[str, DegreeLevel]] = set()
 
         for index in range(MAX_PROGRAMS):
             name = _text(form, f"p{index}_name")
@@ -202,6 +319,7 @@ class UniversityWizard(BaseView):
 
             degree = _enum(form, f"p{index}_degree", DegreeLevel) or DegreeLevel.BACHELOR
             program = existing_programs.get((name, degree))
+            submitted_keys.add((name, degree))
             counters["programs"] += 1
             if program is None:
                 program = Program(university_id=university.id, name=name, degree_level=degree)
@@ -217,6 +335,7 @@ class UniversityWizard(BaseView):
                 )
                 await session.execute(delete(Deadline).where(Deadline.program_id == program.id))
 
+            program.abbreviation = _text(form, f"p{index}_abbr")
             program.field_of_study = _text(form, f"p{index}_field") or name
             program.language_of_instruction = _text(form, f"p{index}_language") or "Ingliz tili"
             program.duration_years = _number(form, f"p{index}_duration") or 4
@@ -278,6 +397,21 @@ class UniversityWizard(BaseView):
         if counters["programs"] == 0:
             raise ValueError("Kamida bitta dastur kiritilishi kerak")
 
+        # Tahrirlash rejimida forma universitetning to'liq holati: admin
+        # blokni o'chirsa, dastur bazadan ham o'chadi. Yangi kiritishda bu
+        # qilinmaydi — aks holda bir xil nomli universitetni qayta kiritish
+        # eski dasturlarni sezdirmay yo'q qilib yuborardi.
+        if university_id is not None:
+            removed = [
+                program
+                for key, program in existing_programs.items()
+                if key not in submitted_keys
+            ]
+            for program in removed:
+                await session.delete(program)
+            counters["removed_programs"] = len(removed)
+
+        counters["id"] = university.id
         return counters
 
 
@@ -288,7 +422,6 @@ class ScholarshipWizard(BaseView):
     name = "Grant qo'shish"
     identity = "scholarship-wizard"
     icon = "fa-solid fa-wand-magic-sparkles"
-    category = "Grantlar"
 
     @expose("/scholarship-wizard", methods=["GET", "POST"])
     async def wizard(self, request: Request):

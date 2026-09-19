@@ -3,29 +3,29 @@ from sqladmin.filters import BooleanFilter, StaticValuesFilter
 from starlette.requests import Request
 
 from app.admin.filters import RelationshipFilter
-from app.admin.formatters import enum_label, format_bool, format_verified_at
+from app.admin.formatters import (
+    enum_label,
+    format_bool,
+    format_program_labels,
+    format_university_wizard_link,
+    format_verified_at,
+)
 from app.db.models import (
     Country,
     CoverageType,
-    Deadline,
     DeadlineType,
     DegreeLevel,
     LanguageCertType,
     Program,
-    ProgramCost,
-    ProgramRequirement,
     Report,
     ReportStatus,
     RequiredChannel,
-    SavedProgram,
     SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
     UiLanguage,
     University,
     User,
-    UserLanguageCertificate,
-    UserOtherTest,
 )
 from app.services.redis_client import redis_client
 from app.services.subscription_service import clear_all_cache, derive_chat_id
@@ -90,22 +90,20 @@ def _choices(labels: dict) -> list[tuple[str, str]]:
 def _labels(**extra: str) -> dict[str, str]:
     return {**_COMMON_LABELS, **extra}
 
-CATALOG = "Katalog"
-# Dastur talablari/xarajatlari/muddatlari odatda "Universitet qo'shish"
-# sehrgari orqali kiritiladi — ular alohida bo'limga ajratildi, shunda
-# asosiy "Katalog" menyusi sodda qoladi.
-PROGRAM_DETAILS = "Dastur tafsilotlari"
-GRANTS = "Grantlar"
-USERS = "Foydalanuvchilar"
-QUALITY = "Ma'lumot sifati"
-SETTINGS = "Sozlamalar"
+# Yon menyuda `category` ATAYLAB ishlatilmaydi — hamma sahifa bitta tekis
+# ro'yxatda turadi. Ochilib-yopiladigan bo'limlar har bir sahifaga yetib
+# borish uchun ortiqcha bosish talab qilardi.
+#
+# Dastur talablari/xarajatlari/muddatlari uchun alohida sahifa YO'Q: ular
+# "Universitet qo'shish" sehrgarida, o'z dasturi bilan bitta joyda kiritiladi.
+# Foydalanuvchining sertifikat/test/saqlangan dasturlari ham alohida sahifa
+# emas — ular "Foydalanuvchilar" sahifasining tafsilot ko'rinishida ko'rinadi.
 
 
 class CountryAdmin(ModelView, model=Country):
     name = "Davlat"
     name_plural = "Davlatlar"
     icon = "fa-solid fa-flag"
-    category = CATALOG
 
     column_list = [Country.id, Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
     column_searchable_list = [Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
@@ -120,9 +118,23 @@ class UniversityAdmin(ModelView, model=University):
     name = "Universitet"
     name_plural = "Universitetlar"
     icon = "fa-solid fa-building-columns"
-    category = CATALOG
 
-    column_list = [University.id, University.name, University.country, University.city, University.timezone]
+    column_list = [
+        University.id,
+        University.name,
+        University.country,
+        University.city,
+        University.website,
+    ]
+    column_details_list = [
+        University.id,
+        University.name,
+        University.country,
+        University.city,
+        University.website,
+        University.timezone,
+        University.programs,
+    ]
     column_searchable_list = [University.name, University.city]
     column_sortable_list = [University.name, University.city]
     form_columns = [
@@ -133,20 +145,31 @@ class UniversityAdmin(ModelView, model=University):
         University.timezone,
     ]
     column_labels = _labels(
-        name="Nomi", country="Davlat", city="Shahar", website="Veb-sayt", timezone="Vaqt zonasi"
+        name="Nomi",
+        country="Davlat",
+        city="Shahar",
+        website="Veb-sayt",
+        timezone="Vaqt zonasi",
+        programs="Dasturlar",
     )
+    # Nom sehrgarga olib boradi: universitetni dasturlari bilan birga
+    # tahrirlashning yagona joyi o'sha.
+    column_formatters = {University.name: format_university_wizard_link}
+    # Dasturlar ro'yxati faqat tafsilot sahifasida — ro'yxatda to'liq nomlar
+    # ustunga sig'maydi va jadvalni o'qib bo'lmay qoladi.
+    column_formatters_detail = {University.programs: format_program_labels}
 
 
 class ProgramAdmin(ModelView, model=Program):
     name = "Dastur"
     name_plural = "Dasturlar"
     icon = "fa-solid fa-graduation-cap"
-    category = CATALOG
 
     column_list = [
         Program.id,
         Program.university,
         Program.name,
+        Program.abbreviation,
         Program.degree_level,
         Program.field_of_study,
         Program.intake_term,
@@ -156,6 +179,7 @@ class ProgramAdmin(ModelView, model=Program):
         Program.id,
         Program.university,
         Program.name,
+        Program.abbreviation,
         Program.degree_level,
         Program.field_of_study,
         Program.language_of_instruction,
@@ -170,7 +194,8 @@ class ProgramAdmin(ModelView, model=Program):
         Program.verified_at,
         Program.verified_by,
     ]
-    column_searchable_list = [Program.name, Program.field_of_study]
+    # Qisqartma ham qidiriladi — talabalar "MBA", "LLM" deb izlashadi.
+    column_searchable_list = [Program.name, Program.abbreviation, Program.field_of_study]
     column_sortable_list = [Program.name, Program.verified_at]
     column_filters = [
         StaticValuesFilter(Program.degree_level, values=_choices(_DEGREE_LABELS), title="Daraja")
@@ -178,6 +203,7 @@ class ProgramAdmin(ModelView, model=Program):
     form_columns = [
         Program.university,
         Program.name,
+        Program.abbreviation,
         Program.degree_level,
         Program.field_of_study,
         Program.language_of_instruction,
@@ -188,8 +214,12 @@ class ProgramAdmin(ModelView, model=Program):
         Program.verified_at,
         Program.verified_by,
     ]
+    form_args = {
+        "abbreviation": {"description": "Diplom qisqartmasi: MBA, LLM, B.Sc., M.Eng."}
+    }
     column_labels = _labels(
         name="Dastur nomi",
+        abbreviation="Qisqartma",
         university="Universitet",
         degree_level="Daraja",
         field_of_study="Yo'nalish",
@@ -212,99 +242,10 @@ class ProgramAdmin(ModelView, model=Program):
     }
 
 
-class ProgramRequirementAdmin(ModelView, model=ProgramRequirement):
-    name = "Talab"
-    name_plural = "Dastur talablari"
-    icon = "fa-solid fa-list-check"
-    category = PROGRAM_DETAILS
-
-    column_list = [
-        ProgramRequirement.id,
-        ProgramRequirement.program,
-        ProgramRequirement.gpa_min,
-        ProgramRequirement.ielts_min,
-        ProgramRequirement.toefl_min,
-        ProgramRequirement.gre_required,
-    ]
-    form_columns = [
-        ProgramRequirement.program,
-        ProgramRequirement.gpa_min,
-        ProgramRequirement.gpa_scale,
-        ProgramRequirement.ielts_min,
-        ProgramRequirement.toefl_min,
-        ProgramRequirement.gre_required,
-        ProgramRequirement.gre_min,
-        ProgramRequirement.prereq_major,
-        ProgramRequirement.age_limit,
-    ]
-    column_labels = _labels(
-        program="Dastur",
-        gpa_min="Minimal GPA",
-        gpa_scale="GPA tizimi",
-        ielts_min="Minimal IELTS",
-        toefl_min="Minimal TOEFL",
-        gre_required="GRE talab qilinadi",
-        gre_min="Minimal GRE",
-        prereq_major="Kerakli yo'nalish",
-        age_limit="Yosh chegarasi",
-    )
-    column_formatters = {ProgramRequirement.gre_required: format_bool}
-
-
-class ProgramCostAdmin(ModelView, model=ProgramCost):
-    name = "Xarajat"
-    name_plural = "Dastur xarajatlari"
-    icon = "fa-solid fa-money-bill-wave"
-    category = PROGRAM_DETAILS
-
-    column_list = [
-        ProgramCost.id,
-        ProgramCost.program,
-        ProgramCost.tuition_amount,
-        ProgramCost.currency,
-        ProgramCost.visa_proof_amount,
-        ProgramCost.living_cost_monthly,
-        ProgramCost.last_checked,
-    ]
-    form_columns = [
-        ProgramCost.program,
-        ProgramCost.tuition_amount,
-        ProgramCost.currency,
-        ProgramCost.visa_proof_amount,
-        ProgramCost.living_cost_monthly,
-        ProgramCost.last_checked,
-    ]
-    column_labels = _labels(
-        program="Dastur",
-        tuition_amount="Kontrakt",
-        currency="Valyuta",
-        visa_proof_amount="Viza uchun isbot summasi",
-        living_cost_monthly="Yashash (oyiga)",
-        last_checked="Oxirgi tekshiruv",
-    )
-
-
-class DeadlineAdmin(ModelView, model=Deadline):
-    name = "Muddat"
-    name_plural = "Dastur muddatlari"
-    icon = "fa-solid fa-calendar-days"
-    category = PROGRAM_DETAILS
-
-    column_list = [Deadline.id, Deadline.program, Deadline.type, Deadline.date_utc, Deadline.intake_term]
-    column_sortable_list = [Deadline.date_utc]
-    form_columns = [Deadline.program, Deadline.type, Deadline.date_utc, Deadline.intake_term]
-    column_labels = _labels(
-        program="Dastur", type="Muddat turi", date_utc="Sana (UTC)", intake_term="Qabul davri"
-    )
-    column_formatters = {Deadline.type: enum_label(_DEADLINE_LABELS)}
-    column_formatters_detail = {Deadline.type: enum_label(_DEADLINE_LABELS)}
-
-
 class ScholarshipAdmin(ModelView, model=Scholarship):
     name = "Grant"
     name_plural = "Grantlar"
     icon = "fa-solid fa-hand-holding-dollar"
-    category = GRANTS
 
     column_list = [
         Scholarship.id,
@@ -401,7 +342,6 @@ class ScholarshipDeadlineAdmin(ModelView, model=ScholarshipDeadline):
     name = "Grant muddati"
     name_plural = "Grant muddatlari"
     icon = "fa-solid fa-calendar-check"
-    category = GRANTS
 
     column_list = [
         ScholarshipDeadline.id,
@@ -428,7 +368,6 @@ class UserAdmin(ModelView, model=User):
     name = "Foydalanuvchi"
     name_plural = "Foydalanuvchilar"
     icon = "fa-solid fa-user"
-    category = USERS
     can_create = False
 
     column_list = [
@@ -494,90 +433,12 @@ class UserAdmin(ModelView, model=User):
     column_formatters = _user_formatters
     column_formatters_detail = _user_formatters
 
-
-class UserLanguageCertificateAdmin(ModelView, model=UserLanguageCertificate):
-    name = "Til sertifikati"
-    name_plural = "Til sertifikatlari"
-    icon = "fa-solid fa-certificate"
-    category = USERS
-    can_create = False
-
-    column_list = [
-        UserLanguageCertificate.id,
-        UserLanguageCertificate.user,
-        UserLanguageCertificate.type,
-        UserLanguageCertificate.score,
-        UserLanguageCertificate.exam_date,
-    ]
-    form_columns = [
-        UserLanguageCertificate.user,
-        UserLanguageCertificate.type,
-        UserLanguageCertificate.score,
-        UserLanguageCertificate.exam_date,
-    ]
-    column_labels = _labels(
-        user="Foydalanuvchi", type="Sertifikat turi", score="Ball", exam_date="Imtihon sanasi"
-    )
-    column_formatters = {UserLanguageCertificate.type: enum_label(_CERT_LABELS)}
-
-
-class UserOtherTestAdmin(ModelView, model=UserOtherTest):
-    name = "Boshqa test"
-    name_plural = "Boshqa testlar (GRE/GMAT)"
-    icon = "fa-solid fa-pen"
-    category = USERS
-    can_create = False
-
-    column_list = [UserOtherTest.id, UserOtherTest.user, UserOtherTest.type, UserOtherTest.score]
-    form_columns = [UserOtherTest.user, UserOtherTest.type, UserOtherTest.score, UserOtherTest.exam_date]
-    column_labels = _labels(
-        user="Foydalanuvchi", type="Test turi", score="Ball", exam_date="Imtihon sanasi"
-    )
-
-
-class SavedProgramAdmin(ModelView, model=SavedProgram):
-    name = "Saqlangan dastur"
-    name_plural = "Saqlangan dasturlar"
-    icon = "fa-solid fa-bookmark"
-    category = USERS
-    can_create = False
-
-    column_list = [
-        SavedProgram.id,
-        SavedProgram.user,
-        SavedProgram.program,
-        SavedProgram.status,
-        SavedProgram.reminders_active,
-        SavedProgram.created_at,
-    ]
-    column_filters = [
-        StaticValuesFilter(
-            SavedProgram.status, values=_choices(_SAVED_STATUS_LABELS), title="Holat"
-        ),
-        BooleanFilter(SavedProgram.reminders_active, title="Eslatmalar yoqilgan"),
-    ]
-    form_columns = [SavedProgram.status, SavedProgram.reminders_active]
-    column_labels = _labels(
-        user="Foydalanuvchi",
-        program="Dastur",
-        status="Ariza holati",
-        reminders_active="Eslatmalar yoqilgan",
-    )
-    _saved_formatters = {
-        SavedProgram.status: enum_label(_SAVED_STATUS_LABELS),
-        SavedProgram.reminders_active: format_bool,
-    }
-    column_formatters = _saved_formatters
-    column_formatters_detail = _saved_formatters
-
-
 class ReportAdmin(ModelView, model=Report):
     """Foydalanuvchidan kelgan 'ma'lumot noto'g'ri' signallari."""
 
     name = "Signal"
     name_plural = "Ma'lumot noto'g'ri signallari"
     icon = "fa-solid fa-triangle-exclamation"
-    category = QUALITY
     can_create = False
 
     column_list = [
@@ -619,7 +480,6 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
     name = "Majburiy kanal"
     name_plural = "Majburiy kanallar"
     icon = "fa-solid fa-bullhorn"
-    category = SETTINGS
 
     column_list = [
         RequiredChannel.id,

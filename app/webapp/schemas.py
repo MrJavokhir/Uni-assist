@@ -50,6 +50,9 @@ class CountryOut(BaseModel):
 class MatchProgramOut(BaseModel):
     id: int
     name: str
+    # Diplom qisqartmasi (MBA, LLM, B.Sc.) — talabalar dasturni ko'pincha
+    # shu bo'yicha taniydi.
+    abbreviation: str | None = None
     university: str
     country: str
     degree_level: str

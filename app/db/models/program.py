@@ -46,6 +46,9 @@ class Program(TimestampMixin, VerificationMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     university_id: Mapped[int] = mapped_column(ForeignKey("universities.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Diplomaning qisqartmasi — LLM, MBA, B.Sc., M.Eng. va h.k. Talabalar
+    # dasturlarni ko'pincha aynan shu qisqartma bo'yicha izlaydi.
+    abbreviation: Mapped[str | None] = mapped_column(String(30), nullable=True)
     degree_level: Mapped[DegreeLevel] = mapped_column(degree_level_enum, nullable=False)
     field_of_study: Mapped[str] = mapped_column(String(255), nullable=False)
     language_of_instruction: Mapped[str] = mapped_column(String(100), nullable=False)

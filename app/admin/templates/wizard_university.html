@@ -4,7 +4,16 @@
 <div class="col-12">
 <div class="ua-page">
 
+  {% if editing %}
+  <div class="alert alert-info ua-edit-banner">
+    <strong>Tahrirlash rejimi.</strong>
+    Bu forma universitetning to'liq holati: blokni o'chirib saqlasangiz, dastur bazadan ham o'chadi.
+    <a href="{{ wizard_path }}" class="ms-2">Yangi universitet qo'shish →</a>
+  </div>
+  {% endif %}
+
   <form method="post" class="ua-wizard">
+    {% if editing %}<input type="hidden" name="university_id" value="{{ prefill.id }}">{% endif %}
 
     {# ---------- 1-qadam: davlat va universitet ---------- #}
     <div class="card mb-3">
@@ -18,7 +27,8 @@
             <select name="country_id" class="form-select" required>
               <option value="">— tanlang —</option>
               {% for country in countries %}
-              <option value="{{ country.id }}">{{ country.name_uz }}</option>
+              <option value="{{ country.id }}"
+                {% if prefill and prefill.country_id == country.id %}selected{% endif %}>{{ country.name_uz }}</option>
               {% endfor %}
             </select>
             <small class="form-hint">Ro'yxatda yo'q bo'lsa, avval "Davlatlar" bo'limidan qo'shing.</small>
@@ -26,20 +36,24 @@
           <div class="col-md-8">
             <label class="form-label required">Universitet nomi</label>
             <input type="text" name="university_name" class="form-control" required
+                   value="{{ prefill.university_name if prefill else '' }}"
                    placeholder="masalan: Boğaziçi University">
             <small class="form-hint">Xuddi shu nomli universitet bo'lsa, u yangilanadi (dublikat yaratilmaydi).</small>
           </div>
           <div class="col-md-4">
             <label class="form-label">Shahar</label>
-            <input type="text" name="city" class="form-control" placeholder="Istanbul">
+            <input type="text" name="city" class="form-control" placeholder="Istanbul"
+                   value="{{ prefill.city if prefill else '' }}">
           </div>
           <div class="col-md-5">
             <label class="form-label">Rasmiy sayt</label>
-            <input type="url" name="website" class="form-control" placeholder="https://...">
+            <input type="url" name="website" class="form-control" placeholder="https://..."
+                   value="{{ prefill.website if prefill else '' }}">
           </div>
           <div class="col-md-3">
             <label class="form-label">Vaqt zonasi</label>
-            <input type="text" name="timezone" class="form-control" value="UTC" placeholder="Europe/Istanbul">
+            <input type="text" name="timezone" class="form-control"
+                   value="{{ prefill.timezone if prefill else 'UTC' }}" placeholder="Europe/Istanbul">
           </div>
         </div>
       </div>
@@ -93,11 +107,16 @@
     </div>
 
     <div class="row g-2">
-      <div class="col-md-5">
+      <div class="col-md-4">
         <label class="form-label required">Dastur nomi</label>
-        <input type="text" name="p__i___name" class="form-control" placeholder="Computer Engineering">
+        <input type="text" name="p__i___name" class="form-control" placeholder="Master of Business Administration">
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
+        <label class="form-label">Qisqartma</label>
+        <input type="text" name="p__i___abbr" class="form-control" maxlength="30" placeholder="MBA">
+        <small class="form-hint">LLM, MBA, B.Sc.</small>
+      </div>
+      <div class="col-md-2">
         <label class="form-label">Daraja</label>
         <select name="p__i___degree" class="form-select">
           {% for level in degree_levels %}
@@ -107,7 +126,7 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">Yo'nalish sohasi</label>
-        <input type="text" name="p__i___field" class="form-control" placeholder="Computer Science">
+        <input type="text" name="p__i___field" class="form-control" placeholder="Business Administration">
       </div>
 
       <div class="col-md-3">
@@ -190,26 +209,46 @@
   </div>
 </template>
 
+<script type="application/json" id="prefill-data">{{ (prefill.programs if prefill else []) | tojson }}</script>
+
 <script>
   (function () {
     const list = document.getElementById("programs");
     const empty = document.getElementById("programs-empty");
     const template = document.getElementById("program-template").innerHTML;
     const maxPrograms = {{ max_programs }};
+    const existing = JSON.parse(document.getElementById("prefill-data").textContent || "[]");
     let index = 0;
 
-    function addProgram() {
-      if (index >= maxPrograms) return;
+    // Forma maydoni nomlari `p<i>_<kalit>` — prefill kalitlari ataylab
+    // shu suffikslarga mos qilib berilgan (wizards.py `_load`).
+    function fill(block, data) {
+      Object.entries(data).forEach(function ([key, value]) {
+        const field = block.querySelector('[name$="_' + key + '"]');
+        if (!field) return;
+        if (field.type === "checkbox") field.checked = Boolean(value);
+        else field.value = value === null ? "" : value;
+      });
+    }
+
+    function addProgram(data) {
+      if (index >= maxPrograms) return null;
       const html = template.replaceAll("__i__", index).replaceAll("__n__", index + 1);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html;
-      list.appendChild(wrapper.firstElementChild);
+      const block = wrapper.firstElementChild;
+      if (data) fill(block, data);
+      list.appendChild(block);
       index += 1;
       empty.hidden = true;
       if (index >= maxPrograms) document.getElementById("add-program").disabled = true;
+      return block;
     }
 
-    document.getElementById("add-program").addEventListener("click", addProgram);
+    document.getElementById("add-program").addEventListener("click", function () {
+      const block = addProgram(null);
+      if (block) block.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
 
     list.addEventListener("click", function (event) {
       if (!event.target.classList.contains("remove-program")) return;
@@ -218,7 +257,8 @@
       document.getElementById("add-program").disabled = false;
     });
 
-    addProgram(); // birinchi blok darhol ochiq turadi
+    if (existing.length) existing.forEach(addProgram);
+    else addProgram(null); // yangi kiritishda birinchi blok darhol ochiq turadi
   })();
 </script>
 {% endblock %}

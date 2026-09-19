@@ -633,7 +633,9 @@ async function renderMatch() {
           <div class="card-top">
             <div class="avatar">${escapeHtml(initials(m.university))}</div>
             <div class="card-body">
-              <div class="card-title">${escapeHtml(m.name)}</div>
+              <div class="card-title">${escapeHtml(m.name)}${
+                m.abbreviation ? `<span class="abbr">${escapeHtml(m.abbreviation)}</span>` : ""
+              }</div>
               <div class="card-sub">${escapeHtml(m.university)}</div>
               <div class="meta-row">
                 <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${

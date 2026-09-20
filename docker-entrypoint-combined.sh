@@ -14,13 +14,15 @@ alembic upgrade head
 # Skriptlar idempotent, ya'ni tasodifan yoqilgan holda ham dublikat yaratmaydi.
 if [ "${RUN_SEEDS:-0}" = "1" ]; then
   echo "RUN_SEEDS=1 — seed skriptlari ishga tushirilmoqda..."
-  # Tartib muhim: seed_llm_programs.py davlatlar bazada bo'lishini talab
-  # qiladi, ularni esa seed_top_destinations.py yaratadi.
+  # Tartib muhim: seed_llm_programs.py va seed_law_bachelor_programs.py
+  # davlatlar bazada bo'lishini talab qiladi, ularni esa
+  # seed_top_destinations.py yaratadi.
   #
   # `set -e` yoqilgan, lekin seed xatosi butun servisni yiqitmasligi kerak —
   # aks holda RUN_SEEDS'ni yoqqan zahoti bot ham, admin panel ham ishlamay
   # qolardi. Shuning uchun har biri alohida ushlanadi va faqat ogohlantiradi.
-  for seed in seed_scholarships seed_top_destinations seed_llm_programs; do
+  for seed in seed_scholarships seed_top_destinations seed_llm_programs \
+              seed_law_bachelor_programs; do
     if python "scripts/${seed}.py"; then
       echo "  ✓ ${seed}"
     else

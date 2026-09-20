@@ -21,7 +21,8 @@ Railway Postgres'i tashqaridan ochiq bo'lmagani uchun yo'l shunday:
 
 1. Railway → Variables → `RUN_SEEDS=1`
 2. Deploy tugashini kuting, log'da tekshiring:
-   `✓ seed_scholarships`, `✓ seed_top_destinations`, `✓ seed_llm_programs`
+   `✓ seed_scholarships`, `✓ seed_top_destinations`, `✓ seed_llm_programs`,
+   `✓ seed_law_bachelor_programs`
 3. `RUN_SEEDS=0` ga qaytaring
 
 Skriptlar idempotent — tasodifan yoqilgan holda qolsa ham dublikat yaratmaydi.

@@ -44,6 +44,21 @@ class LanguageCertType(str, enum.Enum):
     OTHER = "other"
 
 
+class UniversityRankRange(str, enum.Enum):
+    """Foydalanuvchi mo'ljallagan universitet reytingi (jahon reytingidagi o'rin).
+
+    Tanlanmagan bo'lsa (None) — reyting muhim emas.
+    """
+
+    TOP_100 = "1-100"
+    TOP_300 = "101-300"
+    TOP_500 = "301-500"
+    BELOW_500 = "500+"
+
+
+university_rank_range_enum = str_enum(UniversityRankRange, "university_rank_range")
+
+
 class OtherTestType(str, enum.Enum):
     GRE = "GRE"
     GMAT = "GMAT"
@@ -74,6 +89,13 @@ class User(TimestampMixin, Base):
     budget_max: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     budget_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     age: Mapped[int | None] = mapped_column(nullable=True)
+    # Mo'ljaldagi universitet reytingi (jahon reytingidagi o'rin oralig'i).
+    university_rank_range: Mapped[UniversityRankRange | None] = mapped_column(
+        university_rank_range_enum, nullable=True
+    )
+    # Ariza to'lovi (application fee) bor dasturlar ham mos keladimi.
+    # True = to'lovga rozi, False = faqat bepul ariza, None = tanlanmagan.
+    application_fee_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
     target_countries: Mapped[list["Country"]] = relationship(secondary=user_target_country)
     language_certificates: Mapped[list["UserLanguageCertificate"]] = relationship(

@@ -12,9 +12,10 @@ class ProfileOut(BaseModel):
     major: str | None
     gpa_raw: float | None
     gpa_scale: str | None
-    budget_max: float | None
-    budget_currency: str | None
-    age: int | None
+    # Mo'ljaldagi universitet reytingi oralig'i ("1-100", "101-300", ...)
+    university_rank_range: str | None
+    # Ariza to'lovi bor dasturlar mos keladimi (None = tanlanmagan)
+    application_fee_ok: bool | None
     target_country_ids: list[int]
     language_certificates: list[LanguageCertOut]
 
@@ -25,8 +26,8 @@ class ProfileIn(BaseModel):
     major: str | None = None
     gpa_raw: float | None = None
     gpa_scale: str | None = None
-    budget_max: float | None = None
-    age: int | None = None
+    university_rank_range: str | None = None
+    application_fee_ok: bool | None = None
     target_country_ids: list[int] | None = None
     language_cert_type: str | None = None
     language_cert_score: float | None = None

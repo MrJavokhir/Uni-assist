@@ -16,6 +16,7 @@ from app.db.models import (
     Scholarship,
     UiLanguage,
     University,
+    UniversityRankRange,
     User,
 )
 from app.db.session import get_session
@@ -127,9 +128,10 @@ async def get_me(user: User = Depends(get_current_user)) -> ProfileOut:
         major=user.major,
         gpa_raw=float(user.gpa_raw) if user.gpa_raw is not None else None,
         gpa_scale=user.gpa_scale.value if user.gpa_scale else None,
-        budget_max=float(user.budget_max) if user.budget_max is not None else None,
-        budget_currency=user.budget_currency,
-        age=user.age,
+        university_rank_range=(
+            user.university_rank_range.value if user.university_rank_range else None
+        ),
+        application_fee_ok=user.application_fee_ok,
         target_country_ids=[c.id for c in user.target_countries],
         language_certificates=[
             LanguageCertOut(type=c.type.value, score=float(c.score)) for c in user.language_certificates
@@ -165,12 +167,18 @@ async def update_me(
             raise HTTPException(status_code=422, detail="Noto'g'ri GPA shkalasi") from exc
         user.gpa_raw = payload.gpa_raw
 
-    if payload.budget_max is not None:
-        user.budget_max = payload.budget_max
-        user.budget_currency = "USD"
+    # Bo'sh satr = "farqi yo'q" (tanlov tozalanadi); yuborilmasa o'zgarmaydi.
+    if payload.university_rank_range is not None:
+        if payload.university_rank_range:
+            try:
+                user.university_rank_range = UniversityRankRange(payload.university_rank_range)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail="Noto'g'ri reyting oralig'i") from exc
+        else:
+            user.university_rank_range = None
 
-    if payload.age is not None:
-        user.age = payload.age
+    if payload.application_fee_ok is not None:
+        user.application_fee_ok = payload.application_fee_ok
 
     await session.commit()
 
@@ -205,8 +213,8 @@ async def reset_me(
     user.major = None
     user.gpa_raw = None
     user.gpa_scale = None
-    user.budget_max = None
-    user.age = None
+    user.university_rank_range = None
+    user.application_fee_ok = None
 
     for certificate in list(user.language_certificates):
         await session.delete(certificate)

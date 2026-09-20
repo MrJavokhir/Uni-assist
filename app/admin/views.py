@@ -428,6 +428,8 @@ class UserAdmin(ModelView, model=User):
         User.budget_max,
         User.budget_currency,
         User.age,
+        User.university_rank_range,
+        User.application_fee_ok,
         User.target_countries,
         User.language_certificates,
         User.other_tests,
@@ -445,6 +447,8 @@ class UserAdmin(ModelView, model=User):
         User.budget_max,
         User.budget_currency,
         User.age,
+        User.university_rank_range,
+        User.application_fee_ok,
         User.target_countries,
     ]
     column_labels = _labels(
@@ -458,6 +462,8 @@ class UserAdmin(ModelView, model=User):
         budget_max="Byudjet",
         budget_currency="Valyuta",
         age="Yosh",
+        university_rank_range="Universitet reytingi",
+        application_fee_ok="Ariza to'loviga rozi",
         target_countries="Maqsad davlatlar",
         language_certificates="Til sertifikatlari",
         other_tests="Boshqa testlar",

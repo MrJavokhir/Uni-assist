@@ -12,7 +12,7 @@ if (tg) {
 const INIT_DATA = (tg && tg.initData) || "";
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 23;
+const ASSET_V = 24;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -153,11 +153,20 @@ const I18N = {
     "profile.lang_cert_score": "Ball",
     "profile.countries": "Maqsad davlatlar",
     "profile.countries_all": "Barchasi",
+    "profile.countries_none": "Tanlanmagan",
+    "profile.countries_count": "{n} ta davlat",
+    "profile.rank": "Universitet reytingi",
+    "profile.rank_hint": "Jahon reytingidagi o'rin",
+    "profile.rank_any": "Farqi yo'q",
+    "profile.app_fee": "Ariza to'lovi",
+    "profile.app_fee_hint": "Ariza to'lovi bo'lgan dasturlar ham mos keladimi?",
+    "profile.yes": "Ha",
+    "profile.no": "Yo'q",
+    "profile.completeness": "Profil to'ldirilgan",
+    "profile.header_hint": "To'liqroq profil — aniqroq tavsiya",
     "profile.reset": "Hammasini tozalash",
     "profile.reset_confirm": "Profildagi barcha tanlovlar o'chiriladi. Saqlangan dasturlarga tegilmaydi. Davom etamizmi?",
     "profile.reset_toast": "Profil tozalandi",
-    "profile.budget": "Yillik byudjet (USD)",
-    "profile.age": "Yosh",
     "profile.save": "Saqlash",
     "profile.saved_toast": "Profil saqlandi",
 
@@ -324,12 +333,21 @@ const I18N = {
     "profile.lang_cert_none": "Нет",
     "profile.lang_cert_score": "Балл",
     "profile.countries": "Целевые страны",
+    "profile.countries_none": "Не выбрано",
+    "profile.countries_count": "Стран: {n}",
+    "profile.rank": "Рейтинг университета",
+    "profile.rank_hint": "Место в мировом рейтинге",
+    "profile.rank_any": "Не важно",
+    "profile.app_fee": "Плата за подачу заявки",
+    "profile.app_fee_hint": "Подходят ли программы с платной подачей заявки?",
+    "profile.yes": "Да",
+    "profile.no": "Нет",
+    "profile.completeness": "Профиль заполнен",
+    "profile.header_hint": "Чем полнее профиль, тем точнее подбор",
     "profile.countries_all": "Все страны",
     "profile.reset": "Очистить всё",
     "profile.reset_confirm": "Все данные профиля будут удалены. Сохранённые программы не тронем. Продолжить?",
     "profile.reset_toast": "Профиль очищен",
-    "profile.budget": "Годовой бюджет (USD)",
-    "profile.age": "Возраст",
     "profile.save": "Сохранить",
     "profile.saved_toast": "Профиль сохранён",
 
@@ -496,12 +514,21 @@ const I18N = {
     "profile.lang_cert_none": "None",
     "profile.lang_cert_score": "Score",
     "profile.countries": "Target countries",
+    "profile.countries_none": "None selected",
+    "profile.countries_count": "{n} countries",
+    "profile.rank": "University ranking",
+    "profile.rank_hint": "Position in world rankings",
+    "profile.rank_any": "Any",
+    "profile.app_fee": "Application fee",
+    "profile.app_fee_hint": "Are programs with an application fee acceptable?",
+    "profile.yes": "Yes",
+    "profile.no": "No",
+    "profile.completeness": "Profile complete",
+    "profile.header_hint": "A fuller profile means better matches",
     "profile.countries_all": "All countries",
     "profile.reset": "Reset everything",
     "profile.reset_confirm": "All profile choices will be cleared. Saved programs stay untouched. Continue?",
     "profile.reset_toast": "Profile cleared",
-    "profile.budget": "Annual budget (USD)",
-    "profile.age": "Age",
     "profile.save": "Save",
     "profile.saved_toast": "Profile saved",
 
@@ -697,8 +724,9 @@ function profileCompleteness() {
     profile.gpa_raw !== null && profile.gpa_scale !== null,
     profile.language_certificates.length > 0,
     profile.target_country_ids.length > 0,
-    profile.budget_max !== null,
-    profile.age !== null,
+    // "Farqi yo'q" ham javob: ariza to'lovi bo'yicha tanlov qilingani yetarli.
+    // Reyting oralig'i ixtiyoriy afzallik — foizga qo'shilmaydi.
+    profile.application_fee_ok !== null,
   ];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
@@ -727,7 +755,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=23" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=24" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -1580,11 +1608,30 @@ async function renderSaved() {
 
 // ============ Profile ============
 
+// Bo'lim sarlavhasi + ikonka (faqat profil ekranida ishlatiladi).
+function profileSection(iconName, title) {
+  return `<div class="section-head">
+      <span class="section-title sec-ico">${icon(iconName)}<span>${title}</span></span>
+    </div>`;
+}
+
+const RANK_RANGES = ["1-100", "101-300", "301-500", "500+"];
+
 function renderProfile() {
   const el = document.getElementById("view-profile");
   const cert = profile.language_certificates[0] || {};
   const certType = cert.type || "";
   const certScore = cert.score ?? "";
+  const pct = profileCompleteness();
+  const fullName = [TG_USER && TG_USER.first_name, TG_USER && TG_USER.last_name]
+    .filter(Boolean)
+    .join(" ");
+  const feeValue =
+    profile.application_fee_ok === null || profile.application_fee_ok === undefined
+      ? ""
+      : profile.application_fee_ok
+        ? "yes"
+        : "no";
 
   const chips = (id, options, activeValue, multi) => `
     <div class="chip-group" id="${id}">
@@ -1599,7 +1646,28 @@ function renderProfile() {
     </div>`;
 
   el.innerHTML = `
-    <div class="section-head"><span class="section-title">${t("profile.section_academic")}</span></div>
+    <div class="profile-hero">
+      <div class="profile-id">
+        ${
+          TG_USER && TG_USER.photo_url
+            ? `<img class="profile-ava" src="${escapeHtml(TG_USER.photo_url)}" alt="">`
+            : `<div class="profile-ava profile-ava-text">${
+                escapeHtml(initials(fullName)) || icon("user")
+              }</div>`
+        }
+        <div class="profile-id-main">
+          <div class="profile-name">${escapeHtml(fullName || "—")}</div>
+          <div class="profile-tag">${
+            TG_USER && TG_USER.username ? "@" + escapeHtml(TG_USER.username) : t("profile.header_hint")
+          }</div>
+        </div>
+        <div class="profile-pct">${pct}%</div>
+      </div>
+      <div class="bar"><span style="width:${pct}%"></span></div>
+      <div class="profile-meter-label">${t("profile.completeness")}</div>
+    </div>
+
+    ${profileSection("cap", t("profile.section_academic"))}
     <div class="group">
       <div class="field">
         <label>${t("profile.degree_level")}</label>
@@ -1645,7 +1713,7 @@ function renderProfile() {
       </div>
     </div>
 
-    <div class="section-head"><span class="section-title">${t("profile.section_language")}</span></div>
+    ${profileSection("lang", t("profile.section_language"))}
     <div class="group">
       <div class="field">
         <label>${t("profile.lang_cert_type")}</label>
@@ -1665,36 +1733,57 @@ function renderProfile() {
       </div>
     </div>
 
-    <div class="section-head"><span class="section-title">${t("profile.section_preferences")}</span></div>
+    ${profileSection("globe", t("profile.section_preferences"))}
     <div class="group">
-      <div class="field">
-        <label>${t("profile.countries")}</label>
-        <div class="country-list" id="country-list">
-          <button type="button" class="country-row country-all" id="country-all">
-            <span class="country-flag">${icon("globe")}</span>
-            <span class="country-name">${escapeHtml(t("profile.countries_all"))}</span>
-            <span class="country-check">${icon("check")}</span>
-          </button>
-          ${countries
-            .map((c) => {
-              const active = profile.target_country_ids.map(String).includes(String(c.id));
-              return `
-                <button type="button" class="country-row ${active ? "active" : ""}" data-value="${c.id}">
-                  <span class="country-flag">${flag(c.iso_code)}</span>
-                  <span class="country-name">${escapeHtml(countryName(c))}</span>
-                  <span class="country-check">${icon("check")}</span>
-                </button>`;
-            })
-            .join("")}
+      <div class="field field-collapse">
+        <button type="button" class="collapse-head" id="country-toggle" aria-expanded="false" aria-controls="country-collapse">
+          <span class="collapse-label">${t("profile.countries")}</span>
+          <span class="collapse-value" id="country-summary"></span>
+          <span class="collapse-chevron">${icon("chevron")}</span>
+        </button>
+        <div class="collapse-body" id="country-collapse" hidden>
+          <div class="country-list" id="country-list">
+            <button type="button" class="country-row country-all" id="country-all">
+              <span class="country-flag">${icon("globe")}</span>
+              <span class="country-name">${escapeHtml(t("profile.countries_all"))}</span>
+              <span class="country-check">${icon("check")}</span>
+            </button>
+            ${countries
+              .map((c) => {
+                const active = profile.target_country_ids.map(String).includes(String(c.id));
+                return `
+                  <button type="button" class="country-row ${active ? "active" : ""}" data-value="${c.id}">
+                    <span class="country-flag">${flag(c.iso_code)}</span>
+                    <span class="country-name">${escapeHtml(countryName(c))}</span>
+                    <span class="country-check">${icon("check")}</span>
+                  </button>`;
+              })
+              .join("")}
+          </div>
         </div>
       </div>
       <div class="field">
-        <label>${t("profile.budget")}</label>
-        <input type="number" inputmode="numeric" id="budget-input" placeholder="—" value="${profile.budget_max ?? ""}" />
+        <label>${t("profile.rank")}</label>
+        ${chips(
+          "rank-chips",
+          [{ value: "", label: t("profile.rank_any") }].concat(
+            RANK_RANGES.map((r) => ({ value: r, label: r }))
+          ),
+          profile.university_rank_range || ""
+        )}
+        <small class="field-hint">${escapeHtml(t("profile.rank_hint"))}</small>
       </div>
       <div class="field">
-        <label>${t("profile.age")}</label>
-        <input type="number" inputmode="numeric" id="age-input" placeholder="—" value="${profile.age ?? ""}" />
+        <label>${t("profile.app_fee")}</label>
+        ${chips(
+          "fee-chips",
+          [
+            { value: "yes", label: t("profile.yes") },
+            { value: "no", label: t("profile.no") },
+          ],
+          feeValue
+        )}
+        <small class="field-hint">${escapeHtml(t("profile.app_fee_hint"))}</small>
       </div>
     </div>
 
@@ -1705,6 +1794,8 @@ function renderProfile() {
   `;
 
   bindChips("gpa-scale-chips", updateGpaPreview);
+  bindChips("rank-chips");
+  bindChips("fee-chips");
   bindChips("cert-type-chips", (value) => {
     document.getElementById("cert-score-field").hidden = !value;
   });
@@ -1714,10 +1805,36 @@ function renderProfile() {
   const countryRows = () =>
     Array.from(document.querySelectorAll("#country-list .country-row[data-value]"));
   const allRow = document.getElementById("country-all");
+  const summary = document.getElementById("country-summary");
+
+  // Ro'yxat yopiq turganda ham nima tanlangani ko'rinib tursin: bayroqlar
+  // (ko'pi bilan 4 ta) va davlatlar soni sarlavha qatorida ko'rsatiladi.
+  const syncSummary = () => {
+    const rows = countryRows();
+    const selected = rows.filter((r) => r.classList.contains("active"));
+    if (!selected.length) {
+      summary.innerHTML = `<span class="collapse-empty">${escapeHtml(t("profile.countries_none"))}</span>`;
+      return;
+    }
+    if (selected.length === rows.length) {
+      summary.textContent = t("profile.countries_all");
+      return;
+    }
+    const flags = selected
+      .slice(0, 4)
+      .map((r) => `<span class="summary-flag">${escapeHtml(r.querySelector(".country-flag").textContent)}</span>`)
+      .join("");
+    const label =
+      selected.length === 1
+        ? selected[0].querySelector(".country-name").textContent
+        : t("profile.countries_count", { n: selected.length });
+    summary.innerHTML = `${flags}<span>${escapeHtml(label)}</span>`;
+  };
 
   const syncAllRow = () => {
     const rows = countryRows();
     allRow.classList.toggle("active", rows.length > 0 && rows.every((r) => r.classList.contains("active")));
+    syncSummary();
   };
 
   countryRows().forEach((row) => {
@@ -1733,6 +1850,17 @@ function renderProfile() {
     const turnOn = !allRow.classList.contains("active");
     countryRows().forEach((r) => r.classList.toggle("active", turnOn));
     allRow.classList.toggle("active", turnOn);
+    syncSummary();
+  });
+
+  // Davlatlar ro'yxati uzun — sukut bo'yicha yig'ilgan holda turadi.
+  const countryToggle = document.getElementById("country-toggle");
+  const countryCollapse = document.getElementById("country-collapse");
+  countryToggle.addEventListener("click", () => {
+    haptic("light");
+    const open = countryToggle.getAttribute("aria-expanded") === "true";
+    countryToggle.setAttribute("aria-expanded", String(!open));
+    countryCollapse.hidden = open;
   });
 
   syncAllRow();
@@ -1828,8 +1956,7 @@ async function saveProfile() {
   const certType = activeChip("cert-type-chips");
   const certScoreEl = document.getElementById("cert-score-input");
   const certScore = certScoreEl ? certScoreEl.value : "";
-  const budget = document.getElementById("budget-input").value;
-  const age = document.getElementById("age-input").value;
+  const fee = activeChip("fee-chips");
 
   if (degree) payload.degree_level = degree;
   // Har doim yuboriladi: bo'sh qiymat tanlansa yo'nalish tozalanishi kerak.
@@ -1842,8 +1969,10 @@ async function saveProfile() {
     payload.language_cert_type = certType;
     payload.language_cert_score = parseFloat(certScore);
   }
-  if (budget) payload.budget_max = parseFloat(budget);
-  if (age) payload.age = parseInt(age, 10);
+  // Har doim yuboriladi: "Farqi yo'q" tanlansa bo'sh satr saqlangan
+  // tanlovni tozalaydi.
+  payload.university_rank_range = activeChip("rank-chips") || "";
+  if (fee) payload.application_fee_ok = fee === "yes";
 
   profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
   haptic("success");

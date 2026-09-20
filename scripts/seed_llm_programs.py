@@ -215,6 +215,199 @@ SEEDS: list[LlmSeed] = [
         ),
         missing=("IELTS/TOEFL",),
     ),
+    # --------------------- Buyuk Britaniya (davomi) ---------------------
+    # Edinburgh: IELTS 7.0 (Writing 7.0, qolganlari 6.5). Kampus dasturining
+    # kontrakt narxi sahifada yo'q — e'lon qilingan raqam ONLAYN dastur uchun
+    # edi, uni bu yerga yozish noto'g'ri bo'lardi.
+    LlmSeed(
+        country_iso="GB",
+        university="University of Edinburgh",
+        city="Edinburg",
+        website="https://www.ed.ac.uk",
+        timezone="Europe/London",
+        program="Law LLM",
+        source_url="https://study.ed.ac.uk/programmes/postgraduate-taught/167-law",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Edinburgh",
+        city="Edinburg",
+        website="https://www.ed.ac.uk",
+        timezone="Europe/London",
+        program="International Law LLM",
+        source_url="https://study.ed.ac.uk/programmes/postgraduate-taught/166-international-law",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University College London",
+        city="London",
+        website="https://www.ucl.ac.uk",
+        timezone="Europe/London",
+        program="Master of Laws (LLM)",
+        source_url="https://www.ucl.ac.uk/laws/study/master-laws-llm-courses/master-laws-llm",
+        intake_term="2026 Fall",
+        notes=(
+            "Ariza yig'imi 90 GBP. Overseas talabalar birinchi yil kontraktining "
+            "10% depozitini to'laydi."
+        ),
+        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="King's College London",
+        city="London",
+        website="https://www.kcl.ac.uk",
+        timezone="Europe/London",
+        program="Master of Laws (LLM)",
+        source_url="https://www.kcl.ac.uk/study/postgraduate-taught/courses/master-of-laws-llm",
+        intake_term="2026 Fall",
+        # King's "Band B": umumiy 7.0, har bo'limda kamida 6.5.
+        ielts_min=7.0,
+        notes="Xalqaro talabalar uchun 2 000 GBP depozit, u kontrakt hisobiga o'tadi.",
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    # Manchester huquq fakulteti bir nechta LL.M. beradi. Ingliz tili talabi
+    # fakultetning hammasiga bir xil e'lon qilingan, KONTRAKT esa kurs bo'yicha
+    # belgilanadi — shuning uchun narx faqat u aniq yozilgan "LLM Law"da bor.
+    LlmSeed(
+        country_iso="GB",
+        university="University of Manchester",
+        city="Manchester",
+        website="https://www.manchester.ac.uk",
+        timezone="Europe/London",
+        program="LLM Law",
+        source_url="https://www.manchester.ac.uk/study/masters/courses/list/08446/llm-law/",
+        intake_term="2026 Fall",
+        tuition_amount=31000,
+        tuition_currency="GBP",
+        ielts_min=7.0,
+        toefl_min=100,
+        notes="Narx 2026-yil sentyabrda boshlanadigan o'quv yili uchun (xalqaro talabalar).",
+        missing=("ariza yopilish sanasi",),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Manchester",
+        city="Manchester",
+        website="https://www.manchester.ac.uk",
+        timezone="Europe/London",
+        program="LLM Public International Law",
+        source_url="https://www.manchester.ac.uk/study/masters/courses/list/09644/llm-public-international-law/",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        toefl_min=100,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Manchester",
+        city="Manchester",
+        website="https://www.manchester.ac.uk",
+        timezone="Europe/London",
+        program="LLM International Business and Commercial Law",
+        source_url="https://www.manchester.ac.uk/study/masters/courses/list/07991/llm-international-business-and-commercial-law/",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        toefl_min=100,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Manchester",
+        city="Manchester",
+        website="https://www.manchester.ac.uk",
+        timezone="Europe/London",
+        program="LLM International Financial Law",
+        source_url="https://www.manchester.ac.uk/study/masters/courses/list/01060/llm-international-financial-law/",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        toefl_min=100,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Manchester",
+        city="Manchester",
+        website="https://www.manchester.ac.uk",
+        timezone="Europe/London",
+        program="LLM International Economic Law",
+        source_url="https://www.manchester.ac.uk/study/masters/courses/list/18222/llm-international-economic-law/",
+        intake_term="2026 Fall",
+        ielts_min=7.0,
+        toefl_min=100,
+        missing=("kontrakt", "ariza yopilish sanasi"),
+    ),
+    # ---------------------------- AQSH (davomi) ----------------------------
+    LlmSeed(
+        country_iso="US",
+        university="UC Berkeley School of Law",
+        city="Berkeley, CA",
+        website="https://www.law.berkeley.edu",
+        timezone="America/Los_Angeles",
+        program="Master of Laws (LL.M.)",
+        source_url="https://www.law.berkeley.edu/llm-jsd/tuition-costs/",
+        intake_term="2027 Fall",
+        notes=(
+            "Qabul qilinganlar 1 000 USD qaytarilmaydigan depozit to'laydi, "
+            "u kontrakt hisobiga o'tadi."
+        ),
+        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+    ),
+    # -------------------------- Germaniya (davomi) --------------------------
+    LlmSeed(
+        country_iso="DE",
+        university="Goethe University Frankfurt (ILF)",
+        city="Frankfurt",
+        website="https://www.ilf-frankfurt.de",
+        timezone="Europe/Berlin",
+        program="LL.M. Finance",
+        source_url="https://www.ilf-frankfurt.de/llm-finance",
+        intake_term="2026 Fall",
+        tuition_amount=23000,
+        tuition_currency="EUR",
+        ielts_min=7.0,
+        toefl_min=100,
+        notes=(
+            "Narx 2026/27 uchun, to'liq kunlik shakl (yarim kunlik 27 000 EUR). Bundan "
+            "tashqari har semestr uchun universitetning ~380 EUR yig'imi bor. Ariza yig'imi "
+            "yo'q, qabul uzluksiz (rolling) — navbat tartibida. TOEFL iBT'da har bo'limda "
+            "kamida 22 ball kerak."
+        ),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Goethe University Frankfurt (ILF)",
+        city="Frankfurt",
+        website="https://www.ilf-frankfurt.de",
+        timezone="Europe/Berlin",
+        program="LL.M. International Finance",
+        source_url="https://www.ilf-frankfurt.de/llm-international-finance-1",
+        intake_term="2026 Fall",
+        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+    ),
+    # ------------------------------- Polsha -------------------------------
+    LlmSeed(
+        country_iso="PL",
+        university="Jagiellonian University",
+        city="Krakov",
+        website="https://www.uj.edu.pl",
+        timezone="Europe/Warsaw",
+        program="LL.M. in EU and EEA Law",
+        source_url="https://okspo.wpia.uj.edu.pl/llm",
+        intake_term="2026 Fall",
+        notes=(
+            "DIQQAT: bepul o'qish faqat EU/EEA/Shveytsariya rezidentlari uchun. "
+            "O'zbekiston fuqarolari uchun narx sahifada ko'rsatilmagan — universitetdan "
+            "aniqlashtiring."
+        ),
+        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+    ),
 ]
 
 NOTE_PREFIX = "Rasmiy sahifadan tekshirilgan."

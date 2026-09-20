@@ -210,6 +210,19 @@ const I18N = {
     "scholarships.details": "Batafsil",
     "scholarships.official_site": "Rasmiy saytga o'tish",
     "scholarships.about": "Grant haqida",
+    "scholarships.money": "Moliyaviy qo'llab-quvvatlash",
+    "scholarships.study": "O'qish",
+    "scholarships.requirements": "Talablar",
+    "scholarships.degree_levels": "Qaysi darajaga",
+    "scholarships.duration": "Muddati",
+    "scholarships.lang_score": "Til bali",
+    "scholarships.work_exp": "Ish tajribasi",
+    "scholarships.stages": "Tanlov bosqichlari",
+    "scholarships.stages_count": "{n} bosqich",
+    "scholarships.years_count": "{years} yil",
+    "scholarships.per_month": "oyiga",
+    "scholarships.per_year": "yiliga",
+    "scholarships.verify_hint": "Talablar har yili o'zgarishi mumkin — ariza berishdan oldin rasmiy saytdan tasdiqlang.",
     "scholarships.conditions": "Shartlar",
     "scholarships.deadlines": "Muddatlar",
     "scholarships.covers": "Qamrov",
@@ -355,6 +368,19 @@ const I18N = {
     "scholarships.details": "Подробнее",
     "scholarships.official_site": "Перейти на официальный сайт",
     "scholarships.about": "О гранте",
+    "scholarships.money": "Финансирование",
+    "scholarships.study": "Обучение",
+    "scholarships.requirements": "Требования",
+    "scholarships.degree_levels": "Для каких степеней",
+    "scholarships.duration": "Длительность",
+    "scholarships.lang_score": "Языковой балл",
+    "scholarships.work_exp": "Опыт работы",
+    "scholarships.stages": "Этапы отбора",
+    "scholarships.stages_count": "{n} этапа",
+    "scholarships.years_count": "{years} г.",
+    "scholarships.per_month": "в месяц",
+    "scholarships.per_year": "в год",
+    "scholarships.verify_hint": "Требования могут меняться каждый год — перед подачей уточните на официальном сайте.",
     "scholarships.conditions": "Условия",
     "scholarships.deadlines": "Дедлайны",
     "scholarships.covers": "Покрытие",
@@ -500,6 +526,19 @@ const I18N = {
     "scholarships.details": "Details",
     "scholarships.official_site": "Open official website",
     "scholarships.about": "About this grant",
+    "scholarships.money": "Funding",
+    "scholarships.study": "Study",
+    "scholarships.requirements": "Requirements",
+    "scholarships.degree_levels": "Degree levels",
+    "scholarships.duration": "Duration",
+    "scholarships.lang_score": "Language score",
+    "scholarships.work_exp": "Work experience",
+    "scholarships.stages": "Selection stages",
+    "scholarships.stages_count": "{n} stages",
+    "scholarships.years_count": "{years} yr",
+    "scholarships.per_month": "per month",
+    "scholarships.per_year": "per year",
+    "scholarships.verify_hint": "Requirements can change each year — confirm on the official site before applying.",
     "scholarships.conditions": "Conditions",
     "scholarships.deadlines": "Deadlines",
     "scholarships.covers": "Coverage",
@@ -643,7 +682,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=18" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=19" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -976,28 +1015,41 @@ function scholarshipCard(s) {
       }">${icon("clock")}${t("scholarships.deadline", { date: escapeHtml(s.nearest_deadline) })}</span>`
     : "";
 
+  // Bir qarashda eng kerakli raqam: oylik stipendiya.
+  const stipend = stipendText(s);
+
   return `
-    <div class="card">
-      <div class="card-top">
-        <div class="avatar">${escapeHtml(initials(s.name))}</div>
-        <div class="card-body">
+    <div class="card gr-card details-btn" data-id="${s.id}" role="button" tabindex="0">
+      <div class="gr-head">
+        ${avatar(s.name, s.logo)}
+        <div class="gr-head-text">
           <div class="card-title">${escapeHtml(s.name)}</div>
-          <div class="meta-row">
-            <span class="pill ${coverageTone}">${icon("award")}${t(
-              "scholarships.coverage." + s.coverage_type
-            )}</span>
-            ${countryPills}
-            ${deadline}
-          </div>
-          ${extras ? `<div class="meta-row">${extras}</div>` : ""}
+          <div class="gr-countries">${countryPills}</div>
         </div>
+        <span class="card-chevron">${icon("chevron")}</span>
       </div>
-      <div class="card-actions">
-        <button type="button" class="btn btn-soft details-btn" data-id="${s.id}">
-          ${icon("chevron")}${t("scholarships.details")}
-        </button>
+
+      <div class="gr-facts">
+        <span class="pill ${coverageTone}">${icon("award")}${t(
+          "scholarships.coverage." + s.coverage_type
+        )}</span>
+        ${stipend ? `<span class="pill">${icon("spark")}${escapeHtml(stipend)}</span>` : ""}
+        ${deadline}
       </div>
+
+      ${extras ? `<div class="gr-extras">${extras}</div>` : ""}
     </div>`;
+}
+
+function stipendText(s) {
+  if (s.stipend_amount === null || s.stipend_amount === undefined) return "";
+  const fmt = (n) => Number(n).toLocaleString();
+  const amount =
+    s.stipend_max && s.stipend_max !== s.stipend_amount
+      ? `${fmt(s.stipend_amount)}–${fmt(s.stipend_max)}`
+      : fmt(s.stipend_amount);
+  const period = s.stipend_period ? " / " + t("scholarships.per_" + s.stipend_period) : "";
+  return `${amount} ${s.currency}${period}`;
 }
 
 // ---- Tafsilot oynasi: avval ilova ichida ko'rsatiladi, rasmiy saytga
@@ -1197,10 +1249,32 @@ function openScholarshipSheet(s) {
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
 
-  const stipend =
-    s.stipend_amount !== null
-      ? `${s.stipend_amount} ${escapeHtml(s.currency)}`
-      : t("scholarships.not_specified");
+  const dash = t("scholarships.not_specified");
+  const stipend = stipendText(s) || dash;
+
+  // Daraja/muddat/til/bosqich — hammasi raqam yoki kalit sifatida saqlanadi,
+  // shuning uchun jumla foydalanuvchi tilida shu yerda yig'iladi.
+  const degrees = (s.degree_levels || [])
+    .map((d) => t("profile.degree_level." + d))
+    .join(", ");
+  const duration =
+    s.duration_min_years
+      ? s.duration_max_years && s.duration_max_years !== s.duration_min_years
+        ? `${s.duration_min_years}–${s.duration_max_years} ${t("program.years")}`
+        : `${s.duration_min_years} ${t("program.years")}`
+      : dash;
+  const langScore = [
+    s.ielts_min ? `IELTS ${s.ielts_min}` : "",
+    s.toefl_min ? `TOEFL ${s.toefl_min}` : "",
+  ]
+    .filter(Boolean)
+    .join(" / ");
+  const workExp =
+    s.work_experience_years === null || s.work_experience_years === undefined
+      ? dash
+      : s.work_experience_years === 0
+        ? t("scholarships.no")
+        : t("scholarships.years_count", { years: s.work_experience_years });
 
   const deadlines = s.deadlines.length
     ? s.deadlines
@@ -1229,7 +1303,10 @@ function openScholarshipSheet(s) {
 
   sheet.innerHTML = `
     <div class="sheet-handle"></div>
-    <div class="sheet-title">${escapeHtml(s.name)}</div>
+    <div class="sheet-head">
+      ${avatar(s.name, s.logo)}
+      <div><div class="sheet-title">${escapeHtml(s.name)}</div></div>
+    </div>
     <div class="meta-row">
       <span class="pill ${s.coverage_type === "full" ? "green" : "amber"}">${icon("award")}${t(
         "scholarships.coverage." + s.coverage_type
@@ -1243,8 +1320,6 @@ function openScholarshipSheet(s) {
         )
         .join("")}
     </div>
-    ${extras ? `<div class="meta-row">${extras}</div>` : ""}
-
     ${
       s.description
         ? `<div class="sheet-section">
@@ -1255,15 +1330,37 @@ function openScholarshipSheet(s) {
     }
 
     <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.conditions")}</div>
-      ${row(t("scholarships.stipend"), stipend)}
+      <div class="sheet-section-title">${t("scholarships.money")}</div>
+      ${row(t("scholarships.stipend"), escapeHtml(stipend))}
+      ${extras ? `<div class="meta-row sheet-extras">${extras}</div>` : ""}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("scholarships.study")}</div>
+      ${row(t("scholarships.degree_levels"), degrees || dash)}
+      ${row(t("scholarships.duration"), duration)}
       ${row(
-        t("scholarships.age_limit"),
-        s.age_limit !== null ? s.age_limit : t("scholarships.not_specified")
+        t("program.language"),
+        s.study_language ? escapeHtml(instructionLanguage(s.study_language)) : dash
       )}
       ${row(t("scholarships.uni_choice"), t("scholarships.uni_choice." + s.university_choice))}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("scholarships.requirements")}</div>
+      ${row(t("scholarships.lang_score"), langScore || dash)}
+      ${row(t("scholarships.work_exp"), workExp)}
+      ${row(
+        t("scholarships.age_limit"),
+        s.age_limit !== null && s.age_limit !== undefined ? s.age_limit : dash
+      )}
+      ${row(
+        t("scholarships.stages"),
+        s.selection_stages ? t("scholarships.stages_count", { n: s.selection_stages }) : dash
+      )}
       ${row(t("scholarships.separate_application"), yesNo(s.application_linked_to_program))}
       ${row(t("scholarships.for_uzbekistan"), yesNo(s.citizenship_eligible))}
+      <div class="sheet-note">${t("scholarships.verify_hint")}</div>
     </div>
 
     <div class="sheet-section">

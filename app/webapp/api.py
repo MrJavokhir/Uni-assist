@@ -67,6 +67,25 @@ def _localized_notes(program: Program, lang: str) -> str | None:
     return by_lang.get(lang) or program.notes
 
 
+def _localized_description(scholarship: Scholarship, lang: str) -> str | None:
+    """Grant tavsifini foydalanuvchi tilida, bo'lmasa o'zbekchasida."""
+    by_lang = {"ru": scholarship.description_ru, "en": scholarship.description_en}
+    return by_lang.get(lang) or scholarship.description
+
+
+def _favicon(url: str | None) -> str | None:
+    """Sayt manzilidan logotip havolasi (Google favicon xizmati)."""
+    if not url:
+        return None
+    domain = url.split("//")[-1].split("/")[0].strip()
+    return f"https://www.google.com/s2/favicons?domain={domain}&sz=128" if domain else None
+
+
+def _scholarship_logo(scholarship: Scholarship) -> str | None:
+    """Grant logotipi: admin kiritgani, bo'lmasa rasmiy sayt domenidan."""
+    return scholarship.logo_url or _favicon(scholarship.source_url)
+
+
 def _logo_url(university: University) -> str | None:
     """Universitet logotipi.
 
@@ -75,14 +94,7 @@ def _logo_url(university: University) -> str | None:
     uchun ham qo'lda rasm yuklash shart emas. Rasm yuklanmasa Mini App
     universitet nomining bosh harflarini chizadi.
     """
-    if university.logo_url:
-        return university.logo_url
-    if not university.website:
-        return None
-    domain = university.website.split("//")[-1].split("/")[0].strip()
-    if not domain:
-        return None
-    return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
+    return university.logo_url or _favicon(university.website)
 
 
 async def get_current_user(
@@ -344,6 +356,7 @@ async def get_program(
 @router.get("/scholarships", response_model=list[ScholarshipOut])
 async def list_scholarships(
     country_id: int | None = None,
+    user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[ScholarshipOut]:
     """Davlat stipendiyalari — dasturga bog'liq bo'lmagan holda.
@@ -374,7 +387,7 @@ async def list_scholarships(
             ScholarshipOut(
                 id=scholarship.id,
                 name=scholarship.name,
-                description=scholarship.description,
+                description=_localized_description(scholarship, user.ui_language.value),
                 coverage_type=scholarship.coverage_type.value,
                 coverage_percent=scholarship.coverage_percent,
                 stipend_amount=(
@@ -388,6 +401,25 @@ async def list_scholarships(
                 extras_dormitory=scholarship.extras_dormitory,
                 extras_language_course=scholarship.extras_language_course,
                 citizenship_eligible=scholarship.citizenship_eligible,
+                logo=_scholarship_logo(scholarship),
+                stipend_max=float(scholarship.stipend_max)
+                if scholarship.stipend_max is not None
+                else None,
+                stipend_period=scholarship.stipend_period,
+                ielts_min=float(scholarship.ielts_min)
+                if scholarship.ielts_min is not None
+                else None,
+                toefl_min=scholarship.toefl_min,
+                work_experience_years=scholarship.work_experience_years,
+                degree_levels=list(scholarship.degree_levels or []),
+                study_language=scholarship.study_language,
+                duration_min_years=float(scholarship.duration_min_years)
+                if scholarship.duration_min_years is not None
+                else None,
+                duration_max_years=float(scholarship.duration_max_years)
+                if scholarship.duration_max_years is not None
+                else None,
+                selection_stages=scholarship.selection_stages,
                 countries=[
                     CountryOut(
                         id=c.id,

@@ -30,7 +30,6 @@ from app.db.models import Country, CoverageType, Scholarship, UniversityChoiceTy
 from app.db.session import async_session_factory
 
 VERIFIED_BY = "seed"
-TODO_NOTE = "TODO: aniq summa va joriy talablarni rasmiy saytdan tasdiqlash kerak."
 
 
 @dataclass
@@ -59,6 +58,24 @@ class ScholarshipSeed:
     age_limit: int | None = None
     programs_note: str = field(default="", repr=False)
 
+    # Tavsif tarjimalari (bo'sh bo'lsa Mini App o'zbekchasiga qaytadi)
+    description_ru: str | None = None
+    description_en: str | None = None
+
+    # --- Rasmiy sahifadan olingan tafsilotlar ---
+    # None = sahifada ko'rsatilmagan (to'qilmaydi).
+    stipend_amount: float | None = None
+    stipend_max: float | None = None
+    stipend_period: str | None = None  # "month" | "year"
+    ielts_min: float | None = None
+    toefl_min: int | None = None
+    work_experience_years: int | None = None
+    degree_levels: tuple[str, ...] = ()
+    study_language: str | None = None
+    duration_min_years: float | None = None
+    duration_max_years: float | None = None
+    selection_stages: int | None = None
+
 
 # Grantlar tegishli bo'lgan davlatlar (agar bazada bo'lmasa, yaratiladi).
 COUNTRIES: list[CountrySeed] = [
@@ -86,7 +103,22 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "Germaniya akademik almashinuv xizmati (DAAD) stipendiyasi. Magistratura va "
             "PhD uchun oylik stipendiya, sog'liq sug'urtasi, ko'p hollarda aviachipta va "
             "til kursi qoplanadi. Universitetni talabaning o'zi tanlaydi.\n"
-            f"{TODO_NOTE}"
+        ),
+        stipend_amount=992,
+        stipend_max=1300,
+        stipend_period="month",
+        degree_levels=("master", "phd"),
+        duration_min_years=1,
+        duration_max_years=2,
+        description_ru=(
+            "Стипендия Германской службы академических обменов (DAAD). Для магистратуры и PhD: "
+            "ежемесячная стипендия, медицинская страховка, часто авиабилет и языковой курс. "
+            "Университет выбирает сам студент."
+        ),
+        description_en=(
+            "A scholarship from the German Academic Exchange Service (DAAD). For master's and PhD "
+            "study: a monthly stipend, health insurance and often flights and a language course. "
+            "The student chooses the university."
         ),
     ),
     ScholarshipSeed(
@@ -102,7 +134,21 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "Vengriya hukumati stipendiyasi. Kontrakt to'liq qoplanadi, oylik stipendiya, "
             "sog'liq sug'urtasi va yotoqxona (yoki turar joy nafaqasi) beriladi. Universitet "
             "va dastur cheklangan ro'yxatdan talabaning o'zi tomonidan tanlanadi.\n"
-            f"{TODO_NOTE}"
+        ),
+        stipend_amount=43700,
+        stipend_max=180000,
+        stipend_period="month",
+        degree_levels=("bachelor", "master", "phd"),
+        study_language="English",
+        description_ru=(
+            "Стипендия правительства Венгрии. Обучение покрывается полностью, плюс ежемесячная "
+            "стипендия, медицинская страховка и общежитие (или доплата на жильё). Университет и "
+            "программу студент выбирает из ограниченного списка."
+        ),
+        description_en=(
+            "A Hungarian government scholarship. Tuition is fully covered, plus a monthly "
+            "stipend, health insurance and a dormitory place (or a housing contribution). The "
+            "student picks the university and programme from a set list."
         ),
     ),
     ScholarshipSeed(
@@ -117,7 +163,20 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "turiga qarab farq qiladi: ba'zi dasturlarda faqat oylik stipendiya beriladi "
             "(kontrakt alohida), ba'zilarida kontrakt ham qoplanadi — ariza berishdan oldin "
             "aniq dastur shartlarini tekshiring.\n"
-            f"{TODO_NOTE}"
+        ),
+        stipend_amount=2500,
+        stipend_period="month",
+        degree_levels=("master",),
+        description_ru=(
+            "Программы Польского национального агентства академических обменов (NAWA). Покрытие "
+            "зависит от программы: где-то выплачивается только ежемесячная стипендия (обучение "
+            "оплачивается отдельно), где-то покрывается и обучение — уточняйте условия конкретной "
+            "программы."
+        ),
+        description_en=(
+            "Programmes run by Poland's National Agency for Academic Exchange (NAWA). Coverage "
+            "depends on the programme: some pay only a monthly stipend (tuition is separate), "
+            "others cover tuition too — check the conditions of the specific programme."
         ),
     ),
     ScholarshipSeed(
@@ -134,7 +193,21 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "Yosh chegarasi YO'Q — buning o'rniga kamida 2 yillik ish tajribasi va "
             "rahbarlik salohiyati talab qilinadi, shuning uchun 'yosh chegarasi' maydoni "
             "bo'sh qoldirilgan.\n"
-            f"{TODO_NOTE}"
+        ),
+        work_experience_years=2,
+        degree_levels=("master",),
+        study_language="English",
+        duration_min_years=1,
+        duration_max_years=1,
+        description_ru=(
+            "Магистерская стипендия правительства Великобритании (только годичные магистратуры). "
+            "Покрывает обучение, проживание и авиабилет. Возрастного ограничения НЕТ — вместо "
+            "этого требуется минимум 2 года опыта работы и лидерский потенциал."
+        ),
+        description_en=(
+            "A UK government master's scholarship (one-year master's programmes only). It covers "
+            "tuition, living costs and flights. There is NO age limit — instead it requires at "
+            "least 2 years of work experience and leadership potential."
         ),
     ),
     ScholarshipSeed(
@@ -152,7 +225,22 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "yo'l xarajatlari qoplanadi.\n"
             "Eslatma: dastur ko'plab EI davlatlarini qamrab oladi — bu yerda bazadagi "
             "mavjud davlatlar bilan bog'langan, to'liq ro'yxat rasmiy katalogda.\n"
-            f"{TODO_NOTE}"
+        ),
+        stipend_amount=1400,
+        stipend_period="month",
+        degree_levels=("master",),
+        study_language="English",
+        duration_min_years=1,
+        duration_max_years=2,
+        description_ru=(
+            "Совместная магистерская программа Европейского союза. Студент учится минимум в двух "
+            "странах; покрываются обучение, проживание, страховка и дорожные расходы. Программа "
+            "охватывает многие страны ЕС — здесь связаны только те, что есть в базе."
+        ),
+        description_en=(
+            "A joint master's programme run by the European Union. Students study in at least two "
+            "countries; tuition, living costs, insurance and travel are covered. The programme "
+            "spans many EU countries — only those already in the catalogue are linked here."
         ),
     ),
     ScholarshipSeed(
@@ -169,7 +257,19 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "Janubiy Koreya hukumati stipendiyasi (ilgari KGSP). Kontrakt, oylik stipendiya, "
             "aviachipta, sug'urta va bir yillik koreys tili kursi qoplanadi. Ariza elchixona "
             "yoki universitet yo'nalishi orqali beriladi.\n"
-            f"{TODO_NOTE}"
+        ),
+        degree_levels=("master", "phd"),
+        duration_min_years=2,
+        duration_max_years=3,
+        description_ru=(
+            "Стипендия правительства Южной Кореи (ранее KGSP). Покрывает обучение, ежемесячную "
+            "стипендию, авиабилет, страховку и годичный курс корейского языка. Заявка подаётся "
+            "через посольство или напрямую в университет."
+        ),
+        description_en=(
+            "A South Korean government scholarship (formerly KGSP). It covers tuition, a monthly "
+            "allowance, flights, insurance and a one-year Korean language course. You apply "
+            "through an embassy or directly to a university."
         ),
     ),
     ScholarshipSeed(
@@ -185,7 +285,19 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "AQSH Davlat departamentining magistratura/PhD stipendiyasi. Kontrakt, yashash "
             "nafaqasi, aviachipta va sug'urta qoplanadi. Universitet tanlovida komissiya "
             "ishtirok etadi, shuning uchun 'universitetni grant tayinlaydi' deb belgilangan.\n"
-            f"{TODO_NOTE}"
+        ),
+        ielts_min=6.5,
+        toefl_min=79,
+        degree_levels=("master", "phd"),
+        study_language="English",
+        description_ru=(
+            "Стипендия Госдепартамента США для магистратуры и PhD. Покрывает обучение, "
+            "проживание, авиабилет и страховку. В выборе университета участвует комиссия."
+        ),
+        description_en=(
+            "A U.S. State Department scholarship for master's and PhD study. It covers tuition, "
+            "living costs, flights and insurance. A committee takes part in choosing the "
+            "university."
         ),
     ),
     ScholarshipSeed(
@@ -203,7 +315,21 @@ SCHOLARSHIPS: list[ScholarshipSeed] = [
             "Turkiya hukumati stipendiyasi. Kontrakt, oylik stipendiya, yotoqxona, sug'urta, "
             "aviachipta va bir yillik turk tili kursi qoplanadi. Universitet va dasturni "
             "komissiya tayinlaydi (talaba tanlov ro'yxatini ko'rsatadi).\n"
-            f"{TODO_NOTE}"
+        ),
+        stipend_amount=6500,
+        stipend_max=9000,
+        stipend_period="month",
+        degree_levels=("bachelor", "master", "phd"),
+        study_language="Turkish",
+        description_ru=(
+            "Стипендия правительства Турции. Покрывает обучение, ежемесячную стипендию, "
+            "общежитие, страховку, авиабилет и годичный курс турецкого языка. Университет и "
+            "программу назначает комиссия (студент указывает свои предпочтения)."
+        ),
+        description_en=(
+            "A Turkish government scholarship. It covers tuition, a monthly stipend, a dormitory "
+            "place, insurance, flights and a one-year Turkish language course. A committee "
+            "assigns the university and programme (the student lists preferences)."
         ),
     ),
 ]
@@ -259,10 +385,23 @@ async def _upsert_scholarships(session: AsyncSession, countries: dict[str, Count
             updated += 1
 
         scholarship.description = seed.description
+        scholarship.description_ru = seed.description_ru
+        scholarship.description_en = seed.description_en
         scholarship.coverage_type = seed.coverage_type
         scholarship.coverage_percent = seed.coverage_percent
-        # stipend_amount ataylab tegilmaydi — admin panelda qo'lda to'ldiriladi.
         scholarship.currency = seed.currency
+        # Quyidagilar rasmiy sahifalardan olingan; ko'rsatilmaganlari None.
+        scholarship.stipend_amount = seed.stipend_amount
+        scholarship.stipend_max = seed.stipend_max
+        scholarship.stipend_period = seed.stipend_period
+        scholarship.ielts_min = seed.ielts_min
+        scholarship.toefl_min = seed.toefl_min
+        scholarship.work_experience_years = seed.work_experience_years
+        scholarship.degree_levels = list(seed.degree_levels) or None
+        scholarship.study_language = seed.study_language
+        scholarship.duration_min_years = seed.duration_min_years
+        scholarship.duration_max_years = seed.duration_max_years
+        scholarship.selection_stages = seed.selection_stages
         scholarship.extras_flight = seed.extras_flight
         scholarship.extras_insurance = seed.extras_insurance
         scholarship.extras_dormitory = seed.extras_dormitory

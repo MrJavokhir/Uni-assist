@@ -154,6 +154,18 @@ class ScholarshipOut(BaseModel):
     extras_dormitory: bool
     extras_language_course: bool
     citizenship_eligible: bool
+    logo: str | None = None
+    # Rasmiy sahifadan olingan tafsilotlar (None = ko'rsatilmagan)
+    stipend_max: float | None = None
+    stipend_period: str | None = None
+    ielts_min: float | None = None
+    toefl_min: int | None = None
+    work_experience_years: int | None = None
+    degree_levels: list[str] = []
+    study_language: str | None = None
+    duration_min_years: float | None = None
+    duration_max_years: float | None = None
+    selection_stages: int | None = None
     # To'liq obyekt (faqat nom emas): Mini App bayroq chiqarishi uchun
     # iso_code, foydalanuvchi tilida ko'rsatishi uchun esa uchala nom kerak.
     countries: list[CountryOut]

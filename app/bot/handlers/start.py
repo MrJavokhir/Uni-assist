@@ -51,5 +51,10 @@ async def cmd_start(message: Message, session: AsyncSession) -> None:
     aks holda foydalanuvchi o'zi tushunmaydigan tilda kanal so'rovini
     ko'rardi. /start qayta berilsa tilni almashtirish imkonini ham beradi.
     """
-    await get_or_create_user(session, message.from_user.id, message.from_user.username)
+    await get_or_create_user(
+        session,
+        message.from_user.id,
+        message.from_user.username,
+        language_code=message.from_user.language_code,
+    )
     await message.answer(CHOOSE_LANGUAGE, reply_markup=language_keyboard())

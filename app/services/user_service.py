@@ -4,12 +4,32 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.db.models import Country, LanguageCertType, User, UserLanguageCertificate
+from app.db.models import Country, LanguageCertType, UiLanguage, User, UserLanguageCertificate
 
 _PROFILE_RELATIONSHIPS = ("target_countries", "language_certificates", "other_tests", "saved_programs")
 
 
-async def get_or_create_user(session: AsyncSession, telegram_id: int, username: str | None) -> User:
+def _language_from_telegram(code: str | None) -> UiLanguage:
+    """Telegram interfeys tilidan boshlang'ich til.
+
+    Yangi foydalanuvchining `ui_language`i doim "uz" bo'lib qolardi va Mini App
+    bot orqali emas, to'g'ridan-to'g'ri ochilganda ruszabon foydalanuvchi ham
+    o'zbekcha ko'rardi. Botda til so'raladi va uni ustiga yozadi — bu faqat
+    oqilona boshlang'ich qiymat.
+    """
+    base = (code or "").split("-")[0].lower()
+    try:
+        return UiLanguage(base)
+    except ValueError:
+        return UiLanguage.UZ
+
+
+async def get_or_create_user(
+    session: AsyncSession,
+    telegram_id: int,
+    username: str | None,
+    language_code: str | None = None,
+) -> User:
     stmt = (
         select(User)
         .where(User.telegram_id == telegram_id)
@@ -22,7 +42,11 @@ async def get_or_create_user(session: AsyncSession, telegram_id: int, username: 
             await session.commit()
         return user
 
-    user = User(telegram_id=telegram_id, username=username)
+    user = User(
+        telegram_id=telegram_id,
+        username=username,
+        ui_language=_language_from_telegram(language_code),
+    )
     session.add(user)
     await session.commit()
     await session.refresh(user, attribute_names=list(_PROFILE_RELATIONSHIPS))

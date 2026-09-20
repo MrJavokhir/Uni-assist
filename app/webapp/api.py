@@ -99,7 +99,12 @@ async def get_current_user(
     # uchun ilova ichida yana to'sib turish foydalanuvchini ikki marta
     # to'xtatardi. Qarang: app/bot/middlewares.py
     tg_user = result["user"]
-    return await get_or_create_user(session, tg_user["id"], tg_user.get("username"))
+    return await get_or_create_user(
+        session,
+        tg_user["id"],
+        tg_user.get("username"),
+        language_code=tg_user.get("language_code"),
+    )
 
 
 @router.get("/me", response_model=ProfileOut)

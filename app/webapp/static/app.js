@@ -10,6 +10,9 @@ if (tg) {
   }
 }
 const INIT_DATA = (tg && tg.initData) || "";
+// Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
+// oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
+const ASSET_V = 23;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -724,7 +727,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=22" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=23" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -762,16 +765,16 @@ async function renderHome() {
 
     <div class="section-head"><span class="section-title">${t("home.section_shortcuts")}</span></div>
     <div class="quick-grid">
-      <button type="button" class="quick" data-goto="match">
-        <span class="quick-ico accent">${icon("search")}</span>
+      <button type="button" class="quick accent" data-goto="match">
+        <img class="quick-ico" src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("nav.match")}</span>
       </button>
-      <button type="button" class="quick" data-goto="scholarships">
-        <span class="quick-ico amber">${icon("award")}</span>
+      <button type="button" class="quick amber" data-goto="scholarships">
+        <img class="quick-ico" src="icon-grants.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("nav.scholarships")}</span>
       </button>
-      <button type="button" class="quick" data-goto="saved">
-        <span class="quick-ico green">${icon("bookmark")}</span>
+      <button type="button" class="quick violet" data-goto="saved">
+        <img class="quick-ico" src="icon-saved.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("nav.saved")}</span>
       </button>
     </div>
@@ -805,10 +808,8 @@ async function renderHome() {
     : total
     ? `<div class="summary" data-goto="match">
          <div class="summary-top">
-           <div>
-             <div class="summary-value">${total}</div>
-             <div class="summary-label">${t("home.summary_total")}</div>
-           </div>
+           <div class="summary-value">${total}</div>
+           <div class="summary-label">${t("home.summary_total")}</div>
            <span class="summary-go">${icon("chevron")}</span>
          </div>
          <div class="split">
@@ -1288,6 +1289,10 @@ async function openProgramSheet(programId) {
       ${deadlines}
     </div>
 
+    <div class="sheet-verified">${t("program.verified_at", {
+      date: escapeHtml(p.verified_at),
+    })}</div>
+
     <div class="sheet-actions">
       <button type="button" class="btn ${
         p.saved ? "btn-done" : "btn-accent"
@@ -1297,7 +1302,6 @@ async function openProgramSheet(programId) {
       <button type="button" class="btn btn-soft btn-block" id="sheet-open-site">
         ${t("program.official_page")}
       </button>
-      <div class="sheet-note">${t("program.verified_at", { date: escapeHtml(p.verified_at) })}</div>
     </div>
   `,
     sheet

@@ -37,8 +37,36 @@
     });
   }
 
+
+  // Filtrlar o'ngdagi alohida ustunda turardi va jadvalni siqib qo'yardi.
+  // Shablonni forklamasdan, DOM'da ularni sarlavha qatoriga — "Export"
+  // tugmasi yoniga ko'chiramiz.
+  function moveFiltersToHeader() {
+    var sidebar = document.getElementById("filter-sidebar");
+    if (!sidebar) return;
+    var header = document.querySelector(".card .card-header .ms-auto");
+    if (!header) return;
+
+    var body = sidebar.querySelector(".card-body");
+    if (!body) return;
+
+    var wrap = document.createElement("div");
+    wrap.className = "ua-filter-dropdown dropdown d-inline-block me-2";
+    wrap.innerHTML =
+      '<a href="#" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" ' +
+      'aria-expanded="false">Filtr</a>' +
+      '<div class="dropdown-menu ua-filter-menu"></div>';
+    wrap.querySelector(".ua-filter-menu").appendChild(body);
+
+    header.insertBefore(wrap, header.firstChild);
+    // Bo'shab qolgan ustunni olib tashlaymiz — jadval butun kenglikni oladi.
+    var col = sidebar.closest(".filter-sidebar-col");
+    (col || sidebar).remove();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     enableRowClick();
     enableSearchShortcut();
+    moveFiltersToHeader();
   });
 })();

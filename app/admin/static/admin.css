@@ -338,3 +338,43 @@ body {
   .ua-kpi-value { font-size: 1.35rem; }
   .ua-chart-wrap { height: 220px; }
 }
+
+/* ============ Filtrlar sarlavha qatorida ============ */
+
+/* Filtrlar ilgari o'ngdagi alohida ustunda turib jadvalni siqardi
+   (admin.js ularni shu yerga ko'chiradi). */
+.ua-filter-menu {
+  min-width: 230px;
+  padding: 12px 14px;
+}
+.ua-filter-menu .card-body { padding: 0; }
+.ua-filter-menu h6,
+.ua-filter-menu .filter-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+.ua-filter-menu a { display: block; padding: 4px 0; }
+
+/* ============ Sehrgardagi logotip ko'rinishi ============ */
+
+.ua-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ua-logo-row .form-control { flex: 1; min-width: 0; }
+
+.ua-logo-preview {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 9px;
+  border: 1px solid rgba(128, 132, 142, 0.25);
+  background: #fff;
+  padding: 3px;
+}
+
+.ua-logo-bad { color: #c0392b; }

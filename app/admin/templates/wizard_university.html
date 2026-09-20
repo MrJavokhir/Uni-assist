@@ -31,7 +31,7 @@
                 {% if prefill and prefill.country_id == country.id %}selected{% endif %}>{{ country.name_uz }}</option>
               {% endfor %}
             </select>
-            <small class="form-hint">Ro'yxatda yo'q bo'lsa, avval "Davlatlar" bo'limidan qo'shing.</small>
+            <small class="form-hint">Ro'yxatda yo'q davlat kerak bo'lsa, dasturchiga ayting — u seed orqali qo'shiladi.</small>
           </div>
           <div class="col-md-8">
             <label class="form-label required">Universitet nomi</label>
@@ -52,9 +52,21 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Logotip havolasi</label>
-            <input type="url" name="logo_url" class="form-control" placeholder="bo'sh qoldiring"
-                   value="{{ prefill.logo_url if prefill else '' }}">
-            <small class="form-hint">Bo'sh bo'lsa saytdan avtomatik olinadi.</small>
+            <div class="ua-logo-row">
+              {# Ko'rib turish: kiritilgan havola haqiqatan rasmmi yoki yo'qmi
+                 darhol bilinadi. Ilgari buni faqat Mini App'ni ochib tekshirish
+                 mumkin edi. #}
+              <img id="logo-preview" class="ua-logo-preview" alt=""
+                   src="{{ prefill.logo_url if prefill and prefill.logo_url else '' }}"
+                   {% if not (prefill and prefill.logo_url) %}hidden{% endif %}>
+              <input type="url" name="logo_url" id="logo-url" class="form-control"
+                     placeholder="bo'sh qoldiring"
+                     value="{{ prefill.logo_url if prefill else '' }}">
+            </div>
+            <small class="form-hint" id="logo-hint">
+              Bo'sh bo'lsa saytdan avtomatik olinadi. To'g'ridan-to'g'ri rasm havolasi
+              kerak (.png, .svg, .jpg) — sahifa manzili emas.
+            </small>
           </div>
           <div class="col-md-3">
             <label class="form-label">Vaqt zonasi</label>
@@ -137,7 +149,17 @@
 
       <div class="col-md-3">
         <label class="form-label">O'qitish tili</label>
-        <input type="text" name="p__i___language" class="form-control" value="Ingliz tili">
+        {# Kanonik inglizcha nom saqlanadi — Mini App uni foydalanuvchi
+           tiliga o'zi o'giradi (LANGUAGE_NAMES). #}
+        <select name="p__i___language" class="form-select">
+          <option value="English">Ingliz tili</option>
+          <option value="Russian">Rus tili</option>
+          <option value="German">Nemis tili</option>
+          <option value="Italian">Italyan tili</option>
+          <option value="Czech">Chex tili</option>
+          <option value="Polish">Polyak tili</option>
+          <option value="Turkish">Turk tili</option>
+        </select>
       </div>
       <div class="col-md-2">
         <label class="form-label">Davomiyligi (yil)</label>
@@ -262,6 +284,27 @@
       if (!list.querySelector(".ua-program-block")) empty.hidden = false;
       document.getElementById("add-program").disabled = false;
     });
+
+    // Logotip havolasi kiritilganda darhol ko'rsatamiz; rasm yuklanmasa
+    // ogohlantiramiz — admin Mini App'ni ochmasdan turib bilib oladi.
+    const logoInput = document.getElementById("logo-url");
+    const logoPreview = document.getElementById("logo-preview");
+    const logoHint = document.getElementById("logo-hint");
+    if (logoInput) {
+      const showLogo = () => {
+        const url = logoInput.value.trim();
+        logoPreview.hidden = !url;
+        logoHint.classList.remove("ua-logo-bad");
+        if (url) logoPreview.src = url;
+      };
+      logoPreview.addEventListener("error", () => {
+        logoPreview.hidden = true;
+        logoHint.classList.add("ua-logo-bad");
+        logoHint.textContent = "Bu havoladan rasm yuklanmadi — to'g'ridan-to'g'ri rasm manzilini kiriting.";
+      });
+      logoInput.addEventListener("change", showLogo);
+      logoInput.addEventListener("blur", showLogo);
+    }
 
     if (existing.length) existing.forEach(addProgram);
     else addProgram(null); // yangi kiritishda birinchi blok darhol ochiq turadi

@@ -101,9 +101,20 @@ def _labels(**extra: str) -> dict[str, str]:
 
 
 class CountryAdmin(ModelView, model=Country):
+    """Davlatlar — ma'lumotnoma ro'yxati.
+
+    Yon menyuda KO'RSATILMAYDI: 14 ta davlat seed orqali kiritilgan va deyarli
+    hech qachon tahrirlanmaydi, menyuda esa ortiqcha joy egallardi. Sahifa
+    manzili ishlayveradi (/admin/country/list) va boshqa bo'limlardagi
+    "Davlat" havolalari ham shu yerga olib keladi.
+    """
+
     name = "Davlat"
     name_plural = "Davlatlar"
     icon = "fa-solid fa-flag"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
 
     column_list = [Country.id, Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
     column_searchable_list = [Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
@@ -118,6 +129,14 @@ class UniversityAdmin(ModelView, model=University):
     name = "Universitet"
     name_plural = "Universitetlar"
     icon = "fa-solid fa-building-columns"
+
+    # Universitetni tahrirlashning YAGONA yo'li — "Universitet qo'shish"
+    # sehrgari (nom ustiga bosiladi). SQLAdmin'ning o'z ko'rish/tahrirlash
+    # sahifalari o'chirilgan: ular faqat universitetning o'z maydonlarini
+    # ko'rsatardi, dasturlarini esa yo'q — natijada admin qaysi biriga
+    # bosishni bilmay chalkashardi.
+    can_view_details = False
+    can_edit = False
 
     column_list = [
         University.id,

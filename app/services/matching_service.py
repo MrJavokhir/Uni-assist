@@ -34,6 +34,9 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
     stmt = select(Program).join(Program.university).options(
         selectinload(Program.university).selectinload(University.country),
         selectinload(Program.requirement),
+        # Kontrakt narxi ro'yxat kartasida ko'rsatiladi — bo'lmasa har bir
+        # dastur uchun alohida so'rov ketardi (N+1).
+        selectinload(Program.cost),
         selectinload(Program.deadlines),
     )
 

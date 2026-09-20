@@ -479,6 +479,11 @@ async def get_matches(
                 level=result.level.value,
                 missing=result.missing,
                 saved=program.id in saved_ids,
+                tuition_amount=float(program.cost.tuition_amount) if program.cost else None,
+                tuition_currency=program.cost.currency if program.cost else None,
+                ielts_min=float(program.requirement.ielts_min)
+                if program.requirement and program.requirement.ielts_min is not None
+                else None,
             )
         )
     return output

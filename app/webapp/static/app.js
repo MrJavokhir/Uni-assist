@@ -724,7 +724,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=20" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=22" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -906,31 +906,40 @@ async function renderMatch() {
       const missing = m.missing.length
         ? `<span class="pill amber">${t("match.missing", { list: m.missing.join(", ") })}</span>`
         : "";
+      // Tuzilishi grant kartasi bilan bir xil: sarlavha -> faktlar -> amal.
+      const fee =
+        m.tuition_amount !== null && m.tuition_amount !== undefined
+          ? `${Number(m.tuition_amount).toLocaleString()} ${escapeHtml(m.tuition_currency || "")}`
+          : "";
+
       return `
-        <div class="card">
-          <div class="card-top program-open" data-id="${m.id}" role="button" tabindex="0">
+        <div class="card pr-card">
+          <div class="pr-head program-open" data-id="${m.id}" role="button" tabindex="0">
             ${avatar(m.university, m.university_logo)}
-            <div class="card-body">
+            <div class="pr-head-text">
               <div class="card-title">${escapeHtml(m.name)}${
                 m.abbreviation ? `<span class="abbr">${escapeHtml(m.abbreviation)}</span>` : ""
               }</div>
               <div class="card-sub">${escapeHtml(m.university)}</div>
-              <div class="meta-row">
-                <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${
-                  isGreen ? t("match.green") : t("match.yellow")
-                }</span>
+              <div class="pr-countries">
                 <span class="pill"><span class="chip-flag">${flag(
                   m.country.iso_code
                 )}</span>${escapeHtml(countryName(m.country))}</span>
-                ${missing}
               </div>
             </div>
             <span class="card-chevron">${icon("chevron")}</span>
           </div>
-          <div class="card-actions">
-            <button type="button" class="btn btn-soft program-open" data-id="${m.id}">
-              ${icon("search")}${t("match.details")}
-            </button>
+
+          <div class="pr-facts">
+            <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${
+              isGreen ? t("match.green") : t("match.yellow")
+            }</span>
+            ${fee ? `<span class="pill">${icon("spark")}${fee}</span>` : ""}
+            ${m.ielts_min ? `<span class="pill">IELTS ${m.ielts_min}</span>` : ""}
+            ${missing}
+          </div>
+
+          <div class="pr-actions">
             <button type="button" class="btn ${m.saved ? "btn-done" : "btn-soft"} save-btn" data-id="${m.id}" ${
               m.saved ? "disabled" : ""
             }>

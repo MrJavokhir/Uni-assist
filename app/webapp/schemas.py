@@ -60,6 +60,11 @@ class MatchProgramOut(BaseModel):
     level: str
     missing: list[str]
     saved: bool
+    # Ro'yxatda darhol ko'rinadigan asosiy raqamlar — har birini ochib
+    # ko'rmasdan taqqoslash uchun.
+    tuition_amount: float | None = None
+    tuition_currency: str | None = None
+    ielts_min: float | None = None
 
 
 class ProgramRequirementOut(BaseModel):

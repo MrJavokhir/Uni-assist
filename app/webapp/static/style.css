@@ -1245,3 +1245,49 @@ body {
 }
 .scholarship-yes .ico { width: 17px; height: 17px; flex: none; }
 .sheet-scholarship { margin-top: 9px; }
+
+/* ============ Dastur kartasi (grant kartasi bilan bir xil tuzilish) ============ */
+
+.pr-card { padding: 14px; }
+
+.pr-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+.pr-head:active { opacity: 0.75; }
+
+.pr-head-text { flex: 1; min-width: 0; }
+.pr-head .card-title { line-height: 1.3; }
+.pr-head .card-sub { margin-top: 2px; }
+
+.pr-countries {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+/* Davlat chipi sarlavha ostida — bosiqroq, grantlardagidek */
+.pr-countries .pill {
+  padding: 2px 8px;
+  font-size: 11.5px;
+  background: transparent;
+  color: var(--hint);
+  border: 1px solid var(--separator);
+}
+
+.pr-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+.pr-actions {
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--separator);
+}
+.pr-actions .btn { width: 100%; }

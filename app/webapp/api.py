@@ -307,6 +307,9 @@ async def get_program(
         intake_term=program.intake_term,
         notes=_localized_notes(program, user.ui_language.value),
         missing_fields=list(program.missing_fields or []),
+        required_documents=list(program.required_documents or []),
+        has_scholarship=program.has_scholarship,
+        scholarship_url=program.scholarship_url,
         requirement=(
             ProgramRequirementOut(
                 gpa_min=float(requirement.gpa_min) if requirement.gpa_min is not None else None,

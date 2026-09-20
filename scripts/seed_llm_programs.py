@@ -75,6 +75,14 @@ class LlmSeed:
     notes: str | None = None
     notes_ru: str | None = None
     notes_en: str | None = None
+
+    # Ariza uchun hujjatlar — KALITLAR (Mini App ularni tarjima qiladi):
+    # degree_certificate, transcript, translation, reference, english_test,
+    # passport, personal_statement, cv, research_proposal
+    documents: tuple[str, ...] = ()
+    # Shu dasturga/fakultetga tegishli stipendiya bormi
+    has_scholarship: bool | None = None
+    scholarship_url: str | None = None
     # Universitet logotipi saytdan avtomatik olinadi, shuning uchun bu yerda
     # ataylab yo'q (app/webapp/api.py `_logo_url`).
     missing: tuple[str, ...] = field(default_factory=tuple)
@@ -152,6 +160,7 @@ SEEDS: list[LlmSeed] = [
         notes_ru="Приём заявок идёт непрерывно (rolling admissions) — жёсткого дедлайна нет.",
         notes_en="Applications are accepted on a rolling basis — there is no fixed deadline.",
         missing=("language_score",),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -165,6 +174,7 @@ SEEDS: list[LlmSeed] = [
         # IELTS (Academic): umumiy 7.0, Writing 6.5, qolganlari 6.0.
         ielts_min=7.0,
         missing=("tuition", "deadline"),
+        has_scholarship=True,
     ),
     # ------------------------------ Germaniya ------------------------------
     LlmSeed(
@@ -258,6 +268,15 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         missing=("tuition", "deadline"),
+        documents=(
+            "personal_statement",
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.law.ed.ac.uk/study/masters-degrees/scholarships-funding",
     ),
     LlmSeed(
         country_iso="GB",
@@ -270,6 +289,15 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         missing=("tuition", "deadline"),
+        documents=(
+            "personal_statement",
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.law.ed.ac.uk/study/masters-degrees/scholarships-funding",
     ),
     LlmSeed(
         country_iso="GB",
@@ -318,15 +346,30 @@ SEEDS: list[LlmSeed] = [
         timezone="Europe/London",
         program="LLM Law",
         source_url="https://www.manchester.ac.uk/study/masters/courses/list/08446/llm-law/",
-        intake_term="2026 Fall",
+        intake_term="2027 Fall",
         tuition_amount=31000,
         tuition_currency="GBP",
         ielts_min=7.0,
         toefl_min=100,
-        notes="Narx 2026-yil sentyabrda boshlanadigan o'quv yili uchun (xalqaro talabalar).",
-        notes_ru="Стоимость за учебный год, начинающийся в сентябре 2026 (международные студенты).",
-        notes_en="Fee for the academic year starting September 2026 (international students).",
-        missing=("deadline",),
+        # Manchester arizalarni to'rt bosqichda ko'rib chiqadi; bu — oxirgisi.
+        deadline_close=date(2027, 7, 4),
+        notes=(
+            "Narx 2026-yil sentyabrdan boshlangan o'quv yili uchun (xalqaro talabalar). "
+            "Ariza to'rt bosqichda ko'rib chiqiladi: 6-dekabr, 1-mart, 4-may, 4-iyul. "
+            "Erta bosqichda joy ko'proq bo'ladi."
+        ),
+        notes_ru=(
+            "Стоимость за учебный год, начавшийся в сентябре 2026 (международные студенты). "
+            "Заявки рассматриваются в четыре этапа: 6 декабря, 1 марта, 4 мая, 4 июля. "
+            "На ранних этапах мест больше."
+        ),
+        notes_en=(
+            "Fee for the academic year that started in September 2026 (international students). "
+            "Applications are reviewed in four stages: 6 December, 1 March, 4 May, 4 July. "
+            "Earlier stages have more places available."
+        ),
+        missing=(),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -340,6 +383,7 @@ SEEDS: list[LlmSeed] = [
         ielts_min=7.0,
         toefl_min=100,
         missing=("tuition", "deadline"),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -353,6 +397,7 @@ SEEDS: list[LlmSeed] = [
         ielts_min=7.0,
         toefl_min=100,
         missing=("tuition", "deadline"),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -366,6 +411,7 @@ SEEDS: list[LlmSeed] = [
         ielts_min=7.0,
         toefl_min=100,
         missing=("tuition", "deadline"),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -379,6 +425,7 @@ SEEDS: list[LlmSeed] = [
         ielts_min=7.0,
         toefl_min=100,
         missing=("tuition", "deadline"),
+        has_scholarship=True,
     ),
     # ---------------------------- AQSH (davomi) ----------------------------
     LlmSeed(
@@ -480,6 +527,7 @@ SEEDS: list[LlmSeed] = [
         # IELTS 6.5 (Writing va Reading 6.5 dan, Speaking va Listening 6.0 dan kam emas)
         ielts_min=6.5,
         missing=("deadline",),
+        has_scholarship=True,
     ),
     # Glasgow: huquq LL.M.larining narxi va tili talabi bir xil e'lon qilingan
     # (har bir kurs sahifasida alohida yozilgan, taxmin qilinmadi).
@@ -496,6 +544,15 @@ SEEDS: list[LlmSeed] = [
         tuition_currency="GBP",
         ielts_min=7.0,
         missing=("deadline",),
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "reference",
+            "english_test",
+            "passport",
+        ),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -510,6 +567,15 @@ SEEDS: list[LlmSeed] = [
         tuition_currency="GBP",
         ielts_min=7.0,
         missing=("deadline",),
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "reference",
+            "english_test",
+            "passport",
+        ),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -524,6 +590,15 @@ SEEDS: list[LlmSeed] = [
         tuition_currency="GBP",
         ielts_min=7.0,
         missing=("deadline",),
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "reference",
+            "english_test",
+            "passport",
+        ),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -538,6 +613,15 @@ SEEDS: list[LlmSeed] = [
         tuition_currency="GBP",
         ielts_min=7.0,
         missing=("deadline",),
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "translation",
+            "reference",
+            "english_test",
+            "passport",
+        ),
+        has_scholarship=True,
     ),
     LlmSeed(
         country_iso="GB",
@@ -707,6 +791,9 @@ async def _upsert_programs(
         program.notes_ru = seed.notes_ru
         program.notes_en = seed.notes_en
         program.missing_fields = list(seed.missing) or None
+        program.required_documents = list(seed.documents) or None
+        program.has_scholarship = seed.has_scholarship
+        program.scholarship_url = seed.scholarship_url
         program.source_url = seed.source_url
         program.verified_at = now
         program.verified_by = VERIFIED_BY

@@ -190,6 +190,20 @@ const I18N = {
     "program.no_deadlines": "Muddatlar kiritilmagan.",
     "program.official_page": "Dastur sahifasiga o'tish",
     "program.verified_at": "Ma'lumot {date} sanasida tekshirilgan.",
+    "program.documents": "Ariza uchun hujjatlar",
+    "program.own_scholarship": "Dastur stipendiyasi",
+    "program.scholarship_yes": "Bu dastur uchun stipendiya mavjud",
+    "program.scholarship_no": "Bu dastur uchun alohida stipendiya yo'q",
+    "program.scholarship_link": "Stipendiya shartlarini ko'rish",
+    "document.degree_certificate": "Diplom nusxasi",
+    "document.transcript": "Baholar varaqasi (transcript)",
+    "document.translation": "Hujjatlarning rasmiy tarjimasi",
+    "document.reference": "Tavsiyanoma",
+    "document.english_test": "Ingliz tili sertifikati",
+    "document.passport": "Pasport nusxasi",
+    "document.personal_statement": "Motivatsion xat",
+    "document.cv": "CV",
+    "document.research_proposal": "Tadqiqot rejasi",
     "program.missing_intro": "Rasmiy sahifada ko'rsatilmagani uchun bo'sh: {fields}.",
     "program.missing.tuition": "kontrakt narxi",
     "program.missing.language_score": "IELTS/TOEFL bali",
@@ -348,6 +362,20 @@ const I18N = {
     "program.no_deadlines": "Сроки не указаны.",
     "program.official_page": "Открыть страницу программы",
     "program.verified_at": "Данные проверены {date}.",
+    "program.documents": "Документы для заявки",
+    "program.own_scholarship": "Стипендия программы",
+    "program.scholarship_yes": "Для этой программы есть стипендия",
+    "program.scholarship_no": "Отдельной стипендии для этой программы нет",
+    "program.scholarship_link": "Посмотреть условия стипендии",
+    "document.degree_certificate": "Копия диплома",
+    "document.transcript": "Транскрипт оценок",
+    "document.translation": "Официальный перевод документов",
+    "document.reference": "Рекомендательное письмо",
+    "document.english_test": "Сертификат по английскому",
+    "document.passport": "Копия паспорта",
+    "document.personal_statement": "Мотивационное письмо",
+    "document.cv": "Резюме (CV)",
+    "document.research_proposal": "Исследовательское предложение",
     "program.missing_intro": "Не указано на официальной странице: {fields}.",
     "program.missing.tuition": "стоимость обучения",
     "program.missing.language_score": "балл IELTS/TOEFL",
@@ -506,6 +534,20 @@ const I18N = {
     "program.no_deadlines": "No deadlines recorded.",
     "program.official_page": "Open program page",
     "program.verified_at": "Data verified on {date}.",
+    "program.documents": "Application documents",
+    "program.own_scholarship": "Programme scholarship",
+    "program.scholarship_yes": "A scholarship is available for this programme",
+    "program.scholarship_no": "No dedicated scholarship for this programme",
+    "program.scholarship_link": "See scholarship details",
+    "document.degree_certificate": "Degree certificate",
+    "document.transcript": "Academic transcript",
+    "document.translation": "Certified translations",
+    "document.reference": "Reference letter",
+    "document.english_test": "English language certificate",
+    "document.passport": "Passport copy",
+    "document.personal_statement": "Personal statement",
+    "document.cv": "CV",
+    "document.research_proposal": "Research proposal",
     "program.missing_intro": "Not stated on the official page: {fields}.",
     "program.missing.tuition": "tuition fee",
     "program.missing.language_score": "IELTS/TOEFL score",
@@ -682,7 +724,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=19" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=20" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -1199,6 +1241,39 @@ async function openProgramSheet(programId) {
       ${costs}
     </div>
 
+    ${
+      p.required_documents && p.required_documents.length
+        ? `<div class="sheet-section">
+             <div class="sheet-section-title">${t("program.documents")}</div>
+             <ul class="doc-list">
+               ${p.required_documents
+                 .map((d) => `<li>${icon("check")}${escapeHtml(t("document." + d))}</li>`)
+                 .join("")}
+             </ul>
+           </div>`
+        : ""
+    }
+
+    ${
+      p.has_scholarship === null || p.has_scholarship === undefined
+        ? ""
+        : `<div class="sheet-section">
+             <div class="sheet-section-title">${t("program.own_scholarship")}</div>
+             ${
+               p.has_scholarship
+                 ? `<div class="scholarship-yes">${icon("award")}<span>${t(
+                     "program.scholarship_yes"
+                   )}</span></div>` +
+                   (p.scholarship_url
+                     ? `<button type="button" class="btn btn-soft btn-block sheet-scholarship" data-url="${escapeHtml(
+                         p.scholarship_url
+                       )}">${t("program.scholarship_link")}</button>`
+                     : "")
+                 : `<div class="sheet-empty">${t("program.scholarship_no")}</div>`
+             }
+           </div>`
+    }
+
     <div class="sheet-section">
       <div class="sheet-section-title">${t("scholarships.deadlines")}</div>
       ${deadlines}
@@ -1218,6 +1293,16 @@ async function openProgramSheet(programId) {
   `,
     sheet
   );
+
+  const grantBtn = document.querySelector(".sheet-scholarship");
+  if (grantBtn) {
+    grantBtn.addEventListener("click", () => {
+      haptic("light");
+      const url = grantBtn.dataset.url;
+      if (tg && typeof tg.openLink === "function") tg.openLink(url);
+      else window.open(url, "_blank", "noopener");
+    });
+  }
 
   document.getElementById("sheet-open-site").addEventListener("click", () => {
     haptic("light");

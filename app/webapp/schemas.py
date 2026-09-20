@@ -109,6 +109,11 @@ class ProgramDetailOut(BaseModel):
     # Rasmiy sahifada ko'rsatilmagan maydon kalitlari — jumlani Mini App
     # foydalanuvchi tilida o'zi yasaydi.
     missing_fields: list[str]
+    # Ariza uchun hujjat KALITLARI (Mini App ularni tarjima qiladi)
+    required_documents: list[str] = []
+    # Shu dasturning o'z stipendiyasi bormi (None = tekshirilmagan)
+    has_scholarship: bool | None = None
+    scholarship_url: str | None = None
     requirement: ProgramRequirementOut | None
     cost: ProgramCostOut | None
     deadlines: list[ProgramDeadlineOut]

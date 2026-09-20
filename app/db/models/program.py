@@ -65,6 +65,14 @@ class Program(TimestampMixin, VerificationMixin, Base):
     # jumlani esa Mini App foydalanuvchi tilida o'zi yasaydi.
     missing_fields: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
+    # Ariza uchun kerakli hujjatlar — KALITLAR ro'yxati ("transcript", "cv"...).
+    # Matn emas, kalit saqlanadi: Mini App ularni foydalanuvchi tilida yozadi.
+    required_documents: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # Shu dasturning O'ZIGA tegishli stipendiya bormi (universitet/fakultet
+    # stipendiyasi). None = tekshirilmagan.
+    has_scholarship: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    scholarship_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     university: Mapped["University"] = relationship(back_populates="programs")
     requirement: Mapped["ProgramRequirement"] = relationship(
         back_populates="program", cascade="all, delete-orphan", uselist=False

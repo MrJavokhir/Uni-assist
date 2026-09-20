@@ -748,9 +748,53 @@ SEEDS: list[LlmSeed] = [
         website="https://www.ilf-frankfurt.de",
         timezone="Europe/Berlin",
         program="LL.M. International Finance",
-        source_url="https://www.ilf-frankfurt.de/llm-international-finance-1",
-        intake_term="2026 Fall",
-        missing=("tuition", "language_score", "deadline"),
+        source_url="https://www.ilf-frankfurt.de/llm-programs/llm-international-finance/fees-and-application",
+        intake_term="2027 Fall",
+        tuition_amount=20000,
+        tuition_currency="EUR",
+        ielts_min=6.5,
+        toefl_min=92,
+        documents=(
+            "cv",
+            "personal_statement",
+            "degree_certificate",
+            "transcript",
+            "english_test",
+            "reference",
+            "passport",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.ilf-frankfurt.de/llm-programs/llm-international-finance/fees-and-application",
+        notes=(
+            "Kontrakt 2026/27 o'quv yili uchun 20 000 EUR. Erta ariza chegirmasi: 15-yanvargacha "
+            "bergan bo'lsangiz 3 000 EUR (15%), 28-fevralgacha bergan bo'lsangiz 2 000 EUR "
+            "(10%). Til talabi: IELTS 6.5, TOEFL iBT 92 (qog'ozli 580, CBT 237) yoki Cambridge "
+            "CAE «C» va undan yuqori. Hujjatlar orasida ikkita muhrlangan tavsiyanoma va kurs "
+            "reytingi haqidagi ma'lumotnoma bor; Xitoy, Hindiston, Mo'g'uliston va Vetnam "
+            "arizachilariga APS sertifikati kerak. 2026/27 uchun muddatlar: shu to'rt davlat "
+            "uchun 15-may 2026, qolganlar uchun 1-iyul 2026 edi — keyingi yil sanalari sahifada "
+            "hali e'lon qilinmagan."
+        ),
+        notes_ru=(
+            "Стоимость на 2026/27 учебный год — 20 000 EUR. Скидка за раннюю подачу: 3 000 EUR "
+            "(15%) при подаче до 15 января и 2 000 EUR (10%) при подаче до 28 февраля. Языковые "
+            "требования: IELTS 6.5, TOEFL iBT 92 (бумажный 580, CBT 237) или Cambridge CAE "
+            "уровня «C» и выше. Среди документов — два запечатанных рекомендательных письма и "
+            "справка о месте в рейтинге курса; абитуриентам из Китая, Индии, Монголии и Вьетнама "
+            "нужен сертификат APS. Дедлайны на 2026/27: 15 мая 2026 для этих четырёх стран и "
+            "1 июля 2026 для остальных — даты на следующий год ещё не опубликованы."
+        ),
+        notes_en=(
+            "Tuition for the 2026/27 academic year is EUR 20,000. Early-application discounts: "
+            "EUR 3,000 (15%) for applying by 15 January and EUR 2,000 (10%) by 28 February. "
+            "Language requirements: IELTS 6.5, TOEFL iBT 92 (paper-based 580, CBT 237) or "
+            "Cambridge CAE at grade C or above. The documents include two sealed letters of "
+            "recommendation and a confirmation of class rank; applicants from China, India, "
+            "Mongolia and Vietnam need an APS certificate. The 2026/27 deadlines were 15 May "
+            "2026 for those four countries and 1 July 2026 for everyone else; next year's dates "
+            "are not yet published."
+        ),
+        missing=("deadline",),
     ),
     # ------------------------------- Polsha -------------------------------
     LlmSeed(
@@ -1353,6 +1397,775 @@ SEEDS: list[LlmSeed] = [
             "tuition figure is not stated on the course page. International students pay a "
             "deposit before a CAS is issued."
         ),
+    ),
+    # ------------------- Germaniya (to'rtinchi to'plam) -------------------
+    LlmSeed(
+        country_iso="DE",
+        university="Ludwig Maximilian University of Munich",
+        city="Myunxen",
+        website="https://www.jura.lmu.de",
+        timezone="Europe/Berlin",
+        program="European and International Economic Law (LL.M.)",
+        source_url="https://www.jura.lmu.de/en/study/aufbaustudium-ll.m/european-and-international-economic-law-ll.m/",
+        intake_term="2027 Fall",
+        tuition_amount=0,
+        tuition_currency="EUR",
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "cv",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        notes=(
+            "Kontrakt yo'q: faqat semestr yig'imi (~98 EUR), shundan 85 EUR ma'muriy yig'im "
+            "bo'lib, ariza bo'yicha bekor qilinishi mumkin. Dastur 2 semestr, oktyabrda "
+            "boshlanadi va faqat qishki semestrga qabul qiladi. Ingliz tilidan C1 darajadagi "
+            "sertifikat kerak, lekin aniq ball ko'rsatilmagan. Arizaga 3-5 daqiqalik video va "
+            "2 sahifalik motivatsiya xati ham kiradi. 2026/27 uchun muddat 15.02.2026 edi; "
+            "keyingi yil sanasi sahifada hali yo'q."
+        ),
+        notes_ru=(
+            "Платы за обучение нет: только семестровый взнос (~98 EUR), из них 85 EUR — "
+            "административный сбор, который по заявлению могут отменить. Программа длится "
+            "2 семестра, начинается в октябре, набор только на зимний семестр. Нужен "
+            "сертификат по английскому уровня C1, но конкретный балл не указан. В пакет "
+            "документов входят видео на 3-5 минут и мотивационное письмо на 2 страницы. "
+            "Дедлайн на 2026/27 был 15.02.2026; дата на следующий год на странице пока не "
+            "опубликована."
+        ),
+        notes_en=(
+            "There is no tuition fee: only a semester fee of about EUR 98, of which EUR 85 is an "
+            "administrative charge that can be waived on request. The programme runs for two "
+            "semesters, starts in October and admits only in the winter semester. An English "
+            "certificate at C1 level is required, but no test score is stated. The application "
+            "also asks for a 3-5 minute video and a two-page letter of motivation. The 2026/27 "
+            "deadline was 15.02.2026; the next year's date is not yet on the page."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Saarland University (Europa-Institut)",
+        city="Saarbryukken",
+        website="https://www.europainstitut.de",
+        timezone="Europe/Berlin",
+        program="European and International Law (LL.M.)",
+        source_url="https://www.europainstitut.de/en/application",
+        intake_term="2027 Fall",
+        tuition_amount=6800,
+        tuition_currency="EUR",
+        deadline_close=date(2027, 7, 15),
+        documents=(
+            "cv",
+            "personal_statement",
+            "degree_certificate",
+            "transcript",
+            "english_test",
+            "passport",
+        ),
+        has_scholarship=False,
+        notes=(
+            "Kontrakt semestriga 3 400 EUR, o'quv yiliga 6 800 EUR (institutning «Finances | "
+            "Scholarships» sahifasi). Bunga kutubxona, kompyuter xonasi, nusxa olish va ayrim "
+            "tadbirlar kiradi; universitetning semestr yig'imi alohida to'lanadi. Ariza muddati "
+            "— har yili 15-iyul, viza kerak bo'lmaganlar uchun 30-sentyabrgacha kechikkan ariza "
+            "qabul qilinadi. Til bali sahifada ko'rsatilmagan: TOEFL ham, IELTS ham qabul "
+            "qilinadi, lekin minimal ball yozilmagan. Europa-Institut o'zi stipendiya bermaydi."
+        ),
+        notes_ru=(
+            "Стоимость — 3 400 EUR за семестр, 6 800 EUR за учебный год (страница института "
+            "«Finances | Scholarships»). В неё входят библиотека, компьютерный класс, копии и "
+            "часть мероприятий; семестровый взнос университета оплачивается отдельно. Дедлайн — "
+            "15 июля каждого года, для тех, кому не нужна виза, поздние заявки принимают до "
+            "30 сентября. Балл по языку на странице не указан: TOEFL и IELTS принимаются, но "
+            "минимум не назван. Сам Europa-Institut стипендий не даёт."
+        ),
+        notes_en=(
+            "Tuition is EUR 3,400 per semester, EUR 6,800 for the academic year (the institute's "
+            "«Finances | Scholarships» page). It covers the library, the computer workspace, "
+            "photocopies and some activities; the university's semester fee is paid separately. "
+            "The deadline is 15 July each year, with late applications accepted until "
+            "30 September from applicants who do not need a visa. No language score is stated: "
+            "TOEFL and IELTS are accepted but no minimum is given. The Europa-Institut itself "
+            "awards no scholarships."
+        ),
+        missing=("language_score",),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Munich Intellectual Property Law Center (MIPLC)",
+        city="Myunxen",
+        website="https://www.miplc.de",
+        timezone="Europe/Berlin",
+        program="Intellectual Property Law (LL.M.)",
+        source_url="https://www.miplc.de/admissions/tuition-and-financial-aid-law-and-ip-scholarships",
+        intake_term="2027 Fall",
+        tuition_amount=39500,
+        tuition_currency="EUR",
+        has_scholarship=True,
+        scholarship_url="https://www.miplc.de/admissions/tuition-and-financial-aid-law-and-ip-scholarships",
+        notes=(
+            "Sahifada 39 500 EUR summasi 2025/2026 o'quv yili (qish + yoz) uchun ko'rsatilgan. "
+            "Narxga MIPLC kurslari, IP va raqobat huquqi bo'yicha yirik kutubxona, LexisNexis "
+            "va Westlaw bazalari, Myunxen markazidagi ish stoli hamda Augsburg universiteti va "
+            "Myunxen texnika universitetiga ro'yxatdan o'tish kiradi. Qabul uzluksiz (rolling), "
+            "aniq muddat e'lon qilinmagan. Cheklangan sonli qisman chegirma stipendiyalari bor "
+            "— ariza bilan birga topshiriladi (1-dekabrdan 30-aprelgacha); DAAD stipendiyasiga "
+            "1-iyun – 15-oktyabr oralig'ida ariza beriladi."
+        ),
+        notes_ru=(
+            "На странице сумма 39 500 EUR указана для 2025/2026 учебного года (зима + лето). "
+            "В неё входят все курсы MIPLC, крупнейшая библиотека по IP и конкурентному праву, "
+            "базы LexisNexis и Westlaw, рабочее место в центре Мюнхена, а также зачисление в "
+            "Университет Аугсбурга и Технический университет Мюнхена. Приём непрерывный, "
+            "конкретный дедлайн не объявлен. Есть ограниченное число частичных стипендий-скидок "
+            "— подаются вместе с заявкой (с 1 декабря по 30 апреля); на стипендию DAAD подают "
+            "с 1 июня по 15 октября."
+        ),
+        notes_en=(
+            "The page gives EUR 39,500 for the 2025/2026 academic year (winter and summer). The "
+            "fee covers an unlimited number of MIPLC credit hours, the world's largest IP and "
+            "competition library, LexisNexis and Westlaw, a desk in a downtown Munich office, "
+            "and enrolment at the University of Augsburg and the Technical University of Munich. "
+            "Admission is rolling and no fixed deadline is published. A limited number of partial "
+            "fee-waiver scholarships is available and is applied for together with admission "
+            "(1 December to 30 April); DAAD scholarship applications run 1 June to 15 October."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Hamburg",
+        city="Gamburg",
+        website="https://www.jura.uni-hamburg.de",
+        timezone="Europe/Berlin",
+        program="European and International Law (MEIL) LL.M.",
+        source_url="https://www.jura.uni-hamburg.de/en/studium/masterprogramme/meil.html",
+        intake_term="2027 Fall",
+        tuition_amount=7000,
+        tuition_currency="EUR",
+        ielts_min=6.5,
+        toefl_min=90,
+        deadline_close=date(2027, 4, 30),
+        notes=(
+            "Kontrakt 7 000 EUR, ustiga universitetning semestr yig'imi (~335 EUR). Arizalar "
+            "1-noyabrdan qabul qilinadi: erta muddat — 31-yanvar 2027, oxirgi muddat — "
+            "30-aprel 2027. TOEFL 90 yoki IELTS 6.5 kerak; ona tili ingliz bo'lganlar yoki "
+            "diplomi ingliz tilida bo'lganlar bundan ozod. Dastur 2 semestr, sentyabr boshida "
+            "boshlanadi. Hujjatlar bitta PDF fayl qilib yuklanadi, asl nusxalar ro'yxatdan "
+            "o'tishda ko'rsatiladi."
+        ),
+        notes_ru=(
+            "Стоимость 7 000 EUR плюс семестровый взнос университета (~335 EUR). Заявки "
+            "принимают с 1 ноября: ранний срок — 31 января 2027, окончательный — 30 апреля 2027. "
+            "Нужен TOEFL 90 или IELTS 6.5; носители языка и те, чей диплом на английском, "
+            "освобождаются. Программа рассчитана на 2 семестра и начинается в начале сентября. "
+            "Документы загружаются одним PDF-файлом, оригиналы предъявляются при зачислении."
+        ),
+        notes_en=(
+            "Tuition is EUR 7,000, plus the university's semester fee of about EUR 335. "
+            "Applications open on 1 November: the early-bird deadline is 31 January 2027 and the "
+            "final deadline 30 April 2027. A TOEFL score of 90 or IELTS 6.5 is required; native "
+            "speakers and holders of an English-taught degree are exempt. The programme runs for "
+            "two semesters and starts at the beginning of September. Documents are uploaded as a "
+            "single PDF and originals must be presented at registration."
+        ),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="TU Dresden",
+        city="Drezden",
+        website="https://tu-dresden.de",
+        timezone="Europe/Berlin",
+        program="International Studies in Intellectual Property Law and Data Law (LL.M.)",
+        source_url="https://tu-dresden.de/gsw/phil/irget/ipllm/studium",
+        intake_term="2027 Fall",
+        tuition_amount=5000,
+        tuition_currency="EUR",
+        deadline_close=date(2027, 3, 15),
+        notes=(
+            "Kontrakt 2 semestr uchun 5 000 EUR, ustiga har semestr ~300 EUR ma'muriy yig'im "
+            "(dasturning «Fees» sahifasi); qo'shimcha semestr 500 EUR. Yevropa Ittifoqidan "
+            "tashqaridagilar uchun qishki semestrga muddat — 15-mart, EI fuqarolari uchun "
+            "15-may. Bir semestrni hamkor universitetda (Ekseter, Krakov, London, Praga, "
+            "Strasburg, Seged, Tallin, Tokio) o'tash mumkin — u holda TU Dresden ulushi "
+            "3 000 EUR, hamkor esa o'z narxini oladi. O'qish 1-oktyabrda boshlanadi, til bali "
+            "sahifada ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "Стоимость 5 000 EUR за 2 семестра плюс около 300 EUR административного сбора за "
+            "семестр (страница программы «Fees»); дополнительный семестр — 500 EUR. Для "
+            "неграждан ЕС дедлайн на зимний семестр — 15 марта, для граждан ЕС — 15 мая. Один "
+            "семестр можно провести в вузе-партнёре (Эксетер, Краков, Лондон, Прага, Страсбург, "
+            "Сегед, Таллин, Токио) — тогда доля TU Dresden составляет 3 000 EUR, а партнёр "
+            "берёт свою плату. Занятия начинаются 1 октября, балл по языку на странице не указан."
+        ),
+        notes_en=(
+            "Tuition is EUR 5,000 for two semesters, plus about EUR 300 per semester in "
+            "administration fees (the programme's «Fees» page); an extra semester costs EUR 500. "
+            "For non-EU applicants the winter-semester deadline is 15 March, for EU applicants "
+            "15 May. One semester may be spent at a partner university (Exeter, Krakow, London, "
+            "Prague, Strasbourg, Szeged, Tallinn, Tokyo), in which case TU Dresden's share is "
+            "EUR 3,000 and the partner charges its own fee. Teaching starts on 1 October; no "
+            "language score is stated on the page."
+        ),
+        missing=("language_score",),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Freie Universität Berlin",
+        city="Berlin",
+        website="https://www.jura.fu-berlin.de",
+        timezone="Europe/Berlin",
+        program="European and International Business, Competition and Regulatory Law (MBL-FU)",
+        source_url="https://www.jura.fu-berlin.de/en/studium/masterstudiengaenge/mbl-fu/program/index.html",
+        intake_term="2027 Fall",
+        tuition_amount=9500,
+        tuition_currency="EUR",
+        deadline_close=date(2027, 3, 15),
+        notes=(
+            "Kontrakt jami 9 500 EUR (semestriga 4 750 EUR), ustiga semestr yig'imlari. Ariza "
+            "muddati — har yili 15-mart; 2027/28 uchun qabul 1-dekabr 2026 dan boshlanadi. "
+            "Talab: 240 ECTS li diplom (afzali huquq bo'yicha) va kamida bir yillik ish "
+            "tajribasi. Ingliz tili CEFR bo'yicha C1 darajada bo'lishi kerak, aniq IELTS/TOEFL "
+            "bali ko'rsatilmagan. O'qish bir o'quv yili, oktyabrda boshlanadi."
+        ),
+        notes_ru=(
+            "Стоимость — 9 500 EUR всего (4 750 EUR за семестр) плюс семестровые взносы. Дедлайн "
+            "— 15 марта каждого года; приём на 2027/28 открывается 1 декабря 2026. Требуется "
+            "диплом на 240 ECTS (предпочтительно юридический) и минимум год опыта работы. "
+            "Английский — уровень C1 по CEFR, конкретный балл IELTS/TOEFL не указан. Обучение "
+            "длится один учебный год и начинается в октябре."
+        ),
+        notes_en=(
+            "Tuition is EUR 9,500 in total (EUR 4,750 per term) plus semester fees and "
+            "contributions. The deadline is 15 March each year; applications for 2027/28 open on "
+            "1 December 2026. Entry requires a degree worth 240 ECTS, preferably in law, and at "
+            "least one year of work experience. English must be at CEFR C1; no IELTS or TOEFL "
+            "score is given. The programme lasts one academic year and starts in October."
+        ),
+        missing=("language_score",),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="European University Viadrina Frankfurt (Oder)",
+        city="Frankfurt (Oder)",
+        website="https://www.europa-uni.de",
+        timezone="Europe/Berlin",
+        program="International Human Rights and Humanitarian Law (LL.M.)",
+        source_url="https://www.europa-uni.de/en/studium/studienangebot/wb-ma-human-rights/index.html",
+        intake_term="2026 Fall",
+        duration_years=1.5,
+        tuition_amount=7900,
+        tuition_currency="EUR",
+        ielts_min=7.0,
+        toefl_min=93,
+        deadline_close=date(2026, 9, 30),
+        documents=("cv", "degree_certificate", "english_test"),
+        has_scholarship=False,
+        notes=(
+            "Kontrakt 90 ECTS li to'liq LL.M. uchun 7 900 EUR. Muddatlar: erta qabul — "
+            "1-avgust 2026, asosiy muddat — 30-sentyabr 2026 (23:59 CET). Til talabi: IELTS 7.0 "
+            "(har bo'limda kamida 6.5), TOEFL iBT 93 yoki Cambridge C1 180. To'liq kunlik shakl "
+            "3 semestr, yarim kunlik 6 semestrgacha cho'zilishi mumkin; qabul ham qishki, ham "
+            "yozgi semestrga. CV ingliz tilida, ko'pi bilan 4 sahifa. Viadrina o'zi stipendiya "
+            "bermaydi."
+        ),
+        notes_ru=(
+            "Стоимость полной программы LL.M. на 90 ECTS — 7 900 EUR. Сроки: ранний приём — "
+            "1 августа 2026, основной дедлайн — 30 сентября 2026 (23:59 CET). Языковые "
+            "требования: IELTS 7.0 (не ниже 6.5 в каждом разделе), TOEFL iBT 93 или Cambridge C1 "
+            "180. Очная форма — 3 семестра, заочная — до 6; набор и на зимний, и на летний "
+            "семестр. Резюме на английском, максимум 4 страницы. Сам Viadrina стипендий не даёт."
+        ),
+        notes_en=(
+            "Tuition is EUR 7,900 for the full 90-ECTS LL.M. Deadlines: early admission "
+            "1 August 2026, regular admission 30 September 2026 (23:59 CET). Language "
+            "requirements: IELTS 7.0 with no band below 6.5, TOEFL iBT 93, or Cambridge C1 at "
+            "180. Full-time study takes three semesters, part-time up to six; there are both "
+            "winter and summer intakes. The CV must be in English and at most four pages. "
+            "Viadrina itself awards no scholarships."
+        ),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Münster",
+        city="Myunster",
+        website="https://www.uni-muenster.de",
+        timezone="Europe/Berlin",
+        program="Comparative and Global Law (LL.M.)",
+        source_url="https://www.uni-muenster.de/Jura/akademische_qualifizierung/ll_m_-_masterstudiengaenge/comparative_and_global_law_ll_m_/Application_admission_tuition.html",
+        intake_term="2027 Fall",
+        tuition_amount=0,
+        tuition_currency="EUR",
+        ielts_min=7.0,
+        toefl_min=95,
+        documents=(
+            "degree_certificate",
+            "transcript",
+            "english_test",
+            "cv",
+            "reference",
+        ),
+        has_scholarship=False,
+        notes=(
+            "Kontrakt yo'q: faqat semestr badali ~350 EUR, unga ma'muriy xarajatlar, talabalar "
+            "xizmati va jamoat transporti kiradi. Til talabi: IELTS kamida 7.0 yoki TOEFL iBT "
+            "kamida 95 (speaking 25, writing 24), ya'ni C1. Yiliga atigi 20 talaba olinadi; "
+            "arizaga o'qituvchidan bitta tavsiyanoma kerak. 2026/27 uchun ariza 4-may – "
+            "15-iyul 2026 oralig'ida qabul qilingan (31-maygacha bergan kuchli nomzodlarga erta "
+            "taklif), 2027 sanalari sahifada hali yo'q. Universitet o'z stipendiyasini bermaydi, "
+            "DAAD va boshqa fondlarga murojaat qilish tavsiya etiladi."
+        ),
+        notes_ru=(
+            "Платы за обучение нет: только семестровый взнос около 350 EUR, покрывающий "
+            "административные расходы, студенческие сервисы и проезд. Языковые требования: IELTS "
+            "не ниже 7.0 или TOEFL iBT не ниже 95 (speaking 25, writing 24), то есть уровень C1. "
+            "В год берут всего 20 человек; нужна одна рекомендация от преподавателя. На 2026/27 "
+            "заявки принимали с 4 мая по 15 июля 2026 (сильным кандидатам, подавшим до 31 мая, "
+            "делали ранние предложения), даты на 2027 на странице пока не опубликованы. Своих "
+            "стипендий университет не даёт и отсылает к DAAD и другим фондам."
+        ),
+        notes_en=(
+            "There is no tuition fee: only a semester contribution of about EUR 350 covering "
+            "administration, student services and public transport. Language requirements: IELTS "
+            "at least 7.0 or TOEFL iBT at least 95 with 25 in speaking and 24 in writing, i.e. "
+            "CEFR C1. Only 20 students are admitted each year and one academic reference letter "
+            "is required. For 2026/27 the application period ran 4 May to 15 July 2026, with "
+            "early offers to outstanding candidates who applied by 31 May; the 2027 dates are "
+            "not yet on the page. The university awards no scholarships of its own and points "
+            "applicants to the DAAD and other foundations."
+        ),
+        missing=("deadline",),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Göttingen",
+        city="Gyottingen",
+        website="https://www.uni-goettingen.de",
+        timezone="Europe/Berlin",
+        program="Göttingen Master of International Law (GOMIL) LL.M.",
+        source_url="https://www.uni-goettingen.de/en/ll.m.+in+international+law+(gomil)/685263.html",
+        intake_term="2027 Fall",
+        tuition_amount=8500,
+        tuition_currency="EUR",
+        deadline_close=date(2027, 5, 31),
+        has_scholarship=False,
+        notes=(
+            "Kontrakt 8 500 EUR (semestriga 4 250 EUR) — 2026/27 va 2027/28 qishki semestrlari "
+            "uchun; 2028/29 dan 9 000 EUR, 2029/30 dan 9 500 EUR bo'ladi. Birinchi 25% taklif "
+            "kelgandan keyin olti hafta ichida, qolgani oktyabr, yanvar va aprelda to'lanadi. "
+            "Bundan tashqari semestriga ~500 EUR talabalar uyushmasi badali bor. Ariza muddati "
+            "— 31-may; o'qish 1-oktyabrdan 30-sentyabrgacha. Fakultet o'z stipendiyasini "
+            "bermaydi, DAAD kabi tashqi manbalarga yo'naltiradi. Til bali sahifada yo'q."
+        ),
+        notes_ru=(
+            "Стоимость 8 500 EUR (4 250 EUR за семестр) — для зимних семестров 2026/27 и "
+            "2027/28; с 2028/29 — 9 000 EUR, с 2029/30 — 9 500 EUR. Первые 25% вносят в течение "
+            "шести недель после получения места, остальное — в октябре, январе и апреле. "
+            "Дополнительно около 500 EUR взноса студенческого союза за семестр. Дедлайн — "
+            "31 мая; обучение идёт с 1 октября по 30 сентября. Своих стипендий факультет не "
+            "даёт и направляет к внешним источникам вроде DAAD. Балл по языку на странице "
+            "не указан."
+        ),
+        notes_en=(
+            "Tuition is EUR 8,500 (EUR 4,250 per semester) for the winter intakes of 2026/27 and "
+            "2027/28; it rises to EUR 9,000 from 2028/29 and EUR 9,500 from 2029/30. The first "
+            "instalment of 25% is due within six weeks of the offer, the rest in October, "
+            "January and April. There is also a student union contribution of about EUR 500 per "
+            "semester. The deadline is 31 May and the year runs 1 October to 30 September. The "
+            "law faculty awards no scholarships of its own and points to external sources such "
+            "as the DAAD. No language score is stated on the page."
+        ),
+        missing=("language_score",),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Göttingen",
+        city="Gyottingen",
+        website="https://www.uni-goettingen.de",
+        timezone="Europe/Berlin",
+        program=(
+            "European and Transnational Law of Intellectual Property and Information "
+            "Technology (LL.M.)"
+        ),
+        source_url="https://www.uni-goettingen.de/en/545891.html",
+        intake_term="2027 Fall",
+        tuition_amount=9000,
+        tuition_currency="EUR",
+        has_scholarship=True,
+        scholarship_url="https://www.uni-goettingen.de/en/545891.html",
+        notes=(
+            "Kontrakt 9 000 EUR (semestriga 4 500 EUR). Dastur 1 yil, 60 ECTS: 27-oktyabrdan "
+            "30-sentyabrgacha. To'liq va qisman kontrakt chegirmalari (tuition waiver) beriladi. "
+            "Ingliz tili oliy ta'lim uchun yetarli bo'lishi talab qilinadi, lekin aniq "
+            "IELTS/TOEFL bali sahifada yo'q; ariza muddati ham ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "Стоимость 9 000 EUR (4 500 EUR за семестр). Программа длится 1 год, 60 ECTS: с "
+            "27 октября по 30 сентября. Предоставляются полные и частичные скидки на обучение "
+            "(tuition waiver). Требуется английский, достаточный для обучения в вузе, но "
+            "конкретный балл IELTS/TOEFL на странице не указан, дедлайн тоже не назван."
+        ),
+        notes_en=(
+            "Tuition is EUR 9,000 (EUR 4,500 per semester). The programme lasts one year and is "
+            "worth 60 ECTS, running from 27 October to 30 September. Full and partial tuition "
+            "waivers are available. Applicants must show English sufficient for higher education, "
+            "but no IELTS or TOEFL score is given on the page, and no deadline is stated either."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Leibniz University Hannover",
+        city="Gannover",
+        website="https://www.jura.uni-hannover.de",
+        timezone="Europe/Berlin",
+        program="European Legal Practice (LL.M.) - Joint Degree",
+        source_url="https://www.jura.uni-hannover.de/en/studies/studienangebot-der-fakultaet/ergaenzende-studiengaenge/european-legal-practice-llm-joint-degree-master-of-laws/costs-and-scholarship",
+        intake_term="2027 Fall",
+        duration_years=2.0,
+        language="German, English",
+        tuition_amount=0,
+        tuition_currency="EUR",
+        notes=(
+            "Gannoverda kontrakt yo'q: faqat semestr yig'imi ~433,11 EUR, unga jamoat transporti "
+            "chiptasi kiradi (sahifadagi holat — 2021/22 qishki semestri). Dastur 4 semestr va "
+            "sakkizta hamkor universitetdan birida majburiy chet el semestrini o'z ichiga oladi "
+            "— hamkor universitetlar o'z to'lovlarini oladi. Qabul cheklangan; darslar nemis va "
+            "ingliz tillarida. Til bali ham, aniq ariza muddati ham fakultet sahifasida "
+            "ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "В Ганновере платы за обучение нет: только семестровый взнос около 433,11 EUR, "
+            "включающий проездной (по состоянию на зимний семестр 2021/22, как указано на "
+            "странице). Программа рассчитана на 4 семестра и включает обязательный семестр в "
+            "одном из восьми вузов-партнёров — они берут собственную плату. Приём ограничен; "
+            "занятия идут на немецком и английском. Ни балл по языку, ни точный дедлайн на "
+            "странице факультета не указаны."
+        ),
+        notes_en=(
+            "There are no tuition fees in Hannover: only a semester fee of about EUR 433.11, "
+            "which includes a public transport ticket (the page states winter semester 2021/22). "
+            "The programme runs for four semesters and includes a compulsory period abroad at "
+            "one of eight partner universities, which charge their own fees. Admission is "
+            "restricted and teaching is in German and English. Neither a language score nor a "
+            "precise deadline is stated on the faculty page."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Kiel University",
+        city="Kil",
+        website="https://www.uni-kiel.de",
+        timezone="Europe/Berlin",
+        program="International and European Law (LL.M.Int.)",
+        source_url="https://www.uni-kiel.de/en/law/study/international/llm",
+        intake_term="2027 Fall",
+        tuition_amount=0,
+        tuition_currency="EUR",
+        ielts_min=6.5,
+        toefl_min=80,
+        deadline_close=date(2027, 2, 15),
+        documents=(
+            "personal_statement",
+            "degree_certificate",
+            "transcript",
+            "cv",
+            "reference",
+            "passport",
+            "english_test",
+        ),
+        notes=(
+            "Kontrakt yo'q: semestriga ~300 EUR yig'im, birinchi semestrda ro'yxatdan o'tish "
+            "to'lovi ham qo'shiladi. Ingliz tilida to'liq o'qiladigan yagona yo'nalish — "
+            "LL.M.Int.; qolgan ixtisosliklar faqat nemis tilida. Arizalar 1-dekabr 2026 dan "
+            "15-fevral 2027 gacha qabul qilinadi. Til talabi: TOEFL iBT 80, IELTS 6.5 yoki PTE "
+            "Academic 59. O'qish 2 semestr, oktyabrda boshlanadi. Hujjatlar orasida huquq "
+            "professoridan tavsiyanoma bor; Xitoy, Hindiston va Vetnam arizachilariga APS "
+            "sertifikati kerak."
+        ),
+        notes_ru=(
+            "Платы за обучение нет: около 300 EUR взноса за семестр, в первом семестре "
+            "добавляется плата за зачисление. Полностью на английском читается только "
+            "LL.M.Int.; остальные специализации — на немецком. Заявки принимают с 1 декабря "
+            "2026 по 15 февраля 2027. Языковые требования: TOEFL iBT 80, IELTS 6.5 или PTE "
+            "Academic 59. Обучение длится 2 семестра и начинается в октябре. Среди документов — "
+            "рекомендация от профессора права; абитуриентам из Китая, Индии и Вьетнама нужен "
+            "сертификат APS."
+        ),
+        notes_en=(
+            "There are no tuition fees: a semester contribution of about EUR 300, with an "
+            "enrolment fee added in the first semester. Only the LL.M.Int. can be studied "
+            "entirely in English; the other specialisations are taught in German only. "
+            "Applications run from 1 December 2026 to 15 February 2027. Language requirements: "
+            "TOEFL iBT 80, IELTS 6.5 or PTE Academic 59. The programme lasts two semesters and "
+            "starts in October. The documents include a reference from a law professor, and "
+            "applicants from China, India and Vietnam need an APS certificate."
+        ),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Würzburg",
+        city="Vyurtsburg",
+        website="https://www.jura.uni-wuerzburg.de",
+        timezone="Europe/Berlin",
+        program="Digitalization & Law (LL.M.)",
+        source_url="https://www.jura.uni-wuerzburg.de/en/studium/postgraduales-studium/aufbau-und-masterstudiengaenge/llm-digitalization-law/fees/",
+        intake_term="2027 Fall",
+        duration_years=1.5,
+        tuition_amount=7500,
+        tuition_currency="EUR",
+        has_scholarship=False,
+        notes=(
+            "Kontrakt jami 7 500 EUR — dastlabki uch semestrda 2 500 EUR dan uch bo'lib "
+            "to'lanadi; to'rtinchi semestr kerak bo'lsa, faqat semestr yig'imi to'lanadi. "
+            "Universitet semestr yig'imi ~180 EUR. Dastur 3 semestr (1,5 yil), oktyabrda "
+            "boshlanadi, yiliga 40-45 talaba olinadi va LL.M. bilan birga IT-huquq "
+            "ixtisoslashuvining nazariy qismi tasdiqlanadi. Dasturning o'z stipendiyasi yo'q, "
+            "lekin tashqi stipendiyalar qabul qilinadi. 2026/27 uchun ariza 22-yanvar – "
+            "15-iyul 2026 oralig'ida ochiq edi."
+        ),
+        notes_ru=(
+            "Стоимость — 7 500 EUR всего, тремя взносами по 2 500 EUR в первых трёх семестрах; "
+            "если нужен четвёртый семестр, платится только семестровый взнос. Семестровый взнос "
+            "университета — около 180 EUR. Программа длится 3 семестра (1,5 года), начинается в "
+            "октябре, набирают 40-45 человек, и вместе с LL.M. подтверждается теоретическая "
+            "часть специализации по IT-праву. Собственной стипендии у программы нет, но внешние "
+            "принимаются. На 2026/27 приём шёл с 22 января по 15 июля 2026."
+        ),
+        notes_en=(
+            "Tuition totals EUR 7,500, paid in three instalments of EUR 2,500 in the first three "
+            "semesters; a fourth semester costs only the semester fee. The university's semester "
+            "fee is about EUR 180. The programme runs for three semesters (1.5 years), starts in "
+            "October, admits 40-45 students a year, and awards the LL.M. together with "
+            "confirmation of the theoretical part of the IT law specialisation. It has no "
+            "scholarship of its own but accepts external funding. The 2026/27 application window "
+            "ran from 22 January to 15 July 2026."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Osnabrück University",
+        city="Osnabryuk",
+        website="https://www.uni-osnabrueck.de",
+        timezone="Europe/Berlin",
+        program="European Technology Law (METL) LL.M.",
+        source_url="https://www.uni-osnabrueck.de/fb10/en/studieninteressierte/studiengaenge/llm-master-of-european-technology-law-metl/admission-fees",
+        intake_term="2027 Fall",
+        duration_years=1.5,
+        tuition_amount=4860,
+        tuition_currency="EUR",
+        has_scholarship=True,
+        scholarship_url="https://www.uni-osnabrueck.de/fb10/en/studieninteressierte/studiengaenge/llm-master-of-european-technology-law-metl/admission-fees",
+        notes=(
+            "Kontrakt 4 860 EUR, ikki bo'lib to'lanadi — birinchisi taklif kelishi bilan. "
+            "Bundan tashqari semestriga ~400 EUR talabalar uyushmasi badali. Ingliz tili B2 "
+            "(CEFR) darajasida bo'lishi kerak, aniq IELTS/TOEFL bali ko'rsatilmagan. Qabul "
+            "uchun huquq bo'yicha kamida 8 semestrlik diplom yoki texnika yo'nalishida 240 ECTS "
+            "(formal metodlardan 15 ECTS va informatika/sun'iy intellekt sohasida 25 ECTS) "
+            "kerak. O'qish 2 semestr dars va 1 semestr magistrlik ishi, qishki semestrda "
+            "boshlanadi. Universitet va hamkorlari eng kuchli arizachilarga to'liq yoki qisman "
+            "kontrakt chegirmasini berishi mumkin; muddat sahifada ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "Стоимость 4 860 EUR, оплачивается двумя частями — первая сразу после получения "
+            "места. Дополнительно около 400 EUR взноса студенческого союза за семестр. "
+            "Английский нужен на уровне B2 (CEFR), конкретный балл IELTS/TOEFL не указан. Для "
+            "поступления нужен юридический диплом не менее 8 семестров либо техническое "
+            "образование на 240 ECTS (15 ECTS по формальным методам и 25 ECTS по "
+            "информатике/искусственному интеллекту). Программа: 2 семестра занятий плюс семестр "
+            "на магистерскую работу, старт — зимний семестр. Университет и партнёры могут дать "
+            "лучшим абитуриентам полную или частичную скидку; дедлайн на странице не указан."
+        ),
+        notes_en=(
+            "Tuition is EUR 4,860, payable in two instalments, the first as soon as the offer "
+            "arrives. There is also a student union contribution of about EUR 400 per semester. "
+            "English at CEFR B2 is required, with no IELTS or TOEFL score specified. Entry needs "
+            "a law degree of at least eight semesters or a technology degree worth 240 ECTS, "
+            "including 15 ECTS in formal methods and 25 ECTS in informatics or artificial "
+            "intelligence. The programme is two semesters of lectures plus one for the thesis, "
+            "starting in the winter semester. The university and its partners may award full or "
+            "partial tuition waivers to the best applicants; no deadline is stated on the page."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Goethe University Frankfurt (European Academy of Legal Theory)",
+        city="Frankfurt",
+        website="https://www.legaltheory.eu",
+        timezone="Europe/Berlin",
+        program="Legal Theory (LL.M.)",
+        source_url="https://www.legaltheory.eu/llm-in-legal-theory/application-admission-language/",
+        intake_term="2027 Fall",
+        tuition_amount=7200,
+        tuition_currency="EUR",
+        ielts_min=7.0,
+        toefl_min=100,
+        deadline_close=date(2027, 9, 15),
+        documents=(
+            "cv",
+            "english_test",
+            "transcript",
+            "passport",
+            "personal_statement",
+            "reference",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.legaltheory.eu/llm-in-legal-theory/application-admission-language/",
+        notes=(
+            "Dasturni European Academy of Legal Theory olib boradi, o'qish Frankfurtdagi Gyote "
+            "universitetida o'tadi. Kontrakt 7 200 EUR; a'lo natija yoki moddiy ehtiyoj asosida "
+            "uni 6 000 EUR gacha kamaytirishga ariza berish mumkin. Muddat — har yili "
+            "15-sentyabr. Til talabi: IELTS kamida 7.0 yoki TOEFL iBT 100 (har bo'limda kamida "
+            "20). Qabul uchun huquq yoki unga yaqin sohada diplom va bir yillik kasbiy yoki "
+            "ilmiy tajriba kerak; o'qish bir yil, oktyabrda boshlanadi."
+        ),
+        notes_ru=(
+            "Программу ведёт European Academy of Legal Theory, занятия проходят в Университете "
+            "Гёте во Франкфурте. Стоимость 7 200 EUR; при отличных результатах или финансовой "
+            "необходимости можно подать на снижение до 6 000 EUR. Дедлайн — 15 сентября каждого "
+            "года. Языковые требования: IELTS не ниже 7.0 или TOEFL iBT 100 (минимум 20 в "
+            "каждом разделе). Нужны диплом по праву или смежной области и год "
+            "профессионального либо исследовательского опыта; обучение длится год и начинается "
+            "в октябре."
+        ),
+        notes_en=(
+            "The programme is run by the European Academy of Legal Theory and hosted at Goethe "
+            "University Frankfurt. Tuition is EUR 7,200, and a partial reduction to EUR 6,000 "
+            "can be applied for on grounds of excellence or financial need. The deadline is "
+            "15 September each year. Language requirements: IELTS at least 7.0 or TOEFL iBT 100 "
+            "with at least 20 in each section. Entry requires a law degree or a degree in a "
+            "related subject plus one year of professional or research experience; the course "
+            "lasts one year and starts in October."
+        ),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="Heidelberg University",
+        city="Geydelberg",
+        website="https://www.uni-heidelberg.de",
+        timezone="Europe/Berlin",
+        program="Law - Legum Magister (LL.M.)",
+        source_url="https://www.uni-heidelberg.de/en/study/all-subjects/law/law-legum-magister",
+        intake_term="2027 Fall",
+        language="German",
+        tuition_amount=1000,
+        tuition_currency="EUR",
+        notes=(
+            "Dastur chet el universitetida huquq bo'yicha bakalavr diplomini olganlar uchun va "
+            "nemis tilida o'qitiladi. Sahifada narx semestriga 500 EUR deb berilgan; dastur "
+            "2 semestr bo'lgani uchun yiliga 1 000 EUR chiqadi (bu summa EI/EIH tashqarisidagi "
+            "talabalar uchun). Qabul faqat qishki semestrda. Ariza muddati va til bali sahifada "
+            "ko'rsatilmagan — ular tanlangan dastur bo'yicha alohida e'lon qilinadi."
+        ),
+        notes_ru=(
+            "Программа для тех, кто получил диплом бакалавра права в зарубежном вузе, и читается "
+            "на немецком. На странице указана плата 500 EUR за семестр; поскольку программа "
+            "длится 2 семестра, за год выходит 1 000 EUR (для студентов из стран вне ЕС/ЕЭП). "
+            "Набор только на зимний семестр. Дедлайн и балл по языку на странице не указаны — "
+            "их публикуют отдельно по выбранной программе."
+        ),
+        notes_en=(
+            "The programme is for holders of a law bachelor's degree from a university outside "
+            "Germany and is taught in German. The page states a fee of EUR 500 per semester; as "
+            "the programme runs for two semesters that comes to EUR 1,000 for the year (the rate "
+            "for students from outside the EU/EEA). Admission is for the winter semester only. "
+            "Neither a deadline nor a language score is given on the page; these are published "
+            "separately for the chosen programme."
+        ),
+        missing=("language_score", "deadline"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Passau",
+        city="Passau",
+        website="https://www.uni-passau.de",
+        timezone="Europe/Berlin",
+        program="German Law for Foreign Graduates (LL.M.)",
+        source_url="https://www.uni-passau.de/en/llm-germanlaw",
+        intake_term="2027 Fall",
+        language="German",
+        deadline_close=date(2027, 7, 15),
+        documents=(
+            "cv",
+            "degree_certificate",
+            "transcript",
+            "passport",
+            "translation",
+        ),
+        notes=(
+            "Dastur nemis tilida o'qitiladi va chet elda huquq diplomini olganlar uchun "
+            "mo'ljallangan. Nemis tili CEFR bo'yicha B2 yoki undan yuqori bo'lishi kerak; agar "
+            "oldingi ta'lim nemis tilida bo'lgan bo'lsa, diplomning o'zi yetarli. Ariza "
+            "15-apreldan 15-iyulgacha, faqat qishki semestrga (oktyabr) qabul qilinadi. O'qish "
+            "2 semestr, 60 ECTS. Hujjatlar boshqa tilda bo'lsa, tasdiqlangan nemis yoki ingliz "
+            "tarjimasi talab qilinadi. Kontrakt summasi sahifada ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "Программа читается на немецком и предназначена для тех, кто получил юридический "
+            "диплом за рубежом. Немецкий нужен на уровне B2 CEFR или выше; если предыдущее "
+            "образование было на немецком, достаточно самого диплома. Заявки принимают с "
+            "15 апреля по 15 июля, набор только на зимний семестр (октябрь). Обучение — "
+            "2 семестра, 60 ECTS. Документы на других языках требуют заверенного перевода на "
+            "немецкий или английский. Сумма контракта на странице не указана."
+        ),
+        notes_en=(
+            "The programme is taught in German and is intended for people who earned a law "
+            "degree abroad. German must be at CEFR B2 or higher; if the previous education was "
+            "in German, the certificates themselves suffice. Applications run from 15 April to "
+            "15 July and there is a winter-semester (October) intake only. The course lasts two "
+            "semesters and is worth 60 ECTS. Documents in other languages need certified German "
+            "or English translations. No tuition figure is stated on the page."
+        ),
+        missing=("tuition", "language_score"),
+    ),
+    LlmSeed(
+        country_iso="DE",
+        university="University of Bayreuth",
+        city="Bayroyt",
+        website="https://www.uni-bayreuth.de",
+        timezone="Europe/Berlin",
+        program="Law for International Students & Professionals (LL.M.)",
+        source_url="https://www.international-office.uni-bayreuth.de/en/degree-programmes/master-EU/law-for-international-students-_-professionals-_magister-legum_/index.html",
+        intake_term="2027 Fall",
+        language="German",
+        deadline_close=date(2027, 7, 15),
+        documents=(
+            "cv",
+            "degree_certificate",
+            "transcript",
+            "translation",
+        ),
+        notes=(
+            "Xalqaro talabalar va amaliyotchi yuristlar uchun LL.M. Nemis tilidan DSH-2 "
+            "sertifikati talab qilinadi. Ariza muddatlari: qishki semestr uchun 15-apreldan "
+            "15-iyulgacha, yozgi semestr uchun 15-oktyabrdan 15-yanvargacha. Bakalavr "
+            "transkriptida kamida 150 ECTS bo'lishi kerak; maktab attestati va diplomlarning "
+            "asl nusxasi hamda tasdiqlangan tarjimasi, baholar shkalasi ham topshiriladi. "
+            "Kontrakt summasi sahifada ko'rsatilmagan."
+        ),
+        notes_ru=(
+            "LL.M. для иностранных студентов и практикующих юристов. Требуется сертификат по "
+            "немецкому DSH-2. Сроки подачи: на зимний семестр с 15 апреля по 15 июля, на летний "
+            "— с 15 октября по 15 января. В транскрипте бакалавра должно быть не менее "
+            "150 ECTS; также подаются аттестат и дипломы в оригинале с заверенным переводом и "
+            "шкала оценок. Сумма контракта на странице не указана."
+        ),
+        notes_en=(
+            "An LL.M. for international students and practising lawyers. A DSH-2 German "
+            "certificate is required. Application periods: 15 April to 15 July for the winter "
+            "semester and 15 October to 15 January for the summer semester. The bachelor's "
+            "transcript must show at least 150 ECTS; the school leaving certificate and degrees "
+            "must be submitted as originals with certified translations, along with the grading "
+            "scale. No tuition figure is stated on the page."
+        ),
+        missing=("tuition", "language_score"),
     ),
 ]
 

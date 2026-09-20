@@ -156,11 +156,29 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         tuition_amount=39900,
         tuition_currency="GBP",
-        notes="Ariza qabul qilish uzluksiz (rolling admissions) — qat'iy yopilish sanasi yo'q.",
-        notes_ru="Приём заявок идёт непрерывно (rolling admissions) — жёсткого дедлайна нет.",
-        notes_en="Applications are accepted on a rolling basis — there is no fixed deadline.",
         missing=("language_score",),
         has_scholarship=True,
+        documents=(
+            "transcript",
+            "personal_statement",
+            "reference",
+            "cv",
+        ),
+        notes=(
+            "Ariza qabul qilish uzluksiz (rolling admissions) — qat'iy yopilish sanasi "
+            "yo'q, joy to'lgach yopiladi. Ikkita akademik tavsiyanoma kerak. LSE'ning "
+            "ehtiyojga asoslangan moliyaviy yordamiga ariza muddati — 23-aprel."
+        ),
+        notes_ru=(
+            "Приём заявок непрерывный (rolling admissions) — жёсткого дедлайна нет, приём "
+            "закрывается по заполнении мест. Нужны две академические рекомендации. Дедлайн "
+            "заявки на финансовую помощь LSE по нуждаемости — 23 апреля."
+        ),
+        notes_en=(
+            "Applications are considered on a rolling basis — there is no fixed deadline "
+            "and applications close once the programme is full. Two academic references "
+            "are required. The deadline for LSE needs-based funding is 23 April."
+        ),
     ),
     LlmSeed(
         country_iso="GB",
@@ -330,10 +348,33 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         # King's "Band B": umumiy 7.0, har bo'limda kamida 6.5.
         ielts_min=7.0,
-        notes="Xalqaro talabalar uchun 2 000 GBP depozit, u kontrakt hisobiga o'tadi.",
-        notes_ru="Для международных студентов депозит 2 000 GBP, он засчитывается в стоимость обучения.",
-        notes_en="International students pay a GBP 2,000 deposit, credited towards tuition.",
         missing=("tuition", "deadline"),
+        tuition_amount=38300,
+        tuition_currency="GBP",
+        documents=(
+            "personal_statement",
+            "transcript",
+            "degree_certificate",
+            "translation",
+        ),
+        notes=(
+            "Narx 2026/27 uchun. DIQQAT: King's LL.M.ga TAVSIYANOMA talab qilinmaydi "
+            "(raqobat yuqoriligi sababli). Motivatsion xat 4 000 belgigacha yoki 2 "
+            "sahifagacha. CV ixtiyoriy. Xalqaro talabalar 2 000 GBP depozit to'laydi, "
+            "u kontrakt hisobiga o'tadi."
+        ),
+        notes_ru=(
+            "Стоимость за 2026/27. ВНИМАНИЕ: для LL.M. в King's НЕ требуются "
+            "рекомендательные письма (из-за высокого конкурса). Мотивационное письмо до "
+            "4 000 знаков или 2 страниц. CV по желанию. Международные студенты вносят "
+            "депозит 2 000 GBP, он засчитывается в стоимость."
+        ),
+        notes_en=(
+            "Fee for 2026/27. NOTE: King's does NOT require references for the LL.M. "
+            "(because of competition for places). Personal statement up to 4,000 "
+            "characters or 2 pages. A CV is optional. International students pay a GBP "
+            "2,000 deposit, credited towards tuition."
+        ),
     ),
     # Manchester huquq fakulteti bir nechta LL.M. beradi. Ingliz tili talabi
     # fakultetning hammasiga bir xil e'lon qilingan, KONTRAKT esa kurs bo'yicha
@@ -384,6 +425,24 @@ SEEDS: list[LlmSeed] = [
         toefl_min=100,
         missing=("tuition", "deadline"),
         has_scholarship=True,
+        tuition_amount=31000,
+        tuition_currency="GBP",
+        deadline_close=date(2027, 7, 4),
+        notes=(
+            "Narx 2026-yilda boshlangan o'quv yili uchun (xalqaro talabalar); 2027 uchun "
+            "hali belgilanmagan. Ariza to'rt bosqichda ko'rib chiqiladi: 6-dekabr, 1-mart, "
+            "4-may, 4-iyul. Erta bosqichda joy ko'proq bo'ladi."
+        ),
+        notes_ru=(
+            "Стоимость за учебный год, начавшийся в 2026 (международные студенты); на 2027 "
+            "ещё не установлена. Заявки рассматриваются в четыре этапа: 6 декабря, 1 марта, "
+            "4 мая, 4 июля. На ранних этапах мест больше."
+        ),
+        notes_en=(
+            "Fee for the academic year that started in 2026 (international students); the 2027 "
+            "fee is not set yet. Applications are reviewed in four stages: 6 December, 1 March, "
+            "4 May, 4 July. Earlier stages have more places."
+        ),
     ),
     LlmSeed(
         country_iso="GB",
@@ -398,6 +457,24 @@ SEEDS: list[LlmSeed] = [
         toefl_min=100,
         missing=("tuition", "deadline"),
         has_scholarship=True,
+        tuition_amount=31000,
+        tuition_currency="GBP",
+        deadline_close=date(2027, 7, 4),
+        notes=(
+            "Narx 2026-yilda boshlangan o'quv yili uchun (xalqaro talabalar); 2027 uchun "
+            "hali belgilanmagan. Ariza to'rt bosqichda ko'rib chiqiladi: 6-dekabr, 1-mart, "
+            "4-may, 4-iyul. Erta bosqichda joy ko'proq bo'ladi."
+        ),
+        notes_ru=(
+            "Стоимость за учебный год, начавшийся в 2026 (международные студенты); на 2027 "
+            "ещё не установлена. Заявки рассматриваются в четыре этапа: 6 декабря, 1 марта, "
+            "4 мая, 4 июля. На ранних этапах мест больше."
+        ),
+        notes_en=(
+            "Fee for the academic year that started in 2026 (international students); the 2027 "
+            "fee is not set yet. Applications are reviewed in four stages: 6 December, 1 March, "
+            "4 May, 4 July. Earlier stages have more places."
+        ),
     ),
     LlmSeed(
         country_iso="GB",
@@ -412,6 +489,24 @@ SEEDS: list[LlmSeed] = [
         toefl_min=100,
         missing=("tuition", "deadline"),
         has_scholarship=True,
+        tuition_amount=31000,
+        tuition_currency="GBP",
+        deadline_close=date(2027, 7, 4),
+        notes=(
+            "Narx 2026-yilda boshlangan o'quv yili uchun (xalqaro talabalar); 2027 uchun "
+            "hali belgilanmagan. Ariza to'rt bosqichda ko'rib chiqiladi: 6-dekabr, 1-mart, "
+            "4-may, 4-iyul. Erta bosqichda joy ko'proq bo'ladi."
+        ),
+        notes_ru=(
+            "Стоимость за учебный год, начавшийся в 2026 (международные студенты); на 2027 "
+            "ещё не установлена. Заявки рассматриваются в четыре этапа: 6 декабря, 1 марта, "
+            "4 мая, 4 июля. На ранних этапах мест больше."
+        ),
+        notes_en=(
+            "Fee for the academic year that started in 2026 (international students); the 2027 "
+            "fee is not set yet. Applications are reviewed in four stages: 6 December, 1 March, "
+            "4 May, 4 July. Earlier stages have more places."
+        ),
     ),
     LlmSeed(
         country_iso="GB",
@@ -426,6 +521,24 @@ SEEDS: list[LlmSeed] = [
         toefl_min=100,
         missing=("tuition", "deadline"),
         has_scholarship=True,
+        tuition_amount=31000,
+        tuition_currency="GBP",
+        deadline_close=date(2027, 7, 4),
+        notes=(
+            "Narx 2026-yilda boshlangan o'quv yili uchun (xalqaro talabalar); 2027 uchun "
+            "hali belgilanmagan. Ariza to'rt bosqichda ko'rib chiqiladi: 6-dekabr, 1-mart, "
+            "4-may, 4-iyul. Erta bosqichda joy ko'proq bo'ladi."
+        ),
+        notes_ru=(
+            "Стоимость за учебный год, начавшийся в 2026 (международные студенты); на 2027 "
+            "ещё не установлена. Заявки рассматриваются в четыре этапа: 6 декабря, 1 марта, "
+            "4 мая, 4 июля. На ранних этапах мест больше."
+        ),
+        notes_en=(
+            "Fee for the academic year that started in 2026 (international students); the 2027 "
+            "fee is not set yet. Applications are reviewed in four stages: 6 December, 1 March, "
+            "4 May, 4 July. Earlier stages have more places."
+        ),
     ),
     # ---------------------------- AQSH (davomi) ----------------------------
     LlmSeed(
@@ -645,6 +758,7 @@ SEEDS: list[LlmSeed] = [
             "5,000 or 10,000 fee discount, first-round deadline 16 January."
         ),
         missing=("tuition", "language_score", "deadline"),
+        ielts_min=7.0,
     ),
     # --------------------------- Italiya (davomi) ---------------------------
     LlmSeed(

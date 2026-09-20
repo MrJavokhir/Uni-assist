@@ -976,6 +976,384 @@ SEEDS: list[LlmSeed] = [
         notes_en="EUR 15,000 in total (EUR 7,500 per semester).",
         missing=("language_score", "deadline"),
     ),
+    # ------------------- Buyuk Britaniya (beshinchi to'plam) -------------------
+    LlmSeed(
+        country_iso="GB",
+        university="University of Bristol",
+        city="Bristol",
+        website="https://www.bristol.ac.uk",
+        timezone="Europe/London",
+        program="Law - International Law LLM",
+        source_url="https://www.bristol.ac.uk/study/postgraduate/taught/llm-law---international-law/",
+        intake_term="2027 Fall",
+        tuition_amount=29800,
+        tuition_currency="GBP",
+        ielts_min=7.0,
+        deadline_close=date(2027, 8, 12),
+        documents=(
+            "transcript",
+            "degree_certificate",
+            "translation",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.bristol.ac.uk/law/courses/postgraduate/scholarships/",
+        notes=(
+            "Narx 2027/28 o'quv yili uchun (xalqaro talabalar). Xorijiy arizachilar uchun "
+            "muddat — 12-avgust, lekin joylar undan oldin to'lishi mumkin. IELTS: umumiy "
+            "7.0, har bir bo'limda kamida 6.5 (Profile B). Bristol yuridik fakulteti «Think "
+            "Big about Law and Justice» stipendiyasini beradi; bitiruvchilarga 25% chegirma."
+        ),
+        notes_ru=(
+            "Стоимость на 2027/28 "
+            "учебный год "
+            "(международны"
+            "е студенты). "
+            "Дедлайн для "
+            "зарубежных "
+            "абитуриентов "
+            "— 12 августа, но "
+            "места могут "
+            "закончиться "
+            "раньше. IELTS: 7.0 общи"
+            "й, не менее 6.5 в "
+            "каждом разде"
+            "ле (Profile B). Юридиче"
+            "ский факульт"
+            "ет Бристоля "
+            "даёт стипенд"
+            "ию «Think Big about Law and Justice»; "
+            "выпускникам "
+            "— скидка 25%."
+        ),
+        notes_en=(
+            "Fee for the 2027/28 academic year (international students). The deadline for "
+            "overseas applicants is 12 August, but places may fill earlier. IELTS: 7.0 overall "
+            "with at least 6.5 in each band (Profile B). Bristol Law School offers «Think "
+            "Big about Law and Justice» scholarships; alumni get a 25% discount."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Bristol",
+        city="Bristol",
+        website="https://www.bristol.ac.uk",
+        timezone="Europe/London",
+        program="Law - International Commercial Law LLM",
+        source_url="https://www.bristol.ac.uk/study/postgraduate/taught/llm-law---international-commercial-law/",
+        intake_term="2027 Fall",
+        tuition_amount=29800,
+        tuition_currency="GBP",
+        ielts_min=7.0,
+        deadline_close=date(2027, 8, 12),
+        documents=(
+            "transcript",
+            "degree_certificate",
+            "translation",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.bristol.ac.uk/law/courses/postgraduate/scholarships/",
+        notes=(
+            "Narx 2027/28 o'quv yili uchun (xalqaro talabalar). Xorijiy arizachilar uchun "
+            "muddat — 12-avgust, lekin joylar undan oldin to'lishi mumkin. IELTS: umumiy "
+            "7.0, har bir bo'limda kamida 6.5 (Profile B). Bristol yuridik fakulteti «Think "
+            "Big about Law and Justice» stipendiyasini beradi; bitiruvchilarga 25% chegirma."
+        ),
+        notes_ru=(
+            "Стоимость на 2027/28 "
+            "учебный год "
+            "(международны"
+            "е студенты). "
+            "Дедлайн для "
+            "зарубежных "
+            "абитуриентов "
+            "— 12 августа, но "
+            "места могут "
+            "закончиться "
+            "раньше. IELTS: 7.0 общи"
+            "й, не менее 6.5 в "
+            "каждом разде"
+            "ле (Profile B). Юридиче"
+            "ский факульт"
+            "ет Бристоля "
+            "даёт стипенд"
+            "ию «Think Big about Law and Justice»; "
+            "выпускникам "
+            "— скидка 25%."
+        ),
+        notes_en=(
+            "Fee for the 2027/28 academic year (international students). The deadline for "
+            "overseas applicants is 12 August, but places may fill earlier. IELTS: 7.0 overall "
+            "with at least 6.5 in each band (Profile B). Bristol Law School offers «Think "
+            "Big about Law and Justice» scholarships; alumni get a 25% discount."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Bristol",
+        city="Bristol",
+        website="https://www.bristol.ac.uk",
+        timezone="Europe/London",
+        program="Law - Human Rights Law LLM",
+        source_url="https://www.bristol.ac.uk/study/postgraduate/taught/llm-law---human-rights-law/",
+        intake_term="2027 Fall",
+        tuition_amount=29800,
+        tuition_currency="GBP",
+        ielts_min=7.0,
+        deadline_close=date(2027, 8, 12),
+        documents=(
+            "transcript",
+            "degree_certificate",
+            "translation",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.bristol.ac.uk/law/courses/postgraduate/scholarships/",
+        notes=(
+            "Narx 2027/28 o'quv yili uchun (xalqaro talabalar). Xorijiy arizachilar uchun "
+            "muddat — 12-avgust, lekin joylar undan oldin to'lishi mumkin. IELTS: umumiy "
+            "7.0, har bir bo'limda kamida 6.5 (Profile B). Bristol yuridik fakulteti «Think "
+            "Big about Law and Justice» stipendiyasini beradi; bitiruvchilarga 25% chegirma."
+        ),
+        notes_ru=(
+            "Стоимость на 2027/28 "
+            "учебный год "
+            "(международны"
+            "е студенты). "
+            "Дедлайн для "
+            "зарубежных "
+            "абитуриентов "
+            "— 12 августа, но "
+            "места могут "
+            "закончиться "
+            "раньше. IELTS: 7.0 общи"
+            "й, не менее 6.5 в "
+            "каждом разде"
+            "ле (Profile B). Юридиче"
+            "ский факульт"
+            "ет Бристоля "
+            "даёт стипенд"
+            "ию «Think Big about Law and Justice»; "
+            "выпускникам "
+            "— скидка 25%."
+        ),
+        notes_en=(
+            "Fee for the 2027/28 academic year (international students). The deadline for "
+            "overseas applicants is 12 August, but places may fill earlier. IELTS: 7.0 overall "
+            "with at least 6.5 in each band (Profile B). Bristol Law School offers «Think "
+            "Big about Law and Justice» scholarships; alumni get a 25% discount."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Exeter",
+        city="Ekseter",
+        website="https://www.exeter.ac.uk",
+        timezone="Europe/London",
+        program="LLM Master of Laws",
+        source_url="https://www.exeter.ac.uk/study/postgraduate/courses/law/masteroflaws/",
+        intake_term="2026 Fall",
+        tuition_amount=25550,
+        tuition_currency="GBP",
+        missing=("language_score", "deadline"),
+        documents=(
+            "transcript",
+            "degree_certificate",
+            "translation",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.exeter.ac.uk/study/funding/",
+        notes=(
+            "Narx 2026/27 uchun (xalqaro talabalar, to'liq kunduzgi). Kirish uchun 2:2 darajali "
+            "diplom yetarli, huquq bo'yicha oldingi ta'lim talab qilinmaydi. Ingliz tili talabi "
+            "sahifada «Profile B1» deb beriladi — aniq ball universitetning til "
+            "talablari sahifasida. Stipendiyalar: Exeter Excellence Scholarships; "
+            "bitiruvchilarga birinchi yil kontraktining 20% chegirmasi."
+        ),
+        notes_ru=(
+            "Стоимость на "
+            "2026/27 (международ"
+            "ные студенты, "
+            "очно). Для пост"
+            "упления дост"
+            "аточно дипло"
+            "ма уровня 2:2, "
+            "предыдущее "
+            "юридическое "
+            "образование "
+            "не требуется. "
+            "Требование п"
+            "о английском"
+            "у указано как "
+            "«Profile B1» — точный "
+            "балл на стран"
+            "ице языковых "
+            "требований. "
+            "Стипендии: Exeter Excellence "
+            "Scholarships; выпускник"
+            "ам — скидка 20% на "
+            "первый год."
+        ),
+        notes_en=(
+            "Fee for 2026/27 (international students, full-time). A 2:2 honours degree is enough "
+            "and no prior law study is required. The English requirement is given as "
+            "«Profile B1» — the exact score is on the university's language "
+            "requirements page. Funding: Exeter Excellence Scholarships; alumni receive a 20% "
+            "first-year tuition discount."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Exeter",
+        city="Ekseter",
+        website="https://www.exeter.ac.uk",
+        timezone="Europe/London",
+        program="LLM International Commercial Law",
+        source_url="https://www.exeter.ac.uk/study/postgraduate/courses/law/law-international-commercial/",
+        intake_term="2026 Fall",
+        tuition_amount=25550,
+        tuition_currency="GBP",
+        missing=("language_score", "deadline"),
+        documents=(
+            "transcript",
+            "degree_certificate",
+            "translation",
+            "personal_statement",
+            "reference",
+            "english_test",
+        ),
+        has_scholarship=True,
+        scholarship_url="https://www.exeter.ac.uk/study/funding/",
+        notes=(
+            "Narx 2026/27 uchun (xalqaro talabalar, to'liq kunduzgi). Kirish uchun 2:2 darajali "
+            "diplom yetarli, huquq bo'yicha oldingi ta'lim talab qilinmaydi. Ingliz tili talabi "
+            "sahifada «Profile B1» deb beriladi — aniq ball universitetning til "
+            "talablari sahifasida. Stipendiyalar: Exeter Excellence Scholarships; "
+            "bitiruvchilarga birinchi yil kontraktining 20% chegirmasi."
+        ),
+        notes_ru=(
+            "Стоимость на "
+            "2026/27 (международ"
+            "ные студенты, "
+            "очно). Для пост"
+            "упления дост"
+            "аточно дипло"
+            "ма уровня 2:2, "
+            "предыдущее "
+            "юридическое "
+            "образование "
+            "не требуется. "
+            "Требование п"
+            "о английском"
+            "у указано как "
+            "«Profile B1» — точный "
+            "балл на стран"
+            "ице языковых "
+            "требований. "
+            "Стипендии: Exeter Excellence "
+            "Scholarships; выпускник"
+            "ам — скидка 20% на "
+            "первый год."
+        ),
+        notes_en=(
+            "Fee for 2026/27 (international students, full-time). A 2:2 honours degree is enough "
+            "and no prior law study is required. The English requirement is given as "
+            "«Profile B1» — the exact score is on the university's language "
+            "requirements page. Funding: Exeter Excellence Scholarships; alumni receive a 20% "
+            "first-year tuition discount."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="SOAS University of London",
+        city="London",
+        website="https://www.soas.ac.uk",
+        timezone="Europe/London",
+        program="LLM International Law",
+        source_url="https://www.soas.ac.uk/study/find-course/llm-international-law",
+        intake_term="2026 Fall",
+        tuition_amount=27840,
+        tuition_currency="GBP",
+        missing=("language_score", "deadline"),
+        notes=(
+            "Narx xalqaro talabalar uchun, bir yillik to'liq kunduzgi o'qish. SOAS kurs "
+            "sahifasida IELTS balli ham, ariza muddati ham ko'rsatilmagan — ularni qabul "
+            "bo'limidan aniqlash kerak."
+        ),
+        notes_ru=(
+            "Стоимость для "
+            "международны"
+            "х студентов, "
+            "один год очно"
+            "го обучения. Н"
+            "а странице ку"
+            "рса SOAS не указа"
+            "ны ни балл IELTS, ни "
+            "дедлайн — их "
+            "нужно уточни"
+            "ть в приёмной "
+            "комиссии."
+        ),
+        notes_en=(
+            "Fee for international students, one year full-time. The SOAS course page states "
+            "neither an IELTS score nor an application deadline — check both with "
+            "admissions."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Birmingham",
+        city="Birmingem",
+        website="https://www.birmingham.ac.uk",
+        timezone="Europe/London",
+        program="General Law LLM",
+        source_url="https://www.birmingham.ac.uk/study/postgraduate/subjects/law-courses/general-law-llm",
+        intake_term="2027 Fall",
+        ielts_min=6.5,
+        toefl_min=88,
+        missing=("tuition", "deadline"),
+        notes=(
+            "IELTS 6.5, har bir bo'limda kamida 6.0 (TOEFL: umumiy 88). Kirish uchun 2:1 "
+            "darajali huquq diplomi yoki unga teng ta'lim/ish tajribasi. Kontrakt summasi kurs "
+            "sahifasida ko'rsatilmagan. Xalqaro talabalar CAS olishdan oldin depozit to'laydi."
+        ),
+        notes_ru=(
+            "IELTS 6.5, не менее 6.0 в "
+            "каждом разде"
+            "ле (TOEFL: 88 общий). Дл"
+            "я поступлени"
+            "я нужен дипло"
+            "м уровня 2:1 по "
+            "праву либо "
+            "равноценное "
+            "образование "
+            "или опыт рабо"
+            "ты. Сумма конт"
+            "ракта на стра"
+            "нице курса не "
+            "указана. Межд"
+            "ународные ст"
+            "уденты внося"
+            "т депозит до "
+            "получения CAS."
+        ),
+        notes_en=(
+            "IELTS 6.5 with no less than 6.0 in any band (TOEFL: 88 overall). Entry requires a "
+            "2:1 honours degree in law, or equivalent study or professional experience. The "
+            "tuition figure is not stated on the course page. International students pay a "
+            "deposit before a CAS is issued."
+        ),
+    ),
 ]
 
 # DIQQAT: "rasmiy sahifadan tekshirilgan" va "quyidagi maydonlar bo'sh" degan

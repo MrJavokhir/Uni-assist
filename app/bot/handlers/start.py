@@ -6,11 +6,15 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.keyboards import language_keyboard
 from app.config import settings
 from app.i18n import t
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
+
+# Til hali tanlanmagani uchun uchala tilda ham yoziladi.
+CHOOSE_LANGUAGE = "Tilni tanlang · Выберите язык · Choose your language"
 
 # Telegram Mini App'ning statik fayllarini agressiv keshlaydi va yangi deploy
 # foydalanuvchiga yetib bormaydi. Har ishga tushishda URL'ga yangi "v" qo'shamiz —
@@ -41,10 +45,11 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, session: AsyncSession) -> None:
-    user = await get_or_create_user(session, message.from_user.id, message.from_user.username)
-    lang = user.ui_language.value
+    """/start — birinchi qadam har doim til tanlash.
 
-    await message.answer(
-        t("start.welcome", lang, name=message.from_user.full_name),
-        reply_markup=start_keyboard(lang),
-    )
+    Obuna tekshiruvi ham, xush kelibsiz xabari ham tildan keyin bo'ladi:
+    aks holda foydalanuvchi o'zi tushunmaydigan tilda kanal so'rovini
+    ko'rardi. /start qayta berilsa tilni almashtirish imkonini ham beradi.
+    """
+    await get_or_create_user(session, message.from_user.id, message.from_user.username)
+    await message.answer(CHOOSE_LANGUAGE, reply_markup=language_keyboard())

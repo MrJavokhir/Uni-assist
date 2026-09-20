@@ -21,3 +21,24 @@ def subscription_keyboard(channels: list, lang: str) -> InlineKeyboardMarkup:
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+# Til tanlash callback'i: "lang:uz" ko'rinishida. Obuna tekshiruvidan ozod —
+# foydalanuvchi hali tilni tanlamasdan turib kanal so'rovini ko'rmasligi kerak.
+LANGUAGE_CALLBACK_PREFIX = "lang:"
+
+LANGUAGE_CHOICES = (
+    ("uz", "🇺🇿 O'zbekcha"),
+    ("ru", "🇷🇺 Русский"),
+    ("en", "🇬🇧 English"),
+)
+
+
+def language_keyboard() -> InlineKeyboardMarkup:
+    """Til tanlash — har bir til alohida qatorda, bayrog'i bilan."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=label, callback_data=f"{LANGUAGE_CALLBACK_PREFIX}{code}")]
+            for code, label in LANGUAGE_CHOICES
+        ]
+    )

@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from app.bot.handlers import reminders, start, subscription
+from app.bot.handlers import language, reminders, start, subscription
 from app.bot.middlewares import DbSessionMiddleware, SubscriptionMiddleware
 from app.config import settings
 from app.db.session import async_session_factory
@@ -28,6 +28,7 @@ def create_dispatcher() -> Dispatcher:
     dispatcher.update.middleware(DbSessionMiddleware())
     dispatcher.update.middleware(SubscriptionMiddleware())
 
+    dispatcher.include_router(language.router)
     dispatcher.include_router(subscription.router)
     dispatcher.include_router(start.router)
     dispatcher.include_router(reminders.router)

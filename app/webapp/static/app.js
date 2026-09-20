@@ -122,6 +122,10 @@ const I18N = {
     "home.summary_total": "Sizga mos dasturlar",
     "home.summary_empty": "Profilni to'ldiring — sizga mos dasturlarni topaman",
     "home.section_top": "Eng mos dastur",
+    "home.setup_filter": "Qidiruvni sozlash",
+    "home.refine_filter": "Filtrni to'ldirish",
+    "home.summary_no_filter": "Qidiruvni sozlang",
+    "home.summary_no_filter_hint": "Yo'nalish, daraja va davlatni tanlang — shundan keyin sizga mos dasturlarni ko'rsataman",
 
     "profile.section_academic": "Ta'lim",
     "profile.section_language": "Til sertifikati",
@@ -263,6 +267,10 @@ const I18N = {
     "home.summary_total": "Подходящих программ",
     "home.summary_empty": "Заполните профиль — и я подберу программы",
     "home.section_top": "Лучшее совпадение",
+    "home.setup_filter": "Настроить поиск",
+    "home.refine_filter": "Дополнить фильтр",
+    "home.summary_no_filter": "Настройте поиск",
+    "home.summary_no_filter_hint": "Выберите направление, степень и страну — и я покажу подходящие программы",
 
     "profile.section_academic": "Образование",
     "profile.section_language": "Языковой сертификат",
@@ -404,6 +412,10 @@ const I18N = {
     "home.summary_total": "Programs that fit you",
     "home.summary_empty": "Fill in your profile and I'll find programs for you",
     "home.section_top": "Best match",
+    "home.setup_filter": "Set up your search",
+    "home.refine_filter": "Refine your filter",
+    "home.summary_no_filter": "Set up your search",
+    "home.summary_no_filter_hint": "Pick a field, degree and country — then I'll show the programs that fit you",
 
     "profile.section_academic": "Academic",
     "profile.section_language": "Language certificate",
@@ -584,6 +596,16 @@ async function loadMajors(degreeLevel) {
   majors = await api("/majors" + (level ? `?degree_level=${encodeURIComponent(level)}` : ""));
 }
 
+// Qidiruvni chegaralaydigan maydonlardan birortasi tanlanganmi.
+// Hech biri tanlanmagan bo'lsa `find_matches` hamma dasturni qaytaradi —
+// ularni "sizga mos" deb ko'rsatish yangi foydalanuvchini chalg'itadi.
+function hasFilter() {
+  return Boolean(
+    profile &&
+      (profile.degree_level || profile.major || (profile.target_country_ids || []).length)
+  );
+}
+
 function profileCompleteness() {
   const checks = [
     !!profile.degree_level,
@@ -621,24 +643,32 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=16" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=18" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
-        pct < 100
-          ? `<div class="hero-progress">
-               <div class="hero-progress-head">
-                 <span>${t("home.profile_progress")}</span>
-                 <strong>${pct}%</strong>
-               </div>
-               <div class="bar"><span style="width:${pct}%"></span></div>
+        !hasFilter()
+          ? // Hali hech narsa tanlanmagan — foizni ko'rsatishdan ma'no yo'q,
+            // darhol filtrga taklif qilamiz.
+            `<div class="hero-progress">
                <button type="button" class="hero-cta" id="home-cta">
-                 ${icon("spark")}<span>${t("home.complete_profile")}</span>
+                 ${icon("search")}<span>${t("home.setup_filter")}</span>
                </button>
              </div>`
-          : `<div class="hero-progress">
-               <div class="hero-done">${icon("check")}<span>${t("home.profile_done")}</span></div>
-             </div>`
+          : pct < 100
+            ? `<div class="hero-progress">
+                 <div class="hero-progress-head">
+                   <span>${t("home.profile_progress")}</span>
+                   <strong>${pct}%</strong>
+                 </div>
+                 <div class="bar"><span style="width:${pct}%"></span></div>
+                 <button type="button" class="hero-cta" id="home-cta">
+                   ${icon("spark")}<span>${t("home.refine_filter")}</span>
+                 </button>
+               </div>`
+            : `<div class="hero-progress">
+                 <div class="hero-done">${icon("check")}<span>${t("home.profile_done")}</span></div>
+               </div>`
       }
     </div>
 
@@ -682,7 +712,16 @@ async function renderHome() {
 
   // Bitta ma'noli karta: to'rtta bir xil plitka o'rniga yashil/sariq
   // nisbatini ko'rsatadigan chiziq — bir qarashda holatni bildiradi.
-  document.getElementById("home-summary").innerHTML = total
+  // Filtr qo'yilmagan bo'lsa qidiruv katalogdagi HAMMA dasturni qaytaradi.
+  // Ularni "sizga mos" deb ko'rsatish noto'g'ri bo'lardi — buning o'rniga
+  // filtrni sozlashga taklif qilamiz.
+  document.getElementById("home-summary").innerHTML = !hasFilter()
+    ? `<div class="summary empty-summary" data-goto="profile">
+         <div class="summary-ico">${icon("search")}</div>
+         <div class="summary-label">${t("home.summary_no_filter")}</div>
+         <div class="summary-hint">${t("home.summary_no_filter_hint")}</div>
+       </div>`
+    : total
     ? `<div class="summary" data-goto="match">
          <div class="summary-top">
            <div>
@@ -713,8 +752,9 @@ async function renderHome() {
   });
 
   // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin,
-  // faqat raqamlar emas.
-  const best = matches.find((m) => m.level === "green") || matches[0];
+  // faqat raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz:
+  // ro'yxat katalogdagi tasodifiy birinchi yozuv bo'lib qoladi.
+  const best = hasFilter() ? matches.find((m) => m.level === "green") || matches[0] : null;
   if (best) {
     document.getElementById("home-top").innerHTML = `
       <div class="section-head"><span class="section-title">${t("home.section_top")}</span></div>

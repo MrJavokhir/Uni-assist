@@ -108,7 +108,8 @@ async def test_blocks_unsubscribed_user(session) -> None:
     assert result is None
     assert calls == []
     assert len(sent) == 1
-    assert "Uni Assist" in sent[0]
+    # Kanal nomi endi xabar matnida emas, tugmada turadi.
+    assert sent[0]
 
 
 @pytest.mark.asyncio
@@ -150,3 +151,22 @@ async def test_other_callbacks_are_blocked(session) -> None:
     assert result is None
     assert calls == []
     assert len(answered) == 2  # alert + kanal ro'yxati xabari
+
+
+@pytest.mark.asyncio
+async def test_language_callback_is_never_blocked(session) -> None:
+    """Til tanlash obuna to'sig'idan oldin bo'lishi kerak.
+
+    Aks holda foydalanuvchi hali tilni tanlamasdan turib, o'zi tushunmaydigan
+    tilda kanal so'rovini ko'rardi.
+    """
+    session.add(RequiredChannel(title="Uni Assist", invite_url="https://t.me/uniassist_uz"))
+    await session.commit()
+
+    answered: list[str] = []
+    update = _callback_update("lang:ru", answered)
+    result, calls = await _run(session, update, _FakeBot("left"))
+
+    assert result == "handled"
+    assert len(calls) == 1
+    assert answered == []

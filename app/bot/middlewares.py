@@ -4,7 +4,11 @@ from typing import Any
 from aiogram import BaseMiddleware, Bot
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from app.bot.keyboards import SUBSCRIPTION_CHECK_CALLBACK, subscription_keyboard
+from app.bot.keyboards import (
+    LANGUAGE_CALLBACK_PREFIX,
+    SUBSCRIPTION_CHECK_CALLBACK,
+    subscription_keyboard,
+)
 from app.db.session import async_session_factory
 from app.i18n import t
 from app.services.redis_client import redis_client
@@ -46,12 +50,14 @@ class SubscriptionMiddleware(BaseMiddleware):
         if tg_user is None or session is None or bot is None:
             return await handler(event, data)
 
-        # "Tekshirish" tugmasi tekshiruvdan o'tmaydi, aks holda foydalanuvchi
-        # obuna bo'lgach ham holatini yangilay olmay qoladi.
+        # Ikkita callback tekshiruvdan ozod:
+        #  - "Tekshirish": aks holda obuna bo'lgan foydalanuvchi o'z holatini
+        #    yangilay olmay qolardi;
+        #  - til tanlash: obuna so'rovi foydalanuvchi TANLAGAN tilda
+        #    ko'rsatilishi uchun avval til saqlanishi kerak.
         raw_event = event.event if hasattr(event, "event") else event
-        if isinstance(raw_event, CallbackQuery) and (raw_event.data or "").startswith(
-            SUBSCRIPTION_CHECK_CALLBACK
-        ):
+        exempt = (SUBSCRIPTION_CHECK_CALLBACK, LANGUAGE_CALLBACK_PREFIX)
+        if isinstance(raw_event, CallbackQuery) and (raw_event.data or "").startswith(exempt):
             return await handler(event, data)
 
         missing = await missing_channels(bot, session, redis_client, tg_user.id)
@@ -60,11 +66,9 @@ class SubscriptionMiddleware(BaseMiddleware):
 
         user = await get_or_create_user(session, tg_user.id, tg_user.username)
         lang = user.ui_language.value
-        text = (
-            t("subscription.required", lang)
-            + "\n\n"
-            + "\n".join(f"• {channel.title}" for channel in missing)
-        )
+        # Kanal nomlari tugmalarda turibdi — matnda ularni qayta sanab o'tish
+        # xabarni ikki marta takrorlangandek ko'rsatardi.
+        text = t("subscription.required", lang)
         keyboard = subscription_keyboard(missing, lang)
 
         if isinstance(raw_event, CallbackQuery):

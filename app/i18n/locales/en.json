@@ -1,21 +1,19 @@
 {
   "start.welcome": "Hi, {name}! 👋\n\nI help you find universities and scholarships to study abroad.\n\nTap the button below to fill in your profile, find matching programs, and save them 👇",
   "start.open_app": "🌐 Open Uni Assist",
-
-  "subscription.required": "🔒 To use the bot, please join the channel(s) below:",
-  "subscription.short": "Please join the channel first 🔒",
-  "subscription.check_button": "✅ I joined, check now",
+  "subscription.required": "To use all of the bot's features, please join the channel(s) below:",
+  "subscription.short": "Please join the channel first",
+  "subscription.check_button": "✅ I joined",
   "subscription.still_missing": "You haven't joined every channel yet. Please check and try again.",
-  "subscription.thanks": "Thanks! You now have full access to the bot 🎉",
-
+  "subscription.thanks": "Thanks! You now have full access to the bot",
   "deadline.type.application_open": "Application opens",
   "deadline.type.application_close": "Application closes",
   "deadline.type.document": "Document submission",
   "deadline.type.visa": "Visa",
-
   "reminder.title": "⏰ Reminder: <b>{program}</b> ({university})\n{deadline_type} is in {days} day(s)! ({date}, Tashkent time)",
   "reminder.done_button": "✅ I applied",
   "reminder.dismiss_button": "❌ Not needed",
   "reminder.done_confirm": "Great! I won't remind you about this program anymore.",
-  "reminder.dismiss_confirm": "Program removed from your saved list."
+  "reminder.dismiss_confirm": "Program removed from your saved list.",
+  "language.saved": "Language saved"
 }

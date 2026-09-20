@@ -1,21 +1,19 @@
 {
   "start.welcome": "Salom, {name}! 👋\n\nMen chet elda o'qish uchun universitet va grant tanlashda yordam beraman.\n\nProfilingizni to'ldirish, mos dasturlarni topish va saqlash uchun quyidagi tugmani bosing 👇",
   "start.open_app": "🌐 Uni Assist'ni ochish",
-
-  "subscription.required": "🔒 Botdan foydalanish uchun quyidagi kanal(lar)ga a'zo bo'ling:",
-  "subscription.short": "Avval kanalga a'zo bo'ling 🔒",
-  "subscription.check_button": "✅ A'zo bo'ldim, tekshirish",
+  "subscription.required": "Bot imkoniyatlaridan to'liq foydalanmoqchi bo'lsangiz quyidagi kanal(lar)ga a'zo bo'ling:",
+  "subscription.short": "Avval kanalga a'zo bo'ling",
+  "subscription.check_button": "✅ A'zo bo'ldim",
   "subscription.still_missing": "Hali hamma kanalga a'zo bo'lmadingiz. Iltimos, tekshirib qayta urinib ko'ring.",
-  "subscription.thanks": "Rahmat! Endi botdan to'liq foydalanishingiz mumkin 🎉",
-
+  "subscription.thanks": "Rahmat! Endi botdan to'liq foydalanishingiz mumkin",
   "deadline.type.application_open": "Ariza ochilishi",
   "deadline.type.application_close": "Ariza yopilishi",
   "deadline.type.document": "Hujjat topshirish",
   "deadline.type.visa": "Viza",
-
   "reminder.title": "⏰ Eslatma: <b>{program}</b> ({university})\n{deadline_type} muddatiga {days} kun qoldi! ({date}, Toshkent vaqti)",
   "reminder.done_button": "✅ Ariza berdim",
   "reminder.dismiss_button": "❌ Kerak emas",
   "reminder.done_confirm": "Ajoyib! Endi bu dastur bo'yicha eslatma yubormayman.",
-  "reminder.dismiss_confirm": "Dastur saqlanganlar ro'yxatidan olib tashlandi."
+  "reminder.dismiss_confirm": "Dastur saqlanganlar ro'yxatidan olib tashlandi.",
+  "language.saved": "Til saqlandi"
 }

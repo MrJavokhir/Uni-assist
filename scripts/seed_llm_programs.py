@@ -540,6 +540,158 @@ SEEDS: list[LlmSeed] = [
             "4 May, 4 July. Earlier stages have more places."
         ),
     ),
+    # ------------------- Buyuk Britaniya (to'rtinchi to'plam) -------------------
+    # Leeds: uchala dastur ham bir xil narx/ball/muddatga ega — har biri
+    # ALOHIDA kurs sahifasidan tasdiqlandi, bittasidan ko'chirilmadi.
+    LlmSeed(
+        country_iso="GB",
+        university="University of Leeds",
+        city="Lids",
+        website="https://www.leeds.ac.uk",
+        timezone="Europe/London",
+        program="International Business Law LLM",
+        source_url="https://courses.leeds.ac.uk/e461/international-business-law-llm",
+        intake_term="2027 Fall",
+        tuition_amount=29600,
+        tuition_currency="GBP",
+        ielts_min=6.5,
+        deadline_close=date(2027, 7, 30),
+        notes=(
+            "Narx butun dastur uchun (12 oy). IELTS'da har bir bo'limda kamida 6.0 kerak. "
+            "Muddat xalqaro talabalar uchun; Britaniya fuqarolariga 10-sentyabr."
+        ),
+        notes_ru=(
+            "Стоимость за всю программу (12 месяцев). В IELTS нужно минимум 6.0 в каждом "
+            "разделе. Дедлайн для международных студентов; для граждан Великобритании — "
+            "10 сентября."
+        ),
+        notes_en=(
+            "The fee covers the whole 12-month programme. IELTS requires at least 6.0 in "
+            "each component. The deadline shown is for international applicants; UK "
+            "applicants have until 10 September."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Leeds",
+        city="Lids",
+        website="https://www.leeds.ac.uk",
+        timezone="Europe/London",
+        program="International Human Rights Law LLM",
+        source_url="https://courses.leeds.ac.uk/i325/international-human-rights-law-llm",
+        intake_term="2027 Fall",
+        tuition_amount=29600,
+        tuition_currency="GBP",
+        ielts_min=6.5,
+        deadline_close=date(2027, 7, 30),
+        notes="Narx butun dastur uchun (12 oy). IELTS'da har bo'limda kamida 6.0.",
+        notes_ru="Стоимость за всю программу (12 месяцев). В IELTS минимум 6.0 в каждом разделе.",
+        notes_en=(
+            "The fee covers the whole 12-month programme. IELTS requires at least 6.0 in "
+            "each component."
+        ),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Leeds",
+        city="Lids",
+        website="https://www.leeds.ac.uk",
+        timezone="Europe/London",
+        program="International Banking and Finance Law LLM",
+        source_url="https://courses.leeds.ac.uk/f712/international-banking-and-finance-law-llm",
+        intake_term="2027 Fall",
+        tuition_amount=29600,
+        tuition_currency="GBP",
+        ielts_min=6.5,
+        deadline_close=date(2027, 7, 30),
+        notes="Narx butun dastur uchun (12 oy). IELTS'da har bo'limda kamida 6.0.",
+        notes_ru="Стоимость за всю программу (12 месяцев). В IELTS минимум 6.0 в каждом разделе.",
+        notes_en=(
+            "The fee covers the whole 12-month programme. IELTS requires at least 6.0 in "
+            "each component."
+        ),
+    ),
+    # Warwick: muddat va til talabi universitet bo'yicha umumiy, narx esa
+    # kurs sahifasida ko'rsatilmagan.
+    LlmSeed(
+        country_iso="GB",
+        university="University of Warwick",
+        city="Koventri",
+        website="https://warwick.ac.uk",
+        timezone="Europe/London",
+        program="Advanced Legal Studies LLM",
+        source_url="https://warwick.ac.uk/study/postgraduate/courses/llm-advanced-legal-studies/",
+        intake_term="2027 Fall",
+        ielts_min=7.0,
+        deadline_close=date(2027, 8, 2),
+        notes=(
+            "Dars 27-sentyabrda boshlanadi. IELTS: umumiy 7.0, ikkita bo'limda 6.0/6.5 "
+            "bo'lishi mumkin, qolganlari 7.0 dan kam emas."
+        ),
+        notes_ru=(
+            "Занятия начинаются 27 сентября. IELTS: общий 7.0, в двух разделах допускается "
+            "6.0/6.5, остальные не ниже 7.0."
+        ),
+        notes_en=(
+            "Teaching starts on 27 September. IELTS: 7.0 overall; two components may be "
+            "6.0/6.5, the rest must be 7.0 or above."
+        ),
+        missing=("tuition",),
+    ),
+    LlmSeed(
+        country_iso="GB",
+        university="University of Warwick",
+        city="Koventri",
+        website="https://warwick.ac.uk",
+        timezone="Europe/London",
+        program="International Commercial Law LLM",
+        source_url="https://warwick.ac.uk/study/postgraduate/courses/llm-international-commercial-law/",
+        intake_term="2027 Fall",
+        ielts_min=7.0,
+        deadline_close=date(2027, 8, 2),
+        notes="Dars 27-sentyabrda boshlanadi. IELTS'da ikkita bo'limda 6.0/6.5 bo'lishi mumkin.",
+        notes_ru="Занятия начинаются 27 сентября. В IELTS два раздела могут быть 6.0/6.5.",
+        notes_en=(
+            "Teaching starts on 27 September. Two IELTS components may be 6.0/6.5."
+        ),
+        missing=("tuition",),
+    ),
+    # Cambridge: narx sahifada dinamik yuklanadi, olinmadi.
+    LlmSeed(
+        country_iso="GB",
+        university="University of Cambridge",
+        city="Kembrij",
+        website="https://www.cam.ac.uk",
+        timezone="Europe/London",
+        program="Master of Law (LLM)",
+        source_url="https://www.postgraduate.study.cam.ac.uk/courses/directory/lwlwllll",
+        intake_term="2027 Fall",
+        # 9 oy: oktyabrdan iyungacha
+        duration_years=0.8,
+        ielts_min=7.5,
+        notes=(
+            "Dastur 9 oy davom etadi: oktyabrda boshlanib iyunda tugaydi — boshqa UK "
+            "LL.M.lari odatda 12 oy. IELTS talabi ro'yxatdagi eng yuqorisi: umumiy 7.5 va "
+            "HAR BIR bo'limda kamida 7.0. Til testi ariza bilan BIRGA topshiriladi. "
+            "2026-27 qabuli uchun muddat 2025-yil 2-dekabr edi — Cambridge har yili dekabr "
+            "boshida yopadi, aniq sanani rasmiy saytdan tasdiqlang."
+        ),
+        notes_ru=(
+            "Программа длится 9 месяцев: с октября по июнь — другие LL.M. в Великобритании "
+            "обычно 12 месяцев. Требование по IELTS самое высокое в списке: общий 7.5 и "
+            "минимум 7.0 в КАЖДОМ разделе. Языковой тест подаётся ВМЕСТЕ с заявкой. Для "
+            "набора 2026-27 дедлайн был 2 декабря 2025 — Кембридж закрывает приём в начале "
+            "декабря каждый год, уточните точную дату на официальном сайте."
+        ),
+        notes_en=(
+            "The programme runs for 9 months, October to June — other UK LL.M.s are usually "
+            "12 months. The IELTS requirement is the highest on this list: 7.5 overall and at "
+            "least 7.0 in EVERY component. The language test must be submitted WITH the "
+            "application. For 2026-27 entry the deadline was 2 December 2025 — Cambridge "
+            "closes in early December each year; confirm the exact date on the official site."
+        ),
+        missing=("tuition", "deadline"),
+    ),
     # ---------------------------- AQSH (davomi) ----------------------------
     LlmSeed(
         country_iso="US",

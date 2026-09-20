@@ -184,7 +184,8 @@ _EU3 = {"DE", "PL", "HU", "CZ", "IT", "GB"}
 def _programs_for(uni: UniversitySeed) -> list[ProgramSeed]:
     bachelor_years = 3.0 if uni.country_iso in _EU3 else 4.0
     master_years = 1.0 if uni.country_iso == "GB" else 2.0
-    language = "Rus tili" if uni.country_iso == "RU" else "Ingliz tili"
+    # Kanonik inglizcha nom saqlanadi; Mini App uni foydalanuvchi tiliga o'giradi.
+    language = "Russian" if uni.country_iso == "RU" else "English"
 
     return [
         ProgramSeed(uni.name, "Computer Science", DegreeLevel.BACHELOR, "Computer Science", language, bachelor_years),
@@ -199,17 +200,19 @@ async def _upsert_countries(session: AsyncSession) -> tuple[dict[str, Country], 
 
     created = 0
     for seed in COUNTRIES:
-        if seed.iso_code in existing:
-            continue
-        country = Country(
-            name_uz=seed.name_uz,
-            name_ru=seed.name_ru,
-            name_en=seed.name_en,
-            iso_code=seed.iso_code,
-        )
-        session.add(country)
-        existing[seed.iso_code] = country
-        created += 1
+        country = existing.get(seed.iso_code)
+        if country is None:
+            country = Country(iso_code=seed.iso_code)
+            session.add(country)
+            existing[seed.iso_code] = country
+            created += 1
+
+        # Mavjud davlatlarning nomlari ham yangilanadi. Ilgari skript ularni
+        # o'tkazib yuborardi va boshlang'ich seed'dan qolgan xato nom
+        # (masalan Turkiya uchun name_ru="Turtsiya" — kirill emas) tuzalmasdi.
+        country.name_uz = seed.name_uz
+        country.name_ru = seed.name_ru
+        country.name_en = seed.name_en
 
     await session.flush()
     return existing, created
@@ -277,12 +280,14 @@ async def _upsert_programs(
             program.language_of_instruction = seed.language
             program.duration_years = seed.duration_years
             program.intake_term = INTAKE_TERM
-            program.notes = (
-                "Seed orqali kiritilgan. Kontrakt narxi, minimal GPA/IELTS va yashash "
-                "xarajati tasdiqlanmagan — universitet rasmiy saytidan tekshirib, "
-                "admin panelda 'Dastur talablari' va 'Dastur xarajatlari' bo'limlarini "
-                "to'ldiring."
-            )
+            # Ilgari bu yerda uzun o'zbekcha izoh yozilardi va ruscha/inglizcha
+            # interfeysda ham o'zbekcha chiqib qolardi. Endi qaysi maydon
+            # to'ldirilmagani KALIT sifatida saqlanadi, jumlani esa Mini App
+            # foydalanuvchi tilida o'zi yasaydi.
+            program.notes = None
+            program.notes_ru = None
+            program.notes_en = None
+            program.missing_fields = ["tuition", "language_score", "living_cost"]
             # Aniq dastur sahifasi emas, universitetning rasmiy sayti —
             # deep-link to'qib chiqarilmaydi.
             program.source_url = uni_seed.website

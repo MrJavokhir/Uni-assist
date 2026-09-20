@@ -220,12 +220,17 @@ class ProgramAdmin(ModelView, model=Program):
         Program.duration_years,
         Program.intake_term,
         Program.notes,
+        Program.notes_ru,
+        Program.notes_en,
         Program.source_url,
         Program.verified_at,
         Program.verified_by,
     ]
     form_args = {
-        "abbreviation": {"description": "Diplom qisqartmasi: MBA, LLM, B.Sc., M.Eng."}
+        "abbreviation": {"description": "Diplom qisqartmasi: MBA, LLM, B.Sc., M.Eng."},
+        "notes": {"description": "Asosiy til. Tarjimalar bo'sh bo'lsa Mini App shuni ko'rsatadi."},
+        "notes_ru": {"description": "Bo'sh qoldirilsa o'zbekchasi ko'rsatiladi."},
+        "notes_en": {"description": "Bo'sh qoldirilsa o'zbekchasi ko'rsatiladi."},
     }
     column_labels = _labels(
         name="Dastur nomi",
@@ -236,7 +241,10 @@ class ProgramAdmin(ModelView, model=Program):
         language_of_instruction="O'qitish tili",
         duration_years="Davomiyligi (yil)",
         intake_term="Qabul davri",
-        notes="Izoh",
+        notes="Izoh (o'zbekcha)",
+        notes_ru="Izoh (ruscha)",
+        notes_en="Izoh (inglizcha)",
+        missing_fields="To'ldirilmagan maydonlar",
         requirement="Talablar",
         cost="Xarajat",
         deadlines="Muddatlar",

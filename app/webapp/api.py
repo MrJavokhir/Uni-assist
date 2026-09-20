@@ -58,6 +58,15 @@ def _country_out(country: Country) -> CountryOut:
     )
 
 
+def _localized_notes(program: Program, lang: str) -> str | None:
+    """Erkin izohni foydalanuvchi tilida qaytaradi, bo'lmasa o'zbekchasini.
+
+    `notes` ustuni o'zbekcha (asosiy til), `notes_ru`/`notes_en` esa tarjimalar.
+    """
+    by_lang = {"ru": program.notes_ru, "en": program.notes_en}
+    return by_lang.get(lang) or program.notes
+
+
 def _logo_url(university: University) -> str | None:
     """Universitet logotipi.
 
@@ -279,7 +288,8 @@ async def get_program(
         language_of_instruction=program.language_of_instruction,
         duration_years=float(program.duration_years),
         intake_term=program.intake_term,
-        notes=program.notes,
+        notes=_localized_notes(program, user.ui_language.value),
+        missing_fields=list(program.missing_fields or []),
         requirement=(
             ProgramRequirementOut(
                 gpa_min=float(requirement.gpa_min) if requirement.gpa_min is not None else None,

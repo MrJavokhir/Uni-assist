@@ -62,7 +62,7 @@ class LlmSeed:
     source_url: str
     intake_term: str
     duration_years: float = 1.0
-    language: str = "Ingliz tili"
+    language: str = "English"
     abbreviation: str = "LLM"
 
     tuition_amount: float | None = None
@@ -70,7 +70,11 @@ class LlmSeed:
     ielts_min: float | None = None
     toefl_min: int | None = None
     deadline_close: date | None = None
+    # Erkin izoh uch tilda. `notes` — o'zbekcha; ru/en bo'sh bo'lsa Mini App
+    # o'zbekchasiga qaytadi.
     notes: str | None = None
+    notes_ru: str | None = None
+    notes_en: str | None = None
     # Universitet logotipi saytdan avtomatik olinadi, shuning uchun bu yerda
     # ataylab yo'q (app/webapp/api.py `_logo_url`).
     missing: tuple[str, ...] = field(default_factory=tuple)
@@ -89,7 +93,7 @@ SEEDS: list[LlmSeed] = [
         source_url="https://hls.harvard.edu/graduate-program/graduate-program-admissions-and-financial-aid/apply-to-the-graduate-program/",
         intake_term="2027 Fall",
         deadline_close=date(2026, 12, 1),
-        missing=("kontrakt", "IELTS/TOEFL"),
+        missing=("tuition", "language_score"),
     ),
     LlmSeed(
         country_iso="US",
@@ -105,7 +109,7 @@ SEEDS: list[LlmSeed] = [
         # 2026-yil 21-yanvargacha bo'lgan TOEFL iBT shkalasi bo'yicha.
         # Yangi shkalada talab: umumiy 5.5, har bo'limda kamida 5.0.
         toefl_min=105,
-        missing=("IELTS", "ariza yopilish sanasi"),
+        missing=("language_score", "deadline"),
     ),
     LlmSeed(
         country_iso="US",
@@ -117,7 +121,7 @@ SEEDS: list[LlmSeed] = [
         source_url="https://www.law.georgetown.edu/academics/llm-degree-programs/international-legal-studies/",
         intake_term="2027 Fall",
         toefl_min=100,
-        missing=("kontrakt", "IELTS", "ariza yopilish sanasi"),
+        missing=("tuition", "language_score", "deadline"),
     ),
     LlmSeed(
         country_iso="US",
@@ -130,7 +134,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2027 Fall",
         # NYU yillik summani e'lon qilmaydi — faqat kredit narxi. Kreditni
         # ko'paytirib "yillik" raqam chiqarish noto'g'ri bo'lardi.
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        missing=("tuition", "language_score", "deadline"),
     ),
     # --------------------------- Buyuk Britaniya ---------------------------
     LlmSeed(
@@ -145,7 +149,9 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=39900,
         tuition_currency="GBP",
         notes="Ariza qabul qilish uzluksiz (rolling admissions) — qat'iy yopilish sanasi yo'q.",
-        missing=("IELTS/TOEFL",),
+        notes_ru="Приём заявок идёт непрерывно (rolling admissions) — жёсткого дедлайна нет.",
+        notes_en="Applications are accepted on a rolling basis — there is no fixed deadline.",
+        missing=("language_score",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -158,7 +164,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         # IELTS (Academic): umumiy 7.0, Writing 6.5, qolganlari 6.0.
         ielts_min=7.0,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     # ------------------------------ Germaniya ------------------------------
     LlmSeed(
@@ -178,7 +184,17 @@ SEEDS: list[LlmSeed] = [
             "boshqalar MLB oladi. Dasturga 8 haftalik amaliyot kiradi. 15-yanvargacha "
             "ariza bergan va 1-aprelgacha to'lovni tasdiqlaganlarga 2 000 EUR chegirma."
         ),
-        missing=("IELTS/TOEFL",),
+        notes_ru=(
+            "Степень LL.M. получают только те, чей первый диплом — юридический; остальные получают "
+            "MLB. В программу входит 8-недельная стажировка. Подавшим заявку до 15 января и "
+            "подтвердившим оплату до 1 апреля — скидка 2 000 EUR."
+        ),
+        notes_en=(
+            "The LL.M. degree is awarded only to those whose first degree is in law; others receive "
+            "the MLB. The programme includes an 8-week internship. Applicants who apply by 15 "
+            "January and confirm payment by 1 April get a EUR 2,000 discount."
+        ),
+        missing=("language_score",),
     ),
     # ------------------------------- Italiya -------------------------------
     LlmSeed(
@@ -193,7 +209,9 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=16000,
         tuition_currency="EUR",
         notes="Narx 2026/27 nashri uchun; o'quv materiallari va kampus xizmatlari kiradi.",
-        missing=("IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru="Стоимость за выпуск 2026/27; включает учебные материалы и доступ к кампусу.",
+        notes_en="Fee for the 2026/27 edition; includes course materials and campus facilities.",
+        missing=("language_score", "deadline"),
     ),
     # ------------------------------- Chexiya -------------------------------
     LlmSeed(
@@ -213,7 +231,17 @@ SEEDS: list[LlmSeed] = [
             "kiradi); vizasizlar uchun 1-iyul. Ariza yig'imi 200 USD, qaytarilmaydi. "
             "Erta ariza bergan va 14 kun ichida to'laganlarga narx 6 200 USD."
         ),
-        missing=("IELTS/TOEFL",),
+        notes_ru=(
+            "Дедлайн для заявителей, которым нужна виза (граждане Узбекистана входят сюда); для "
+            "остальных — 1 июля. Невозвратный сбор за заявку 200 USD. При ранней подаче и оплате в "
+            "течение 14 дней стоимость 6 200 USD."
+        ),
+        notes_en=(
+            "Deadline for applicants who need a visa (Uzbek citizens are in this group); 1 July for "
+            "the rest. Non-refundable application fee USD 200. Early applicants who pay within 14 "
+            "days get the fee reduced to USD 6,200."
+        ),
+        missing=("language_score",),
     ),
     # --------------------- Buyuk Britaniya (davomi) ---------------------
     # Edinburgh: IELTS 7.0 (Writing 7.0, qolganlari 6.5). Kampus dasturining
@@ -229,7 +257,7 @@ SEEDS: list[LlmSeed] = [
         source_url="https://study.ed.ac.uk/programmes/postgraduate-taught/167-law",
         intake_term="2026 Fall",
         ielts_min=7.0,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -241,7 +269,7 @@ SEEDS: list[LlmSeed] = [
         source_url="https://study.ed.ac.uk/programmes/postgraduate-taught/166-international-law",
         intake_term="2026 Fall",
         ielts_min=7.0,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -256,7 +284,12 @@ SEEDS: list[LlmSeed] = [
             "Ariza yig'imi 90 GBP. Overseas talabalar birinchi yil kontraktining "
             "10% depozitini to'laydi."
         ),
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru=(
+            "Сбор за заявку 90 GBP. Студенты категории Overseas вносят депозит 10% от стоимости "
+            "первого года."
+        ),
+        notes_en="Application fee GBP 90. Overseas students pay a deposit of 10% of the first-year fee.",
+        missing=("tuition", "language_score", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -270,7 +303,9 @@ SEEDS: list[LlmSeed] = [
         # King's "Band B": umumiy 7.0, har bo'limda kamida 6.5.
         ielts_min=7.0,
         notes="Xalqaro talabalar uchun 2 000 GBP depozit, u kontrakt hisobiga o'tadi.",
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        notes_ru="Для международных студентов депозит 2 000 GBP, он засчитывается в стоимость обучения.",
+        notes_en="International students pay a GBP 2,000 deposit, credited towards tuition.",
+        missing=("tuition", "deadline"),
     ),
     # Manchester huquq fakulteti bir nechta LL.M. beradi. Ingliz tili talabi
     # fakultetning hammasiga bir xil e'lon qilingan, KONTRAKT esa kurs bo'yicha
@@ -289,7 +324,9 @@ SEEDS: list[LlmSeed] = [
         ielts_min=7.0,
         toefl_min=100,
         notes="Narx 2026-yil sentyabrda boshlanadigan o'quv yili uchun (xalqaro talabalar).",
-        missing=("ariza yopilish sanasi",),
+        notes_ru="Стоимость за учебный год, начинающийся в сентябре 2026 (международные студенты).",
+        notes_en="Fee for the academic year starting September 2026 (international students).",
+        missing=("deadline",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -302,7 +339,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         toefl_min=100,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -315,7 +352,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         toefl_min=100,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -328,7 +365,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         toefl_min=100,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     LlmSeed(
         country_iso="GB",
@@ -341,7 +378,7 @@ SEEDS: list[LlmSeed] = [
         intake_term="2026 Fall",
         ielts_min=7.0,
         toefl_min=100,
-        missing=("kontrakt", "ariza yopilish sanasi"),
+        missing=("tuition", "deadline"),
     ),
     # ---------------------------- AQSH (davomi) ----------------------------
     LlmSeed(
@@ -357,7 +394,9 @@ SEEDS: list[LlmSeed] = [
             "Qabul qilinganlar 1 000 USD qaytarilmaydigan depozit to'laydi, "
             "u kontrakt hisobiga o'tadi."
         ),
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru="Зачисленные вносят невозвратный депозит 1 000 USD, он засчитывается в стоимость.",
+        notes_en="Admitted students pay a non-refundable USD 1,000 deposit, credited towards tuition.",
+        missing=("tuition", "language_score", "deadline"),
     ),
     # -------------------------- Germaniya (davomi) --------------------------
     LlmSeed(
@@ -379,6 +418,16 @@ SEEDS: list[LlmSeed] = [
             "yo'q, qabul uzluksiz (rolling) — navbat tartibida. TOEFL iBT'da har bo'limda "
             "kamida 22 ball kerak."
         ),
+        notes_ru=(
+            "Стоимость за 2026/27, очная форма (заочная — 27 000 EUR). Дополнительно "
+            "университетский сбор ~380 EUR за семестр. Сбора за заявку нет, приём непрерывный в "
+            "порядке очереди. В TOEFL iBT нужно минимум 22 балла в каждой секции."
+        ),
+        notes_en=(
+            "Fee for 2026/27, full-time (part-time EUR 27,000). There is also a university semester "
+            "contribution of about EUR 380. No application fee; admission is rolling, first come "
+            "first served. TOEFL iBT requires at least 22 in each section."
+        ),
     ),
     LlmSeed(
         country_iso="DE",
@@ -389,7 +438,7 @@ SEEDS: list[LlmSeed] = [
         program="LL.M. International Finance",
         source_url="https://www.ilf-frankfurt.de/llm-international-finance-1",
         intake_term="2026 Fall",
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        missing=("tuition", "language_score", "deadline"),
     ),
     # ------------------------------- Polsha -------------------------------
     LlmSeed(
@@ -406,7 +455,15 @@ SEEDS: list[LlmSeed] = [
             "O'zbekiston fuqarolari uchun narx sahifada ko'rsatilmagan — universitetdan "
             "aniqlashtiring."
         ),
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru=(
+            "ВНИМАНИЕ: бесплатное обучение только для резидентов ЕС/ЕЭЗ/Швейцарии. Для граждан "
+            "Узбекистана стоимость на сайте не указана — уточняйте в университете."
+        ),
+        notes_en=(
+            "NOTE: tuition-free study applies only to EU/EEA/Swiss residents. The fee for Uzbek "
+            "citizens is not stated on the page — check with the university."
+        ),
+        missing=("tuition", "language_score", "deadline"),
     ),
     # ------------------- Buyuk Britaniya (uchinchi to'plam) -------------------
     LlmSeed(
@@ -422,7 +479,7 @@ SEEDS: list[LlmSeed] = [
         tuition_currency="GBP",
         # IELTS 6.5 (Writing va Reading 6.5 dan, Speaking va Listening 6.0 dan kam emas)
         ielts_min=6.5,
-        missing=("ariza yopilish sanasi",),
+        missing=("deadline",),
     ),
     # Glasgow: huquq LL.M.larining narxi va tili talabi bir xil e'lon qilingan
     # (har bir kurs sahifasida alohida yozilgan, taxmin qilinmadi).
@@ -438,7 +495,7 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=29355,
         tuition_currency="GBP",
         ielts_min=7.0,
-        missing=("ariza yopilish sanasi",),
+        missing=("deadline",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -452,7 +509,7 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=29355,
         tuition_currency="GBP",
         ielts_min=7.0,
-        missing=("ariza yopilish sanasi",),
+        missing=("deadline",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -466,7 +523,7 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=29355,
         tuition_currency="GBP",
         ielts_min=7.0,
-        missing=("ariza yopilish sanasi",),
+        missing=("deadline",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -480,7 +537,7 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=29355,
         tuition_currency="GBP",
         ielts_min=7.0,
-        missing=("ariza yopilish sanasi",),
+        missing=("deadline",),
     ),
     LlmSeed(
         country_iso="GB",
@@ -495,7 +552,15 @@ SEEDS: list[LlmSeed] = [
             "Xalqaro talabalar uchun 'Inspiring Excellence' stipendiyasi bor: kontraktdan "
             "5 000 yoki 10 000 GBP chegirma, birinchi bosqich muddati 16-yanvar."
         ),
-        missing=("kontrakt", "IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru=(
+            "Для международных студентов есть стипендия «Inspiring Excellence»: скидка 5 000 или 10 "
+            "000 GBP, дедлайн первого раунда — 16 января."
+        ),
+        notes_en=(
+            "International students can apply for the 'Inspiring Excellence' scholarship: a GBP "
+            "5,000 or 10,000 fee discount, first-round deadline 16 January."
+        ),
+        missing=("tuition", "language_score", "deadline"),
     ),
     # --------------------------- Italiya (davomi) ---------------------------
     LlmSeed(
@@ -510,7 +575,9 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=16000,
         tuition_currency="EUR",
         notes="Narx 2025/26 nashri uchun e'lon qilingan.",
-        missing=("IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru="Стоимость объявлена для выпуска 2025/26.",
+        notes_en="Fee published for the 2025/26 edition.",
+        missing=("language_score", "deadline"),
     ),
     # ------------------- Germaniya (uchinchi to'plam) -------------------
     LlmSeed(
@@ -530,7 +597,18 @@ SEEDS: list[LlmSeed] = [
             "to'lov kerak. Kontraktdan chegirma (to'liq yoki qisman) uchun ariza muddati "
             "31-mart. Arizalar uni-assist orqali topshiriladi."
         ),
-        missing=("IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru=(
+            "Всего 12 900 EUR (6 450 за семестр). Дополнительно взнос студенческого союза ~355 EUR "
+            "за семестр. После зачисления в течение 2 недель нужно внести 2 250 EUR. Дедлайн заявки "
+            "на скидку (полную или частичную) — 31 марта. Заявки подаются через uni-assist."
+        ),
+        notes_en=(
+            "EUR 12,900 in total (EUR 6,450 per semester). There is also a student union "
+            "contribution of about EUR 355 per semester. Admitted students must pay EUR 2,250 "
+            "within two weeks. The deadline to apply for a full or partial fee waiver is 31 March. "
+            "Applications go through uni-assist."
+        ),
+        missing=("language_score", "deadline"),
     ),
     LlmSeed(
         country_iso="DE",
@@ -544,24 +622,17 @@ SEEDS: list[LlmSeed] = [
         tuition_amount=15000,
         tuition_currency="EUR",
         notes="Jami 15 000 EUR (semestriga 7 500).",
-        missing=("IELTS/TOEFL", "ariza yopilish sanasi"),
+        notes_ru="Всего 15 000 EUR (7 500 за семестр).",
+        notes_en="EUR 15,000 in total (EUR 7,500 per semester).",
+        missing=("language_score", "deadline"),
     ),
 ]
 
-NOTE_PREFIX = "Rasmiy sahifadan tekshirilgan."
-MISSING_HINT = (
-    "Rasmiy sahifada ko'rsatilmagan va shuning uchun bo'sh qoldirilgan: {fields}. "
-    "Admin panelda 'Universitet qo'shish' sehrgari orqali to'ldiring."
-)
-
-
-def _build_notes(seed: LlmSeed) -> str:
-    parts = [NOTE_PREFIX]
-    if seed.notes:
-        parts.append(seed.notes)
-    if seed.missing:
-        parts.append(MISSING_HINT.format(fields=", ".join(seed.missing)))
-    return " ".join(parts)
+# DIQQAT: "rasmiy sahifadan tekshirilgan" va "quyidagi maydonlar bo'sh" degan
+# jumlalar endi BAZAGA YOZILMAYDI. Ilgari ular o'zbekcha matn sifatida
+# `notes`ga qo'shilardi va ruscha/inglizcha interfeysda ham o'zbekcha chiqardi.
+# Endi Mini App ularni `verified_at` va `missing_fields` dan o'zi yasaydi —
+# foydalanuvchi tilida.
 
 
 async def _countries_by_iso(session: AsyncSession) -> dict[str, Country]:
@@ -632,7 +703,10 @@ async def _upsert_programs(
         program.language_of_instruction = seed.language
         program.duration_years = seed.duration_years
         program.intake_term = seed.intake_term
-        program.notes = _build_notes(seed)
+        program.notes = seed.notes
+        program.notes_ru = seed.notes_ru
+        program.notes_en = seed.notes_en
+        program.missing_fields = list(seed.missing) or None
         program.source_url = seed.source_url
         program.verified_at = now
         program.verified_by = VERIFIED_BY

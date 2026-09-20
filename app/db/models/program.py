@@ -2,7 +2,7 @@ import enum
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, VerificationMixin, str_enum
@@ -54,7 +54,16 @@ class Program(TimestampMixin, VerificationMixin, Base):
     language_of_instruction: Mapped[str] = mapped_column(String(100), nullable=False)
     duration_years: Mapped[float] = mapped_column(Numeric(3, 1), nullable=False)
     intake_term: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Erkin izoh uch tilda. `notes` — o'zbekcha (asosiy); qolganlari bo'sh
+    # bo'lsa Mini App o'zbekchasiga qaytadi.
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notes_ru: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notes_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Rasmiy sahifada ko'rsatilmagan maydonlar KALITLARI ("tuition", "ielts"...).
+    # Ilgari bu ma'lumot izoh matniga o'zbekcha yozib qo'yilardi va ruscha/
+    # inglizcha interfeysda ham o'zbekcha chiqib qolardi. Endi kalit saqlanadi,
+    # jumlani esa Mini App foydalanuvchi tilida o'zi yasaydi.
+    missing_fields: Mapped[list | None] = mapped_column(JSON, nullable=True)
 
     university: Mapped["University"] = relationship(back_populates="programs")
     requirement: Mapped["ProgramRequirement"] = relationship(

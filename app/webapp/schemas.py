@@ -104,7 +104,11 @@ class ProgramDetailOut(BaseModel):
     language_of_instruction: str
     duration_years: float
     intake_term: str
+    # Foydalanuvchi tilidagi erkin izoh (yo'q bo'lsa o'zbekchasi)
     notes: str | None
+    # Rasmiy sahifada ko'rsatilmagan maydon kalitlari — jumlani Mini App
+    # foydalanuvchi tilida o'zi yasaydi.
+    missing_fields: list[str]
     requirement: ProgramRequirementOut | None
     cost: ProgramCostOut | None
     deadlines: list[ProgramDeadlineOut]

@@ -53,6 +53,39 @@ function countryName(country) {
   return country["name_" + lang] || country.name_uz;
 }
 
+// Bazada o'qitish tili matn sifatida saqlanadi. Yangi yozuvlar kanonik
+// inglizcha nom bilan keladi ("English"), eskilarida esa o'zbekcha nom
+// qolgan — ikkalasi ham shu yerda foydalanuvchi tiliga o'giriladi.
+// Ro'yxatda yo'q qiymat bo'lsa, o'zi qanday bo'lsa shunday ko'rsatiladi.
+const LANGUAGE_NAMES = {
+  English: { uz: "Ingliz tili", ru: "Английский", en: "English" },
+  Russian: { uz: "Rus tili", ru: "Русский", en: "Russian" },
+  German: { uz: "Nemis tili", ru: "Немецкий", en: "German" },
+  Italian: { uz: "Italyan tili", ru: "Итальянский", en: "Italian" },
+  Czech: { uz: "Chex tili", ru: "Чешский", en: "Czech" },
+  Polish: { uz: "Polyak tili", ru: "Польский", en: "Polish" },
+  Turkish: { uz: "Turk tili", ru: "Турецкий", en: "Turkish" },
+};
+const LANGUAGE_ALIASES = {
+  "ingliz tili": "English",
+  "rus tili": "Russian",
+  "nemis tili": "German",
+  "italyan tili": "Italian",
+};
+
+function instructionLanguage(value) {
+  const raw = String(value || "").trim();
+  const key = LANGUAGE_ALIASES[raw.toLowerCase()] || raw;
+  const entry = LANGUAGE_NAMES[key];
+  return entry ? entry[lang] || entry.uz : raw;
+}
+
+function missingNote(fields) {
+  if (!fields || !fields.length) return "";
+  const names = fields.map((f) => t("program.missing." + f)).join(", ");
+  return `<div class="sheet-note">${escapeHtml(t("program.missing_intro", { fields: names }))}</div>`;
+}
+
 function escapeHtml(text) {
   return String(text ?? "").replace(/[&<>"']/g, (c) => ({
     "&": "&amp;",
@@ -84,6 +117,11 @@ const I18N = {
     "home.section_shortcuts": "Tezkor amallar",
     "home.shortcut_match": "Mos dasturlarni ko'rish",
     "home.shortcut_saved": "Saqlangan dasturlarim",
+    "home.profile_progress": "Profil to'ldirilgan",
+    "home.profile_done": "Profil to'liq to'ldirilgan",
+    "home.summary_total": "Sizga mos dasturlar",
+    "home.summary_empty": "Profilni to'ldiring — sizga mos dasturlarni topaman",
+    "home.section_top": "Eng mos dastur",
 
     "profile.section_academic": "Ta'lim",
     "profile.section_language": "Til sertifikati",
@@ -148,6 +186,11 @@ const I18N = {
     "program.no_deadlines": "Muddatlar kiritilmagan.",
     "program.official_page": "Dastur sahifasiga o'tish",
     "program.verified_at": "Ma'lumot {date} sanasida tekshirilgan.",
+    "program.missing_intro": "Rasmiy sahifada ko'rsatilmagani uchun bo'sh: {fields}.",
+    "program.missing.tuition": "kontrakt narxi",
+    "program.missing.language_score": "IELTS/TOEFL bali",
+    "program.missing.deadline": "ariza muddati",
+    "program.missing.living_cost": "yashash xarajati",
 
     "scholarships.empty_title": "Grant topilmadi",
     "scholarships.empty_text": "Hozircha bazada davlat stipendiyalari yo'q yoki tanlangan davlat bo'yicha topilmadi.",
@@ -215,6 +258,11 @@ const I18N = {
     "home.section_shortcuts": "Быстрые действия",
     "home.shortcut_match": "Смотреть подходящие программы",
     "home.shortcut_saved": "Мои сохранённые",
+    "home.profile_progress": "Профиль заполнен",
+    "home.profile_done": "Профиль заполнен полностью",
+    "home.summary_total": "Подходящих программ",
+    "home.summary_empty": "Заполните профиль — и я подберу программы",
+    "home.section_top": "Лучшее совпадение",
 
     "profile.section_academic": "Образование",
     "profile.section_language": "Языковой сертификат",
@@ -279,6 +327,11 @@ const I18N = {
     "program.no_deadlines": "Сроки не указаны.",
     "program.official_page": "Открыть страницу программы",
     "program.verified_at": "Данные проверены {date}.",
+    "program.missing_intro": "Не указано на официальной странице: {fields}.",
+    "program.missing.tuition": "стоимость обучения",
+    "program.missing.language_score": "балл IELTS/TOEFL",
+    "program.missing.deadline": "срок подачи",
+    "program.missing.living_cost": "расходы на проживание",
 
     "scholarships.empty_title": "Гранты не найдены",
     "scholarships.empty_text": "Пока в базе нет государственных стипендий или по выбранной стране ничего не найдено.",
@@ -346,6 +399,11 @@ const I18N = {
     "home.section_shortcuts": "Quick actions",
     "home.shortcut_match": "See matching programs",
     "home.shortcut_saved": "My saved programs",
+    "home.profile_progress": "Profile complete",
+    "home.profile_done": "Your profile is complete",
+    "home.summary_total": "Programs that fit you",
+    "home.summary_empty": "Fill in your profile and I'll find programs for you",
+    "home.section_top": "Best match",
 
     "profile.section_academic": "Academic",
     "profile.section_language": "Language certificate",
@@ -410,6 +468,11 @@ const I18N = {
     "program.no_deadlines": "No deadlines recorded.",
     "program.official_page": "Open program page",
     "program.verified_at": "Data verified on {date}.",
+    "program.missing_intro": "Not stated on the official page: {fields}.",
+    "program.missing.tuition": "tuition fee",
+    "program.missing.language_score": "IELTS/TOEFL score",
+    "program.missing.deadline": "application deadline",
+    "program.missing.living_cost": "living costs",
 
     "scholarships.empty_title": "No grants found",
     "scholarships.empty_text": "There are no government scholarships in the database yet, or none for the selected country.",
@@ -558,70 +621,125 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <div class="hero-row">
-        <div class="hero-text">
-          <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
-          <div class="hero-sub">${t("home.tagline")}</div>
-        </div>
-        ${progressRing(pct)}
-      </div>
+      <img class="hero-logo" src="logo-mark.png?v=16" alt="" aria-hidden="true">
+      <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
+      <div class="hero-sub">${t("home.tagline")}</div>
       ${
         pct < 100
-          ? `<button type="button" class="hero-cta" id="home-cta">${icon("spark")}<span>${t("home.complete_profile")}</span></button>`
-          : ""
+          ? `<div class="hero-progress">
+               <div class="hero-progress-head">
+                 <span>${t("home.profile_progress")}</span>
+                 <strong>${pct}%</strong>
+               </div>
+               <div class="bar"><span style="width:${pct}%"></span></div>
+               <button type="button" class="hero-cta" id="home-cta">
+                 ${icon("spark")}<span>${t("home.complete_profile")}</span>
+               </button>
+             </div>`
+          : `<div class="hero-progress">
+               <div class="hero-done">${icon("check")}<span>${t("home.profile_done")}</span></div>
+             </div>`
       }
     </div>
 
     <div id="home-alert"></div>
 
     <div class="section-head"><span class="section-title">${t("home.section_overview")}</span></div>
-    <div class="stat-grid" id="home-stats">${skeletons(2, true)}${skeletons(2, true)}</div>
+    <div id="home-summary">${skeletons(2)}</div>
+
+    <div id="home-top"></div>
 
     <div class="section-head"><span class="section-title">${t("home.section_shortcuts")}</span></div>
-    <div class="card shortcut" data-goto="match">
-      <div class="card-top">
-        <div class="stat-ico accent">${icon("search")}</div>
-        <div class="card-body"><div class="card-title">${t("home.shortcut_match")}</div></div>
-        ${icon("chevron")}
-      </div>
-    </div>
-    <div class="card shortcut" data-goto="saved">
-      <div class="card-top">
-        <div class="stat-ico accent">${icon("bookmark")}</div>
-        <div class="card-body"><div class="card-title">${t("home.shortcut_saved")}</div></div>
-        ${icon("chevron")}
-      </div>
+    <div class="quick-grid">
+      <button type="button" class="quick" data-goto="match">
+        <span class="quick-ico accent">${icon("search")}</span>
+        <span class="quick-label">${t("nav.match")}</span>
+      </button>
+      <button type="button" class="quick" data-goto="scholarships">
+        <span class="quick-ico amber">${icon("award")}</span>
+        <span class="quick-label">${t("nav.scholarships")}</span>
+      </button>
+      <button type="button" class="quick" data-goto="saved">
+        <span class="quick-ico green">${icon("bookmark")}</span>
+        <span class="quick-label">${t("nav.saved")}</span>
+      </button>
     </div>
   `;
 
   const cta = document.getElementById("home-cta");
   if (cta) cta.addEventListener("click", () => switchTab("profile"));
-  el.querySelectorAll(".shortcut").forEach((card) => {
-    card.addEventListener("click", () => switchTab(card.dataset.goto));
+  el.querySelectorAll(".quick").forEach((card) => {
+    card.addEventListener("click", () => {
+      haptic("light");
+      switchTab(card.dataset.goto);
+    });
   });
 
   const [matches, saved] = await Promise.all([api("/match"), api("/saved")]);
   const green = matches.filter((m) => m.level === "green").length;
   const yellow = matches.filter((m) => m.level === "yellow").length;
+  const total = green + yellow;
 
-  const stat = (iconName, tone, value, label, goto) => `
-    <div class="stat" data-goto="${goto}">
-      <div class="stat-ico ${tone}">${icon(iconName)}</div>
-      <div>
-        <div class="stat-value">${value}</div>
-        <div class="stat-label">${label}</div>
-      </div>
-    </div>`;
+  // Bitta ma'noli karta: to'rtta bir xil plitka o'rniga yashil/sariq
+  // nisbatini ko'rsatadigan chiziq — bir qarashda holatni bildiradi.
+  document.getElementById("home-summary").innerHTML = total
+    ? `<div class="summary" data-goto="match">
+         <div class="summary-top">
+           <div>
+             <div class="summary-value">${total}</div>
+             <div class="summary-label">${t("home.summary_total")}</div>
+           </div>
+           <span class="summary-go">${icon("chevron")}</span>
+         </div>
+         <div class="split">
+           <span class="split-green" style="width:${total ? (green / total) * 100 : 0}%"></span>
+           <span class="split-amber" style="width:${total ? (yellow / total) * 100 : 0}%"></span>
+         </div>
+         <div class="summary-legend">
+           <span><i class="dot green"></i>${green} ${t("home.stat_green")}</span>
+           <span><i class="dot amber"></i>${yellow} ${t("home.stat_yellow")}</span>
+           <span class="summary-saved"><i class="dot accent"></i>${saved.length} ${t("home.stat_saved")}</span>
+         </div>
+       </div>`
+    : `<div class="summary empty-summary" data-goto="profile">
+         <div class="summary-label">${t("home.summary_empty")}</div>
+       </div>`;
 
-  document.getElementById("home-stats").innerHTML =
-    stat("check", "green", green, t("home.stat_green"), "match") +
-    stat("spark", "amber", yellow, t("home.stat_yellow"), "match") +
-    stat("bookmark", "accent", saved.length, t("home.stat_saved"), "saved") +
-    stat("user", "accent", pct + "%", t("home.stat_profile"), "profile");
-
-  document.querySelectorAll("#home-stats .stat").forEach((s) => {
-    s.addEventListener("click", () => switchTab(s.dataset.goto));
+  el.querySelectorAll("#home-summary .summary").forEach((s) => {
+    s.addEventListener("click", () => {
+      haptic("light");
+      switchTab(s.dataset.goto);
+    });
   });
+
+  // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin,
+  // faqat raqamlar emas.
+  const best = matches.find((m) => m.level === "green") || matches[0];
+  if (best) {
+    document.getElementById("home-top").innerHTML = `
+      <div class="section-head"><span class="section-title">${t("home.section_top")}</span></div>
+      <div class="card">
+        <div class="card-top program-open" data-id="${best.id}" role="button" tabindex="0">
+          ${avatar(best.university, best.university_logo)}
+          <div class="card-body">
+            <div class="card-title">${escapeHtml(best.name)}${
+              best.abbreviation ? `<span class="abbr">${escapeHtml(best.abbreviation)}</span>` : ""
+            }</div>
+            <div class="card-sub">${escapeHtml(best.university)}</div>
+            <div class="meta-row">
+              <span class="pill ${best.level === "green" ? "green" : "amber"}">${
+                best.level === "green" ? icon("check") + t("match.green") : icon("spark") + t("match.yellow")
+              }</span>
+              <span class="pill"><span class="chip-flag">${flag(
+                best.country.iso_code
+              )}</span>${escapeHtml(countryName(best.country))}</span>
+            </div>
+          </div>
+          <span class="card-chevron">${icon("chevron")}</span>
+        </div>
+      </div>`;
+    bindProgramOpeners(document.getElementById("home-top"));
+  }
 
   const upcoming = saved
     .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
@@ -973,9 +1091,10 @@ async function openProgramSheet(programId) {
     <div class="sheet-section">
       <div class="sheet-section-title">${t("program.about")}</div>
       ${row(t("program.field"), escapeHtml(p.field_of_study))}
-      ${row(t("program.language"), escapeHtml(p.language_of_instruction))}
+      ${row(t("program.language"), escapeHtml(instructionLanguage(p.language_of_instruction)))}
       ${row(t("program.intake"), escapeHtml(p.intake_term))}
       ${p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : ""}
+      ${missingNote(p.missing_fields)}
     </div>
 
     <div class="sheet-section">

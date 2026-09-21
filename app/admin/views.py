@@ -2,7 +2,7 @@ from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
 from starlette.requests import Request
 
-from app.admin.filters import RelationshipFilter
+from app.admin.filters import DistinctValuesFilter, RelationshipFilter
 from app.admin.formatters import (
     enum_label,
     format_bool,
@@ -156,6 +156,11 @@ class UniversityAdmin(ModelView, model=University):
     ]
     column_searchable_list = [University.name, University.city]
     column_sortable_list = [University.name, University.city]
+    column_filters = [
+        RelationshipFilter(
+            University.country, Country, Country.name_uz, title="Davlatlar", parameter_name="country"
+        ),
+    ]
     form_columns = [
         University.country,
         University.name,
@@ -227,7 +232,8 @@ class ProgramAdmin(ModelView, model=Program):
     column_searchable_list = [Program.name, Program.abbreviation, Program.field_of_study]
     column_sortable_list = [Program.name, Program.verified_at]
     column_filters = [
-        StaticValuesFilter(Program.degree_level, values=_choices(_DEGREE_LABELS), title="Daraja")
+        DistinctValuesFilter(Program.name, title="Dasturlar"),
+        StaticValuesFilter(Program.degree_level, values=_choices(_DEGREE_LABELS), title="Daraja"),
     ]
     form_columns = [
         Program.university,

@@ -3,7 +3,9 @@
 SQLAdmin'ning tayyor `ForeignKeyFilter`'i haqiqiy FK ustunini talab qiladi
 (`column.type`, `column == value`), shuning uchun many-to-many bog'lanish
 bo'yicha filtrlay olmaydi. Davlat stipendiyalari esa aynan M2M orqali
-davlatlarga bog'langan, shu sababli o'z filtrimiz kerak.
+davlatlarga bog'langan, shu sababli o'z filtrimiz kerak. Tayyor filtrlar
+"All" deb yozadi va ro'yxatni saralamaydi — o'zimiznikida "Barchasi" va
+alifbo tartibi.
 
 Filtrlar SQLAdmin'da duck-typing orqali ishlaydi: `parameter_name`, `title`,
 `template`, `has_operator` atributlari va `lookups()` / `get_filtered_query()`
@@ -66,4 +68,39 @@ class RelationshipFilter:
         except (TypeError, ValueError):
             return query
 
-        return query.filter(self.relationship.any(self.related_model.id == related_id))
+        condition = self.related_model.id == related_id
+        # Kolleksiya (M2M / one-to-many) — `.any()`, bitta obyekt
+        # (many-to-one, masalan University.country) — `.has()`.
+        if self.relationship.property.uselist:
+            return query.filter(self.relationship.any(condition))
+        return query.filter(self.relationship.has(condition))
+
+
+class DistinctValuesFilter:
+    """Ustundagi takrorlanmas qiymatlar ro'yxati bo'yicha filtrlaydi.
+
+    Masalan dastur nomi: "Computer Science" bir nechta universitetda bor —
+    filtr ularning hammasini bitta tanlov bilan ko'rsatadi.
+    """
+
+    has_operator = False
+    template = "sqladmin/filters/lookup_filter.html"
+
+    def __init__(self, column: Any, title: str, parameter_name: str | None = None) -> None:
+        self.column = column
+        self.title = title
+        self.parameter_name = parameter_name or column.key
+
+    async def lookups(
+        self,
+        request: Request,
+        model: Any,
+        run_query: Callable[[Select], Any],
+    ) -> list[tuple[str, str]]:
+        rows = await run_query(select(self.column).distinct().order_by(self.column))
+        return [(ALL_VALUE, "Barchasi")] + [(str(value), str(value)) for (value,) in rows]
+
+    async def get_filtered_query(self, query: Select, value: Any, model: Any) -> Select:
+        if value is None or value == "" or value == ALL_VALUE:
+            return query
+        return query.filter(self.column == value)

@@ -30,7 +30,6 @@ from app.db.models import (
     Deadline,
     DeadlineType,
     DegreeLevel,
-    GpaScale,
     Program,
     ProgramCost,
     ProgramRequirement,
@@ -41,7 +40,9 @@ from app.db.models import (
 )
 from app.db.session import async_session_factory
 
-MAX_PROGRAMS = 12
+# Tahrirlashda forma universitetning TO'LIQ holati: bu chegaradan oshgan
+# dasturlar formaga sig'masa, saqlashda o'chib ketadi — shuning uchun katta.
+MAX_PROGRAMS = 60
 MAX_DEADLINES = 6
 
 
@@ -104,6 +105,29 @@ def _as_str(value: Any) -> str:
     return text or "0"
 
 
+def _multiline(form: FormData, key: str) -> str | None:
+    """Textarea: bo'sh qatorlar va chetdagi bo'shliqlar olib tashlanadi."""
+    lines = [line.strip() for line in (form.get(key) or "").splitlines()]
+    text = "\n".join(line for line in lines if line)
+    return text or None
+
+
+def _tristate(form: FormData, key: str) -> bool | None:
+    """Tanlov "yes" / "no" / "" -> True / False / None."""
+    value = _text(form, key)
+    if value == "yes":
+        return True
+    if value == "no":
+        return False
+    return None
+
+
+def _tristate_out(value: bool | None) -> str:
+    if value is None:
+        return ""
+    return "yes" if value else "no"
+
+
 def _enum(form: FormData, key: str, enum_cls: Any) -> Any | None:
     value = _text(form, key)
     if value is None:
@@ -128,6 +152,10 @@ class UniversityWizard(BaseView):
         # tahrirlash va yangi dastur qo'shish shu yerdan bajariladi.
         university_id = request.query_params.get("university_id")
         university_id = int(university_id) if (university_id or "").isdigit() else None
+        # "Dasturlar" bo'limidan kelinganda (`?program_id=`) o'sha dastur bloki
+        # ajratib ko'rsatiladi va unga aylantiriladi.
+        focus_program_id = request.query_params.get("program_id")
+        focus_program_id = int(focus_program_id) if (focus_program_id or "").isdigit() else None
 
         async with async_session_factory() as session:
             if request.method == "POST":
@@ -175,9 +203,9 @@ class UniversityWizard(BaseView):
                 ),
                 "countries": countries,
                 "degree_levels": list(DegreeLevel),
-                "gpa_scales": list(GpaScale),
                 "max_programs": MAX_PROGRAMS,
                 "prefill": prefill,
+                "focus_program_id": focus_program_id,
                 "editing": editing,
                 # "Yangi universitet qo'shish" havolasi uchun — sehrgarning
                 # o'z manzili, query'siz.
@@ -225,21 +253,24 @@ class UniversityWizard(BaseView):
                     "duration": _as_str(program.duration_years),
                     "intake": program.intake_term,
                     "source_url": program.source_url or "",
-                    "gpa_min": _as_str(requirement.gpa_min) if requirement else "",
-                    "gpa_scale": (
-                        requirement.gpa_scale.value
-                        if requirement and requirement.gpa_scale
-                        else ""
-                    ),
                     "ielts": _as_str(requirement.ielts_min) if requirement else "",
                     "toefl": _as_str(requirement.toefl_min) if requirement else "",
-                    "age_limit": _as_str(requirement.age_limit) if requirement else "",
                     "gre_required": bool(requirement and requirement.gre_required),
+                    "requirements": program.requirements_text or "",
                     "tuition": _as_str(cost.tuition_amount) if cost else "",
                     "currency": cost.currency if cost else "USD",
-                    "visa_proof": _as_str(cost.visa_proof_amount) if cost else "",
-                    "living": _as_str(cost.living_cost_monthly) if cost else "",
+                    "fee": _tristate_out(program.has_application_fee),
+                    "fee_amount": _as_str(program.application_fee_amount),
+                    "fee_currency": program.application_fee_currency or "",
+                    "scholarship": _tristate_out(program.has_scholarship),
+                    "scholarship_url": program.scholarship_url or "",
+                    "notes": program.notes or "",
+                    "notes_ru": program.notes_ru or "",
+                    "notes_en": program.notes_en or "",
                     "deadline_close": close.date_utc.strftime("%Y-%m-%d") if close else "",
+                    # "_" bilan boshlangan kalitlar forma maydoni emas —
+                    # JS ularni to'ldirishda o'tkazib yuboradi.
+                    "_pid": program.id,
                 }
             )
 
@@ -251,6 +282,7 @@ class UniversityWizard(BaseView):
             "website": university.website or "",
             "logo_url": university.logo_url or "",
             "timezone": university.timezone,
+            "ranking": _as_str(university.ranking),
             "programs": programs,
         }
 
@@ -286,6 +318,7 @@ class UniversityWizard(BaseView):
         university.website = _text(form, "website")
         university.logo_url = _text(form, "logo_url")
         university.timezone = _text(form, "timezone") or "UTC"
+        university.ranking = _integer(form, "ranking")
         if existing is None:
             session.add(university)
         await session.flush()
@@ -343,29 +376,45 @@ class UniversityWizard(BaseView):
             program.duration_years = _number(form, f"p{index}_duration") or 4
             program.intake_term = _text(form, f"p{index}_intake") or "—"
             program.notes = _text(form, f"p{index}_notes")
+            program.notes_ru = _text(form, f"p{index}_notes_ru")
+            program.notes_en = _text(form, f"p{index}_notes_en")
+            program.requirements_text = _multiline(form, f"p{index}_requirements")
+            program.has_application_fee = _tristate(form, f"p{index}_fee")
+            # Summa faqat "Bor" tanlanganda ma'noli — "Yo'q"da eski raqam
+            # qolib ketib, Mini App'da chalkashlik bermasin.
+            if program.has_application_fee:
+                program.application_fee_amount = _number(form, f"p{index}_fee_amount")
+                program.application_fee_currency = (
+                    _text(form, f"p{index}_fee_currency")
+                    or _text(form, f"p{index}_currency")
+                    or "USD"
+                ).upper()
+            else:
+                program.application_fee_amount = None
+                program.application_fee_currency = None
+            program.has_scholarship = _tristate(form, f"p{index}_scholarship")
+            program.scholarship_url = (
+                _text(form, f"p{index}_scholarship_url") if program.has_scholarship else None
+            )
             program.source_url = _text(form, f"p{index}_source_url") or university.website or "—"
             program.verified_at = now
             program.verified_by = verified_by
             await session.flush()
 
-            gpa_min = _number(form, f"p{index}_gpa_min")
+            # GPA, yosh chegarasi, viza isboti va yashash xarajati endi
+            # yuritilmaydi — talab/xarajat yozuvi qayta yaratilganda ular bo'sh
+            # qoladi.
             ielts = _number(form, f"p{index}_ielts")
             toefl = _integer(form, f"p{index}_toefl")
             gre_required = _checked(form, f"p{index}_gre_required")
-            age_limit = _integer(form, f"p{index}_age_limit")
 
-            if any(v is not None for v in (gpa_min, ielts, toefl, age_limit)) or gre_required:
+            if ielts is not None or toefl is not None or gre_required:
                 session.add(
                     ProgramRequirement(
                         program_id=program.id,
-                        gpa_min=gpa_min,
-                        gpa_scale=_enum(form, f"p{index}_gpa_scale", GpaScale),
                         ielts_min=ielts,
                         toefl_min=toefl,
                         gre_required=gre_required,
-                        gre_min=_integer(form, f"p{index}_gre_min"),
-                        prereq_major=_text(form, f"p{index}_prereq_major"),
-                        age_limit=age_limit,
                     )
                 )
                 counters["requirements"] += 1
@@ -376,9 +425,7 @@ class UniversityWizard(BaseView):
                     ProgramCost(
                         program_id=program.id,
                         tuition_amount=tuition,
-                        currency=_text(form, f"p{index}_currency") or "USD",
-                        visa_proof_amount=_number(form, f"p{index}_visa_proof"),
-                        living_cost_monthly=_number(form, f"p{index}_living"),
+                        currency=(_text(form, f"p{index}_currency") or "USD").upper(),
                         last_checked=_date(form, f"p{index}_last_checked") or now.date(),
                     )
                 )

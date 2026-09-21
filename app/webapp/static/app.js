@@ -12,7 +12,7 @@ if (tg) {
 const INIT_DATA = (tg && tg.initData) || "";
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 24;
+const ASSET_V = 25;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -186,17 +186,24 @@ const I18N = {
     "program.intake": "Qabul davri",
     "program.years": "yil",
     "program.requirements": "Talablar",
-    "program.gpa_min": "Min. GPA",
+    "program.ranking": "QS #{n}",
+    "program.ranking_label": "Jahon reytingi (QS)",
+    "program.language_certs": "Til sertifikati",
+    "program.certs_either": "Ulardan biri yetarli.",
+    "program.no_language_req": "Til sertifikati talab qilinmaydi.",
+    "program.app_fee": "Ariza to'lovi",
+    "program.app_fee_free": "Bepul",
+    "program.app_fee_paid": "Bor (summasi ko'rsatilmagan)",
+    "match.missing_key.ielts": "IELTS",
+    "match.missing_key.toefl": "TOEFL",
+    "match.missing_key.ielts_toefl": "IELTS yoki TOEFL",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
     "program.gre": "GRE",
-    "program.age_limit": "Yosh chegarasi",
     "program.prereq": "Oldingi ta'lim",
     "program.no_requirements": "Talablar kiritilmagan.",
     "program.costs": "Xarajatlar",
     "program.tuition": "Kontrakt (yiliga)",
-    "program.visa_proof": "Viza uchun isbot",
-    "program.living": "Yashash (oyiga)",
     "program.no_costs": "Xarajatlar kiritilmagan.",
     "program.cost_disclaimer": "Taxminiy raqamlar, oxirgi tekshiruv: {date}. Aniq summani universitet saytidan tasdiqlang.",
     "program.no_deadlines": "Muddatlar kiritilmagan.",
@@ -367,17 +374,24 @@ const I18N = {
     "program.intake": "Период набора",
     "program.years": "г.",
     "program.requirements": "Требования",
-    "program.gpa_min": "Мин. GPA",
+    "program.ranking": "QS #{n}",
+    "program.ranking_label": "Мировой рейтинг (QS)",
+    "program.language_certs": "Языковой сертификат",
+    "program.certs_either": "Достаточно одного из них.",
+    "program.no_language_req": "Языковой сертификат не требуется.",
+    "program.app_fee": "Плата за подачу заявки",
+    "program.app_fee_free": "Бесплатно",
+    "program.app_fee_paid": "Есть (сумма не указана)",
+    "match.missing_key.ielts": "IELTS",
+    "match.missing_key.toefl": "TOEFL",
+    "match.missing_key.ielts_toefl": "IELTS или TOEFL",
     "program.ielts_min": "Мин. IELTS",
     "program.toefl_min": "Мин. TOEFL",
     "program.gre": "GRE",
-    "program.age_limit": "Возрастной предел",
     "program.prereq": "Предыдущее образование",
     "program.no_requirements": "Требования не указаны.",
     "program.costs": "Расходы",
     "program.tuition": "Контракт (в год)",
-    "program.visa_proof": "Подтверждение для визы",
-    "program.living": "Проживание (в месяц)",
     "program.no_costs": "Расходы не указаны.",
     "program.cost_disclaimer": "Приблизительные суммы, последняя проверка: {date}. Уточните на сайте университета.",
     "program.no_deadlines": "Сроки не указаны.",
@@ -548,17 +562,24 @@ const I18N = {
     "program.intake": "Intake",
     "program.years": "yr",
     "program.requirements": "Requirements",
-    "program.gpa_min": "Min. GPA",
+    "program.ranking": "QS #{n}",
+    "program.ranking_label": "World ranking (QS)",
+    "program.language_certs": "Language certificate",
+    "program.certs_either": "Either one is accepted.",
+    "program.no_language_req": "No language certificate required.",
+    "program.app_fee": "Application fee",
+    "program.app_fee_free": "Free",
+    "program.app_fee_paid": "Required (amount not listed)",
+    "match.missing_key.ielts": "IELTS",
+    "match.missing_key.toefl": "TOEFL",
+    "match.missing_key.ielts_toefl": "IELTS or TOEFL",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
     "program.gre": "GRE",
-    "program.age_limit": "Age limit",
     "program.prereq": "Prior degree",
     "program.no_requirements": "No requirements recorded.",
     "program.costs": "Costs",
     "program.tuition": "Tuition (per year)",
-    "program.visa_proof": "Visa proof of funds",
-    "program.living": "Living (per month)",
     "program.no_costs": "No costs recorded.",
     "program.cost_disclaimer": "Approximate figures, last checked {date}. Confirm on the university site.",
     "program.no_deadlines": "No deadlines recorded.",
@@ -755,7 +776,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=24" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=25" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -932,8 +953,11 @@ async function renderMatch() {
   el.innerHTML = matches
     .map((m) => {
       const isGreen = m.level === "green";
+      // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
       const missing = m.missing.length
-        ? `<span class="pill amber">${t("match.missing", { list: m.missing.join(", ") })}</span>`
+        ? `<span class="pill amber">${t("match.missing", {
+            list: m.missing.map((k) => t("match.missing_key." + k)).join(", "),
+          })}</span>`
         : "";
       // Tuzilishi grant kartasi bilan bir xil: sarlavha -> faktlar -> amal.
       const fee =
@@ -954,6 +978,13 @@ async function renderMatch() {
                 <span class="pill"><span class="chip-flag">${flag(
                   m.country.iso_code
                 )}</span>${escapeHtml(countryName(m.country))}</span>
+                ${
+                  m.university_ranking
+                    ? `<span class="pill rank-pill">${icon("award")}${t("program.ranking", {
+                        n: m.university_ranking,
+                      })}</span>`
+                    : ""
+                }
               </div>
             </div>
             <span class="card-chevron">${icon("chevron")}</span>
@@ -965,6 +996,7 @@ async function renderMatch() {
             }</span>
             ${fee ? `<span class="pill">${icon("spark")}${fee}</span>` : ""}
             ${m.ielts_min ? `<span class="pill">IELTS ${m.ielts_min}</span>` : ""}
+            ${m.toefl_min ? `<span class="pill">TOEFL ${m.toefl_min}</span>` : ""}
             ${missing}
           </div>
 
@@ -1198,32 +1230,66 @@ async function openProgramSheet(programId) {
       ? dash
       : `${Number(amount).toLocaleString()} ${escapeHtml(currency)}`;
 
-  const req = p.requirement;
-  const requirements = req
-    ? row(t("program.gpa_min"), req.gpa_min !== null ? `${req.gpa_min}${
-        req.gpa_scale ? ` / ${req.gpa_scale}` : ""
-      }` : dash) +
-      row(t("program.ielts_min"), req.ielts_min !== null ? req.ielts_min : dash) +
-      row(t("program.toefl_min"), req.toefl_min !== null ? req.toefl_min : dash) +
-      row(
-        t("program.gre"),
-        req.gre_required
-          ? (req.gre_min !== null ? `${t("scholarships.yes")} (${req.gre_min})` : t("scholarships.yes"))
-          : t("scholarships.no")
-      ) +
-      row(t("program.age_limit"), req.age_limit !== null ? req.age_limit : dash) +
-      (req.prereq_major ? row(t("program.prereq"), escapeHtml(req.prereq_major)) : "")
-    : `<div class="sheet-empty">${t("program.no_requirements")}</div>`;
+  const req = p.requirement || {};
+
+  // Til sertifikati: faqat dastur qabul qiladiganlari. Ikkalasi bo'lsa —
+  // ulardan biri yetarli ekani alohida aytiladi.
+  const certRows =
+    (req.ielts_min !== null && req.ielts_min !== undefined
+      ? row(t("program.ielts_min"), req.ielts_min)
+      : "") +
+    (req.toefl_min !== null && req.toefl_min !== undefined
+      ? row(t("program.toefl_min"), req.toefl_min)
+      : "");
+  const bothCerts =
+    req.ielts_min !== null && req.ielts_min !== undefined &&
+    req.toefl_min !== null && req.toefl_min !== undefined;
+  const languageCerts = certRows
+    ? certRows + (bothCerts ? `<div class="sheet-note">${t("program.certs_either")}</div>` : "")
+    : `<div class="sheet-empty">${t("program.no_language_req")}</div>`;
+
+  const extraRequirements = (p.requirements || []).length
+    ? `<ul class="doc-list">${p.requirements
+        .map((r) => `<li>${icon("check")}${escapeHtml(r)}</li>`)
+        .join("")}</ul>`
+    : "";
+  const requirementRows =
+    (req.gre_required
+      ? row(
+          t("program.gre"),
+          req.gre_min !== null && req.gre_min !== undefined
+            ? `${t("scholarships.yes")} (${req.gre_min})`
+            : t("scholarships.yes")
+        )
+      : "") +
+    (req.prereq_major ? row(t("program.prereq"), escapeHtml(req.prereq_major)) : "");
+  const requirements =
+    requirementRows || extraRequirements
+      ? requirementRows + extraRequirements
+      : `<div class="sheet-empty">${t("program.no_requirements")}</div>`;
 
   const cost = p.cost;
-  const costs = cost
-    ? row(t("program.tuition"), money(cost.tuition_amount, cost.currency)) +
-      row(t("program.visa_proof"), money(cost.visa_proof_amount, cost.currency)) +
-      row(t("program.living"), money(cost.living_cost_monthly, cost.currency)) +
-      `<div class="sheet-note">${t("program.cost_disclaimer", {
-        date: escapeHtml(cost.last_checked),
-      })}</div>`
-    : `<div class="sheet-empty">${t("program.no_costs")}</div>`;
+  const feeRow =
+    p.has_application_fee === null || p.has_application_fee === undefined
+      ? ""
+      : row(
+          t("program.app_fee"),
+          p.has_application_fee
+            ? p.application_fee_amount !== null && p.application_fee_amount !== undefined
+              ? money(p.application_fee_amount, p.application_fee_currency || "")
+              : t("program.app_fee_paid")
+            : t("program.app_fee_free")
+        );
+  const costs =
+    cost || feeRow
+      ? (cost ? row(t("program.tuition"), money(cost.tuition_amount, cost.currency)) : "") +
+        feeRow +
+        (cost
+          ? `<div class="sheet-note">${t("program.cost_disclaimer", {
+              date: escapeHtml(cost.last_checked),
+            })}</div>`
+          : "")
+      : `<div class="sheet-empty">${t("program.no_costs")}</div>`;
 
   const deadlines = p.deadlines.length
     ? p.deadlines
@@ -1258,6 +1324,13 @@ async function openProgramSheet(programId) {
       )}</span>
       <span class="pill">${icon("cap")}${t("profile.degree_level." + p.degree_level)}</span>
       <span class="pill">${icon("clock")}${p.duration_years} ${t("program.years")}</span>
+      ${
+        p.university_ranking
+          ? `<span class="pill rank-pill" title="${escapeHtml(t("program.ranking_label"))}">${icon(
+              "award"
+            )}${t("program.ranking", { n: p.university_ranking })}</span>`
+          : ""
+      }
     </div>
 
     <div class="sheet-section">
@@ -1267,6 +1340,11 @@ async function openProgramSheet(programId) {
       ${row(t("program.intake"), escapeHtml(p.intake_term))}
       ${p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : ""}
       ${missingNote(p.missing_fields)}
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("program.language_certs")}</div>
+      ${languageCerts}
     </div>
 
     <div class="sheet-section">

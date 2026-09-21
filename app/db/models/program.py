@@ -72,6 +72,16 @@ class Program(TimestampMixin, VerificationMixin, Base):
     # stipendiyasi). None = tekshirilmagan.
     has_scholarship: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     scholarship_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Ariza to'lovi (application fee). None = tekshirilmagan, False = bepul.
+    # Summa kontrakt valyutasida emas — o'z valyutasi bilan saqlanadi, chunki
+    # xarajat (ProgramCost) yozuvi bo'lmasligi ham mumkin.
+    has_application_fee: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    application_fee_amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
+    application_fee_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    # Qo'shimcha talablar — erkin matn, har qatorda bittasi (masalan "Huquq
+    # bo'yicha bakalavr diplomi", "2 ta tavsiyanoma"). Mini App ro'yxat qilib
+    # ko'rsatadi.
+    requirements_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     university: Mapped["University"] = relationship(back_populates="programs")
     requirement: Mapped["ProgramRequirement"] = relationship(

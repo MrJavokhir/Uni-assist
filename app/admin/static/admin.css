@@ -378,3 +378,61 @@ body {
 }
 
 .ua-logo-bad { color: #c0392b; }
+
+/* ---- Dastur bloki: til sertifikati qatorlari ---- */
+.ua-certs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ua-cert-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid rgba(120, 124, 148, 0.2);
+  border-radius: 10px;
+  background: #fff;
+  max-width: 380px;
+}
+.ua-cert-row[hidden] { display: none; }
+.ua-cert-name {
+  min-width: 56px;
+  font-weight: 700;
+  color: var(--ua-accent);
+}
+.ua-cert-label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #8b8fa3;
+  white-space: nowrap;
+}
+.ua-cert-input { max-width: 110px; }
+.ua-cert-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ua-cert-actions [hidden] { display: none; }
+
+.ua-toggle-target[hidden] { display: none; }
+
+/* Izoh bo'limi — yig'iladigan */
+.ua-notes > summary {
+  cursor: pointer;
+  list-style: none;
+}
+.ua-notes > summary::-webkit-details-marker { display: none; }
+.ua-notes > summary::before {
+  content: "▸ ";
+}
+.ua-notes[open] > summary::before {
+  content: "▾ ";
+}
+
+/* "Dasturlar" bo'limidan ochilgan dastur ajralib tursin */
+.ua-program-focus {
+  border-color: var(--ua-accent);
+  box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.18);
+}

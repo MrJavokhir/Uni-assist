@@ -14,6 +14,7 @@ from app.db.models import (
     Program,
     ProgramRequirement,
     University,
+    UniversityRankRange,
     User,
     UserLanguageCertificate,
 )
@@ -30,8 +31,11 @@ async def _make_program(
     gpa_min: float | None = 70,
     gpa_scale: GpaScale | None = GpaScale.SCALE_100,
     ielts_min: float | None = 6.0,
+    toefl_min: int | None = None,
     age_limit: int | None = None,
     deadline_close: datetime | None = None,
+    ranking: int | None = None,
+    has_application_fee: bool | None = None,
 ) -> Program:
     # `iso_code` unikal — bir testda bir nechta dastur yaratilganda davlat
     # qayta ishlatiladi, aks holda unikal cheklov buziladi.
@@ -49,7 +53,11 @@ async def _make_program(
         await session.flush()
 
     university = University(
-        country_id=country.id, name=f"{country_name} University", city="Istanbul", timezone="UTC"
+        country_id=country.id,
+        name=f"{country_name} University {ranking}",
+        city="Istanbul",
+        timezone="UTC",
+        ranking=ranking,
     )
     session.add(university)
     await session.flush()
@@ -65,6 +73,7 @@ async def _make_program(
         source_url="https://example.com",
         verified_at=datetime.now(UTC),
         verified_by="tester",
+        has_application_fee=has_application_fee,
     )
     session.add(program)
     await session.flush()
@@ -74,6 +83,7 @@ async def _make_program(
         gpa_min=gpa_min,
         gpa_scale=gpa_scale,
         ielts_min=ielts_min,
+        toefl_min=toefl_min,
         age_limit=age_limit,
     )
     session.add(requirement)
@@ -99,6 +109,7 @@ async def _make_user(
     gpa_raw: float | None = 85,
     gpa_scale: GpaScale | None = GpaScale.SCALE_100,
     ielts_score: float | None = 6.5,
+    toefl_score: float | None = None,
     age: int | None = None,
 ) -> User:
     user = User(telegram_id=1, gpa_raw=gpa_raw, gpa_scale=gpa_scale, age=age)
@@ -111,6 +122,15 @@ async def _make_user(
                 user_id=user.id,
                 type=LanguageCertType.IELTS,
                 score=ielts_score,
+                exam_date=datetime.now(UTC).date(),
+            )
+        )
+    if toefl_score is not None:
+        session.add(
+            UserLanguageCertificate(
+                user_id=user.id,
+                type=LanguageCertType.TOEFL,
+                score=toefl_score,
                 exam_date=datetime.now(UTC).date(),
             )
         )
@@ -130,14 +150,14 @@ async def test_green_when_all_requirements_met(session: AsyncSession):
     assert results[0].missing == []
 
 
-async def test_yellow_when_gpa_below_minimum(session: AsyncSession):
+async def test_gpa_is_no_longer_checked(session: AsyncSession):
+    """GPA talabi admin panelda yuritilmaydi — eski qiymat natijaga ta'sir qilmaydi."""
     await _make_program(session, gpa_min=90, ielts_min=6.0)
     user = await _make_user(session, gpa_raw=75, ielts_score=6.5)
 
     results = await find_matches(session, user)
 
-    assert results[0].level == MatchLevel.YELLOW
-    assert "gpa" in results[0].missing
+    assert results[0].level == MatchLevel.GREEN
 
 
 async def test_yellow_when_no_language_certificate(session: AsyncSession):
@@ -162,14 +182,93 @@ async def test_red_when_deadline_passed(session: AsyncSession):
     assert "deadline" in results[0].missing
 
 
-async def test_red_when_over_age_limit(session: AsyncSession):
+async def test_age_limit_is_no_longer_checked(session: AsyncSession):
     await _make_program(session, gpa_min=70, ielts_min=6.0, age_limit=30)
     user = await _make_user(session, gpa_raw=85, ielts_score=6.5, age=35)
 
     results = await find_matches(session, user)
 
-    assert results[0].level == MatchLevel.RED
-    assert "age" in results[0].missing
+    assert results[0].level == MatchLevel.GREEN
+
+
+async def test_toefl_is_enough_when_both_certificates_accepted(session: AsyncSession):
+    await _make_program(session, ielts_min=7.0, toefl_min=90)
+    user = await _make_user(session, ielts_score=None, toefl_score=95)
+
+    results = await find_matches(session, user)
+
+    assert results[0].level == MatchLevel.GREEN
+
+
+async def test_yellow_when_no_accepted_certificate_meets_minimum(session: AsyncSession):
+    await _make_program(session, ielts_min=7.0, toefl_min=90)
+    user = await _make_user(session, ielts_score=6.5, toefl_score=80)
+
+    results = await find_matches(session, user)
+
+    assert results[0].level == MatchLevel.YELLOW
+    assert results[0].missing == ["ielts_toefl"]
+
+
+async def test_toefl_only_program_reports_toefl(session: AsyncSession):
+    await _make_program(session, ielts_min=None, toefl_min=100)
+    user = await _make_user(session, ielts_score=8.0)
+
+    results = await find_matches(session, user)
+
+    assert results[0].missing == ["toefl"]
+
+
+async def test_rank_range_keeps_matching_and_unranked_universities(session: AsyncSession):
+    top = await _make_program(session, ranking=40)
+    unranked = await _make_program(session, ranking=None)
+    await _make_program(session, ranking=250)
+
+    user = await _make_user(session)
+    user.university_rank_range = UniversityRankRange.TOP_100
+    await session.commit()
+
+    ids = {r.program.id for r in await find_matches(session, user)}
+
+    assert ids == {top.id, unranked.id}
+
+
+async def test_rank_range_below_500_has_no_upper_bound(session: AsyncSession):
+    low = await _make_program(session, ranking=900)
+    await _make_program(session, ranking=120)
+
+    user = await _make_user(session)
+    user.university_rank_range = UniversityRankRange.BELOW_500
+    await session.commit()
+
+    ids = {r.program.id for r in await find_matches(session, user)}
+
+    assert ids == {low.id}
+
+
+async def test_paid_applications_hidden_when_user_declines_fee(session: AsyncSession):
+    await _make_program(session, has_application_fee=True)
+    free = await _make_program(session, has_application_fee=False)
+    unknown = await _make_program(session, has_application_fee=None)
+
+    user = await _make_user(session)
+    user.application_fee_ok = False
+    await session.commit()
+
+    ids = {r.program.id for r in await find_matches(session, user)}
+
+    assert ids == {free.id, unknown.id}
+
+
+async def test_paid_applications_shown_when_user_accepts_fee(session: AsyncSession):
+    await _make_program(session, has_application_fee=True)
+    await _make_program(session, has_application_fee=False)
+
+    user = await _make_user(session)
+    user.application_fee_ok = True
+    await session.commit()
+
+    assert len(await find_matches(session, user)) == 2
 
 
 async def test_country_filter_excludes_other_countries(session: AsyncSession):

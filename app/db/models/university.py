@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
@@ -25,6 +25,10 @@ class University(TimestampMixin, Base):
     # Universitet joylashgan hudud vaqt zonasi (masalan "Europe/Berlin") —
     # deadline'larni foydalanuvchiga Toshkent vaqtida ko'rsatish uchun kerak.
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="UTC")
+    # Jahon reytingidagi o'rni (QS World University Rankings). None = reytingda
+    # yo'q yoki hali kiritilmagan. Foydalanuvchi profilidagi reyting oralig'i
+    # shu raqam bo'yicha filtrlanadi.
+    ranking: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     country: Mapped["Country"] = relationship(back_populates="universities")
     programs: Mapped[list["Program"]] = relationship(

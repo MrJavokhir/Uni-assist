@@ -1473,3 +1473,10 @@ body {
   padding-bottom: 12px;
   animation: enter 0.18s ease;
 }
+
+/* Universitet reytingi (QS) — dastur kartasi va tafsilot oynasida */
+.pill.rank-pill {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}

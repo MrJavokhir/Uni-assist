@@ -66,24 +66,22 @@ class MatchProgramOut(BaseModel):
     tuition_amount: float | None = None
     tuition_currency: str | None = None
     ielts_min: float | None = None
+    toefl_min: int | None = None
+    # Universitetning jahon reytingidagi o'rni (QS)
+    university_ranking: int | None = None
 
 
 class ProgramRequirementOut(BaseModel):
-    gpa_min: float | None
-    gpa_scale: str | None
     ielts_min: float | None
     toefl_min: int | None
     gre_required: bool
     gre_min: int | None
     prereq_major: str | None
-    age_limit: int | None
 
 
 class ProgramCostOut(BaseModel):
     tuition_amount: float
     currency: str
-    visa_proof_amount: float | None
-    living_cost_monthly: float | None
     last_checked: str
 
 
@@ -103,6 +101,7 @@ class ProgramDetailOut(BaseModel):
     university: str
     university_website: str | None
     university_logo: str | None
+    university_ranking: int | None = None
     city: str
     country: CountryOut
     degree_level: str
@@ -120,6 +119,12 @@ class ProgramDetailOut(BaseModel):
     # Shu dasturning o'z stipendiyasi bormi (None = tekshirilmagan)
     has_scholarship: bool | None = None
     scholarship_url: str | None = None
+    # Ariza to'lovi (None = tekshirilmagan, False = bepul)
+    has_application_fee: bool | None = None
+    application_fee_amount: float | None = None
+    application_fee_currency: str | None = None
+    # Qo'shimcha talablar — admin har qatorga bittadan yozadi
+    requirements: list[str] = []
     requirement: ProgramRequirementOut | None
     cost: ProgramCostOut | None
     deadlines: list[ProgramDeadlineOut]

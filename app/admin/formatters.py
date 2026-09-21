@@ -44,6 +44,28 @@ def format_university_wizard_link(model: object, attribute: str) -> Markup:
     )
 
 
+def format_program_wizard_link(model: object, attribute: str) -> Markup:
+    """Dastur nomini universitet sehrgariga, o'sha dasturga fokus bilan havola qiladi.
+
+    SQLAdmin'ning oddiy tahrirlash formasi talab (IELTS/TOEFL), xarajat va
+    muddatlarni tahrirlay olmaydi — ular alohida jadvallarda. Sehrgar esa
+    hammasini bitta blokda beradi, shuning uchun dastur ham o'sha yerda
+    tahrirlanadi.
+    """
+    name = escape(getattr(model, attribute) or "—")
+    return Markup(
+        f"<a href='/admin/university-wizard?university_id={model.university_id}"
+        f"&program_id={model.id}' title='Tahrirlash'>{name}</a>"
+    )
+
+
+def format_ranking(model: object, attribute: str) -> Markup:
+    value = getattr(model, attribute)
+    if value is None:
+        return Markup("<span class='text-muted'>—</span>")
+    return Markup(f"#{int(value)}")
+
+
 def format_program_labels(model: object, attribute: str) -> list[str]:
     """Universitet dasturlarini qisqa yorliq bilan ko'rsatadi.
 

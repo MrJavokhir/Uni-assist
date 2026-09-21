@@ -7,6 +7,8 @@ from app.admin.formatters import (
     enum_label,
     format_bool,
     format_program_labels,
+    format_program_wizard_link,
+    format_ranking,
     format_university_wizard_link,
     format_verified_at,
 )
@@ -143,6 +145,7 @@ class UniversityAdmin(ModelView, model=University):
         University.name,
         University.country,
         University.city,
+        University.ranking,
         University.website,
     ]
     column_details_list = [
@@ -150,12 +153,13 @@ class UniversityAdmin(ModelView, model=University):
         University.name,
         University.country,
         University.city,
+        University.ranking,
         University.website,
         University.timezone,
         University.programs,
     ]
     column_searchable_list = [University.name, University.city]
-    column_sortable_list = [University.name, University.city]
+    column_sortable_list = [University.name, University.city, University.ranking]
     column_filters = [
         RelationshipFilter(
             University.country, Country, Country.name_uz, title="Davlatlar", parameter_name="country"
@@ -168,8 +172,12 @@ class UniversityAdmin(ModelView, model=University):
         University.website,
         University.logo_url,
         University.timezone,
+        University.ranking,
     ]
     form_args = {
+        "ranking": {
+            "description": "QS World University Rankings'dagi o'rni. Reytingda bo'lmasa bo'sh qoldiring."
+        },
         "logo_url": {
             "description": (
                 "Bo'sh qoldiring — logotip rasmiy sayt domenidan avtomatik olinadi. "
@@ -184,11 +192,15 @@ class UniversityAdmin(ModelView, model=University):
         website="Veb-sayt",
         logo_url="Logotip havolasi",
         timezone="Vaqt zonasi",
+        ranking="Reyting (QS)",
         programs="Dasturlar",
     )
     # Nom sehrgarga olib boradi: universitetni dasturlari bilan birga
     # tahrirlashning yagona joyi o'sha.
-    column_formatters = {University.name: format_university_wizard_link}
+    column_formatters = {
+        University.name: format_university_wizard_link,
+        University.ranking: format_ranking,
+    }
     # Dasturlar ro'yxati faqat tafsilot sahifasida — ro'yxatda to'liq nomlar
     # ustunga sig'maydi va jadvalni o'qib bo'lmay qoladi.
     column_formatters_detail = {University.programs: format_program_labels}
@@ -198,6 +210,10 @@ class ProgramAdmin(ModelView, model=Program):
     name = "Dastur"
     name_plural = "Dasturlar"
     icon = "fa-solid fa-graduation-cap"
+
+    # Tahrirlash universitet sehrgarida (dastur nomi o'sha yerga olib boradi):
+    # oddiy forma til sertifikati, xarajat va muddatlarni tahrirlay olmaydi.
+    can_edit = False
 
     column_list = [
         Program.id,
@@ -221,8 +237,14 @@ class ProgramAdmin(ModelView, model=Program):
         Program.intake_term,
         Program.notes,
         Program.requirement,
+        Program.requirements_text,
         Program.cost,
+        Program.has_application_fee,
+        Program.application_fee_amount,
+        Program.application_fee_currency,
         Program.deadlines,
+        Program.has_scholarship,
+        Program.scholarship_url,
         Program.scholarships,
         Program.source_url,
         Program.verified_at,
@@ -247,11 +269,18 @@ class ProgramAdmin(ModelView, model=Program):
         Program.notes,
         Program.notes_ru,
         Program.notes_en,
+        Program.requirements_text,
+        Program.has_application_fee,
+        Program.application_fee_amount,
+        Program.application_fee_currency,
+        Program.has_scholarship,
+        Program.scholarship_url,
         Program.source_url,
         Program.verified_at,
         Program.verified_by,
     ]
     form_args = {
+        "requirements_text": {"description": "Har qatorga bittadan talab."},
         "abbreviation": {"description": "Diplom qisqartmasi: MBA, LLM, B.Sc., M.Eng."},
         "notes": {"description": "Asosiy til. Tarjimalar bo'sh bo'lsa Mini App shuni ko'rsatadi."},
         "notes_ru": {"description": "Bo'sh qoldirilsa o'zbekchasi ko'rsatiladi."},
@@ -270,18 +299,27 @@ class ProgramAdmin(ModelView, model=Program):
         notes_ru="Izoh (ruscha)",
         notes_en="Izoh (inglizcha)",
         missing_fields="To'ldirilmagan maydonlar",
-        requirement="Talablar",
+        requirement="Til sertifikati / GRE",
+        requirements_text="Qo'shimcha talablar",
         cost="Xarajat",
+        has_application_fee="Ariza to'lovi",
+        application_fee_amount="Ariza to'lovi summasi",
+        application_fee_currency="Ariza to'lovi valyutasi",
         deadlines="Muddatlar",
+        has_scholarship="Dastur stipendiyasi",
+        scholarship_url="Stipendiya havolasi",
         scholarships="Grantlar",
     )
     column_formatters = {
+        Program.name: format_program_wizard_link,
         Program.verified_at: format_verified_at,
         Program.degree_level: enum_label(_DEGREE_LABELS),
     }
     column_formatters_detail = {
         Program.verified_at: format_verified_at,
         Program.degree_level: enum_label(_DEGREE_LABELS),
+        Program.has_application_fee: format_bool,
+        Program.has_scholarship: format_bool,
     }
 
 

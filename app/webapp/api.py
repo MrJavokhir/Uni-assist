@@ -306,6 +306,7 @@ async def get_program(
         university=program.university.name,
         university_website=program.university.website,
         university_logo=_logo_url(program.university),
+        university_ranking=program.university.ranking,
         city=program.university.city,
         country=_country_out(program.university.country),
         degree_level=program.degree_level.value,
@@ -318,10 +319,18 @@ async def get_program(
         required_documents=list(program.required_documents or []),
         has_scholarship=program.has_scholarship,
         scholarship_url=program.scholarship_url,
+        has_application_fee=program.has_application_fee,
+        application_fee_amount=(
+            float(program.application_fee_amount)
+            if program.application_fee_amount is not None
+            else None
+        ),
+        application_fee_currency=program.application_fee_currency,
+        requirements=[
+            line.strip() for line in (program.requirements_text or "").splitlines() if line.strip()
+        ],
         requirement=(
             ProgramRequirementOut(
-                gpa_min=float(requirement.gpa_min) if requirement.gpa_min is not None else None,
-                gpa_scale=requirement.gpa_scale.value if requirement.gpa_scale else None,
                 ielts_min=float(requirement.ielts_min)
                 if requirement.ielts_min is not None
                 else None,
@@ -329,7 +338,6 @@ async def get_program(
                 gre_required=requirement.gre_required,
                 gre_min=requirement.gre_min,
                 prereq_major=requirement.prereq_major,
-                age_limit=requirement.age_limit,
             )
             if requirement
             else None
@@ -338,12 +346,6 @@ async def get_program(
             ProgramCostOut(
                 tuition_amount=float(cost.tuition_amount),
                 currency=cost.currency,
-                visa_proof_amount=float(cost.visa_proof_amount)
-                if cost.visa_proof_amount is not None
-                else None,
-                living_cost_monthly=float(cost.living_cost_monthly)
-                if cost.living_cost_monthly is not None
-                else None,
                 last_checked=cost.last_checked.isoformat(),
             )
             if cost
@@ -492,6 +494,8 @@ async def get_matches(
                 ielts_min=float(program.requirement.ielts_min)
                 if program.requirement and program.requirement.ielts_min is not None
                 else None,
+                toefl_min=program.requirement.toefl_min if program.requirement else None,
+                university_ranking=program.university.ranking,
             )
         )
     return output

@@ -14,19 +14,26 @@ Telegram bot birga. Sabab `docker-entrypoint-combined.sh` boshida yozilgan.
 Har `master`ga push GitHub orqali avtomatik build va deploy'ni boshlaydi.
 Migratsiyalar (`alembic upgrade head`) konteyner ishga tushganda o'zi bajariladi.
 
-## Katalogni to'ldirish (seed)
+## Katalogni to'ldirish
 
-Seed skriptlari **avtomatik ishlamaydi** — kodni push qilish yetarli emas.
-Railway Postgres'i tashqaridan ochiq bo'lmagani uchun yo'l shunday:
+Katalog (davlatlar, universitetlar, dasturlar, stipendiyalar) **faqat admin
+panel orqali** boshqariladi — kodda katalog ma'lumoti yo'q va deploy uni hech
+qachon o'zgartirmaydi. Ilgari bu ish `RUN_SEEDS=1` seed skriptlari bilan
+qilinardi; ular adminkada qilingan tahrirlarni ustidan yozib, admin o'chirgan
+dasturlarni qaytarib keltirgani uchun olib tashlandi (git tarixida bor).
 
-1. Railway → Variables → `RUN_SEEDS=1`
-2. Deploy tugashini kuting, log'da tekshiring:
-   `✓ seed_scholarships`, `✓ seed_top_destinations`, `✓ seed_llm_programs`,
-   `✓ seed_law_bachelor_programs`
-3. `RUN_SEEDS=0` ga qaytaring
+Yo'llar:
 
-Skriptlar idempotent — tasodifan yoqilgan holda qolsa ham dublikat yaratmaydi.
-Bittasi yiqilsa ham servis baribir ishga tushadi (faqat log'da `✗` yoziladi).
+- **Bittalab:** "Universitet qo'shish" sehrgari (universitet + dasturlari),
+  "Grant qo'shish" sehrgari, "Yo'nalishlar" bo'limi.
+- **Ommaviy:** "CSV import" sahifasi — davlatlar, universitetlar, dasturlar.
+  Shablon CSV shu sahifadan yuklab olinadi. Import avval oldindan ko'rish
+  beradi (bazaga hech narsa yozilmaydi), "Tasdiqlash"dan keyin bitta
+  tranzaksiyada saqlaydi. Bo'sh katak mavjud qiymatni **o'zgartirmaydi**.
+- **Zaxira:** o'sha sahifadagi "Eksport CSV" — xuddi shu formatda, ya'ni
+  eksport qilingan fayllarni bo'sh bazaga qayta import qilish mumkin.
+
+Railway'da `RUN_SEEDS` o'zgaruvchisi qolgan bo'lsa, u endi hech narsa qilmaydi.
 
 ## ⚠️ CLI'dan `railway redeploy` QILMANG
 

@@ -468,3 +468,12 @@ body {
   display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px;
   font-size: 0.8rem; color: #8b8fa3;
 }
+
+/* Ariza hujjatlari katakchalari */
+.ua-docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 2px 16px;
+  margin-bottom: 4px;
+}
+.ua-doc { margin-bottom: 0; }

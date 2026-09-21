@@ -228,14 +228,24 @@
       </div>
     </div>
 
-    {# ---- Talablar ---- #}
-    <div class="ua-sub-title">Talablar</div>
-    <div class="row g-2">
+    {# ---- Talablar va ariza hujjatlari — Mini App'da bitta bo'lim ---- #}
+    <div class="ua-sub-title">Talablar va hujjatlar</div>
+    <label class="form-label">Ariza uchun hujjatlar</label>
+    <div class="ua-docs">
+      {% for key, label in documents.items() %}
+      <label class="form-check ua-doc">
+        <input class="form-check-input" type="checkbox" name="p__i___doc_{{ key }}">
+        <span class="form-check-label">{{ label }}</span>
+      </label>
+      {% endfor %}
+      <input type="hidden" name="p__i___docs_extra">
+    </div>
+    <div class="row g-2 mt-1">
       <div class="col-md-9">
         <label class="form-label">Qo'shimcha talablar</label>
         <textarea name="p__i___requirements" class="form-control" rows="3"
                   placeholder="Har qatorga bittadan, masalan:&#10;Huquq bo'yicha bakalavr diplomi&#10;2 ta tavsiyanoma"></textarea>
-        <small class="form-hint">Har bir talab alohida qatorda — Mini App ularni ro'yxat qilib ko'rsatadi.</small>
+        <small class="form-hint">Ro'yxatda yo'q talab yoki hujjat — har biri alohida qatorda. Mini App belgilangan hujjatlar bilan birga bitta ro'yxat qilib ko'rsatadi.</small>
       </div>
       <div class="col-md-3">
         <label class="form-label d-block">GRE</label>

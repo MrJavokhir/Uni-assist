@@ -53,6 +53,23 @@ INSTRUCTION_LANGUAGES: dict[str, str] = {
 }
 
 
+# Ariza uchun hujjatlar — bazada KALIT saqlanadi (Program.required_documents),
+# Mini App uni foydalanuvchi tilida yozadi (app.js: "document.<kalit>").
+# Qiymat -> admin panelda ko'rinadigan o'zbekcha nom. Yangi kalit qo'shilsa,
+# app.js'ga uch tildagi tarjimasi ham qo'shilishi SHART.
+REQUIRED_DOCUMENTS: dict[str, str] = {
+    "transcript": "Baholar varaqasi (transcript)",
+    "degree_certificate": "Diplom nusxasi",
+    "translation": "Hujjatlarning rasmiy tarjimasi",
+    "personal_statement": "Motivatsion xat",
+    "reference": "Tavsiyanoma",
+    "english_test": "Ingliz tili sertifikati",
+    "cv": "CV",
+    "passport": "Pasport nusxasi",
+    "research_proposal": "Tadqiqot rejasi",
+}
+
+
 # Shared Enum instance'lar — bir nechta jadvalda bir xil Postgres enum turidan
 # foydalanish uchun (masalan Program va Scholarship deadline'lari, yoki
 # User va Program'dagi degree_level/gpa_scale) — DDL ikki marta yaratilmasin uchun bitta joyda e'lon qilinadi.

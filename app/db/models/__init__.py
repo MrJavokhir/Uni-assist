@@ -4,6 +4,7 @@ from app.db.models.country import Country
 from app.db.models.field import Field
 from app.db.models.program import (
     INSTRUCTION_LANGUAGES,
+    REQUIRED_DOCUMENTS,
     Deadline,
     DeadlineType,
     DegreeLevel,
@@ -37,6 +38,7 @@ from app.db.models.user import (
 
 __all__ = [
     "INSTRUCTION_LANGUAGES",
+    "REQUIRED_DOCUMENTS",
     "Base",
     "Country",
     "CoverageType",

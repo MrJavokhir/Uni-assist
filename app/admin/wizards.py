@@ -28,6 +28,7 @@ from starlette.responses import RedirectResponse
 from app.admin.auth import current_admin
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
+    REQUIRED_DOCUMENTS,
     Country,
     CoverageType,
     Deadline,
@@ -124,6 +125,28 @@ def _tristate(form: FormData, key: str) -> bool | None:
     if value == "no":
         return False
     return None
+
+
+def _documents_out(documents: list | None) -> dict[str, Any]:
+    """Hujjatlar ro'yxati -> forma katakchalari (`doc_<kalit>`).
+
+    Ro'yxatda yo'q (noma'lum) kalitlar yashirin `docs_extra` maydonida
+    saqlanadi — sehrgar ularni jimgina o'chirib yubormasin.
+    """
+    documents = documents or []
+    extra = [key for key in documents if key not in REQUIRED_DOCUMENTS]
+    return {
+        **{f"doc_{key}": key in documents for key in REQUIRED_DOCUMENTS},
+        "docs_extra": ",".join(extra),
+    }
+
+
+def _documents_in(form: FormData, index: int) -> list[str] | None:
+    """Belgilangan katakchalar (+ noma'lum eski kalitlar) -> hujjatlar ro'yxati."""
+    documents = [key for key in REQUIRED_DOCUMENTS if _checked(form, f"p{index}_doc_{key}")]
+    extra = (form.get(f"p{index}_docs_extra") or "").split(",")
+    documents += [key.strip() for key in extra if key.strip()]
+    return documents or None
 
 
 def _tristate_out(value: bool | None) -> str:
@@ -227,6 +250,7 @@ class UniversityWizard(BaseView):
                 "focus_program_id": focus_program_id,
                 "editing": editing,
                 "languages": INSTRUCTION_LANGUAGES,
+                "documents": REQUIRED_DOCUMENTS,
                 "admin_username": current_admin(request),
                 "errors": errors,
                 "university_errors": university_errors,
@@ -322,6 +346,9 @@ class UniversityWizard(BaseView):
                 continue
             program: dict[str, Any] = {key: form.get(f"p{index}_{key}") or "" for key in keys}
             program["gre_required"] = _checked(form, f"p{index}_gre_required")
+            for key in REQUIRED_DOCUMENTS:
+                program[f"doc_{key}"] = _checked(form, f"p{index}_doc_{key}")
+            program["docs_extra"] = form.get(f"p{index}_docs_extra") or ""
             program["_errors"] = program_errors.get(index, {})
             programs.append(program)
 
@@ -408,6 +435,7 @@ class UniversityWizard(BaseView):
                     "toefl": _as_str(requirement.toefl_min) if requirement else "",
                     "gre_required": bool(requirement and requirement.gre_required),
                     "requirements": program.requirements_text or "",
+                    **_documents_out(program.required_documents),
                     "tuition": _as_str(cost.tuition_amount) if cost else "",
                     "currency": cost.currency if cost else "USD",
                     "fee": _tristate_out(program.has_application_fee),
@@ -526,6 +554,7 @@ class UniversityWizard(BaseView):
             program.notes_ru = _text(form, f"p{index}_notes_ru")
             program.notes_en = _text(form, f"p{index}_notes_en")
             program.requirements_text = _multiline(form, f"p{index}_requirements")
+            program.required_documents = _documents_in(form, index)
             program.has_application_fee = _tristate(form, f"p{index}_fee")
             # Summa faqat "Bor" tanlanganda ma'noli — "Yo'q"da eski raqam
             # qolib ketib, Mini App'da chalkashlik bermasin.

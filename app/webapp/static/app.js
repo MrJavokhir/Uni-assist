@@ -12,7 +12,7 @@ if (tg) {
 const INIT_DATA = (tg && tg.initData) || "";
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 26;
+const ASSET_V = 27;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -211,6 +211,7 @@ const I18N = {
     "program.intake": "Qabul davri",
     "program.years": "yil",
     "program.requirements": "Talablar",
+    "program.requirements_docs": "Talablar va hujjatlar",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "Jahon reytingi (QS)",
     "program.language_certs": "Til sertifikati",
@@ -234,7 +235,6 @@ const I18N = {
     "program.no_deadlines": "Muddatlar kiritilmagan.",
     "program.official_page": "Dastur sahifasiga o'tish",
     "program.verified_at": "Ma'lumot {date} sanasida tekshirilgan.",
-    "program.documents": "Ariza uchun hujjatlar",
     "program.own_scholarship": "Dastur stipendiyasi",
     "program.scholarship_yes": "Bu dastur uchun stipendiya mavjud",
     "program.scholarship_no": "Bu dastur uchun alohida stipendiya yo'q",
@@ -399,6 +399,7 @@ const I18N = {
     "program.intake": "Период набора",
     "program.years": "г.",
     "program.requirements": "Требования",
+    "program.requirements_docs": "Требования и документы",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "Мировой рейтинг (QS)",
     "program.language_certs": "Языковой сертификат",
@@ -422,7 +423,6 @@ const I18N = {
     "program.no_deadlines": "Сроки не указаны.",
     "program.official_page": "Открыть страницу программы",
     "program.verified_at": "Данные проверены {date}.",
-    "program.documents": "Документы для заявки",
     "program.own_scholarship": "Стипендия программы",
     "program.scholarship_yes": "Для этой программы есть стипендия",
     "program.scholarship_no": "Отдельной стипендии для этой программы нет",
@@ -587,6 +587,7 @@ const I18N = {
     "program.intake": "Intake",
     "program.years": "yr",
     "program.requirements": "Requirements",
+    "program.requirements_docs": "Requirements & documents",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "World ranking (QS)",
     "program.language_certs": "Language certificate",
@@ -610,7 +611,6 @@ const I18N = {
     "program.no_deadlines": "No deadlines recorded.",
     "program.official_page": "Open program page",
     "program.verified_at": "Data verified on {date}.",
-    "program.documents": "Application documents",
     "program.own_scholarship": "Programme scholarship",
     "program.scholarship_yes": "A scholarship is available for this programme",
     "program.scholarship_no": "No dedicated scholarship for this programme",
@@ -801,7 +801,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=26" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=27" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -1273,8 +1273,14 @@ async function openProgramSheet(programId) {
     ? certRows + (bothCerts ? `<div class="sheet-note">${t("program.certs_either")}</div>` : "")
     : `<div class="sheet-empty">${t("program.no_language_req")}</div>`;
 
-  const extraRequirements = (p.requirements || []).length
-    ? `<ul class="doc-list">${p.requirements
+  // Ariza hujjatlari (kalitlar, foydalanuvchi tilida) va admin yozgan
+  // qo'shimcha talablar — bitta ro'yxat: ikkalasi ham "arizaga nima kerak".
+  const checklist = [
+    ...(p.required_documents || []).map((d) => t("document." + d)),
+    ...(p.requirements || []),
+  ];
+  const extraRequirements = checklist.length
+    ? `<ul class="doc-list">${checklist
         .map((r) => `<li>${icon("check")}${escapeHtml(r)}</li>`)
         .join("")}</ul>`
     : "";
@@ -1373,27 +1379,14 @@ async function openProgramSheet(programId) {
     </div>
 
     <div class="sheet-section">
-      <div class="sheet-section-title">${t("program.requirements")}</div>
-      ${requirements}
-    </div>
-
-    <div class="sheet-section">
       <div class="sheet-section-title">${t("program.costs")}</div>
       ${costs}
     </div>
 
-    ${
-      p.required_documents && p.required_documents.length
-        ? `<div class="sheet-section">
-             <div class="sheet-section-title">${t("program.documents")}</div>
-             <ul class="doc-list">
-               ${p.required_documents
-                 .map((d) => `<li>${icon("check")}${escapeHtml(t("document." + d))}</li>`)
-                 .join("")}
-             </ul>
-           </div>`
-        : ""
-    }
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("program.requirements_docs")}</div>
+      ${requirements}
+    </div>
 
     ${
       p.has_scholarship === null || p.has_scholarship === undefined

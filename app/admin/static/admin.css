@@ -436,3 +436,10 @@ body {
   border-color: var(--ua-accent);
   box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.18);
 }
+
+/* Saqlanmagan forma: xatoli dastur bloki */
+.ua-program-error {
+  border-color: #d63939;
+  box-shadow: 0 0 0 3px rgba(214, 57, 57, 0.15);
+}
+.ua-legacy { color: #b35c00; }

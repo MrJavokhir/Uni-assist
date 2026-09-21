@@ -1,8 +1,20 @@
 {% extends "sqladmin/layout.html" %}
 
 {% block content %}
+{# Universitet maydoni xatosi: qizil ramka + xabar (wizards.py `_validate`). #}
+{% macro invalid(name) %}{% if university_errors.get(name) %} is-invalid{% endif %}{% endmacro %}
+{% macro feedback(name) %}{% if university_errors.get(name) %}<div class="invalid-feedback d-block">{{ university_errors[name] }}</div>{% endif %}{% endmacro %}
 <div class="col-12">
 <div class="ua-page">
+
+  {% if errors %}
+  <div class="alert alert-danger ua-errors">
+    <strong>Saqlanmadi — quyidagilarni to'g'rilang:</strong>
+    <ul class="mb-0 mt-1">
+      {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
 
   {% if editing %}
   <div class="alert alert-info ua-edit-banner">
@@ -24,26 +36,28 @@
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label required">Davlat</label>
-            <select name="country_id" class="form-select" required>
+            <select name="country_id" class="form-select{{ invalid('country_id') }}" required>
               <option value="">— tanlang —</option>
               {% for country in countries %}
               <option value="{{ country.id }}"
                 {% if prefill and prefill.country_id == country.id %}selected{% endif %}>{{ country.name_uz }}</option>
               {% endfor %}
             </select>
+            {{ feedback('country_id') }}
             <small class="form-hint">Ro'yxatda yo'q davlat kerak bo'lsa, dasturchiga ayting — u seed orqali qo'shiladi.</small>
           </div>
           <div class="col-md-8">
             <label class="form-label required">Universitet nomi</label>
-            <input type="text" name="university_name" class="form-control" required
+            <input type="text" name="university_name" class="form-control{{ invalid('university_name') }}" required
                    value="{{ prefill.university_name if prefill else '' }}"
                    placeholder="masalan: Boğaziçi University">
             <small class="form-hint">Xuddi shu nomli universitet bo'lsa, u yangilanadi (dublikat yaratilmaydi).</small>
           </div>
           <div class="col-md-4">
-            <label class="form-label">Shahar</label>
-            <input type="text" name="city" class="form-control" placeholder="Istanbul"
+            <label class="form-label required">Shahar</label>
+            <input type="text" name="city" class="form-control{{ invalid('city') }}" placeholder="Istanbul" required
                    value="{{ prefill.city if prefill else '' }}">
+            {{ feedback('city') }}
           </div>
           <div class="col-md-5">
             <label class="form-label">Rasmiy sayt</label>
@@ -69,15 +83,16 @@
             </small>
           </div>
           <div class="col-md-3">
-            <label class="form-label">Vaqt zonasi</label>
-            <input type="text" name="timezone" class="form-control"
+            <label class="form-label required">Vaqt zonasi</label>
+            <input type="text" name="timezone" class="form-control{{ invalid('timezone') }}" required
                    value="{{ prefill.timezone if prefill else 'UTC' }}" placeholder="Europe/Istanbul">
+            {{ feedback('timezone') }}
           </div>
           <div class="col-md-3">
             <label class="form-label">Jahon reytingi (QS)</label>
             <div class="input-group">
               <span class="input-group-text">#</span>
-              <input type="number" name="ranking" class="form-control" min="1" step="1"
+              <input type="number" name="ranking" class="form-control{{ invalid('ranking') }}" min="1" step="1"
                      value="{{ prefill.ranking if prefill else '' }}" placeholder="masalan 45">
             </div>
             <small class="form-hint">QS World University Rankings'dagi o'rni. Reytingda bo'lmasa bo'sh qoldiring.</small>
@@ -111,7 +126,8 @@
         <div class="row g-3 align-items-end">
           <div class="col-md-4">
             <label class="form-label">Kim tekshirdi</label>
-            <input type="text" name="verified_by" class="form-control" value="admin">
+            <input type="text" name="verified_by" class="form-control"
+                   value="{{ (prefill.verified_by if prefill and prefill.verified_by) or admin_username or 'admin' }}">
             <small class="form-hint">Har bir dastur shu nom bilan "tekshirilgan" deb belgilanadi.</small>
           </div>
           <div class="col-md-8 text-end">
@@ -152,40 +168,41 @@
         </select>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Yo'nalish sohasi</label>
-        <select name="p__i___field" class="form-select">
+        <label class="form-label required">Yo'nalish</label>
+        <select name="p__i___field" class="form-select" required>
           <option value="">— tanlang —</option>
           {% for field in fields %}
           <option value="{{ field.id }}">{{ field.name_uz }}</option>
           {% endfor %}
         </select>
+        <input type="hidden" name="p__i___legacy_field">
+        <small class="form-hint ua-legacy" data-legacy="field" hidden></small>
       </div>
 
       <div class="col-md-3">
-        <label class="form-label">O'qitish tili</label>
-        {# Kanonik inglizcha nom saqlanadi — Mini App uni foydalanuvchi
-           tiliga o'zi o'giradi (LANGUAGE_NAMES). #}
-        <select name="p__i___language" class="form-select">
-          <option value="English">Ingliz tili</option>
-          <option value="Russian">Rus tili</option>
-          <option value="German">Nemis tili</option>
-          <option value="Italian">Italyan tili</option>
-          <option value="Czech">Chex tili</option>
-          <option value="Polish">Polyak tili</option>
-          <option value="Turkish">Turk tili</option>
+        <label class="form-label required">O'qitish tili</label>
+        {# Kanonik inglizcha nom saqlanadi (INSTRUCTION_LANGUAGES) — Mini App
+           uni foydalanuvchi tiliga o'zi o'giradi (app.js: LANGUAGE_NAMES). #}
+        <select name="p__i___language" class="form-select" required>
+          <option value="">— tanlang —</option>
+          {% for value, label in languages.items() %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
         </select>
+        <input type="hidden" name="p__i___legacy_language">
+        <small class="form-hint ua-legacy" data-legacy="language" hidden></small>
       </div>
       <div class="col-md-2">
-        <label class="form-label">Davomiyligi (yil)</label>
-        <input type="number" step="0.5" name="p__i___duration" class="form-control" value="4">
+        <label class="form-label required">Davomiyligi (yil)</label>
+        <input type="number" step="0.5" min="0.5" name="p__i___duration" class="form-control" required>
       </div>
       <div class="col-md-3">
-        <label class="form-label">Qabul davri</label>
-        <input type="text" name="p__i___intake" class="form-control" placeholder="2026 Fall">
+        <label class="form-label required">Qabul davri</label>
+        <input type="text" name="p__i___intake" class="form-control" placeholder="2026 Fall" required>
       </div>
       <div class="col-md-4">
-        <label class="form-label">Manba havolasi</label>
-        <input type="url" name="p__i___source_url" class="form-control" placeholder="dastur sahifasi">
+        <label class="form-label required">Manba havolasi</label>
+        <input type="url" name="p__i___source_url" class="form-control" placeholder="dastur sahifasi" required>
       </div>
     </div>
 
@@ -345,6 +362,32 @@
       block.querySelector(".ua-cert-empty").hidden = shown > 0;
     }
 
+    // Eski (ma'lumotnomaga mos kelmagan) qiymat: tanlov bo'sh turadi, admin
+    // qaysi qiymat bo'lganini ko'rib, ro'yxatdan to'g'risini tanlaydi.
+    function showLegacy(block, data) {
+      block.querySelectorAll(".ua-legacy").forEach(function (hint) {
+        const value = data["legacy_" + hint.dataset.legacy];
+        if (!value) return;
+        hint.hidden = false;
+        hint.textContent = "Eski qiymat: " + value + " — ro'yxatdan tanlang";
+      });
+    }
+
+    // Server tekshiruvi xatolari (`_errors`: {kalit: xabar}) maydon ostida.
+    function showErrors(block, errors) {
+      const i = block.dataset.index;
+      Object.entries(errors).forEach(function ([key, message]) {
+        const field = block.querySelector('[name="p' + i + "_" + key + '"]');
+        if (!field) return;
+        field.classList.add("is-invalid");
+        const note = document.createElement("div");
+        note.className = "invalid-feedback d-block";
+        note.textContent = message;
+        field.insertAdjacentElement("afterend", note);
+      });
+      if (Object.keys(errors).length) block.classList.add("ua-program-error");
+    }
+
     // "Bor" tanlanganda summa/havola maydonlari ochiladi.
     function syncToggles(block) {
       block.querySelectorAll(".ua-toggle-group").forEach(function (group) {
@@ -364,6 +407,8 @@
       if (data) {
         fill(block, data);
         if (data._pid) block.dataset.programId = data._pid;
+        showLegacy(block, data);
+        showErrors(block, data._errors || {});
         if (data.notes || data.notes_ru || data.notes_en) block.querySelector(".ua-notes").open = true;
       }
       syncCerts(block);
@@ -436,6 +481,10 @@
 
     if (existing.length) existing.forEach(addProgram);
     else addProgram(null); // yangi kiritishda birinchi blok darhol ochiq turadi
+
+    // Xato bo'lsa — birinchi xatoli blokka aylantiramiz.
+    const firstError = list.querySelector(".ua-program-error");
+    if (firstError) firstError.scrollIntoView({ block: "center" });
 
     // "Dasturlar" bo'limidan kelingan bo'lsa — o'sha dasturga aylantiramiz.
     if (focusProgramId) {

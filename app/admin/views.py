@@ -1,8 +1,10 @@
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
 from starlette.requests import Request
+from wtforms import SelectField
+from wtforms.validators import InputRequired
 
-from app.admin.filters import DistinctValuesFilter, RelationshipFilter
+from app.admin.filters import DistinctValuesFilter, IsNullFilter, RelationshipFilter
 from app.admin.formatters import (
     enum_label,
     format_bool,
@@ -13,6 +15,7 @@ from app.admin.formatters import (
     format_verified_at,
 )
 from app.db.models import (
+    INSTRUCTION_LANGUAGES,
     Country,
     CoverageType,
     DeadlineType,
@@ -293,6 +296,16 @@ class ProgramAdmin(ModelView, model=Program):
     column_filters = [
         DistinctValuesFilter(Program.name, title="Dasturlar"),
         StaticValuesFilter(Program.degree_level, values=_choices(_DEGREE_LABELS), title="Daraja"),
+        # Migratsiyada ma'lumotnomaga mos kelmagan dasturlar — admin qo'lda
+        # yo'nalish biriktiradi (eski qiymat tafsilotda ko'rinadi).
+        IsNullFilter(
+            Program.field_id,
+            title="Yo'nalish",
+            label="Yo'nalishi yo'q",
+            parameter_name="no_field",
+        ),
+        # "seed-unverified" dasturlarni topib, qo'lda tekshirish/o'chirish uchun.
+        DistinctValuesFilter(Program.verified_by, title="Kim tekshirgan"),
     ]
     form_columns = [
         Program.university,
@@ -316,7 +329,15 @@ class ProgramAdmin(ModelView, model=Program):
         Program.verified_at,
         Program.verified_by,
     ]
+    # Yo'nalish va til — faqat ro'yxatdan, majburiy (erkin matn katalogni
+    # parchalab yuborardi).
+    form_overrides = {"language_of_instruction": SelectField}
     form_args = {
+        "field": {"validators": [InputRequired(message="Yo'nalishni tanlang")]},
+        "language_of_instruction": {
+            "choices": [("", "— tanlang —"), *INSTRUCTION_LANGUAGES.items()],
+            "validators": [InputRequired(message="O'qitish tilini tanlang")],
+        },
         "requirements_text": {"description": "Har qatorga bittadan talab."},
         "abbreviation": {"description": "Diplom qisqartmasi: MBA, LLM, B.Sc., M.Eng."},
         "notes": {"description": "Asosiy til. Tarjimalar bo'sh bo'lsa Mini App shuni ko'rsatadi."},

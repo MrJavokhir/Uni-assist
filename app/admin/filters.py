@@ -104,3 +104,33 @@ class DistinctValuesFilter:
         if value is None or value == "" or value == ALL_VALUE:
             return query
         return query.filter(self.column == value)
+
+
+class IsNullFilter:
+    """Ustuni bo'sh (NULL) yozuvlarni ajratib ko'rsatadi.
+
+    Masalan "Yo'nalishi yo'q" — migratsiyada ma'lumotnomaga mos kelmagan
+    dasturlarni topib, qo'lda yo'nalish biriktirish uchun.
+    """
+
+    has_operator = False
+    template = "sqladmin/filters/lookup_filter.html"
+
+    def __init__(self, column: Any, title: str, label: str, parameter_name: str) -> None:
+        self.column = column
+        self.title = title
+        self.label = label
+        self.parameter_name = parameter_name
+
+    async def lookups(
+        self,
+        request: Request,
+        model: Any,
+        run_query: Callable[[Select], Any],
+    ) -> list[tuple[str, str]]:
+        return [(ALL_VALUE, "Barchasi"), ("yes", self.label)]
+
+    async def get_filtered_query(self, query: Select, value: Any, model: Any) -> Select:
+        if value == "yes":
+            return query.filter(self.column.is_(None))
+        return query

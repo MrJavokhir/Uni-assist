@@ -15,6 +15,7 @@ Mavjud CRUD bo'limlari saqlanadi — ular tahrirlash va nozik tuzatishlar uchun.
 
 from datetime import UTC, date, datetime
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqladmin import BaseView, expose
 from sqladmin.flash import Flash
@@ -25,6 +26,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from app.db.models import (
+    INSTRUCTION_LANGUAGES,
     Country,
     CoverageType,
     Deadline,
@@ -158,29 +160,37 @@ class UniversityWizard(BaseView):
         focus_program_id = request.query_params.get("program_id")
         focus_program_id = int(focus_program_id) if (focus_program_id or "").isdigit() else None
 
+        errors: list[str] = []
+        university_errors: dict[str, str] = {}
+        prefill: dict[str, Any] | None = None
+
         async with async_session_factory() as session:
             if request.method == "POST":
                 form = await request.form()
-                try:
-                    created = await self._save(session, form)
-                    await session.commit()
-                except Exception as exc:  # noqa: BLE001 — xabarni foydalanuvchiga ko'rsatamiz
-                    await session.rollback()
-                    Flash.error(request, f"Saqlashda xatolik: {exc}")
-                else:
-                    message = (
-                        f"'{created['university']}' saqlandi — {created['programs']} ta dastur "
-                        f"({created['new_programs']} tasi yangi), {created['requirements']} ta talab, "
-                        f"{created['costs']} ta xarajat, {created['deadlines']} ta muddat."
-                    )
-                    if created.get("removed_programs"):
-                        message += f" {created['removed_programs']} ta dastur o'chirildi."
-                    Flash.success(request, message)
-                    # Saqlagandan keyin ham tahrirlash rejimida qolamiz, shunda
-                    # admin darhol yana dastur qo'sha oladi.
-                    return RedirectResponse(
-                        f"{request.url.path}?university_id={created['id']}", status_code=303
-                    )
+                university_errors, program_errors = await self._validate(session, form)
+                if not university_errors and not program_errors:
+                    try:
+                        created = await self._save(session, form)
+                        await session.commit()
+                    except Exception as exc:  # noqa: BLE001 — xabarni foydalanuvchiga ko'rsatamiz
+                        await session.rollback()
+                        errors = [f"Saqlashda xatolik: {exc}"]
+                    else:
+                        Flash.success(request, self._success_message(created))
+                        # Saqlagandan keyin ham tahrirlash rejimida qolamiz, shunda
+                        # admin darhol yana dastur qo'sha oladi.
+                        return RedirectResponse(
+                            f"{request.url.path}?university_id={created['id']}", status_code=303
+                        )
+
+                # Hech narsa saqlanmadi — forma admin kiritgan qiymatlar bilan
+                # qayta ochiladi (bazadagi eski holat bilan emas).
+                prefill = self._prefill_from_form(form, program_errors)
+                errors = errors or list(university_errors.values()) + [
+                    f"Dastur #{position} ({program['name']}): {message}"
+                    for position, program in enumerate(prefill["programs"], start=1)
+                    for message in program["_errors"].values()
+                ]
 
             countries = (
                 (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
@@ -190,9 +200,10 @@ class UniversityWizard(BaseView):
                 .scalars()
                 .all()
             )
-            prefill = await self._load(session, university_id) if university_id else None
+            if prefill is None and university_id:
+                prefill = await self._load(session, university_id)
 
-        editing = prefill is not None
+        editing = bool(prefill and prefill.get("id"))
         return await self.templates.TemplateResponse(
             request,
             "wizard_university.html",
@@ -214,11 +225,127 @@ class UniversityWizard(BaseView):
                 "prefill": prefill,
                 "focus_program_id": focus_program_id,
                 "editing": editing,
+                "languages": INSTRUCTION_LANGUAGES,
+                "errors": errors,
+                "university_errors": university_errors,
                 # "Yangi universitet qo'shish" havolasi uchun — sehrgarning
                 # o'z manzili, query'siz.
                 "wizard_path": request.url.path,
             },
         )
+
+    async def _validate(
+        self, session: Any, form: FormData
+    ) -> tuple[dict[str, str], dict[int, dict[str, str]]]:
+        """Formani saqlashdan OLDIN tekshiradi.
+
+        Ilgari bo'sh maydon jimgina to'ldirilardi (yo'nalishga dastur nomi,
+        tilga "Ingliz tili", shaharga "—") — natijada katalog buzilardi.
+        Endi bo'sh majburiy maydon xato beradi va hech narsa saqlanmaydi.
+
+        Qaytaradi: (universitet xatolari {maydon: xabar},
+                    dastur xatolari {forma indeksi: {kalit: xabar}}).
+        """
+        university_errors: dict[str, str] = {}
+
+        country_id = _integer(form, "country_id")
+        if country_id is None or await session.get(Country, country_id) is None:
+            university_errors["country_id"] = "Davlat tanlanmagan"
+        if _text(form, "university_name") is None:
+            university_errors["university_name"] = "Universitet nomi kiritilmagan"
+        if _text(form, "city") is None:
+            university_errors["city"] = "Shahar kiritilmagan"
+
+        timezone = _text(form, "timezone")
+        if timezone is None:
+            university_errors["timezone"] = "Vaqt zonasi kiritilmagan"
+        else:
+            try:
+                ZoneInfo(timezone)
+            except (ZoneInfoNotFoundError, ValueError):
+                university_errors["timezone"] = (
+                    f"Vaqt zonasi noto'g'ri: {timezone!r} (masalan Europe/Berlin)"
+                )
+
+        ranking = _text(form, "ranking")
+        if ranking is not None and (not ranking.isdigit() or int(ranking) < 1):
+            university_errors["ranking"] = "Reyting musbat butun son bo'lishi kerak"
+
+        valid_field_ids = set((await session.execute(select(Field.id))).scalars().all())
+        program_errors: dict[int, dict[str, str]] = {}
+        programs = 0
+        for index in range(MAX_PROGRAMS):
+            if _text(form, f"p{index}_name") is None:
+                continue
+            programs += 1
+            problems: dict[str, str] = {}
+            if _integer(form, f"p{index}_field") not in valid_field_ids:
+                problems["field"] = "yo'nalish tanlanmagan"
+            if _text(form, f"p{index}_language") not in INSTRUCTION_LANGUAGES:
+                problems["language"] = "o'qitish tili tanlanmagan"
+            if _enum(form, f"p{index}_degree", DegreeLevel) is None:
+                problems["degree"] = "daraja tanlanmagan"
+            duration = _number(form, f"p{index}_duration")
+            if duration is None or duration <= 0:
+                problems["duration"] = "davomiylik kiritilmagan"
+            if _text(form, f"p{index}_intake") is None:
+                problems["intake"] = "qabul davri kiritilmagan"
+            if _text(form, f"p{index}_source_url") is None:
+                problems["source_url"] = "manba havolasi kiritilmagan"
+            if problems:
+                program_errors[index] = problems
+
+        if programs == 0:
+            university_errors["programs"] = "Kamida bitta dastur kiritilishi kerak"
+        return university_errors, program_errors
+
+    def _prefill_from_form(
+        self, form: FormData, program_errors: dict[int, dict[str, str]]
+    ) -> dict[str, Any]:
+        """Yuborilgan formani `_load` bilan bir xil ko'rinishga keltiradi.
+
+        Xato bo'lganda forma shu bilan qayta chiziladi — admin kiritgan hech
+        narsa yo'qolmaydi. Bloklar ketma-ket qayta raqamlanadi, xatolar esa
+        har bir blokka `_errors` sifatida biriktiriladi.
+        """
+        keys = (
+            "name", "abbr", "degree", "field", "language", "duration", "intake", "source_url",
+            "ielts", "toefl", "requirements", "tuition", "currency", "fee", "fee_amount",
+            "fee_currency", "scholarship", "scholarship_url", "notes", "notes_ru", "notes_en",
+            "deadline_close", "legacy_field", "legacy_language",
+        )
+        programs = []
+        for index in range(MAX_PROGRAMS):
+            if _text(form, f"p{index}_name") is None:
+                continue
+            program: dict[str, Any] = {key: form.get(f"p{index}_{key}") or "" for key in keys}
+            program["gre_required"] = _checked(form, f"p{index}_gre_required")
+            program["_errors"] = program_errors.get(index, {})
+            programs.append(program)
+
+        return {
+            "id": _integer(form, "university_id"),
+            "country_id": _integer(form, "country_id"),
+            "university_name": form.get("university_name") or "",
+            "city": form.get("city") or "",
+            "website": form.get("website") or "",
+            "logo_url": form.get("logo_url") or "",
+            "timezone": form.get("timezone") or "",
+            "ranking": form.get("ranking") or "",
+            "verified_by": form.get("verified_by") or "",
+            "programs": programs,
+        }
+
+    @staticmethod
+    def _success_message(created: dict[str, Any]) -> str:
+        message = (
+            f"'{created['university']}' saqlandi — {created['programs']} ta dastur "
+            f"({created['new_programs']} tasi yangi), {created['requirements']} ta talab, "
+            f"{created['costs']} ta xarajat, {created['deadlines']} ta muddat."
+        )
+        if created.get("removed_programs"):
+            message += f" {created['removed_programs']} ta dastur o'chirildi."
+        return message
 
     async def _load(self, session: Any, university_id: int) -> dict[str, Any] | None:
         """Universitetni dasturlari bilan formaga tushadigan ko'rinishda o'qiydi."""
@@ -256,7 +383,22 @@ class UniversityWizard(BaseView):
                     "abbr": program.abbreviation or "",
                     "degree": program.degree_level.value,
                     "field": program.field_id or "",
-                    "language": program.language_of_instruction,
+                    # Kanonik bo'lmagan eski qiymat tanlovga tushmaydi — admin
+                    # uni ro'yxatdan qayta tanlaydi, eski qiymat esa maslahat
+                    # sifatida ko'rinadi (`legacy_*`).
+                    "language": (
+                        program.language_of_instruction
+                        if program.language_of_instruction in INSTRUCTION_LANGUAGES
+                        else ""
+                    ),
+                    "legacy_field": (
+                        (program.field_of_study_legacy or "") if program.field_id is None else ""
+                    ),
+                    "legacy_language": (
+                        ""
+                        if program.language_of_instruction in INSTRUCTION_LANGUAGES
+                        else program.language_of_instruction
+                    ),
                     "duration": _as_str(program.duration_years),
                     "intake": program.intake_term,
                     "source_url": program.source_url or "",
@@ -294,13 +436,9 @@ class UniversityWizard(BaseView):
         }
 
     async def _save(self, session: Any, form: FormData) -> dict[str, Any]:
+        # Forma `_validate`dan o'tgan — majburiy maydonlar shu yerda bor.
         country_id = _integer(form, "country_id")
-        if country_id is None:
-            raise ValueError("Davlat tanlanmagan")
-
         university_name = _text(form, "university_name")
-        if university_name is None:
-            raise ValueError("Universitet nomi kiritilmagan")
 
         verified_by = _text(form, "verified_by") or "admin"
         now = datetime.now(UTC)
@@ -321,10 +459,10 @@ class UniversityWizard(BaseView):
         university = existing or University(name=university_name)
         university.name = university_name
         university.country_id = country_id
-        university.city = _text(form, "city") or "—"
+        university.city = _text(form, "city")
         university.website = _text(form, "website")
         university.logo_url = _text(form, "logo_url")
-        university.timezone = _text(form, "timezone") or "UTC"
+        university.timezone = _text(form, "timezone")
         university.ranking = _integer(form, "ranking")
         if existing is None:
             session.add(university)
@@ -359,7 +497,7 @@ class UniversityWizard(BaseView):
             if name is None:
                 continue
 
-            degree = _enum(form, f"p{index}_degree", DegreeLevel) or DegreeLevel.BACHELOR
+            degree = _enum(form, f"p{index}_degree", DegreeLevel)
             program = existing_programs.get((name, degree))
             submitted_keys.add((name, degree))
             counters["programs"] += 1
@@ -379,9 +517,9 @@ class UniversityWizard(BaseView):
 
             program.abbreviation = _text(form, f"p{index}_abbr")
             program.field_id = _integer(form, f"p{index}_field")
-            program.language_of_instruction = _text(form, f"p{index}_language") or "Ingliz tili"
-            program.duration_years = _number(form, f"p{index}_duration") or 4
-            program.intake_term = _text(form, f"p{index}_intake") or "—"
+            program.language_of_instruction = _text(form, f"p{index}_language")
+            program.duration_years = _number(form, f"p{index}_duration")
+            program.intake_term = _text(form, f"p{index}_intake")
             program.notes = _text(form, f"p{index}_notes")
             program.notes_ru = _text(form, f"p{index}_notes_ru")
             program.notes_en = _text(form, f"p{index}_notes_en")
@@ -403,7 +541,7 @@ class UniversityWizard(BaseView):
             program.scholarship_url = (
                 _text(form, f"p{index}_scholarship_url") if program.has_scholarship else None
             )
-            program.source_url = _text(form, f"p{index}_source_url") or university.website or "—"
+            program.source_url = _text(form, f"p{index}_source_url")
             program.verified_at = now
             program.verified_by = verified_by
             await session.flush()
@@ -449,9 +587,6 @@ class UniversityWizard(BaseView):
                     )
                 )
                 counters["deadlines"] += 1
-
-        if counters["programs"] == 0:
-            raise ValueError("Kamida bitta dastur kiritilishi kerak")
 
         # Tahrirlash rejimida forma universitetning to'liq holati: admin
         # blokni o'chirsa, dastur bazadan ham o'chadi. Yangi kiritishda bu

@@ -1273,19 +1273,59 @@ body {
   color: var(--green);
 }
 
-.scholarship-yes {
+/* Dastur stipendiyasi — bitta karta (holat + izoh + o'tish) */
+.sch-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 11px 13px;
-  border-radius: var(--r-md);
-  background: var(--green-soft);
-  color: var(--green);
-  font-size: 14px;
-  font-weight: 600;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--green) 22%, transparent);
+  border-radius: var(--r-lg);
+  background: linear-gradient(135deg, var(--green-soft), transparent 140%);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
 }
-.scholarship-yes .ico { width: 17px; height: 17px; flex: none; }
-.sheet-scholarship { margin-top: 9px; }
+button.sch-card { cursor: pointer; transition: transform 0.12s ease, background 0.15s ease; }
+button.sch-card:active { transform: scale(0.985); }
+
+.sch-ico {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--green) 35%, transparent);
+}
+.sch-ico .ico { width: 21px; height: 21px; }
+
+.sch-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.sch-title { font-size: 15px; font-weight: 700; }
+.sch-sub { font-size: 12.5px; color: var(--hint); line-height: 1.35; }
+
+.sch-go {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
+}
+.sch-go .ico { width: 15px; height: 15px; }
+
+/* Stipendiya yo'q — betaraf rang, grantlarga yo'naltiradi */
+.sch-card.sch-none {
+  border-color: var(--separator);
+  background: var(--surface);
+}
+.sch-none .sch-ico { background: var(--card); color: var(--hint); box-shadow: none; }
+.sch-none .sch-go { background: var(--card); color: var(--hint); }
 
 /* ============ Dastur kartasi (grant kartasi bilan bir xil tuzilish) ============ */
 

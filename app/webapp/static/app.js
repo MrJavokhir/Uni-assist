@@ -63,7 +63,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 29;
+const ASSET_V = 30;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -313,9 +313,11 @@ const I18N = {
     "program.official_page": "Dastur sahifasiga o'tish",
     "program.verified_at": "Ma'lumot {date} sanasida tekshirilgan.",
     "program.own_scholarship": "Dastur stipendiyasi",
-    "program.scholarship_yes": "Bu dastur uchun stipendiya mavjud",
-    "program.scholarship_no": "Bu dastur uchun alohida stipendiya yo'q",
-    "program.scholarship_link": "Stipendiya shartlarini ko'rish",
+    "program.scholarship_title_yes": "Stipendiya mavjud",
+    "program.scholarship_sub_link": "Shartlari va ariza tartibi — rasmiy sahifada",
+    "program.scholarship_sub_nolink": "Shartlarini universitet sahifasidan aniqlang",
+    "program.scholarship_title_no": "Alohida stipendiya yo'q",
+    "program.scholarship_sub_no": "Davlat grantlarini ko'ring",
     "document.degree_certificate": "Diplom nusxasi",
     "document.transcript": "Baholar varaqasi (transcript)",
     "document.translation": "Hujjatlarning rasmiy tarjimasi",
@@ -527,9 +529,11 @@ const I18N = {
     "program.official_page": "Открыть страницу программы",
     "program.verified_at": "Данные проверены {date}.",
     "program.own_scholarship": "Стипендия программы",
-    "program.scholarship_yes": "Для этой программы есть стипендия",
-    "program.scholarship_no": "Отдельной стипендии для этой программы нет",
-    "program.scholarship_link": "Посмотреть условия стипендии",
+    "program.scholarship_title_yes": "Есть стипендия",
+    "program.scholarship_sub_link": "Условия и порядок подачи — на официальной странице",
+    "program.scholarship_sub_nolink": "Условия уточните на сайте университета",
+    "program.scholarship_title_no": "Отдельной стипендии нет",
+    "program.scholarship_sub_no": "Посмотрите государственные гранты",
     "document.degree_certificate": "Копия диплома",
     "document.transcript": "Транскрипт оценок",
     "document.translation": "Официальный перевод документов",
@@ -741,9 +745,11 @@ const I18N = {
     "program.official_page": "Open program page",
     "program.verified_at": "Data verified on {date}.",
     "program.own_scholarship": "Programme scholarship",
-    "program.scholarship_yes": "A scholarship is available for this programme",
-    "program.scholarship_no": "No dedicated scholarship for this programme",
-    "program.scholarship_link": "See scholarship details",
+    "program.scholarship_title_yes": "Scholarship available",
+    "program.scholarship_sub_link": "Terms and how to apply — on the official page",
+    "program.scholarship_sub_nolink": "Check the terms on the university website",
+    "program.scholarship_title_no": "No dedicated scholarship",
+    "program.scholarship_sub_no": "Browse government grants",
     "document.degree_certificate": "Degree certificate",
     "document.transcript": "Academic transcript",
     "document.translation": "Certified translations",
@@ -930,7 +936,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=29" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=30" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -1656,16 +1662,34 @@ async function openProgramSheet(programId) {
         : `<div class="sheet-section">
              <div class="sheet-section-title">${t("program.own_scholarship")}</div>
              ${
+               // Bitta karta: holat + izoh; havola bo'lsa kartaning o'zi bosiladi.
                p.has_scholarship
-                 ? `<div class="scholarship-yes">${icon("award")}<span>${t(
-                     "program.scholarship_yes"
-                   )}</span></div>` +
-                   (p.scholarship_url
-                     ? `<button type="button" class="btn btn-soft btn-block sheet-scholarship" data-url="${escapeHtml(
-                         p.scholarship_url
-                       )}">${t("program.scholarship_link")}</button>`
-                     : "")
-                 : `<div class="sheet-empty">${t("program.scholarship_no")}</div>`
+                 ? p.scholarship_url
+                   ? `<button type="button" class="sch-card sheet-scholarship" data-url="${escapeHtml(
+                       p.scholarship_url
+                     )}">
+                        <span class="sch-ico">${icon("award")}</span>
+                        <span class="sch-text">
+                          <span class="sch-title">${t("program.scholarship_title_yes")}</span>
+                          <span class="sch-sub">${t("program.scholarship_sub_link")}</span>
+                        </span>
+                        <span class="sch-go">${icon("chevron")}</span>
+                      </button>`
+                   : `<div class="sch-card">
+                        <span class="sch-ico">${icon("award")}</span>
+                        <span class="sch-text">
+                          <span class="sch-title">${t("program.scholarship_title_yes")}</span>
+                          <span class="sch-sub">${t("program.scholarship_sub_nolink")}</span>
+                        </span>
+                      </div>`
+                 : `<button type="button" class="sch-card sch-none" id="sheet-to-grants">
+                      <span class="sch-ico">${icon("award")}</span>
+                      <span class="sch-text">
+                        <span class="sch-title">${t("program.scholarship_title_no")}</span>
+                        <span class="sch-sub">${t("program.scholarship_sub_no")}</span>
+                      </span>
+                      <span class="sch-go">${icon("chevron")}</span>
+                    </button>`
              }
            </div>`
     }
@@ -1692,6 +1716,16 @@ async function openProgramSheet(programId) {
   `,
     sheet
   );
+
+  // Dasturning o'z stipendiyasi yo'q — davlat grantlariga yo'naltiramiz.
+  const toGrants = document.getElementById("sheet-to-grants");
+  if (toGrants) {
+    toGrants.addEventListener("click", () => {
+      haptic("light");
+      closeSheet();
+      switchTab("scholarships");
+    });
+  }
 
   const grantBtn = document.querySelector(".sheet-scholarship");
   if (grantBtn) {

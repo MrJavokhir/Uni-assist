@@ -10,9 +10,60 @@ if (tg) {
   }
 }
 const INIT_DATA = (tg && tg.initData) || "";
+
+// iOS raqamli klaviaturasida "Done" tugmasi yo'q — foydalanuvchi uni yopa
+// olmay, natija klaviatura ostida qolib ketardi. Shuning uchun maydondan
+// tashqariga bosilganda yoki sahifa surilganda klaviatura yopiladi, Enter
+// ham uni yopadi (Android klaviaturasida "Done" ko'rsatiladi).
+const TEXT_FIELD = "input, textarea, select, [contenteditable='true']";
+
+function dismissKeyboard() {
+  const active = document.activeElement;
+  if (active && active.matches && active.matches("input, textarea")) active.blur();
+}
+
+// Tugma/chip bosilganda klaviatura touchstart'da yopilsa, ekran siljib bosish
+// boshqa joyga tushib qolishi mumkin — ular uchun bosish bajarilgach yopiladi.
+const TAPPABLE = "button, a, label, .chip, .country-row, [role='button']";
+
+document.addEventListener(
+  "touchstart",
+  (event) => {
+    if (!event.target.closest(TEXT_FIELD) && !event.target.closest(TAPPABLE)) dismissKeyboard();
+  },
+  { passive: true }
+);
+document.addEventListener(
+  "click",
+  (event) => {
+    if (event.target.closest(TAPPABLE) && !event.target.closest(TEXT_FIELD)) {
+      setTimeout(dismissKeyboard, 0);
+    }
+  },
+  true
+);
+document.addEventListener(
+  "touchmove",
+  (event) => {
+    if (!event.target.closest(TEXT_FIELD)) dismissKeyboard();
+  },
+  { passive: true }
+);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.matches && event.target.matches("input")) {
+    event.preventDefault();
+    event.target.blur();
+  }
+});
+document.addEventListener("focusin", (event) => {
+  const field = event.target;
+  if (field.matches && field.matches("input") && !field.hasAttribute("enterkeyhint")) {
+    field.setAttribute("enterkeyhint", "done");
+  }
+});
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 28;
+const ASSET_V = 29;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -879,7 +930,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=28" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=29" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${

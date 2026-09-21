@@ -64,6 +64,10 @@ body {
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
+  /* Ilova oddiy sahifa emas: ikki marta bosishda iOS ekranni kattalashtirib
+     yuborardi. `manipulation` — kattalashtirish yo'q, bosish kechikmaydi. */
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 
 #app {

@@ -44,3 +44,40 @@ def test_mapping_targets_exist_among_seeded_fields():
     codes = {code for code, *_ in fields_migration.FIELDS}
     assert len(codes) == 18
     assert set(fields_migration.LEGACY_FIELD_MAP.values()) <= codes
+
+
+language_migration = _load("e4b8c2d95f17_canonical_instruction_language.py")
+
+
+def test_legacy_uzbek_english_maps_to_canonical():
+    assert language_migration.map_legacy_language("Ingliz tili") == "English"
+    assert language_migration.map_legacy_language("  ingliz TILI ") == "English"
+
+
+def test_canonical_and_unknown_languages_are_left_alone():
+    # Kanonik qiymat almashtirilmaydi; noma'lumi faqat log'ga chiqadi.
+    assert language_migration.map_legacy_language("English") is None
+    assert language_migration.map_legacy_language("Nemis tili") is None
+    assert language_migration.map_legacy_language(None) is None
+
+
+def test_migration_canonical_list_matches_app_constant():
+    from app.db.models import INSTRUCTION_LANGUAGES
+
+    assert language_migration.CANONICAL_LANGUAGES == set(INSTRUCTION_LANGUAGES)
+
+
+def test_every_canonical_language_is_translated_in_mini_app():
+    """Yangi til qo'shilsa, app.js'da uch tildagi tarjimasi ham bo'lishi shart."""
+    import re
+
+    from app.db.models import INSTRUCTION_LANGUAGES
+
+    app_js = (VERSIONS.parent.parent / "app" / "webapp" / "static" / "app.js").read_text(
+        encoding="utf-8"
+    )
+    block = app_js[app_js.index("const LANGUAGE_NAMES = {") :]
+    block = block[: block.index("};")]
+    entry = re.compile(r"^\s+(\w+): \{ uz: .+, ru: .+, en: .+ \},$", re.MULTILINE)
+    translated = set(entry.findall(block))
+    assert set(INSTRUCTION_LANGUAGES) <= translated

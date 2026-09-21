@@ -76,18 +76,23 @@ function majorOptions(selectedId) {
   );
 }
 
-// Bazada o'qitish tili matn sifatida saqlanadi. Yangi yozuvlar kanonik
-// inglizcha nom bilan keladi ("English"), eskilarida esa o'zbekcha nom
-// qolgan — ikkalasi ham shu yerda foydalanuvchi tiliga o'giriladi.
+// Bazada o'qitish tili KANONIK INGLIZCHA nom bilan saqlanadi ("English") —
+// ro'yxat Python'dagi INSTRUCTION_LANGUAGES bilan bir xil bo'lishi kerak.
+// Eski o'zbekcha qiymatlar (LANGUAGE_ALIASES) ham shu yerda o'giriladi.
 // Ro'yxatda yo'q qiymat bo'lsa, o'zi qanday bo'lsa shunday ko'rsatiladi.
 const LANGUAGE_NAMES = {
   English: { uz: "Ingliz tili", ru: "Английский", en: "English" },
   Russian: { uz: "Rus tili", ru: "Русский", en: "Russian" },
   German: { uz: "Nemis tili", ru: "Немецкий", en: "German" },
-  Italian: { uz: "Italyan tili", ru: "Итальянский", en: "Italian" },
-  Czech: { uz: "Chex tili", ru: "Чешский", en: "Czech" },
-  Polish: { uz: "Polyak tili", ru: "Польский", en: "Polish" },
+  French: { uz: "Fransuz tili", ru: "Французский", en: "French" },
+  Korean: { uz: "Koreys tili", ru: "Корейский", en: "Korean" },
+  Chinese: { uz: "Xitoy tili", ru: "Китайский", en: "Chinese" },
+  Japanese: { uz: "Yapon tili", ru: "Японский", en: "Japanese" },
   Turkish: { uz: "Turk tili", ru: "Турецкий", en: "Turkish" },
+  Italian: { uz: "Italyan tili", ru: "Итальянский", en: "Italian" },
+  Polish: { uz: "Polyak tili", ru: "Польский", en: "Polish" },
+  Czech: { uz: "Chex tili", ru: "Чешский", en: "Czech" },
+  Hungarian: { uz: "Venger tili", ru: "Венгерский", en: "Hungarian" },
 };
 const LANGUAGE_ALIASES = {
   "ingliz tili": "English",

@@ -3,6 +3,7 @@ from app.db.models.channel import RequiredChannel
 from app.db.models.country import Country
 from app.db.models.field import Field
 from app.db.models.program import (
+    INSTRUCTION_LANGUAGES,
     Deadline,
     DeadlineType,
     DegreeLevel,
@@ -35,6 +36,7 @@ from app.db.models.user import (
 )
 
 __all__ = [
+    "INSTRUCTION_LANGUAGES",
     "Base",
     "Country",
     "CoverageType",

@@ -33,6 +33,26 @@ class DeadlineType(str, enum.Enum):
     VISA = "visa"
 
 
+# O'qitish tili — bazada KANONIK INGLIZCHA nom saqlanadi, Mini App uni
+# foydalanuvchi tiliga o'zi o'giradi (app.js: LANGUAGE_NAMES). Qiymat -> admin
+# panelda ko'rinadigan o'zbekcha nom. Yangi til qo'shilsa, app.js'dagi
+# LANGUAGE_NAMES'ga uch tildagi tarjimasi ham qo'shilishi SHART.
+INSTRUCTION_LANGUAGES: dict[str, str] = {
+    "English": "Ingliz tili",
+    "Russian": "Rus tili",
+    "German": "Nemis tili",
+    "French": "Fransuz tili",
+    "Korean": "Koreys tili",
+    "Chinese": "Xitoy tili",
+    "Japanese": "Yapon tili",
+    "Turkish": "Turk tili",
+    "Italian": "Italyan tili",
+    "Polish": "Polyak tili",
+    "Czech": "Chex tili",
+    "Hungarian": "Venger tili",
+}
+
+
 # Shared Enum instance'lar — bir nechta jadvalda bir xil Postgres enum turidan
 # foydalanish uchun (masalan Program va Scholarship deadline'lari, yoki
 # User va Program'dagi degree_level/gpa_scale) — DDL ikki marta yaratilmasin uchun bitta joyda e'lon qilinadi.

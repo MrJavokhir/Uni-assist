@@ -17,6 +17,7 @@ from app.db.models import (
     CoverageType,
     DeadlineType,
     DegreeLevel,
+    Field,
     LanguageCertType,
     Program,
     Report,
@@ -127,6 +128,41 @@ class CountryAdmin(ModelView, model=Country):
     )
 
 
+class FieldAdmin(ModelView, model=Field):
+    """Yo'nalishlar ma'lumotnomasi — dastur va profil shu ro'yxatdan tanlaydi.
+
+    `code` CSV import/eksportning kaliti: uni o'zgartirish eski CSV fayllarni
+    buzadi. Yo'nalish o'chirilsa, unga bog'langan dasturlar "Yo'nalishi yo'q"
+    filtriga tushadi (FK ON DELETE SET NULL).
+    """
+
+    name = "Yo'nalish"
+    name_plural = "Yo'nalishlar"
+    icon = "fa-solid fa-layer-group"
+
+    column_list = [Field.id, Field.code, Field.name_uz, Field.name_ru, Field.name_en, Field.sort_order]
+    column_searchable_list = [Field.code, Field.name_uz, Field.name_ru, Field.name_en]
+    column_sortable_list = [Field.code, Field.name_uz, Field.sort_order]
+    column_default_sort = [(Field.sort_order, False)]
+    form_columns = [Field.code, Field.name_uz, Field.name_ru, Field.name_en, Field.sort_order]
+    form_args = {
+        "code": {
+            "description": (
+                "Lotin kichik harflar va _ (masalan cs_it). CSV import shu kod bilan ishlaydi — "
+                "keyin o'zgartirmang."
+            )
+        },
+        "sort_order": {"description": "Ro'yxatdagi o'rni: kichigi yuqorida."},
+    }
+    column_labels = _labels(
+        code="Kod",
+        name_uz="Nomi (uz)",
+        name_ru="Nomi (ru)",
+        name_en="Nomi (en)",
+        sort_order="Tartib",
+    )
+
+
 class UniversityAdmin(ModelView, model=University):
     name = "Universitet"
     name_plural = "Universitetlar"
@@ -221,7 +257,7 @@ class ProgramAdmin(ModelView, model=Program):
         Program.name,
         Program.abbreviation,
         Program.degree_level,
-        Program.field_of_study,
+        Program.field,
         Program.intake_term,
         Program.verified_at,
     ]
@@ -231,7 +267,8 @@ class ProgramAdmin(ModelView, model=Program):
         Program.name,
         Program.abbreviation,
         Program.degree_level,
-        Program.field_of_study,
+        Program.field,
+        Program.field_of_study_legacy,
         Program.language_of_instruction,
         Program.duration_years,
         Program.intake_term,
@@ -251,7 +288,7 @@ class ProgramAdmin(ModelView, model=Program):
         Program.verified_by,
     ]
     # Qisqartma ham qidiriladi — talabalar "MBA", "LLM" deb izlashadi.
-    column_searchable_list = [Program.name, Program.abbreviation, Program.field_of_study]
+    column_searchable_list = [Program.name, Program.abbreviation]
     column_sortable_list = [Program.name, Program.verified_at]
     column_filters = [
         DistinctValuesFilter(Program.name, title="Dasturlar"),
@@ -262,7 +299,7 @@ class ProgramAdmin(ModelView, model=Program):
         Program.name,
         Program.abbreviation,
         Program.degree_level,
-        Program.field_of_study,
+        Program.field,
         Program.language_of_instruction,
         Program.duration_years,
         Program.intake_term,
@@ -291,7 +328,8 @@ class ProgramAdmin(ModelView, model=Program):
         abbreviation="Qisqartma",
         university="Universitet",
         degree_level="Daraja",
-        field_of_study="Yo'nalish",
+        field="Yo'nalish",
+        field_of_study_legacy="Eski yo'nalish (matn)",
         language_of_instruction="O'qitish tili",
         duration_years="Davomiyligi (yil)",
         intake_term="Qabul davri",
@@ -457,7 +495,7 @@ class UserAdmin(ModelView, model=User):
         User.username,
         User.ui_language,
         User.degree_level,
-        User.major,
+        User.field,
         User.created_at,
     ]
     column_details_list = [
@@ -468,7 +506,8 @@ class UserAdmin(ModelView, model=User):
         User.gpa_raw,
         User.gpa_scale,
         User.degree_level,
-        User.major,
+        User.field,
+        User.major_legacy,
         User.budget_max,
         User.budget_currency,
         User.age,
@@ -487,7 +526,7 @@ class UserAdmin(ModelView, model=User):
         User.gpa_raw,
         User.gpa_scale,
         User.degree_level,
-        User.major,
+        User.field,
         User.budget_max,
         User.budget_currency,
         User.age,
@@ -502,7 +541,8 @@ class UserAdmin(ModelView, model=User):
         gpa_raw="GPA",
         gpa_scale="GPA tizimi",
         degree_level="Daraja",
-        major="Yo'nalish",
+        field="Yo'nalish",
+        major_legacy="Eski yo'nalish (matn)",
         budget_max="Byudjet",
         budget_currency="Valyuta",
         age="Yosh",

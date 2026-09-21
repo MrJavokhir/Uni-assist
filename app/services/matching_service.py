@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 
-from sqlalchemy import false, func, or_, select
+from sqlalchemy import false, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -67,10 +67,10 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
     if user.degree_level is not None:
         stmt = stmt.where(Program.degree_level == user.degree_level)
 
-    # Yo'nalish profilda katalogdagi qiymatlardan tanlanadi, shuning uchun
-    # qat'iy (registrga sezgir bo'lmagan) tenglik xavfsiz.
-    if user.major:
-        stmt = stmt.where(func.lower(Program.field_of_study) == user.major.strip().lower())
+    # Yo'nalish ma'lumotnomadan tanlanadi — ID bo'yicha tenglik. Yo'nalishi
+    # biriktirilmagan (field_id NULL) dasturlar bu filtrga tushmaydi.
+    if user.field_id is not None:
+        stmt = stmt.where(Program.field_id == user.field_id)
 
     # Reytingi kiritilmagan universitetlar chiqarib tashlanmaydi: ma'lumot
     # yo'qligi "mos emas" degani emas — aks holda admin reytinglarni to'ldirib

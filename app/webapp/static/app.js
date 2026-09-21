@@ -12,7 +12,7 @@ if (tg) {
 const INIT_DATA = (tg && tg.initData) || "";
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 25;
+const ASSET_V = 26;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -54,6 +54,26 @@ function flag(isoCode) {
 
 function countryName(country) {
   return country["name_" + lang] || country.name_uz;
+}
+
+// Yo'nalish (`fields` ma'lumotnomasi) nomi foydalanuvchi tilida.
+function fieldName(field) {
+  return field ? field["name_" + lang] || field.name_uz : "";
+}
+
+// Profildagi yo'nalish tanlovi: qiymat — yo'nalish ID'si.
+function majorOptions(selectedId) {
+  return (
+    `<option value="">${escapeHtml(t("profile.major_placeholder"))}</option>` +
+    majors
+      .map(
+        (m) =>
+          `<option value="${m.id}" ${String(selectedId) === String(m.id) ? "selected" : ""}>${escapeHtml(
+            fieldName(m)
+          )}</option>`
+      )
+      .join("")
+  );
 }
 
 // Bazada o'qitish tili matn sifatida saqlanadi. Yangi yozuvlar kanonik
@@ -734,14 +754,14 @@ async function loadMajors(degreeLevel) {
 function hasFilter() {
   return Boolean(
     profile &&
-      (profile.degree_level || profile.major || (profile.target_country_ids || []).length)
+      (profile.degree_level || profile.field_id || (profile.target_country_ids || []).length)
   );
 }
 
 function profileCompleteness() {
   const checks = [
     !!profile.degree_level,
-    !!profile.major,
+    !!profile.field_id,
     profile.gpa_raw !== null && profile.gpa_scale !== null,
     profile.language_certificates.length > 0,
     profile.target_country_ids.length > 0,
@@ -776,7 +796,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=25" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=26" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -1335,7 +1355,7 @@ async function openProgramSheet(programId) {
 
     <div class="sheet-section">
       <div class="sheet-section-title">${t("program.about")}</div>
-      ${row(t("program.field"), escapeHtml(p.field_of_study))}
+      ${row(t("program.field"), p.field ? escapeHtml(fieldName(p.field)) : dash)}
       ${row(t("program.language"), escapeHtml(instructionLanguage(p.language_of_instruction)))}
       ${row(t("program.intake"), escapeHtml(p.intake_term))}
       ${p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : ""}
@@ -1758,15 +1778,7 @@ function renderProfile() {
       <div class="field">
         <label>${t("profile.major")}</label>
         <select id="major-input" class="select-input">
-          <option value="">${escapeHtml(t("profile.major_placeholder"))}</option>
-          ${majors
-            .map(
-              (m) =>
-                `<option value="${escapeHtml(m)}" ${
-                  profile.major === m ? "selected" : ""
-                }>${escapeHtml(m)}</option>`
-            )
-            .join("")}
+          ${majorOptions(profile.field_id)}
         </select>
         ${
           majors.length
@@ -1948,17 +1960,7 @@ function renderProfile() {
   bindChips("degree-chips", async (value) => {
     const selected = document.getElementById("major-input").value;
     await loadMajors(value);
-    const select = document.getElementById("major-input");
-    select.innerHTML =
-      `<option value="">${escapeHtml(t("profile.major_placeholder"))}</option>` +
-      majors
-        .map(
-          (m) =>
-            `<option value="${escapeHtml(m)}" ${
-              selected === m ? "selected" : ""
-            }>${escapeHtml(m)}</option>`
-        )
-        .join("");
+    document.getElementById("major-input").innerHTML = majorOptions(selected);
   });
 
   document.getElementById("gpa-value-input").addEventListener("input", updateGpaPreview);
@@ -2028,7 +2030,7 @@ async function saveProfile() {
   const payload = { ui_language: lang, target_country_ids: selectedCountries };
 
   const degree = activeChip("degree-chips");
-  const major = document.getElementById("major-input").value.trim();
+  const fieldValue = document.getElementById("major-input").value;
   const gpaScale = activeChip("gpa-scale-chips");
   const gpaValue = document.getElementById("gpa-value-input").value;
   const certType = activeChip("cert-type-chips");
@@ -2037,8 +2039,8 @@ async function saveProfile() {
   const fee = activeChip("fee-chips");
 
   if (degree) payload.degree_level = degree;
-  // Har doim yuboriladi: bo'sh qiymat tanlansa yo'nalish tozalanishi kerak.
-  payload.major = major;
+  // Har doim yuboriladi: bo'sh tanlov (null) yo'nalishni tozalaydi.
+  payload.field_id = fieldValue ? Number(fieldValue) : null;
   if (gpaScale && gpaValue) {
     payload.gpa_scale = gpaScale;
     payload.gpa_raw = parseFloat(gpaValue);

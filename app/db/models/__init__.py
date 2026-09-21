@@ -1,6 +1,7 @@
 from app.db.base import Base
 from app.db.models.channel import RequiredChannel
 from app.db.models.country import Country
+from app.db.models.field import Field
 from app.db.models.program import (
     Deadline,
     DeadlineType,
@@ -40,6 +41,7 @@ __all__ = [
     "Deadline",
     "DeadlineType",
     "DegreeLevel",
+    "Field",
     "GpaScale",
     "LanguageCertType",
     "OtherTestType",

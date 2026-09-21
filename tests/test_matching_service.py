@@ -9,6 +9,7 @@ from app.db.models import (
     Deadline,
     DeadlineType,
     DegreeLevel,
+    Field,
     GpaScale,
     LanguageCertType,
     Program,
@@ -23,11 +24,21 @@ from app.services.matching_service import MatchLevel, find_matches
 pytestmark = pytest.mark.asyncio
 
 
+async def _get_field(session: AsyncSession, code: str) -> Field:
+    """Yo'nalishni kod bo'yicha oladi, bo'lmasa yaratadi (test bazasi bo'sh boshlanadi)."""
+    field = (await session.execute(select(Field).where(Field.code == code))).scalar_one_or_none()
+    if field is None:
+        field = Field(code=code, name_uz=code, name_ru=code, name_en=code, sort_order=0)
+        session.add(field)
+        await session.flush()
+    return field
+
+
 async def _make_program(
     session: AsyncSession,
     *,
     country_name: str = "Turkiya",
-    field_of_study: str = "Computer Science",
+    field_code: str | None = "cs_it",
     gpa_min: float | None = 70,
     gpa_scale: GpaScale | None = GpaScale.SCALE_100,
     ielts_min: float | None = 6.0,
@@ -62,11 +73,13 @@ async def _make_program(
     session.add(university)
     await session.flush()
 
+    field = await _get_field(session, field_code) if field_code else None
+
     program = Program(
         university_id=university.id,
-        name=field_of_study,
+        name=field_code or "Program",
         degree_level=DegreeLevel.BACHELOR,
-        field_of_study=field_of_study,
+        field_id=field.id if field else None,
         language_of_instruction="English",
         duration_years=4,
         intake_term="2026 Fall",
@@ -293,17 +306,13 @@ async def test_country_filter_excludes_other_countries(session: AsyncSession):
     assert results[0].program.id == program_tr.id
 
 
-async def test_major_filter_excludes_other_fields(session: AsyncSession):
-    """Profildagi yo'nalish endi qidiruvni chegaralaydi.
-
-    Ilgari `major` saqlanardi-yu, `find_matches` uni umuman hisobga olmasdi —
-    foydalanuvchi "Engineering" tanlasa ham unga barcha yo'nalishlar chiqardi.
-    """
-    cs = await _make_program(session, field_of_study="Computer Science")
-    await _make_program(session, country_name="Polsha", field_of_study="Engineering")
+async def test_field_filter_excludes_other_fields(session: AsyncSession):
+    """Profildagi yo'nalish (field_id) qidiruvni chegaralaydi."""
+    cs = await _make_program(session, field_code="cs_it")
+    await _make_program(session, country_name="Polsha", field_code="engineering")
 
     user = await _make_user(session)
-    user.major = "Computer Science"
+    user.field_id = cs.field_id
     await session.commit()
 
     results = await find_matches(session, user)
@@ -311,11 +320,13 @@ async def test_major_filter_excludes_other_fields(session: AsyncSession):
     assert [r.program.id for r in results] == [cs.id]
 
 
-async def test_major_filter_is_case_insensitive(session: AsyncSession):
-    cs = await _make_program(session, field_of_study="Computer Science")
+async def test_field_filter_skips_programs_without_field(session: AsyncSession):
+    """Yo'nalishi biriktirilmagan dastur yo'nalish tanlagan foydalanuvchiga chiqmaydi."""
+    cs = await _make_program(session, field_code="cs_it")
+    await _make_program(session, country_name="Polsha", field_code=None)
 
     user = await _make_user(session)
-    user.major = "  computer science  "
+    user.field_id = cs.field_id
     await session.commit()
 
     results = await find_matches(session, user)
@@ -323,9 +334,9 @@ async def test_major_filter_is_case_insensitive(session: AsyncSession):
     assert [r.program.id for r in results] == [cs.id]
 
 
-async def test_no_major_means_no_field_filter(session: AsyncSession):
-    await _make_program(session, field_of_study="Computer Science")
-    await _make_program(session, country_name="Polsha", field_of_study="Engineering")
+async def test_no_field_means_no_field_filter(session: AsyncSession):
+    await _make_program(session, field_code="cs_it")
+    await _make_program(session, country_name="Polsha", field_code="engineering")
 
     user = await _make_user(session)
     await session.commit()

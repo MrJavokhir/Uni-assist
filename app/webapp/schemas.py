@@ -9,7 +9,7 @@ class LanguageCertOut(BaseModel):
 class ProfileOut(BaseModel):
     ui_language: str
     degree_level: str | None
-    major: str | None
+    field_id: int | None
     gpa_raw: float | None
     gpa_scale: str | None
     # Mo'ljaldagi universitet reytingi oralig'i ("1-100", "101-300", ...)
@@ -23,7 +23,9 @@ class ProfileOut(BaseModel):
 class ProfileIn(BaseModel):
     ui_language: str | None = None
     degree_level: str | None = None
-    major: str | None = None
+    # null yuborilsa yo'nalish tozalanadi; umuman yuborilmasa o'zgarmaydi
+    # (farqi `model_fields_set` orqali aniqlanadi).
+    field_id: int | None = None
     gpa_raw: float | None = None
     gpa_scale: str | None = None
     university_rank_range: str | None = None
@@ -46,6 +48,16 @@ class CountryOut(BaseModel):
     name_ru: str
     name_en: str
     iso_code: str
+
+
+class FieldOut(BaseModel):
+    """Yo'nalish — Mini App nomini foydalanuvchi tilida o'zi tanlaydi."""
+
+    id: int
+    code: str
+    name_uz: str
+    name_ru: str
+    name_en: str
 
 
 class MatchProgramOut(BaseModel):
@@ -105,7 +117,8 @@ class ProgramDetailOut(BaseModel):
     city: str
     country: CountryOut
     degree_level: str
-    field_of_study: str
+    # None = yo'nalish hali biriktirilmagan
+    field: FieldOut | None
     language_of_instruction: str
     duration_years: float
     intake_term: str

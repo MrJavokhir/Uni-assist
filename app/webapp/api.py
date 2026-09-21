@@ -1,13 +1,14 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from sqlalchemy import distinct, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models import (
     Country,
     DegreeLevel,
+    Field,
     GpaScale,
     LanguageCertType,
     Program,
@@ -31,6 +32,7 @@ from app.services.user_service import (
 from app.webapp.auth import InitDataError, validate_init_data
 from app.webapp.schemas import (
     CountryOut,
+    FieldOut,
     GpaConvertOut,
     LanguageCertOut,
     MatchProgramOut,
@@ -56,6 +58,18 @@ def _country_out(country: Country) -> CountryOut:
         name_ru=country.name_ru,
         name_en=country.name_en,
         iso_code=country.iso_code,
+    )
+
+
+def _field_out(field: Field | None) -> FieldOut | None:
+    if field is None:
+        return None
+    return FieldOut(
+        id=field.id,
+        code=field.code,
+        name_uz=field.name_uz,
+        name_ru=field.name_ru,
+        name_en=field.name_en,
     )
 
 
@@ -125,7 +139,7 @@ async def get_me(user: User = Depends(get_current_user)) -> ProfileOut:
     return ProfileOut(
         ui_language=user.ui_language.value,
         degree_level=user.degree_level.value if user.degree_level else None,
-        major=user.major,
+        field_id=user.field_id,
         gpa_raw=float(user.gpa_raw) if user.gpa_raw is not None else None,
         gpa_scale=user.gpa_scale.value if user.gpa_scale else None,
         university_rank_range=(
@@ -157,8 +171,10 @@ async def update_me(
         except ValueError as exc:
             raise HTTPException(status_code=422, detail="Noto'g'ri daraja") from exc
 
-    if payload.major is not None:
-        user.major = payload.major.strip() or None
+    if "field_id" in payload.model_fields_set:
+        if payload.field_id is not None and await session.get(Field, payload.field_id) is None:
+            raise HTTPException(status_code=422, detail="Noto'g'ri yo'nalish")
+        user.field_id = payload.field_id
 
     if payload.gpa_raw is not None and payload.gpa_scale is not None:
         try:
@@ -210,7 +226,7 @@ async def reset_me(
     boshqa tilga o'tkazib yuborardi.
     """
     user.degree_level = None
-    user.major = None
+    user.field_id = None
     user.gpa_raw = None
     user.gpa_scale = None
     user.university_rank_range = None
@@ -253,24 +269,25 @@ async def list_countries(session: AsyncSession = Depends(get_session)) -> list[C
     ]
 
 
-@router.get("/majors", response_model=list[str])
+@router.get("/majors", response_model=list[FieldOut])
 async def list_majors(
     degree_level: str | None = None,
     session: AsyncSession = Depends(get_session),
-) -> list[str]:
-    """Katalogda mavjud yo'nalishlar ro'yxati.
+) -> list[FieldOut]:
+    """Profilda tanlash uchun yo'nalishlar (`fields` ma'lumotnomasidan).
 
-    Profilda foydalanuvchi yo'nalishni qo'lda yozmaydi — shu ro'yxatdan
-    tanlaydi. Aks holda "Kompyuter injiniringi" kabi erkin matn hech qaysi
-    dasturga to'g'ri kelmay, moslik qidiruvi bo'sh natija berardi.
+    Faqat katalogda kamida bitta dasturi bor yo'nalishlar qaytadi (daraja
+    berilsa — o'sha darajadagi dasturi borlari): bo'sh yo'nalishni tanlagan
+    foydalanuvchi hech narsa topmay qolardi.
     """
-    stmt = select(distinct(Program.field_of_study)).order_by(Program.field_of_study)
+    has_program = select(Program.id).where(Program.field_id == Field.id)
     if degree_level:
         try:
-            stmt = stmt.where(Program.degree_level == DegreeLevel(degree_level))
+            has_program = has_program.where(Program.degree_level == DegreeLevel(degree_level))
         except ValueError:
             pass
-    return list((await session.execute(stmt)).scalars().all())
+    stmt = select(Field).where(has_program.exists()).order_by(Field.sort_order, Field.name_en)
+    return [_field_out(f) for f in (await session.execute(stmt)).scalars().all()]
 
 
 @router.get("/programs/{program_id}", response_model=ProgramDetailOut)
@@ -285,6 +302,7 @@ async def get_program(
             select(Program)
             .options(
                 selectinload(Program.university).selectinload(University.country),
+                selectinload(Program.field),
                 selectinload(Program.requirement),
                 selectinload(Program.cost),
                 selectinload(Program.deadlines),
@@ -310,7 +328,7 @@ async def get_program(
         city=program.university.city,
         country=_country_out(program.university.country),
         degree_level=program.degree_level.value,
-        field_of_study=program.field_of_study,
+        field=_field_out(program.field),
         language_of_instruction=program.language_of_instruction,
         duration_years=float(program.duration_years),
         intake_term=program.intake_term,

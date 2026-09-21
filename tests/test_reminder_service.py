@@ -38,7 +38,6 @@ async def _make_saved_program(session: AsyncSession, *, days_until_deadline: int
         university_id=university.id,
         name="Computer Science",
         degree_level=DegreeLevel.BACHELOR,
-        field_of_study="CS",
         language_of_instruction="English",
         duration_years=4,
         intake_term="2026 Fall",

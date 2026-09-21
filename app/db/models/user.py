@@ -20,6 +20,7 @@ from app.db.models.program import DegreeLevel, GpaScale, degree_level_enum, gpa_
 
 if TYPE_CHECKING:
     from app.db.models.country import Country
+    from app.db.models.field import Field
     from app.db.models.program import Program
 
 user_target_country = Table(
@@ -85,7 +86,13 @@ class User(TimestampMixin, Base):
     gpa_raw: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
     gpa_scale: Mapped[GpaScale | None] = mapped_column(gpa_scale_enum, nullable=True)
     degree_level: Mapped[DegreeLevel | None] = mapped_column(degree_level_enum, nullable=True)
-    major: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Tanlangan yo'nalish (`fields` ma'lumotnomasidan). Moslik qidiruvi
+    # dasturlarni shu bo'yicha chegaralaydi.
+    field_id: Mapped[int | None] = mapped_column(
+        ForeignKey("fields.id", ondelete="SET NULL"), nullable=True
+    )
+    # Eski erkin matnli yo'nalish — faqat o'qish uchun, keyinroq o'chiriladi.
+    major_legacy: Mapped[str | None] = mapped_column(String(255), nullable=True)
     budget_max: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     budget_currency: Mapped[str | None] = mapped_column(String(3), nullable=True)
     age: Mapped[int | None] = mapped_column(nullable=True)
@@ -97,6 +104,7 @@ class User(TimestampMixin, Base):
     # True = to'lovga rozi, False = faqat bepul ariza, None = tanlanmagan.
     application_fee_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
+    field: Mapped["Field | None"] = relationship()
     target_countries: Mapped[list["Country"]] = relationship(secondary=user_target_country)
     language_certificates: Mapped[list["UserLanguageCertificate"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

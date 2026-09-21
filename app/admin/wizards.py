@@ -30,6 +30,7 @@ from app.db.models import (
     Deadline,
     DeadlineType,
     DegreeLevel,
+    Field,
     Program,
     ProgramCost,
     ProgramRequirement,
@@ -184,6 +185,11 @@ class UniversityWizard(BaseView):
             countries = (
                 (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
             )
+            fields = (
+                (await session.execute(select(Field).order_by(Field.sort_order, Field.name_uz)))
+                .scalars()
+                .all()
+            )
             prefill = await self._load(session, university_id) if university_id else None
 
         editing = prefill is not None
@@ -202,6 +208,7 @@ class UniversityWizard(BaseView):
                     else "Davlat, universitet va uning dasturlari — bitta formada"
                 ),
                 "countries": countries,
+                "fields": fields,
                 "degree_levels": list(DegreeLevel),
                 "max_programs": MAX_PROGRAMS,
                 "prefill": prefill,
@@ -248,7 +255,7 @@ class UniversityWizard(BaseView):
                     "name": program.name,
                     "abbr": program.abbreviation or "",
                     "degree": program.degree_level.value,
-                    "field": program.field_of_study,
+                    "field": program.field_id or "",
                     "language": program.language_of_instruction,
                     "duration": _as_str(program.duration_years),
                     "intake": program.intake_term,
@@ -371,7 +378,7 @@ class UniversityWizard(BaseView):
                 await session.execute(delete(Deadline).where(Deadline.program_id == program.id))
 
             program.abbreviation = _text(form, f"p{index}_abbr")
-            program.field_of_study = _text(form, f"p{index}_field") or name
+            program.field_id = _integer(form, f"p{index}_field")
             program.language_of_instruction = _text(form, f"p{index}_language") or "Ingliz tili"
             program.duration_years = _number(form, f"p{index}_duration") or 4
             program.intake_term = _text(form, f"p{index}_intake") or "—"

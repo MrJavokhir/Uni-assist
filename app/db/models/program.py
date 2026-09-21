@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, VerificationMixin, str_enum
 
 if TYPE_CHECKING:
+    from app.db.models.field import Field
     from app.db.models.scholarship import Scholarship
     from app.db.models.university import University
     from app.db.models.user import SavedProgram
@@ -50,7 +51,15 @@ class Program(TimestampMixin, VerificationMixin, Base):
     # dasturlarni ko'pincha aynan shu qisqartma bo'yicha izlaydi.
     abbreviation: Mapped[str | None] = mapped_column(String(30), nullable=True)
     degree_level: Mapped[DegreeLevel] = mapped_column(degree_level_enum, nullable=False)
-    field_of_study: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Yo'nalish — `fields` ma'lumotnomasiga bog'lanadi. NULL = hali
+    # biriktirilmagan (eski erkin matn ma'lumotnomaga mos kelmagan); admin
+    # ularni "Yo'nalishi yo'q" filtri orqali topib biriktiradi.
+    field_id: Mapped[int | None] = mapped_column(
+        ForeignKey("fields.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    # Eski erkin matnli yo'nalish — faqat o'qish uchun, admin to'g'ri
+    # yo'nalishni tanlashi uchun ko'rinib turadi. Tozalash tugagach o'chiriladi.
+    field_of_study_legacy: Mapped[str | None] = mapped_column(String(255), nullable=True)
     language_of_instruction: Mapped[str] = mapped_column(String(100), nullable=False)
     duration_years: Mapped[float] = mapped_column(Numeric(3, 1), nullable=False)
     intake_term: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -84,6 +93,7 @@ class Program(TimestampMixin, VerificationMixin, Base):
     requirements_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     university: Mapped["University"] = relationship(back_populates="programs")
+    field: Mapped["Field | None"] = relationship()
     requirement: Mapped["ProgramRequirement"] = relationship(
         back_populates="program", cascade="all, delete-orphan", uselist=False
     )

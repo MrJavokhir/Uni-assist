@@ -9,6 +9,7 @@ from app.admin.auth import AdminAuth
 from app.admin.stats import StatsView
 from app.admin.views import (
     CountryAdmin,
+    FieldAdmin,
     ProgramAdmin,
     ReportAdmin,
     RequiredChannelAdmin,
@@ -59,7 +60,7 @@ admin.add_base_view(StatsView)
 # muddatlari bilan kiritish/tahrirlashning yagona joyi.
 admin.add_base_view(UniversityWizard)
 
-for view in (CountryAdmin, UniversityAdmin, ProgramAdmin):
+for view in (CountryAdmin, UniversityAdmin, ProgramAdmin, FieldAdmin):
     admin.add_view(view)
 
 admin.add_base_view(ScholarshipWizard)

@@ -6,6 +6,7 @@ from sqladmin import Admin
 from starlette.responses import Response
 
 from app.admin.auth import AdminAuth
+from app.admin.csv_views import CatalogImportView
 from app.admin.stats import StatsView
 from app.admin.views import (
     CountryAdmin,
@@ -62,6 +63,8 @@ admin.add_base_view(UniversityWizard)
 
 for view in (CountryAdmin, UniversityAdmin, ProgramAdmin, FieldAdmin):
     admin.add_view(view)
+# Katalogni ommaviy kiritish va zaxiralash (katalog kodda emas — faqat adminka).
+admin.add_base_view(CatalogImportView)
 
 admin.add_base_view(ScholarshipWizard)
 for view in (

@@ -25,6 +25,7 @@ from starlette.datastructures import FormData
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
+from app.admin.auth import current_admin
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
     Country,
@@ -226,6 +227,7 @@ class UniversityWizard(BaseView):
                 "focus_program_id": focus_program_id,
                 "editing": editing,
                 "languages": INSTRUCTION_LANGUAGES,
+                "admin_username": current_admin(request),
                 "errors": errors,
                 "university_errors": university_errors,
                 # "Yangi universitet qo'shish" havolasi uchun — sehrgarning

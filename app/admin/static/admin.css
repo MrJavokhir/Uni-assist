@@ -443,3 +443,28 @@ body {
   box-shadow: 0 0 0 3px rgba(214, 57, 57, 0.15);
 }
 .ua-legacy { color: #b35c00; }
+
+/* ---- CSV import / eksport ---- */
+.ua-csv-rules { margin: 0 0 16px; padding-left: 18px; color: #5b6070; }
+.ua-csv-rules li { margin-bottom: 4px; }
+.ua-csv-kind-card {
+  border: 1px solid rgba(120, 124, 148, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fbfbff;
+  height: 100%;
+}
+.ua-csv-columns { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.ua-csv-columns code, .ua-csv-legend code { font-size: 0.72rem; }
+.ua-col-key { background: rgba(99, 91, 255, 0.14); color: var(--ua-accent); font-weight: 700; }
+.ua-col-req { background: rgba(232, 145, 42, 0.16); color: #a35d00; }
+.ua-csv-legend { margin-top: 10px; font-size: 0.8rem; color: #8b8fa3; }
+.ua-csv-counts { display: flex; gap: 6px; flex-wrap: wrap; }
+.ua-csv-kind { margin: 18px 0 8px; font-size: 0.95rem; }
+.ua-csv-table td { vertical-align: top; }
+.ua-csv-error td { background: rgba(214, 57, 57, 0.05); }
+.ua-csv-list { margin: 0; padding-left: 16px; }
+.ua-csv-unchanged {
+  display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px;
+  font-size: 0.8rem; color: #8b8fa3;
+}

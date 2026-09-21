@@ -1,0 +1,152 @@
+{% extends "sqladmin/layout.html" %}
+
+{% set status_labels = {
+  "new": ("Yangi", "bg-green-lt"),
+  "update": ("Yangilanadi", "bg-blue-lt"),
+  "unchanged": ("O'zgarishsiz", "bg-secondary-lt"),
+  "error": ("Xato", "bg-red-lt"),
+} %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  {% if notice %}
+  <div class="alert alert-warning">{{ notice }}</div>
+  {% endif %}
+
+  {# ======================= Oldindan ko'rish ======================= #}
+  {% if plan %}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title"><span class="ua-step">2</span> Oldindan ko'rish</h3>
+      <div class="card-actions ua-csv-counts">
+        <span class="badge bg-green-lt">Yangi: {{ counts['new'] }}</span>
+        <span class="badge bg-blue-lt">Yangilanadi: {{ counts['update'] }}</span>
+        <span class="badge bg-secondary-lt">O'zgarishsiz: {{ counts['unchanged'] }}</span>
+        <span class="badge bg-red-lt">Xato: {{ counts['error'] + plan.file_errors|length }}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="text-muted mb-3">Bu bosqichda bazaga hech narsa yozilmagan.</p>
+
+      {% for kind, message in plan.file_errors.items() %}
+      <div class="alert alert-danger"><strong>{{ labels[kind] }}:</strong> {{ message }}</div>
+      {% endfor %}
+
+      {% for kind in kinds %}
+      {% set rows = plan.rows | selectattr("kind", "equalto", kind) | list %}
+      {% if rows %}
+      {% set visible = rows | rejectattr("status", "equalto", "unchanged") | list %}
+      {% set unchanged = rows | selectattr("status", "equalto", "unchanged") | list %}
+      <h4 class="ua-csv-kind">{{ labels[kind] }} <span class="text-muted">({{ rows|length }} qator)</span></h4>
+      <div class="table-responsive">
+        <table class="table table-sm table-vcenter ua-csv-table">
+          <thead><tr><th>Qator</th><th>Kalit</th><th>Holat</th><th>Tafsilot</th></tr></thead>
+          <tbody>
+            {% for row in visible %}
+            <tr class="{% if row.status == 'error' %}ua-csv-error{% endif %}">
+              <td class="text-muted">{{ row.line }}</td>
+              <td>{{ row.key }}</td>
+              <td><span class="badge {{ status_labels[row.status][1] }}">{{ status_labels[row.status][0] }}</span></td>
+              <td>
+                {% if row.errors %}
+                <ul class="ua-csv-list text-danger">{% for e in row.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% elif row.changes %}
+                <ul class="ua-csv-list">
+                  {% for name, (old, new) in row.changes.items() %}
+                  <li><code>{{ name }}</code>: <span class="text-muted">{{ old if old is not none else "—" }}</span> → <strong>{{ new }}</strong></li>
+                  {% endfor %}
+                </ul>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if unchanged %}
+      <details class="mb-3">
+        <summary class="text-muted">O'zgarishsiz qatorlar: {{ unchanged|length }} ta</summary>
+        <div class="ua-csv-unchanged">{% for row in unchanged %}<span>{{ row.line }}: {{ row.key }}</span>{% endfor %}</div>
+      </details>
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+
+      <form method="post" action="{{ url_for('admin:view-catalog-io-confirm') }}" class="d-flex gap-2 align-items-center mt-3">
+        <input type="hidden" name="token" value="{{ token or '' }}">
+        <button type="submit" class="btn btn-primary" {% if plan.has_errors or not token %}disabled{% endif %}>
+          Tasdiqlash va saqlash
+        </button>
+        <a href="{{ url_for('admin:view-catalog-io') }}" class="btn btn-link">Bekor qilish</a>
+        {% if plan.has_errors %}
+        <span class="text-danger">Xatoli qator bor — faylni tuzatib, qaytadan yuklang. Hech narsa saqlanmaydi.</span>
+        {% elif counts['new'] + counts['update'] == 0 %}
+        <span class="text-muted">Saqlanadigan o'zgarish yo'q.</span>
+        {% else %}
+        <span class="text-muted">Hammasi bitta tranzaksiyada saqlanadi. Oldindan ko'rish 30 daqiqa amal qiladi.</span>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======================= Yuklash ======================= #}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title"><span class="ua-step">1</span> Import</h3>
+    </div>
+    <div class="card-body">
+      <ul class="ua-csv-rules">
+        <li><strong>Bo'sh katak mavjud qiymatni o'zgartirmaydi</strong> — import hech narsani o'chirmaydi. Qiymatni tozalash faqat adminkada.</li>
+        <li>Mos kelgan yozuv yangilanadi, topilmasa yangisi yaratiladi. Nomlar katta-kichik harfga sezgir emas.</li>
+        <li>Bir nechta fayl birga yuklansa, davlatlar → universitetlar → dasturlar tartibida ishlanadi: keyingisi oldingisida yaratilayotgan yozuvga tayana oladi.</li>
+        <li>Format: UTF-8 CSV (Excel'da "CSV UTF-8"), ajratuvchi <code>,</code> yoki <code>;</code>. Har fayl 5 MB / {{ max_rows }} qatorgacha.</li>
+      </ul>
+
+      <form method="post" action="{{ url_for('admin:view-catalog-io-preview') }}" enctype="multipart/form-data">
+        <div class="row g-3">
+          {% for kind in kinds %}
+          <div class="col-md-4">
+            <div class="ua-csv-kind-card">
+              <div class="d-flex justify-content-between align-items-baseline">
+                <label class="form-label mb-1">{{ labels[kind] }}</label>
+                <a href="{{ url_for('admin:view-catalog-io-template', kind=kind) }}" class="small">Shablon CSV ↓</a>
+              </div>
+              <input type="file" name="{{ kind }}" accept=".csv,text/csv" class="form-control">
+              <div class="ua-csv-columns">
+                {% for column in columns[kind] %}<code class="{% if column in key_columns[kind] %}ua-col-key{% elif column in required_for_new[kind] %}ua-col-req{% endif %}">{{ column }}</code>{% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="ua-csv-legend">
+          <code class="ua-col-key">kalit</code> — yozuvni topish uchun, har doim majburiy;
+          <code class="ua-col-req">yangi uchun</code> — yangi yozuv yaratishda majburiy.
+          Yo'nalish kodlari: "Yo'nalishlar" bo'limidagi <em>Kod</em> ustuni.
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Tekshirish (hali saqlanmaydi)</button>
+      </form>
+    </div>
+  </div>
+
+  {# ======================= Eksport ======================= #}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title"><span class="ua-step">⇩</span> Eksport</h3>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">Joriy katalog import bilan aynan bir xil formatda — zaxira uchun yoki bo'sh bazaga qayta kiritish uchun.</p>
+      <div class="d-flex gap-2 flex-wrap">
+        {% for kind in kinds %}
+        <a class="btn btn-outline-primary" href="{{ url_for('admin:view-catalog-io-export', kind=kind) }}">{{ labels[kind] }}.csv</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}

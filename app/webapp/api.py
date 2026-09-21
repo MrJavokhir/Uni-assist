@@ -253,6 +253,7 @@ async def gpa_convert(value: float, scale: str) -> GpaConvertOut:
         us4=result.us4,
         ects=result.ects,
         bavarian=result.bavarian,
+        uk=result.uk,
         disclaimer=(
             "Bu — taxminiy hisob-kitob. Yakuniy GPA'ni universitet yoki tan olish idorasi "
             "(WES, Uni-Assist, ANABIN) belgilaydi. Rasmiy ariza uchun shu raqamga to'liq tayanmang."

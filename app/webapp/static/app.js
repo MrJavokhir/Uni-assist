@@ -12,7 +12,7 @@ if (tg) {
 const INIT_DATA = (tg && tg.initData) || "";
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 27;
+const ASSET_V = 28;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -145,6 +145,32 @@ const I18N = {
     "home.section_shortcuts": "Tezkor amallar",
     "home.shortcut_match": "Mos dasturlarni ko'rish",
     "home.shortcut_saved": "Saqlangan dasturlarim",
+    "home.shortcut_gpa": "GPA konvertor",
+    "gpa.title": "GPA konvertor",
+    "gpa.subtitle": "O'zbekiston bahosini AQSH, Buyuk Britaniya va Yevropa tizimlariga o'giradi",
+    "gpa.scale": "Baholash tizimi",
+    "gpa.value": "O'rtacha bahoingiz",
+    "gpa.range": "{min} dan {max} gacha kiriting",
+    "gpa.empty": "Bahoingizni kiriting — natija shu yerda chiqadi.",
+    "gpa.results": "Natija",
+    "gpa.us": "AQSH",
+    "gpa.us_sub": "GPA, 4.0 shkala",
+    "gpa.uk": "Buyuk Britaniya",
+    "gpa.eu": "Yevropa",
+    "gpa.eu_sub": "ECTS baho (A — eng yuqori)",
+    "gpa.de": "Germaniya",
+    "gpa.de_sub": "1.0 — eng yuqori, 4.0 — o'tish chegarasi",
+    "gpa.uk_short.first": "First",
+    "gpa.uk_short.upper_second": "2:1",
+    "gpa.uk_short.lower_second": "2:2",
+    "gpa.uk_short.third": "Third",
+    "gpa.uk_short.below": "—",
+    "gpa.uk_class.first": "Birinchi daraja (First Class)",
+    "gpa.uk_class.upper_second": "Yuqori ikkinchi daraja (Upper Second)",
+    "gpa.uk_class.lower_second": "Quyi ikkinchi daraja (Lower Second)",
+    "gpa.uk_class.third": "Uchinchi daraja (Third Class)",
+    "gpa.uk_class.below": "Diplom darajasidan past",
+    "gpa.disclaimer": "Bu taxminiy hisob. Yakuniy bahoni universitet yoki tan olish idorasi (WES, UK ENIC, uni-assist) belgilaydi.",
     "home.profile_progress": "Profil to'ldirilgan",
     "home.profile_done": "Profil to'liq to'ldirilgan",
     "home.summary_total": "Sizga mos dasturlar",
@@ -333,6 +359,32 @@ const I18N = {
     "home.section_shortcuts": "Быстрые действия",
     "home.shortcut_match": "Смотреть подходящие программы",
     "home.shortcut_saved": "Мои сохранённые",
+    "home.shortcut_gpa": "Конвертер GPA",
+    "gpa.title": "Конвертер GPA",
+    "gpa.subtitle": "Переводит узбекскую оценку в системы США, Великобритании и Европы",
+    "gpa.scale": "Система оценок",
+    "gpa.value": "Ваш средний балл",
+    "gpa.range": "Введите значение от {min} до {max}",
+    "gpa.empty": "Введите средний балл — результат появится здесь.",
+    "gpa.results": "Результат",
+    "gpa.us": "США",
+    "gpa.us_sub": "GPA, шкала 4.0",
+    "gpa.uk": "Великобритания",
+    "gpa.eu": "Европа",
+    "gpa.eu_sub": "Оценка ECTS (A — высшая)",
+    "gpa.de": "Германия",
+    "gpa.de_sub": "1.0 — высшая, 4.0 — проходной порог",
+    "gpa.uk_short.first": "First",
+    "gpa.uk_short.upper_second": "2:1",
+    "gpa.uk_short.lower_second": "2:2",
+    "gpa.uk_short.third": "Third",
+    "gpa.uk_short.below": "—",
+    "gpa.uk_class.first": "Диплом первой степени (First Class)",
+    "gpa.uk_class.upper_second": "Высшая вторая степень (Upper Second)",
+    "gpa.uk_class.lower_second": "Низшая вторая степень (Lower Second)",
+    "gpa.uk_class.third": "Третья степень (Third Class)",
+    "gpa.uk_class.below": "Ниже уровня диплома",
+    "gpa.disclaimer": "Это приблизительный расчёт. Итоговую оценку определяет университет или служба признания (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Профиль заполнен",
     "home.profile_done": "Профиль заполнен полностью",
     "home.summary_total": "Подходящих программ",
@@ -521,6 +573,32 @@ const I18N = {
     "home.section_shortcuts": "Quick actions",
     "home.shortcut_match": "See matching programs",
     "home.shortcut_saved": "My saved programs",
+    "home.shortcut_gpa": "GPA converter",
+    "gpa.title": "GPA converter",
+    "gpa.subtitle": "Converts an Uzbek grade to the US, UK and European systems",
+    "gpa.scale": "Grading system",
+    "gpa.value": "Your average grade",
+    "gpa.range": "Enter a value from {min} to {max}",
+    "gpa.empty": "Enter your grade — the result will appear here.",
+    "gpa.results": "Result",
+    "gpa.us": "United States",
+    "gpa.us_sub": "GPA, 4.0 scale",
+    "gpa.uk": "United Kingdom",
+    "gpa.eu": "Europe",
+    "gpa.eu_sub": "ECTS grade (A is highest)",
+    "gpa.de": "Germany",
+    "gpa.de_sub": "1.0 is highest, 4.0 is the pass mark",
+    "gpa.uk_short.first": "First",
+    "gpa.uk_short.upper_second": "2:1",
+    "gpa.uk_short.lower_second": "2:2",
+    "gpa.uk_short.third": "Third",
+    "gpa.uk_short.below": "—",
+    "gpa.uk_class.first": "First Class Honours",
+    "gpa.uk_class.upper_second": "Upper Second Class (2:1)",
+    "gpa.uk_class.lower_second": "Lower Second Class (2:2)",
+    "gpa.uk_class.third": "Third Class Honours",
+    "gpa.uk_class.below": "Below honours level",
+    "gpa.disclaimer": "This is an estimate. The final grade is set by the university or a recognition body (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Profile complete",
     "home.profile_done": "Your profile is complete",
     "home.summary_total": "Programs that fit you",
@@ -801,7 +879,7 @@ async function renderHome() {
 
   el.innerHTML = `
     <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=27" alt="" aria-hidden="true">
+      <img class="hero-logo" src="logo-mark.png?v=28" alt="" aria-hidden="true">
       <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
       <div class="hero-sub">${t("home.tagline")}</div>
       ${
@@ -847,9 +925,9 @@ async function renderHome() {
         <img class="quick-ico" src="icon-grants.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("nav.scholarships")}</span>
       </button>
-      <button type="button" class="quick violet" data-goto="saved">
-        <img class="quick-ico" src="icon-saved.png?v=${ASSET_V}" alt="" aria-hidden="true">
-        <span class="quick-label">${t("nav.saved")}</span>
+      <button type="button" class="quick rose" data-action="gpa">
+        <img class="quick-ico" src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
+        <span class="quick-label">${t("home.shortcut_gpa")}</span>
       </button>
     </div>
   `;
@@ -859,7 +937,8 @@ async function renderHome() {
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
-      switchTab(card.dataset.goto);
+      if (card.dataset.action === "gpa") openGpaSheet();
+      else switchTab(card.dataset.goto);
     });
   });
 
@@ -1233,6 +1312,138 @@ function showSheet(html, sheet) {
   } catch (e) {
     /* eski klientlar */
   }
+}
+
+// ============ GPA konvertor ============
+
+// Har bir O'zbekiston shkalasi uchun ruxsat etilgan oraliq va namuna qiymat.
+const GPA_SCALES = {
+  5: { min: 2, max: 5, step: "0.01", example: "4.5" },
+  100: { min: 0, max: 100, step: "0.1", example: "85" },
+  4: { min: 0, max: 4, step: "0.01", example: "3.5" },
+};
+
+function openGpaSheet() {
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  // Profilda baho bo'lsa, konvertor shu bilan ochiladi.
+  let scale = profile && profile.gpa_scale ? String(profile.gpa_scale) : "100";
+  const initial = profile && profile.gpa_raw !== null && profile.gpa_scale ? profile.gpa_raw : "";
+
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-head gpa-head">
+      <img class="gpa-head-ico" src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      <div>
+        <div class="sheet-title">${t("gpa.title")}</div>
+        <div class="sheet-sub">${t("gpa.subtitle")}</div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("gpa.scale")}</div>
+      <div class="chip-group" id="gpa-sheet-scale">
+        ${["5", "100", "4"]
+          .map(
+            (value) =>
+              `<div class="chip ${value === scale ? "active" : ""}" data-value="${value}">${t(
+                "profile.gpa_scale." + value
+              )}</div>`
+          )
+          .join("")}
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <div class="sheet-section-title">${t("gpa.value")}</div>
+      <input type="number" inputmode="decimal" id="gpa-sheet-input" class="gpa-input"
+             value="${escapeHtml(initial)}" />
+      <div class="gpa-range" id="gpa-sheet-range"></div>
+    </div>
+
+    <div id="gpa-sheet-result"></div>
+  `,
+    sheet
+  );
+
+  const input = document.getElementById("gpa-sheet-input");
+  const range = document.getElementById("gpa-sheet-range");
+  const result = document.getElementById("gpa-sheet-result");
+  let timer = null;
+  let requestId = 0;
+
+  const applyScale = () => {
+    const cfg = GPA_SCALES[scale];
+    input.step = cfg.step;
+    input.min = cfg.min;
+    input.max = cfg.max;
+    input.placeholder = cfg.example;
+    range.textContent = t("gpa.range", { min: cfg.min, max: cfg.max });
+  };
+
+  const render = async () => {
+    const cfg = GPA_SCALES[scale];
+    const value = parseFloat(String(input.value).replace(",", "."));
+    if (Number.isNaN(value)) {
+      result.innerHTML = `<div class="sheet-empty">${t("gpa.empty")}</div>`;
+      return;
+    }
+    if (value < cfg.min || value > cfg.max) {
+      result.innerHTML = `<div class="gpa-error">${t("gpa.range", { min: cfg.min, max: cfg.max })}</div>`;
+      return;
+    }
+    const current = ++requestId;
+    let r;
+    try {
+      r = await api(`/gpa/convert?value=${encodeURIComponent(value)}&scale=${encodeURIComponent(scale)}`);
+    } catch (e) {
+      return;
+    }
+    // Tez yozilganda eski javob yangisining ustidan chizilmasin.
+    if (current !== requestId) return;
+
+    const card = (code, label, main, sub) => `
+      <div class="gpa-result">
+        <span class="gpa-result-flag">${flag(code)}</span>
+        <div class="gpa-result-text">
+          <div class="gpa-result-label">${label}</div>
+          ${sub ? `<div class="gpa-result-sub">${sub}</div>` : ""}
+        </div>
+        <div class="gpa-result-value">${main}</div>
+      </div>`;
+
+    result.innerHTML = `
+      <div class="sheet-section">
+        <div class="sheet-section-title">${t("gpa.results")}</div>
+        <div class="gpa-results">
+          ${card("US", t("gpa.us"), `${r.us4.toFixed(2)}`, t("gpa.us_sub"))}
+          ${card("GB", t("gpa.uk"), escapeHtml(t("gpa.uk_short." + r.uk)), t("gpa.uk_class." + r.uk))}
+          ${card("EU", t("gpa.eu"), escapeHtml(r.ects), t("gpa.eu_sub"))}
+          ${card("DE", t("gpa.de"), `${r.bavarian.toFixed(1)}`, t("gpa.de_sub"))}
+        </div>
+      </div>
+      <div class="disclaimer">${icon("clock")}<span>${t("gpa.disclaimer")}</span></div>`;
+  };
+
+  document.querySelectorAll("#gpa-sheet-scale .chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      haptic("light");
+      document
+        .querySelectorAll("#gpa-sheet-scale .chip")
+        .forEach((c) => c.classList.toggle("active", c === chip));
+      scale = chip.dataset.value;
+      applyScale();
+      render();
+    });
+  });
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(render, 250);
+  });
+
+  applyScale();
+  render();
 }
 
 async function openProgramSheet(programId) {

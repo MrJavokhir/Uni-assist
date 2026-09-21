@@ -39,6 +39,8 @@ class GpaConvertOut(BaseModel):
     us4: float
     ects: str
     bavarian: float
+    # Buyuk Britaniya diplom darajasi kaliti (first, upper_second, ...)
+    uk: str
     disclaimer: str
 
 

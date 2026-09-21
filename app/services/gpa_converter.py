@@ -31,11 +31,26 @@ _BAVARIAN_MIN_PASS: dict[GpaScale, float] = {
 }
 
 
+# AQSH 4.0 GPA -> Buyuk Britaniya diplom darajasi (quyi chegaralar).
+# Britaniya universitetlari xorijiy baholarni odatda shunday solishtiradi:
+# 3.7 ≈ First, 3.3 ≈ Upper Second (2:1), 3.0 ≈ Lower Second (2:2).
+# Har universitetning o'z jadvali bor — natija faqat taxminiy.
+_UK_CLASSES: list[tuple[float, str]] = [
+    (3.7, "first"),
+    (3.3, "upper_second"),
+    (3.0, "lower_second"),
+    (2.5, "third"),
+]
+
+
 @dataclass(frozen=True)
 class GpaConversionResult:
     us4: float
     ects: str
     bavarian: float
+    # Kalit: first / upper_second / lower_second / third / below —
+    # Mini App uni foydalanuvchi tilida yozadi.
+    uk: str
 
 
 def to_us4(value: float, scale: GpaScale) -> float:
@@ -105,9 +120,19 @@ def to_bavarian(
     return round(max(1.0, min(5.0, n)), 2)
 
 
+def to_uk(value: float, scale: GpaScale) -> str:
+    """Berilgan bahoni taxminiy Buyuk Britaniya diplom darajasiga o'giradi."""
+    us4 = to_us4(value, scale)
+    for threshold, uk_class in _UK_CLASSES:
+        if us4 >= threshold:
+            return uk_class
+    return "below"
+
+
 def convert(value: float, scale: GpaScale) -> GpaConversionResult:
     return GpaConversionResult(
         us4=to_us4(value, scale),
         ects=to_ects(value, scale),
         bavarian=to_bavarian(value, scale),
+        uk=to_uk(value, scale),
     )

@@ -320,3 +320,107 @@ async def test_export_then_import_is_unchanged(session: AsyncSession):
 def test_template_has_header_and_one_sample_row(kind):
     rows = parse_csv(template_csv(kind).encode("utf-8"), kind)
     assert len(rows) == 1
+
+
+# ------------------------- tafsilot ustunlari -------------------------
+
+DETAILS_HEADER = PROGRAMS_HEADER + (
+    ",ielts_min,toefl_min,tuition_amount,tuition_currency,deadline_close,"
+    "has_application_fee,application_fee_amount,application_fee_currency,"
+    "has_scholarship,scholarship_url,required_documents,requirements_text"
+)
+BASE = "DE,TU Munich,Informatics,BSc,bachelor,cs_it,English,3,2027 September,https://tum.de/i,,,"
+
+
+async def _load_program(session: AsyncSession) -> Program:
+    from sqlalchemy.orm import selectinload
+
+    session.expire_all()
+    return (
+        await session.execute(
+            select(Program).options(
+                selectinload(Program.requirement),
+                selectinload(Program.cost),
+                selectinload(Program.deadlines),
+            )
+        )
+    ).scalar_one()
+
+
+async def test_details_are_saved_for_new_program(session: AsyncSession):
+    await _seed(session)
+    data = _csv(
+        DETAILS_HEADER,
+        BASE + ",6.5,90,38000,gbp,2027-01-14,yes,28.95,GBP,no,,"
+        "transcript|personal_statement|reference,A level: AAA|Maths A",
+    )
+
+    plan = await _import(session, programs=data)
+
+    assert plan.rows[0].status == STATUS_NEW
+    program = await _load_program(session)
+    assert float(program.requirement.ielts_min) == 6.5
+    assert program.requirement.toefl_min == 90
+    assert float(program.cost.tuition_amount) == 38000
+    assert program.cost.currency == "GBP"
+    assert [d.date_utc.date().isoformat() for d in program.deadlines] == ["2027-01-14"]
+    assert program.has_application_fee is True
+    assert float(program.application_fee_amount) == 28.95
+    assert program.has_scholarship is False
+    assert program.required_documents == ["transcript", "personal_statement", "reference"]
+    assert program.requirements_text == "A level: AAA\nMaths A"
+
+
+async def test_empty_detail_cells_keep_existing_details(session: AsyncSession):
+    await _seed(session)
+    await _import(session, programs=_csv(
+        DETAILS_HEADER, BASE + ",6.5,90,38000,GBP,2027-01-14,yes,28.95,GBP,,,transcript,",
+    ))
+
+    # Faqat IELTS o'zgaradi, qolgan tafsilot kataklari bo'sh.
+    plan = await _plan(session, programs=_csv(
+        DETAILS_HEADER, "DE,TU Munich,Informatics,,bachelor,,,,,,,,,7,,,,,,,,,,,",
+    ))
+
+    assert plan.rows[0].status == STATUS_UPDATE
+    assert set(plan.rows[0].changes) == {"ielts_min"}
+    await apply_plan(session, plan, admin="tester")
+    await session.commit()
+    program = await _load_program(session)
+    assert float(program.requirement.ielts_min) == 7
+    assert program.requirement.toefl_min == 90
+    assert float(program.cost.tuition_amount) == 38000
+    assert len(program.deadlines) == 1
+    assert program.required_documents == ["transcript"]
+
+
+async def test_invalid_detail_values_are_errors(session: AsyncSession):
+    await _seed(session)
+    rows = [
+        BASE + ",6.3,,,,,,,,,,,",                       # IELTS 0.5 qadamda emas
+        BASE.replace("Informatics", "A") + ",,,38000,,,,,,,,,",   # valyutasiz kontrakt
+        BASE.replace("Informatics", "B") + ",,,,,14/01/2027,,,,,,,",  # sana formati
+        BASE.replace("Informatics", "C") + ",,,,,,maybe,,,,,,",     # yes/no emas
+        BASE.replace("Informatics", "D") + ",,,,,,,,,,,diploma,",   # noma'lum hujjat
+    ]
+    plan = await _plan(session, programs=_csv(DETAILS_HEADER, *rows))
+
+    assert [r.status for r in plan.rows] == [STATUS_ERROR] * 5
+
+
+async def test_export_then_import_with_details_is_unchanged(session: AsyncSession):
+    await _seed(session)
+    await _import(session, programs=_csv(
+        DETAILS_HEADER,
+        BASE + ",6.5,90,38000,GBP,2027-01-14,yes,28.95,GBP,yes,https://tum.de/s,"
+        "transcript|cv,Line one|Line two",
+    ))
+
+    exported = {
+        kind: (await export_csv(session, kind)).encode("utf-8")
+        for kind in ("countries", "universities", "programs")
+    }
+    plan = await _plan(session, **exported)
+
+    assert not plan.has_errors, [(r.line, r.errors) for r in plan.rows if r.errors]
+    assert {r.status for r in plan.rows} == {STATUS_UNCHANGED}

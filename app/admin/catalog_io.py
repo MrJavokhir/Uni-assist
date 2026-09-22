@@ -22,7 +22,7 @@ import csv
 import io
 import re
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -33,10 +33,15 @@ from sqlalchemy.orm import selectinload
 
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
+    REQUIRED_DOCUMENTS,
     Country,
+    Deadline,
+    DeadlineType,
     DegreeLevel,
     Field,
     Program,
+    ProgramCost,
+    ProgramRequirement,
     University,
 )
 
@@ -59,8 +64,24 @@ COLUMNS: dict[str, list[str]] = {
         "notes",
         "notes_ru",
         "notes_en",
+        # Tafsilotlar (bo'sh katak — o'zgarmaydi)
+        "ielts_min",
+        "toefl_min",
+        "tuition_amount",
+        "tuition_currency",
+        "deadline_close",
+        "has_application_fee",
+        "application_fee_amount",
+        "application_fee_currency",
+        "has_scholarship",
+        "scholarship_url",
+        "required_documents",
+        "requirements_text",
     ],
 }
+
+# Bir katakda bir nechta qiymat (hujjatlar, talab qatorlari) shu belgi bilan ajratiladi.
+LIST_SEPARATOR = "|"
 
 # Kalit ustunlar sarlavhada bo'lishi SHART; qolganlari ixtiyoriy
 # (yo'q ustun = bo'sh katak = qiymat o'zgarmaydi).
@@ -113,6 +134,18 @@ SAMPLE_ROWS: dict[str, dict[str, str]] = {
         "notes": "",
         "notes_ru": "",
         "notes_en": "",
+        "ielts_min": "6.5",
+        "toefl_min": "88",
+        "tuition_amount": "54000",
+        "tuition_currency": "EUR",
+        "deadline_close": "2027-05-31",
+        "has_application_fee": "no",
+        "application_fee_amount": "",
+        "application_fee_currency": "",
+        "has_scholarship": "",
+        "scholarship_url": "",
+        "required_documents": "transcript|degree_certificate|cv|english_test",
+        "requirements_text": "Bachelor's in computer science or related field",
     },
 }
 
@@ -127,6 +160,7 @@ STATUS_UNCHANGED = "unchanged"
 STATUS_ERROR = "error"
 
 _ISO_RE = re.compile(r"^[A-Z]{2}$")
+_CURRENCY_RE = re.compile(r"^[A-Z]{3}$")
 _URL_RE = re.compile(r"^https?://\S+$")
 
 
@@ -208,6 +242,9 @@ class RowPlan:
     target_id: int | None = None  # yangilanadigan yozuv ID'si
     # Bog'lanishlar (yangi yozuvlarga ham): davlat ISO / universitet kaliti
     ref: dict[str, Any] = field(default_factory=dict)
+    # Dasturning bog'liq jadvallari uchun qiymatlar:
+    # {"requirement": {...}, "cost": {...}, "deadline": {"date_utc": ...}}
+    related: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -297,7 +334,15 @@ async def build_plan(
         fields = {f.code: f for f in (await session.execute(select(Field))).scalars()}
         programs: dict[tuple[int, str, DegreeLevel], Program] = {
             (p.university_id, _norm(p.name), p.degree_level): p
-            for p in (await session.execute(select(Program))).scalars()
+            for p in (
+                await session.execute(
+                    select(Program).options(
+                        selectinload(Program.requirement),
+                        selectinload(Program.cost),
+                        selectinload(Program.deadlines),
+                    )
+                )
+            ).scalars()
         }
         seen: set[tuple[str, str, str, DegreeLevel]] = set()
         for line, row in files["programs"]:
@@ -414,6 +459,190 @@ def _plan_university(
     return result
 
 
+def _yes_no(value: str, column: str, errors: list[str]) -> bool | None:
+    text = value.strip().lower()
+    if text in ("yes", "ha", "true", "1"):
+        return True
+    if text in ("no", "yo'q", "yoq", "false", "0"):
+        return False
+    errors.append(f"{column}: 'yes' yoki 'no' bo'lishi kerak")
+    return None
+
+
+def _positive_decimal(value: str, column: str, errors: list[str], upper: int) -> Decimal | None:
+    try:
+        number = Decimal(value.replace(",", "."))
+        if number <= 0 or number > upper:
+            raise InvalidOperation
+        return number.normalize()
+    except InvalidOperation:
+        errors.append(f"{column}: 0 dan katta, {upper} dan oshmaydigan son bo'lishi kerak")
+        return None
+
+
+def _currency(value: str, column: str, errors: list[str]) -> str | None:
+    code = value.strip().upper()
+    if not _CURRENCY_RE.match(code):
+        errors.append(f"{column}: uch harfli valyuta kodi bo'lishi kerak (GBP, USD, EUR)")
+        return None
+    return code
+
+
+def _split_list(value: str) -> list[str]:
+    return [part.strip() for part in value.split(LIST_SEPARATOR) if part.strip()]
+
+
+def _parse_program_details(
+    row: dict[str, str], values: dict[str, Any], errors: list[str]
+) -> dict[str, dict[str, Any]]:
+    """Tafsilot ustunlarini o'qiydi. Dastur maydonlari `values`ga yoziladi,
+    bog'liq jadvallar (talab, xarajat, muddat) qiymatlari qaytariladi.
+
+    Bo'sh katak — hech narsa qo'shilmaydi (mavjud qiymat o'zgarmaydi).
+    """
+    related: dict[str, dict[str, Any]] = {"requirement": {}, "cost": {}, "deadline": {}}
+
+    if row["ielts_min"]:
+        ielts = _positive_decimal(row["ielts_min"], "ielts_min", errors, 9)
+        if ielts is not None:
+            if (ielts * 2) % 1:
+                errors.append("ielts_min: 0.5 qadam bilan bo'lishi kerak (6, 6.5, 7...)")
+            else:
+                related["requirement"]["ielts_min"] = ielts
+    if row["toefl_min"]:
+        if row["toefl_min"].isdigit() and 0 < int(row["toefl_min"]) <= 120:
+            related["requirement"]["toefl_min"] = int(row["toefl_min"])
+        else:
+            errors.append("toefl_min: 1 dan 120 gacha butun son bo'lishi kerak")
+
+    if row["tuition_amount"]:
+        amount = _positive_decimal(row["tuition_amount"], "tuition_amount", errors, 10_000_000)
+        if amount is not None:
+            related["cost"]["tuition_amount"] = amount
+    if row["tuition_currency"]:
+        code = _currency(row["tuition_currency"], "tuition_currency", errors)
+        if code:
+            related["cost"]["currency"] = code
+
+    if row["deadline_close"]:
+        try:
+            day = date.fromisoformat(row["deadline_close"])
+            related["deadline"]["date_utc"] = datetime(day.year, day.month, day.day, tzinfo=UTC)
+        except ValueError:
+            errors.append("deadline_close: sana YYYY-MM-DD ko'rinishida bo'lishi kerak")
+
+    if row["has_application_fee"]:
+        flag = _yes_no(row["has_application_fee"], "has_application_fee", errors)
+        if flag is not None:
+            values["has_application_fee"] = flag
+    if row["application_fee_amount"]:
+        fee = _positive_decimal(
+            row["application_fee_amount"], "application_fee_amount", errors, 100_000
+        )
+        if fee is not None:
+            values["application_fee_amount"] = fee
+    if row["application_fee_currency"]:
+        code = _currency(row["application_fee_currency"], "application_fee_currency", errors)
+        if code:
+            values["application_fee_currency"] = code
+
+    if row["has_scholarship"]:
+        flag = _yes_no(row["has_scholarship"], "has_scholarship", errors)
+        if flag is not None:
+            values["has_scholarship"] = flag
+    if row["scholarship_url"]:
+        _check_url(row["scholarship_url"], "scholarship_url", errors)
+        values["scholarship_url"] = row["scholarship_url"]
+
+    if row["required_documents"]:
+        documents = _split_list(row["required_documents"])
+        unknown = [d for d in documents if d not in REQUIRED_DOCUMENTS]
+        if unknown:
+            errors.append(
+                f"required_documents: noma'lum kalit(lar) {', '.join(unknown)} "
+                f"(ruxsat: {', '.join(REQUIRED_DOCUMENTS)})"
+            )
+        else:
+            values["required_documents"] = [d for d in REQUIRED_DOCUMENTS if d in documents]
+    if row["requirements_text"]:
+        values["requirements_text"] = "\n".join(_split_list(row["requirements_text"]))
+    return related
+
+
+def _close_deadline(program: Program) -> Deadline | None:
+    return next(
+        (d for d in program.deadlines if d.type == DeadlineType.APPLICATION_CLOSE), None
+    )
+
+
+def _related_diff(
+    program: Program, related: dict[str, dict[str, Any]]
+) -> dict[str, tuple[Any, Any]]:
+    """Bog'liq jadvallar bo'yicha farq (oldindan ko'rishda ko'rsatish uchun)."""
+    changes: dict[str, tuple[Any, Any]] = {}
+    requirement, cost = program.requirement, program.cost
+    for name, new in related["requirement"].items():
+        old = getattr(requirement, name) if requirement else None
+        if (_decimal(old) if old is not None else None) != _decimal(new):
+            changes[name] = (old, new)
+    for name, new in related["cost"].items():
+        old = getattr(cost, name) if cost else None
+        same = _decimal(old) == new if isinstance(new, Decimal) else old == new
+        if not same:
+            changes["tuition_amount" if name == "tuition_amount" else "tuition_currency"] = (
+                old, new
+            )
+    if "date_utc" in related["deadline"]:
+        current = _close_deadline(program)
+        old_day = current.date_utc.date() if current else None
+        new_day = related["deadline"]["date_utc"].date()
+        if old_day != new_day:
+            changes["deadline_close"] = (old_day, new_day)
+    return changes
+
+
+async def _apply_related(
+    session: AsyncSession,
+    program: Program,
+    related: dict[str, dict[str, Any]],
+    today: date,
+    existing: Program | None,
+) -> None:
+    """Talab, xarajat va ariza muddatini yozadi (bo'sh qiymatlar tegilmaydi).
+
+    `existing` — bog'liq yozuvlari oldindan yuklangan mavjud dastur; yangi
+    dasturda None (async'da relationship'ni lazy yuklab bo'lmaydi).
+    """
+    if related.get("requirement"):
+        requirement = existing.requirement if existing else None
+        if requirement is None:
+            requirement = ProgramRequirement(program_id=program.id, gre_required=False)
+            session.add(requirement)
+        for name, value in related["requirement"].items():
+            setattr(requirement, name, value)
+
+    if related.get("cost"):
+        cost = existing.cost if existing else None
+        if cost is None:
+            cost = ProgramCost(program_id=program.id, last_checked=today)
+            session.add(cost)
+        for name, value in related["cost"].items():
+            setattr(cost, name, value)
+        cost.last_checked = today
+
+    if related.get("deadline"):
+        deadline = _close_deadline(existing) if existing else None
+        if deadline is None:
+            session.add(Deadline(
+                program_id=program.id,
+                type=DeadlineType.APPLICATION_CLOSE,
+                date_utc=related["deadline"]["date_utc"],
+                intake_term=program.intake_term,
+            ))
+        else:
+            deadline.date_utc = related["deadline"]["date_utc"]
+
+
 def _plan_program(
     line: int,
     row: dict[str, str],
@@ -484,6 +713,7 @@ def _plan_program(
             values[column] = row[column]
     if len(row["abbreviation"]) > 30:
         errors.append("abbreviation: 30 belgidan oshmasin")
+    related = _parse_program_details(row, values, errors)
     if errors:
         return result
 
@@ -502,13 +732,34 @@ def _plan_program(
         if missing:
             errors.append(f"Yangi dastur uchun majburiy: {', '.join(missing)}")
             return result
+        if related["cost"] and "tuition_amount" not in related["cost"]:
+            errors.append("tuition_currency berilgan, lekin tuition_amount yo'q")
+            return result
+        if "tuition_amount" in related["cost"] and "currency" not in related["cost"]:
+            errors.append("tuition_amount uchun tuition_currency ham kerak (masalan GBP)")
+            return result
         result.status = STATUS_NEW
         result.values = {"name": name, "degree_level": degree, **values}
+        result.related = related
         return result
+
+    if related["cost"] and existing.cost is None:
+        missing_cost = [
+            column for column, key in (("tuition_amount", "tuition_amount"),
+                                       ("tuition_currency", "currency"))
+            if key not in related["cost"]
+        ]
+        if missing_cost:
+            errors.append(
+                f"Dasturda hali xarajat yo'q — {', '.join(missing_cost)} ham kerak"
+            )
+            return result
 
     result.target_id = existing.id
     result.values = values
+    result.related = related
     result.changes = _diff(existing, values)
+    result.changes.update(_related_diff(existing, related))
     if "field_id" in result.changes:
         # Oldindan ko'rishda ID emas, yo'nalish kodi ko'rinsin.
         codes = {f.id: f.code for f in fields.values()}
@@ -572,12 +823,28 @@ async def apply_plan(session: AsyncSession, plan: ImportPlan, admin: str) -> dic
                 uni_id = university_ids[(_norm(row.ref["university_name"]), row.ref["country_iso"])]
                 program = Program(university_id=uni_id, **row.values)
                 session.add(program)
+                program.verified_at = now
+                program.verified_by = admin
+                await session.flush()
+                existing = None
             else:
-                program = await session.get(Program, row.target_id)
+                program = (
+                    await session.execute(
+                        select(Program)
+                        .options(
+                            selectinload(Program.requirement),
+                            selectinload(Program.cost),
+                            selectinload(Program.deadlines),
+                        )
+                        .where(Program.id == row.target_id)
+                    )
+                ).scalar_one()
                 for name, value in row.values.items():
                     setattr(program, name, value)
-            program.verified_at = now
-            program.verified_by = admin
+                program.verified_at = now
+                program.verified_by = admin
+                existing = program
+            await _apply_related(session, program, row.related, now.date(), existing)
             saved[row.status] += 1
     await session.flush()
     return saved
@@ -593,6 +860,12 @@ def _fmt(value: Any) -> str:
         text = f"{Decimal(str(value)).normalize():f}"
         return text
     return str(value)
+
+
+def _fmt_bool(value: bool | None) -> str:
+    if value is None:
+        return ""
+    return "yes" if value else "no"
 
 
 def template_csv(kind: str) -> str:
@@ -627,10 +900,14 @@ async def export_csv(session: AsyncSession, kind: str) -> str:
             .options(
                 selectinload(Program.university).selectinload(University.country),
                 selectinload(Program.field),
+                selectinload(Program.requirement),
+                selectinload(Program.cost),
+                selectinload(Program.deadlines),
             )
             .order_by(Program.university_id, Program.name, Program.degree_level)
         )
         for p in (await session.execute(stmt)).scalars():
+            req, cost, close = p.requirement, p.cost, _close_deadline(p)
             rows.append({
                 "country_iso": p.university.country.iso_code,
                 "university_name": p.university.name,
@@ -645,6 +922,20 @@ async def export_csv(session: AsyncSession, kind: str) -> str:
                 "notes": p.notes or "",
                 "notes_ru": p.notes_ru or "",
                 "notes_en": p.notes_en or "",
+                "ielts_min": _fmt(req.ielts_min) if req else "",
+                "toefl_min": _fmt(req.toefl_min) if req else "",
+                "tuition_amount": _fmt(cost.tuition_amount) if cost else "",
+                "tuition_currency": cost.currency if cost else "",
+                "deadline_close": close.date_utc.date().isoformat() if close else "",
+                "has_application_fee": _fmt_bool(p.has_application_fee),
+                "application_fee_amount": _fmt(p.application_fee_amount),
+                "application_fee_currency": p.application_fee_currency or "",
+                "has_scholarship": _fmt_bool(p.has_scholarship),
+                "scholarship_url": p.scholarship_url or "",
+                "required_documents": LIST_SEPARATOR.join(p.required_documents or []),
+                "requirements_text": LIST_SEPARATOR.join(
+                    (p.requirements_text or "").splitlines()
+                ),
             })
     else:
         raise ValueError(f"Noma'lum tur: {kind}")

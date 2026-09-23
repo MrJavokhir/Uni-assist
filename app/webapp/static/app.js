@@ -63,7 +63,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 30;
+const ASSET_V = 31;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -269,8 +269,11 @@ const I18N = {
     "profile.reset": "Hammasini tozalash",
     "profile.reset_confirm": "Profildagi barcha tanlovlar o'chiriladi. Saqlangan dasturlarga tegilmaydi. Davom etamizmi?",
     "profile.reset_toast": "Profil tozalandi",
-    "profile.save": "Saqlash",
-    "profile.saved_toast": "Profil saqlandi",
+    "profile.find": "Mos dasturlarni topish",
+    "finding.title": "Siz uchun mos dasturlar jamlanmoqda",
+    "finding.step1": "Profil ma'lumotlari o'qilmoqda",
+    "finding.step2": "Dasturlar talablaringiz bo'yicha solishtirilmoqda",
+    "finding.step3": "Eng mos natijalar saralanmoqda",
 
     "match.empty_title": "Mos dastur topilmadi",
     "match.empty_text": "Profilingizni to'ldiring — shunda sizga mos dasturlarni topa olaman.",
@@ -485,8 +488,11 @@ const I18N = {
     "profile.reset": "Очистить всё",
     "profile.reset_confirm": "Все данные профиля будут удалены. Сохранённые программы не тронем. Продолжить?",
     "profile.reset_toast": "Профиль очищен",
-    "profile.save": "Сохранить",
-    "profile.saved_toast": "Профиль сохранён",
+    "profile.find": "Подобрать программы",
+    "finding.title": "Подбираем подходящие вам программы",
+    "finding.step1": "Читаем данные профиля",
+    "finding.step2": "Сравниваем программы с вашими параметрами",
+    "finding.step3": "Отбираем самые подходящие результаты",
 
     "match.empty_title": "Программы не найдены",
     "match.empty_text": "Заполните профиль — и я подберу подходящие программы.",
@@ -701,8 +707,11 @@ const I18N = {
     "profile.reset": "Reset everything",
     "profile.reset_confirm": "All profile choices will be cleared. Saved programs stay untouched. Continue?",
     "profile.reset_toast": "Profile cleared",
-    "profile.save": "Save",
-    "profile.saved_toast": "Profile saved",
+    "profile.find": "Find my programs",
+    "finding.title": "Finding programs that fit you",
+    "finding.step1": "Reading your profile",
+    "finding.step2": "Comparing programs against your requirements",
+    "finding.step3": "Ranking the closest matches",
 
     "match.empty_title": "No programs found",
     "match.empty_text": "Fill in your profile and I'll find programs that fit you.",
@@ -1347,7 +1356,11 @@ function ensureSheet() {
 
 function closeSheet() {
   document.querySelector(".sheet-backdrop")?.classList.remove("open");
-  document.querySelector(".sheet")?.classList.remove("open");
+  const sheet = document.querySelector(".sheet");
+  sheet?.classList.remove("open");
+  // Balandlik faqat o'sha varaqqa tegishli — yopilganda olib tashlanadi,
+  // aks holda keyingi kichik varaq ham balandligicha ochilardi.
+  sheet?.classList.remove("sheet-tall");
   document.body.style.overflow = "";
   try {
     tg?.BackButton?.hide();
@@ -1356,9 +1369,12 @@ function closeSheet() {
   }
 }
 
-function showSheet(html, sheet) {
+// `options.tall` — varaqni kontent bo'yicha emas, to'liq sahifa balandligida
+// ochadi (GPA konvertor uchun: natija chiqqanda varaq sakrab kattaymaydi).
+function showSheet(html, sheet, options) {
   sheet.innerHTML = html;
   document.querySelector(".sheet-backdrop").classList.add("open");
+  sheet.classList.toggle("sheet-tall", !!(options && options.tall));
   sheet.classList.add("open");
   document.body.style.overflow = "hidden";
   try {
@@ -1421,7 +1437,8 @@ function openGpaSheet() {
 
     <div id="gpa-sheet-result"></div>
   `,
-    sheet
+    sheet,
+    { tall: true }
   );
 
   const input = document.getElementById("gpa-sheet-input");
@@ -2171,7 +2188,9 @@ function renderProfile() {
       </div>
     </div>
 
-    <button type="button" class="btn btn-accent btn-block" id="save-profile-btn">${t("profile.save")}</button>
+    <button type="button" class="btn btn-accent btn-block" id="find-programs-btn">
+      ${icon("spark")}${t("profile.find")}
+    </button>
     <button type="button" class="btn btn-danger-soft btn-block" id="reset-profile-btn">
       ${icon("trash")}${t("profile.reset")}
     </button>
@@ -2258,7 +2277,7 @@ function renderProfile() {
   });
 
   document.getElementById("gpa-value-input").addEventListener("input", updateGpaPreview);
-  document.getElementById("save-profile-btn").addEventListener("click", saveProfile);
+  document.getElementById("find-programs-btn").addEventListener("click", findPrograms);
   document.getElementById("reset-profile-btn").addEventListener("click", resetProfile);
 
   updateGpaPreview();
@@ -2349,8 +2368,82 @@ async function saveProfile() {
   if (fee) payload.application_fee_ok = fee === "yes";
 
   profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
-  haptic("success");
-  showToast(t("profile.saved_toast"));
+}
+
+// ---- "Mos dasturlarni topish" ----
+// Oyna faqat vizual: tanlov mantiqi — serverdagi o'sha eski filtrning o'zi.
+// Hech qanday tashqi xizmat yoki model chaqirilmaydi, shuning uchun matnlarda
+// ham "AI" deyilmaydi — faqat nima qilinayotgani aytiladi.
+
+const FINDING_MS = 2200;
+
+function showFindingOverlay() {
+  let el = document.getElementById("finding-overlay");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "finding-overlay";
+    el.className = "finding";
+    document.body.append(el);
+  }
+  // Yopilish animatsiyasi (260 ms) tugamasdan tugma qayta bosilsa, eski
+  // o'chirish taymeri yangi oynani ham olib tashlab yuborardi.
+  clearTimeout(el._hideTimer);
+  el.innerHTML = `
+    <div class="finding-card" role="status" aria-live="polite">
+      <div class="finding-orb">
+        <span class="finding-ring"></span>
+        <span class="finding-ring finding-ring-2"></span>
+        <span class="finding-ring finding-ring-3"></span>
+        <span class="finding-core">${icon("spark")}</span>
+      </div>
+      <div class="finding-title">${t("finding.title")}</div>
+      <div class="finding-steps">
+        ${[1, 2, 3]
+          .map(
+            (n, i) => `
+        <div class="finding-step" style="--d:${i * 620}ms">
+          <span class="finding-step-dot"></span><span>${t("finding.step" + n)}</span>
+        </div>`
+          )
+          .join("")}
+      </div>
+      <div class="finding-bar"><span style="--dur:${FINDING_MS}ms"></span></div>
+    </div>`;
+  document.body.style.overflow = "hidden";
+  // Ochilish animatsiyasi ishga tushishi uchun klass keyingi kadrda qo'shiladi.
+  requestAnimationFrame(() => el.classList.add("open"));
+  return el;
+}
+
+function hideFindingOverlay() {
+  const el = document.getElementById("finding-overlay");
+  if (!el) return;
+  el.classList.remove("open");
+  document.body.style.overflow = "";
+  el._hideTimer = setTimeout(() => el.remove(), 260);
+}
+
+async function findPrograms() {
+  const btn = document.getElementById("find-programs-btn");
+  if (btn) btn.disabled = true;
+  haptic("light");
+  showFindingOverlay();
+  const startedAt = Date.now();
+  try {
+    await saveProfile();
+    await switchTab("match");
+    // Oyna eng kamida shuncha turadi. Javob tez kelsa ham u "chaqnab"
+    // o'tib ketmasligi kerak — aks holda nima bo'lgani ko'rinmay qoladi.
+    const left = FINDING_MS - (Date.now() - startedAt);
+    if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
+    haptic("success");
+  } catch (err) {
+    haptic("error");
+    showToast(err.message);
+  } finally {
+    hideFindingOverlay();
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function resetProfile() {

@@ -63,7 +63,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 33;
+const ASSET_V = 34;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -183,15 +183,12 @@ const I18N = {
     "nav.saved": "Saqlangan",
     "nav.profile": "Profil",
 
-    "home.greeting": "Salom, {name}!",
-    "home.tagline": "Chet elda o'qish safaringiz shu yerdan boshlanadi.",
     "home.stat_green": "Mos dasturlar",
     "home.stat_yellow": "Yaqin dasturlar",
     "home.stat_saved": "Saqlangan",
     "home.alert_title": "Yaqinlashayotgan muddat",
     "home.alert_body": "{program} · {days} kun qoldi",
     "home.section_shortcuts": "Tezkor amallar",
-    "home.greeting_plain": "Salom!",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
@@ -403,15 +400,12 @@ const I18N = {
     "nav.saved": "Сохранённые",
     "nav.profile": "Профиль",
 
-    "home.greeting": "Привет, {name}!",
-    "home.tagline": "Ваш путь к учёбе за рубежом начинается здесь.",
     "home.stat_green": "Подходящие",
     "home.stat_yellow": "Почти подходят",
     "home.stat_saved": "Сохранённые",
     "home.alert_title": "Приближается дедлайн",
     "home.alert_body": "{program} · осталось {days} дн.",
     "home.section_shortcuts": "Быстрые действия",
-    "home.greeting_plain": "Привет!",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
@@ -623,15 +617,12 @@ const I18N = {
     "nav.saved": "Saved",
     "nav.profile": "Profile",
 
-    "home.greeting": "Hi, {name}!",
-    "home.tagline": "Your journey to studying abroad starts here.",
     "home.stat_green": "Matching",
     "home.stat_yellow": "Close matches",
     "home.stat_saved": "Saved",
     "home.alert_title": "Deadline approaching",
     "home.alert_body": "{program} · {days} day(s) left",
     "home.section_shortcuts": "Quick actions",
-    "home.greeting_plain": "Hi there!",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
@@ -926,13 +917,15 @@ function profileCompleteness() {
 
 // Bosh sahifadagi katta halqa: ichida raqam, atrofida to'liq mos dasturlar ulushi.
 function bigRing(pct) {
-  const r = 39;
+  // 106px: ichki doiraga "dastur / программ / programmes" so'zi ham bemalol
+  // sig'sin. 98px'da uzunroq so'z chetga tegib, siqilib ko'rinardi.
+  const r = 42;
   const c = 2 * Math.PI * r;
   const offset = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
   return `
-    <svg class="ring-svg" width="98" height="98" viewBox="0 0 98 98">
-      <circle class="ring-bg" cx="49" cy="49" r="${r}" fill="none" stroke-width="10"/>
-      <circle class="ring-fg" cx="49" cy="49" r="${r}" fill="none" stroke-width="10"
+    <svg class="ring-svg" width="106" height="106" viewBox="0 0 106 106">
+      <circle class="ring-bg" cx="53" cy="53" r="${r}" fill="none" stroke-width="10"/>
+      <circle class="ring-fg" cx="53" cy="53" r="${r}" fill="none" stroke-width="10"
               stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
     </svg>`;
 }
@@ -950,33 +943,13 @@ function compactNumber(value) {
 
 async function renderHome() {
   const el = document.getElementById("view-home");
-  const name = (TG_USER && TG_USER.first_name) || "";
   const pct = profileCompleteness();
   const ready = hasFilter();
-  const photo = TG_USER && TG_USER.photo_url;
 
+  // Salomlashish qatori (avatar, qidiruv va "saqlangan" tugmalari) olib
+  // tashlandi: ikkala tugma ham pastdagi tab panelida bor edi, ism esa
+  // Profil sahifasida ko'rinadi. Sahifa darhol asosiy kartadan boshlanadi.
   el.innerHTML = `
-    <div class="hi-row">
-      ${
-        photo
-          ? `<img class="hi-ava" src="${escapeHtml(photo)}" alt="">`
-          : `<div class="hi-ava hi-ava-text">${escapeHtml(initials(name)) || icon("user")}</div>`
-      }
-      <div class="hi-text">
-        <div class="hi-hello">${
-          name ? t("home.greeting", { name: escapeHtml(name) }) : t("home.greeting_plain")
-        }</div>
-        <div class="hi-sub">${t("home.tagline")}</div>
-      </div>
-      <button type="button" class="hi-btn" data-goto="match" aria-label="${escapeHtml(t("nav.match"))}">
-        ${icon("search")}
-      </button>
-      <button type="button" class="hi-btn" id="hi-saved" data-goto="saved"
-              aria-label="${escapeHtml(t("nav.saved"))}">
-        ${icon("bookmark")}
-      </button>
-    </div>
-
     <div class="hero home-hero">
       <div class="hero-main">
         <div class="hero-chip">${icon("spark")}<span>${t("home.profile_progress")}</span></div>
@@ -1102,8 +1075,6 @@ async function renderHome() {
   document.getElementById("mini-saved-bar").children[0].style.width = saved.length
     ? `${(upcoming.length / saved.length) * 100}%`
     : "0";
-
-  if (upcoming.length) document.getElementById("hi-saved").classList.add("has-dot");
 
   // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin, faqat
   // raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz.

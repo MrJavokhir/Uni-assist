@@ -494,45 +494,64 @@ body {
 
 /* ============ Tab bar ============ */
 
+/* Suzuvchi panel: ekran chetiga yopishmaydi, kontent ustida "ko'tarilib"
+   turadi. Yorliqlar olib tashlandi — faol bo'lim rangli kvadrat bilan
+   ajralib turadi, shuning uchun matnsiz ham qaysi sahifada ekani ko'rinadi. */
 .tabbar {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 14px;
+  right: 14px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
   z-index: 30;
   display: flex;
-  gap: 2px;
-  padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
-  background: var(--bg); /* fallback for engines without color-mix */
-  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  gap: 4px;
+  padding: 7px;
+  max-width: 592px;
+  margin: 0 auto;
+  border-radius: 26px;
+  background: var(--card); /* fallback for engines without color-mix */
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border: 1px solid var(--separator);
   -webkit-backdrop-filter: saturate(180%) blur(18px);
   backdrop-filter: saturate(180%) blur(18px);
-  border-top: 1px solid var(--separator);
+  box-shadow: 0 10px 30px rgba(16, 20, 40, 0.16), 0 2px 8px rgba(16, 20, 40, 0.08);
 }
 
 .tab {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
+  display: grid;
+  place-items: center;
+  height: 46px;
   border: none;
   background: none;
   font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 600;
   color: var(--hint);
-  padding: 6px 2px;
-  border-radius: 12px;
+  border-radius: 18px;
   cursor: pointer;
-  transition: color 0.15s ease, transform 0.12s ease;
+  transition: color 0.15s ease, transform 0.12s ease, background 0.18s ease;
 }
 .tab:active { transform: scale(0.94); }
 
+/* Yorliq ekranda ko'rinmaydi, lekin skrinrider uchun qoladi. */
+.tab-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .tab-ico { width: 23px; height: 23px; }
 
-.tab.active { color: var(--accent); }
-.tab.active .tab-ico { filter: drop-shadow(0 3px 8px rgba(99, 91, 255, 0.35)); }
+.tab.active {
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: var(--shadow-accent);
+}
+.tab.active .tab-ico { filter: drop-shadow(0 2px 4px rgba(16, 20, 40, 0.28)); }
 
 /* ============ Tafsilot oynasi (sheet) ============ */
 
@@ -868,82 +887,6 @@ body {
 
 /* ============ Bosh sahifa ============ */
 
-/* Salomlashuv qatori: avatar, ism va ikkita dumaloq tugma. */
-.hi-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.hi-ava {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  flex: none;
-  object-fit: cover;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1.5px solid var(--separator);
-}
-.hi-ava-text {
-  display: grid;
-  place-items: center;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-.hi-ava-text .ico { width: 20px; height: 20px; }
-
-.hi-text { flex: 1; min-width: 0; }
-
-.hi-hello {
-  font-size: 16.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.hi-sub {
-  font-size: 12px;
-  line-height: 1.32;
-  color: var(--hint);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.hi-btn {
-  position: relative;
-  flex: none;
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--separator);
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform 0.12s ease;
-}
-.hi-btn:active { transform: scale(0.92); }
-/* Yaqinlashayotgan muddat bo'lsa — qizil nuqta. */
-.hi-btn.has-dot::after {
-  content: "";
-  position: absolute;
-  top: 6px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--red);
-  border: 2px solid var(--card);
-}
-
 /* Hero: chapda profil foizi, o'ngda mos dasturlar halqasi. */
 .home-hero {
   display: flex;
@@ -998,8 +941,8 @@ body {
 /* Katta halqa: chetida oq chiziq, o'rtasida karta rangidagi doira. */
 .ring-lg {
   position: relative;
-  width: 98px;
-  height: 98px;
+  width: 106px;
+  height: 106px;
   flex: none;
 }
 .ring-svg { transform: rotate(-90deg); display: block; }
@@ -1011,26 +954,32 @@ body {
 }
 .ring-core {
   position: absolute;
-  inset: 19px;
+  inset: 16px;
   border-radius: 50%;
   display: grid;
   place-content: center;
   text-align: center;
+  /* Ichki doira 74px. Matn chetga tegmasligi uchun yon tomondan joy. */
+  padding: 0 7px;
   background: var(--card);
   color: var(--text);
 }
 .ring-core b {
   display: block;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 .ring-core span {
   display: block;
-  font-size: 9.5px;
+  margin-top: 1px;
+  font-size: 9px;
   font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   color: var(--hint);
+  overflow-wrap: anywhere;
 }
 
 /* Ikki ustunli blok: chapda katta karta, o'ngda ikkita kichik. */
@@ -1098,7 +1047,8 @@ body {
   width: 56px;
   height: 56px;
   object-fit: contain;
-  filter: drop-shadow(0 6px 12px rgba(16, 20, 40, 0.22));
+  filter: drop-shadow(0 8px 14px rgba(16, 20, 40, 0.3))
+          drop-shadow(0 2px 3px rgba(16, 20, 40, 0.18));
 }
 /* Tugma rasm ustiga chiqib turadi — namunadagi "Get Started" kabi. */
 .hx-recap-cta {
@@ -1330,8 +1280,11 @@ body {
   width: 46px;
   height: 46px;
   object-fit: contain;
-  /* 3D ikonkaning o'z soyasi yo'q — kartadan "ko'tarilib" tursin. */
-  filter: drop-shadow(0 4px 8px rgba(16, 20, 40, 0.22));
+  /* 3D ikonkaning o'z soyasi yo'q — kartadan sezilarli "ko'tarilib" tursin.
+     Ikki qatlam: yumshoq uzoq soya hajm beradi, tig'iz yaqin soya chetini
+     kartadan ajratadi. */
+  filter: drop-shadow(0 7px 12px rgba(16, 20, 40, 0.3))
+          drop-shadow(0 2px 3px rgba(16, 20, 40, 0.18));
   transition: transform 0.16s ease;
 }
 .quick:active .quick-ico { transform: translateY(1px) scale(0.94); }
@@ -1690,8 +1643,8 @@ button.sch-card:active { transform: scale(0.985); }
   place-items: center;
   padding: 24px;
   background: rgba(10, 12, 22, 0.55);
-  backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;

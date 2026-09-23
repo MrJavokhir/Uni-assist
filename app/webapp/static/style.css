@@ -181,117 +181,6 @@ body {
   box-shadow: var(--shadow-accent);
 }
 
-.hero-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.hero-text { flex: 1; min-width: 0; }
-
-.hero-greeting {
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  margin-bottom: 3px;
-}
-
-.hero-sub {
-  font-size: 13px;
-  line-height: 1.4;
-  opacity: 0.9;
-}
-
-/* Circular progress ring */
-.ring { position: relative; flex-shrink: 0; }
-.ring svg { transform: rotate(-90deg); display: block; }
-.ring-bg { stroke: rgba(255, 255, 255, 0.28); }
-.ring-fg {
-  stroke: #ffffff;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-.ring-value {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.hero-cta {
-  position: relative;
-  margin-top: 16px;
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: var(--on-accent);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 11px 16px;
-  border-radius: 13px;
-  cursor: pointer;
-  transition: transform 0.12s ease, background 0.12s ease;
-}
-.hero-cta:active { transform: scale(0.97); background: rgba(255, 255, 255, 0.28); }
-.hero-cta .ico { width: 16px; height: 16px; }
-
-/* ============ Stats ============ */
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  background: var(--card);
-  border-radius: var(--r-lg);
-  padding: 13px;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform 0.12s ease;
-}
-.stat:active { transform: scale(0.975); }
-
-.stat-ico {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
-  flex-shrink: 0;
-}
-.stat-ico .ico { width: 18px; height: 18px; }
-.stat-ico.green { background: var(--green-soft); color: var(--green); }
-.stat-ico.amber { background: var(--amber-soft); color: var(--amber); }
-.stat-ico.accent { background: var(--accent-soft); color: var(--accent); }
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-}
-
-.stat-label {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--hint);
-  line-height: 1.25;
-}
-
 /* ============ Alert ============ */
 
 .alert {
@@ -977,98 +866,314 @@ body {
   letter-spacing: 0.02em;
 }
 
-/* ============ Bosh sahifa (qayta ishlangan) ============ */
+/* ============ Bosh sahifa ============ */
 
-/* Logotip hero'ning o'ng yuqori burchagida suv belgisi sifatida —
-   ilgari bu yerda ma'nosiz oq doira turardi. */
-.hero-logo {
-  position: absolute;
-  top: -14px;
-  right: -18px;
-  width: 132px;
-  height: 132px;
-  opacity: 0.16;
-  transform: rotate(-8deg);
-  pointer-events: none;
-  filter: brightness(0) invert(1);
-}
-
-.hero-progress { position: relative; margin-top: 16px; }
-
-.hero-progress-head {
+/* Salomlashuv qatori: avatar, ism va ikkita dumaloq tugma. */
+.hi-row {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  font-size: 12.5px;
-  margin-bottom: 7px;
-  opacity: 0.92;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
 }
-.hero-progress-head strong { font-size: 15px; font-weight: 800; }
 
-.bar {
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+.hi-ava {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex: none;
+  object-fit: cover;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1.5px solid var(--separator);
+}
+.hi-ava-text {
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.hi-ava-text .ico { width: 20px; height: 20px; }
+
+.hi-text { flex: 1; min-width: 0; }
+
+.hi-hello {
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hi-sub {
+  font-size: 12px;
+  line-height: 1.32;
+  color: var(--hint);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.bar span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: #fff;
-  transition: width 0.7s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
 
-.hero-done {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 13.5px;
-  font-weight: 600;
-  opacity: 0.95;
-}
-.hero-done .ico { width: 16px; height: 16px; }
-
-.hero .hero-cta { margin-top: 12px; }
-
-/* --- Moslik xulosasi --- */
-
-.summary {
+.hi-btn {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--separator);
+  border-radius: 50%;
   background: var(--card);
-  border-radius: var(--r-lg);
-  padding: 15px 16px 14px;
+  color: var(--text);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: transform 0.12s ease;
 }
-.summary:active { transform: scale(0.985); }
-
-/* Raqam va izoh bir qatorda — ilgari ular ustma-ust turib, o'ng tomonda
-   katta bo'sh joy qolardi. */
-.summary-top {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
+.hi-btn:active { transform: scale(0.92); }
+/* Yaqinlashayotgan muddat bo'lsa — qizil nuqta. */
+.hi-btn.has-dot::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid var(--card);
 }
 
-.summary-value {
-  font-size: 26px;
+/* Hero: chapda profil foizi, o'ngda mos dasturlar halqasi. */
+.home-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px 20px;
+}
+
+.hero-main { flex: 1; min-width: 0; }
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 650;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 5px 11px 5px 9px;
+}
+.hero-chip .ico { width: 15px; height: 15px; }
+
+.hero-big {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  margin: 10px 0 13px;
+}
+.hero-big span { font-size: 23px; letter-spacing: -0.02em; margin-left: 1px; }
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--on-accent);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 9px 8px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.hero-pill:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.3); }
+.hero-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-pill .ico { width: 15px; height: 15px; flex: none; opacity: 0.85; }
+
+/* Katta halqa: chetida oq chiziq, o'rtasida karta rangidagi doira. */
+.ring-lg {
+  position: relative;
+  width: 98px;
+  height: 98px;
+  flex: none;
+}
+.ring-svg { transform: rotate(-90deg); display: block; }
+.ring-bg { stroke: rgba(255, 255, 255, 0.26); }
+.ring-fg {
+  stroke: #ffffff;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.ring-core {
+  position: absolute;
+  inset: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: var(--card);
+  color: var(--text);
+}
+.ring-core b {
+  display: block;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.1;
+}
+.ring-core span {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--hint);
 }
 
-.summary-label { font-size: 13px; color: var(--hint); }
-.summary-top .summary-go { margin-left: auto; align-self: center; }
+/* Ikki ustunli blok: chapda katta karta, o'ngda ikkita kichik. */
+.hx-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.hx-side {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+}
 
-.summary-go { color: var(--hint); display: grid; place-items: center; }
-.summary-go .ico { width: 17px; height: 17px; }
+.hx-recap,
+.hx-mini {
+  position: relative;
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--separator);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.hx-recap:active,
+.hx-mini:active { transform: scale(0.98); }
 
-/* Yashil/sariq nisbati — bir qarashda holat ko'rinadi */
+.hx-recap {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 14px 14px;
+  overflow: hidden;
+}
+.hx-recap-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+.hx-recap-text {
+  margin-top: 5px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--hint);
+}
+/* Rasm o'rnidagi yumshoq panel — hero bilan bir rang oilasida. */
+.hx-recap-art {
+  flex: 1;
+  min-height: 96px;
+  margin: 12px 0 0;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--accent) 16%, transparent),
+    color-mix(in srgb, var(--accent-2) 13%, transparent)
+  );
+}
+.hx-recap-art img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(16, 20, 40, 0.22));
+}
+/* Tugma rasm ustiga chiqib turadi — namunadagi "Get Started" kabi. */
+.hx-recap-cta {
+  position: relative;
+  align-self: center;
+  margin-top: -17px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 12.5px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  box-shadow: var(--shadow-md);
+}
+
+.hx-mini {
+  display: flex;
+  flex-direction: column;
+  padding: 13px 13px 12px;
+}
+.hx-mini-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.hx-mini-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.hx-mini-ico {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.hx-mini-ico .ico { width: 14px; height: 14px; }
+
+.hx-mini-value {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.hx-mini-foot { margin-top: 6px; }
+
+.hx-tag {
+  display: inline-block;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--hint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hx-mini .split { margin: 9px 0 0; height: 5px; }
+
+/* Yashil/sariq nisbati — bir qarashda holat ko'rinadi. */
 .split {
   display: flex;
   height: 7px;
-  margin: 13px 0 10px;
   border-radius: 999px;
   overflow: hidden;
   background: var(--surface);
@@ -1076,29 +1181,107 @@ body {
 .split span { display: block; height: 100%; transition: width 0.6s ease; }
 .split-green { background: var(--green); }
 .split-amber { background: var(--amber); }
+.split-accent { background: var(--accent); }
 
-.summary-legend {
+/* Eng mos dastur kartasi — hero bilan bir rangda, faqat ochroq. */
+.top-card {
+  position: relative;
+  overflow: hidden;
+  padding: 15px 16px 15px;
+  border: 1px solid var(--separator);
+  border-radius: var(--r-xl);
+  background: var(--accent-soft);
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent) 15%, var(--card)) 0%,
+    color-mix(in srgb, var(--accent-2) 12%, var(--card)) 100%
+  );
+}
+
+.top-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
+  align-items: center;
+  gap: 9px;
+}
+.top-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+}
+.top-head-text { flex: 1; min-width: 0; }
+.top-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top-sub {
   font-size: 12px;
   color: var(--hint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.summary-legend span { display: inline-flex; align-items: center; gap: 5px; }
 
-.dot {
-  width: 7px;
-  height: 7px;
+.top-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
   border-radius: 50%;
-  display: inline-block;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease;
 }
-.dot.green { background: var(--green); }
-.dot.amber { background: var(--amber); }
-.dot.accent { background: var(--accent); }
+.top-btn:active { transform: scale(0.9); }
+.top-btn .ico { width: 16px; height: 16px; }
+.top-btn[disabled] { color: var(--green); }
 
-.empty-summary { text-align: center; padding: 22px 16px; }
+.top-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+.top-fact { min-width: 0; }
+.top-fact-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--hint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top-fact-value {
+  margin-top: 2px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.top-fact-value i {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--hint);
+  margin-left: 2px;
+}
+.fx-flag { font-size: 19px; line-height: 1.15; }
 
 /* --- Tezkor amallar: uchta ixcham plitka --- */
+
 
 .quick-grid {
   display: grid;
@@ -1160,31 +1343,6 @@ body {
   text-align: center;
   line-height: 1.2;
   letter-spacing: -0.01em;
-}
-
-/* Filtr sozlanmagan holatdagi xulosa kartasi */
-.summary-ico {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 10px;
-  border-radius: 13px;
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.summary-ico .ico { width: 20px; height: 20px; }
-
-.empty-summary .summary-label {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-}
-.summary-hint {
-  margin-top: 5px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--hint);
 }
 
 /* ============ Grant kartasi (mobil uchun qayta tuzilgan) ============ */

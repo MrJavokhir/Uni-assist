@@ -63,7 +63,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 32;
+const ASSET_V = 33;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -185,17 +185,25 @@ const I18N = {
 
     "home.greeting": "Salom, {name}!",
     "home.tagline": "Chet elda o'qish safaringiz shu yerdan boshlanadi.",
-    "home.complete_profile": "Profilni to'ldirish",
-    "home.section_overview": "Qisqacha",
     "home.stat_green": "Mos dasturlar",
     "home.stat_yellow": "Yaqin dasturlar",
     "home.stat_saved": "Saqlangan",
-    "home.stat_profile": "Profil to'liqligi",
     "home.alert_title": "Yaqinlashayotgan muddat",
     "home.alert_body": "{program} · {days} kun qoldi",
     "home.section_shortcuts": "Tezkor amallar",
-    "home.shortcut_match": "Mos dasturlarni ko'rish",
-    "home.shortcut_saved": "Saqlangan dasturlarim",
+    "home.greeting_plain": "Salom!",
+    "home.recap_title": "Mos dasturlar",
+    "home.full_match": "To'liq mos",
+    "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
+    "home.recap_cta": "Ko'rish",
+    "home.unit_program": "dastur",
+    "home.near_short": "{n} yaqin",
+    "home.deadline_short": "{n} kun qoldi",
+    "home.deadline_none": "Muddat yo'q",
+    "home.fact_country": "Davlat",
+    "home.fact_ielts": "IELTS",
+    "home.fact_tuition": "Kontrakt",
+    "home.fact_rank": "Reyting",
     "home.shortcut_gpa": "GPA konvertor",
     "gpa.title": "GPA konvertor",
     "gpa.subtitle": "O'zbekiston bahosini AQSH, Buyuk Britaniya va Yevropa tizimlariga o'giradi",
@@ -223,14 +231,9 @@ const I18N = {
     "gpa.uk_class.below": "Diplom darajasidan past",
     "gpa.disclaimer": "Bu taxminiy hisob. Yakuniy bahoni universitet yoki tan olish idorasi (WES, UK ENIC, uni-assist) belgilaydi.",
     "home.profile_progress": "Profil to'ldirilgan",
-    "home.profile_done": "Profil to'liq to'ldirilgan",
-    "home.summary_total": "Sizga mos dasturlar",
-    "home.summary_empty": "Profilni to'ldiring — sizga mos dasturlarni topaman",
     "home.section_top": "Eng mos dastur",
     "home.setup_filter": "Qidiruvni sozlash",
     "home.refine_filter": "Filtrni to'ldirish",
-    "home.summary_no_filter": "Qidiruvni sozlang",
-    "home.summary_no_filter_hint": "Yo'nalish, daraja va davlatni tanlang — shundan keyin sizga mos dasturlarni ko'rsataman",
 
     "profile.section_academic": "Ta'lim",
     "profile.section_language": "Til sertifikati",
@@ -402,17 +405,25 @@ const I18N = {
 
     "home.greeting": "Привет, {name}!",
     "home.tagline": "Ваш путь к учёбе за рубежом начинается здесь.",
-    "home.complete_profile": "Заполнить профиль",
-    "home.section_overview": "Обзор",
     "home.stat_green": "Подходящие",
     "home.stat_yellow": "Почти подходят",
     "home.stat_saved": "Сохранённые",
-    "home.stat_profile": "Профиль заполнен",
     "home.alert_title": "Приближается дедлайн",
     "home.alert_body": "{program} · осталось {days} дн.",
     "home.section_shortcuts": "Быстрые действия",
-    "home.shortcut_match": "Смотреть подходящие программы",
-    "home.shortcut_saved": "Мои сохранённые",
+    "home.greeting_plain": "Привет!",
+    "home.recap_title": "Подходящие программы",
+    "home.full_match": "Полное совпадение",
+    "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
+    "home.recap_cta": "Смотреть",
+    "home.unit_program": "программ",
+    "home.near_short": "{n} близких",
+    "home.deadline_short": "осталось {n} дн.",
+    "home.deadline_none": "Без дедлайна",
+    "home.fact_country": "Страна",
+    "home.fact_ielts": "IELTS",
+    "home.fact_tuition": "Контракт",
+    "home.fact_rank": "Рейтинг",
     "home.shortcut_gpa": "Конвертер GPA",
     "gpa.title": "Конвертер GPA",
     "gpa.subtitle": "Переводит узбекскую оценку в системы США, Великобритании и Европы",
@@ -440,14 +451,9 @@ const I18N = {
     "gpa.uk_class.below": "Ниже уровня диплома",
     "gpa.disclaimer": "Это приблизительный расчёт. Итоговую оценку определяет университет или служба признания (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Профиль заполнен",
-    "home.profile_done": "Профиль заполнен полностью",
-    "home.summary_total": "Подходящих программ",
-    "home.summary_empty": "Заполните профиль — и я подберу программы",
     "home.section_top": "Лучшее совпадение",
     "home.setup_filter": "Настроить поиск",
     "home.refine_filter": "Дополнить фильтр",
-    "home.summary_no_filter": "Настройте поиск",
-    "home.summary_no_filter_hint": "Выберите направление, степень и страну — и я покажу подходящие программы",
 
     "profile.section_academic": "Образование",
     "profile.section_language": "Языковой сертификат",
@@ -619,17 +625,25 @@ const I18N = {
 
     "home.greeting": "Hi, {name}!",
     "home.tagline": "Your journey to studying abroad starts here.",
-    "home.complete_profile": "Complete your profile",
-    "home.section_overview": "Overview",
     "home.stat_green": "Matching",
     "home.stat_yellow": "Close matches",
     "home.stat_saved": "Saved",
-    "home.stat_profile": "Profile complete",
     "home.alert_title": "Deadline approaching",
     "home.alert_body": "{program} · {days} day(s) left",
     "home.section_shortcuts": "Quick actions",
-    "home.shortcut_match": "See matching programs",
-    "home.shortcut_saved": "My saved programs",
+    "home.greeting_plain": "Hi there!",
+    "home.recap_title": "Your matches",
+    "home.full_match": "Full match",
+    "home.recap_text": "Every programme that fits your profile, in one place.",
+    "home.recap_cta": "Explore",
+    "home.unit_program": "programmes",
+    "home.near_short": "{n} close",
+    "home.deadline_short": "{n} days left",
+    "home.deadline_none": "No deadline",
+    "home.fact_country": "Country",
+    "home.fact_ielts": "IELTS",
+    "home.fact_tuition": "Tuition",
+    "home.fact_rank": "Ranking",
     "home.shortcut_gpa": "GPA converter",
     "gpa.title": "GPA converter",
     "gpa.subtitle": "Converts an Uzbek grade to the US, UK and European systems",
@@ -657,14 +671,9 @@ const I18N = {
     "gpa.uk_class.below": "Below honours level",
     "gpa.disclaimer": "This is an estimate. The final grade is set by the university or a recognition body (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Profile complete",
-    "home.profile_done": "Your profile is complete",
-    "home.summary_total": "Programs that fit you",
-    "home.summary_empty": "Fill in your profile and I'll find programs for you",
     "home.section_top": "Best match",
     "home.setup_filter": "Set up your search",
     "home.refine_filter": "Refine your filter",
-    "home.summary_no_filter": "Set up your search",
-    "home.summary_no_filter_hint": "Pick a field, degree and country — then I'll show the programs that fit you",
 
     "profile.section_academic": "Academic",
     "profile.section_language": "Language certificate",
@@ -915,19 +924,26 @@ function profileCompleteness() {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
-function progressRing(pct) {
-  const r = 26;
+// Bosh sahifadagi katta halqa: ichida raqam, atrofida to'liq mos dasturlar ulushi.
+function bigRing(pct) {
+  const r = 39;
   const c = 2 * Math.PI * r;
-  const offset = c * (1 - pct / 100);
+  const offset = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
   return `
-    <div class="ring">
-      <svg width="64" height="64" viewBox="0 0 64 64">
-        <circle class="ring-bg" cx="32" cy="32" r="${r}" fill="none" stroke-width="6"/>
-        <circle class="ring-fg" cx="32" cy="32" r="${r}" fill="none" stroke-width="6"
-                stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
-      </svg>
-      <div class="ring-value">${pct}%</div>
-    </div>`;
+    <svg class="ring-svg" width="98" height="98" viewBox="0 0 98 98">
+      <circle class="ring-bg" cx="49" cy="49" r="${r}" fill="none" stroke-width="10"/>
+      <circle class="ring-fg" cx="49" cy="49" r="${r}" fill="none" stroke-width="10"
+              stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
+    </svg>`;
+}
+
+// Katta summani qisqartiradi: 9250 -> "9.3k". Faktlar ustuni tor, to'liq raqam sig'maydi.
+function compactNumber(value) {
+  const n = Number(value);
+  if (!isFinite(n)) return "—";
+  if (n >= 10000) return Math.round(n / 1000) + "k";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(Math.round(n));
 }
 
 // ============ Home ============
@@ -936,42 +952,83 @@ async function renderHome() {
   const el = document.getElementById("view-home");
   const name = (TG_USER && TG_USER.first_name) || "";
   const pct = profileCompleteness();
+  const ready = hasFilter();
+  const photo = TG_USER && TG_USER.photo_url;
 
   el.innerHTML = `
-    <div class="hero">
-      <img class="hero-logo" src="logo-mark.png?v=30" alt="" aria-hidden="true">
-      <div class="hero-greeting">${t("home.greeting", { name: escapeHtml(name) })}</div>
-      <div class="hero-sub">${t("home.tagline")}</div>
+    <div class="hi-row">
       ${
-        !hasFilter()
-          ? // Hali hech narsa tanlanmagan — foizni ko'rsatishdan ma'no yo'q,
-            // darhol filtrga taklif qilamiz.
-            `<div class="hero-progress">
-               <button type="button" class="hero-cta" id="home-cta">
-                 ${icon("search")}<span>${t("home.setup_filter")}</span>
-               </button>
-             </div>`
-          : pct < 100
-            ? `<div class="hero-progress">
-                 <div class="hero-progress-head">
-                   <span>${t("home.profile_progress")}</span>
-                   <strong>${pct}%</strong>
-                 </div>
-                 <div class="bar"><span style="width:${pct}%"></span></div>
-                 <button type="button" class="hero-cta" id="home-cta">
-                   ${icon("spark")}<span>${t("home.refine_filter")}</span>
-                 </button>
-               </div>`
-            : `<div class="hero-progress">
-                 <div class="hero-done">${icon("check")}<span>${t("home.profile_done")}</span></div>
-               </div>`
+        photo
+          ? `<img class="hi-ava" src="${escapeHtml(photo)}" alt="">`
+          : `<div class="hi-ava hi-ava-text">${escapeHtml(initials(name)) || icon("user")}</div>`
       }
+      <div class="hi-text">
+        <div class="hi-hello">${
+          name ? t("home.greeting", { name: escapeHtml(name) }) : t("home.greeting_plain")
+        }</div>
+        <div class="hi-sub">${t("home.tagline")}</div>
+      </div>
+      <button type="button" class="hi-btn" data-goto="match" aria-label="${escapeHtml(t("nav.match"))}">
+        ${icon("search")}
+      </button>
+      <button type="button" class="hi-btn" id="hi-saved" data-goto="saved"
+              aria-label="${escapeHtml(t("nav.saved"))}">
+        ${icon("bookmark")}
+      </button>
+    </div>
+
+    <div class="hero home-hero">
+      <div class="hero-main">
+        <div class="hero-chip">${icon("spark")}<span>${t("home.profile_progress")}</span></div>
+        <div class="hero-big">${pct}<span>%</span></div>
+        <button type="button" class="hero-pill" id="home-cta">
+          <span>${t(ready ? "home.refine_filter" : "home.setup_filter")}</span>${icon("chevron")}
+        </button>
+      </div>
+      <div class="ring-lg" id="hero-ring">
+        ${bigRing(0)}
+        <div class="ring-core"><b>—</b><span>${t("home.unit_program")}</span></div>
+      </div>
     </div>
 
     <div id="home-alert"></div>
 
-    <div class="section-head"><span class="section-title">${t("home.section_overview")}</span></div>
-    <div id="home-summary">${skeletons(2)}</div>
+    <div class="hx-grid">
+      <div class="hx-recap" data-goto="match" role="button" tabindex="0">
+        <div class="hx-recap-title">${t("home.recap_title")}</div>
+        <div class="hx-recap-text">${t("home.recap_text")}</div>
+        <div class="hx-recap-art">
+          <img src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
+        </div>
+        <span class="hx-recap-cta">${t("home.recap_cta")}</span>
+      </div>
+
+      <div class="hx-side">
+        <div class="hx-mini" data-goto="match" role="button" tabindex="0">
+          <div class="hx-mini-head">
+            <span class="hx-mini-label">${t("home.full_match")}</span>
+            <span class="hx-mini-ico">${icon("check")}</span>
+          </div>
+          <div class="hx-mini-value" id="mini-green-value">—</div>
+          <div class="hx-mini-foot" id="mini-green-foot"></div>
+          <div class="split" id="mini-green-bar">
+            <span class="split-green" style="width:0"></span>
+            <span class="split-amber" style="width:0"></span>
+          </div>
+        </div>
+        <div class="hx-mini" data-goto="saved" role="button" tabindex="0">
+          <div class="hx-mini-head">
+            <span class="hx-mini-label">${t("home.stat_saved")}</span>
+            <span class="hx-mini-ico">${icon("bookmark")}</span>
+          </div>
+          <div class="hx-mini-value" id="mini-saved-value">—</div>
+          <div class="hx-mini-foot" id="mini-saved-foot"></div>
+          <div class="split" id="mini-saved-bar">
+            <span class="split-accent" style="width:0"></span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div id="home-top"></div>
 
@@ -992,8 +1049,16 @@ async function renderHome() {
     </div>
   `;
 
-  const cta = document.getElementById("home-cta");
-  if (cta) cta.addEventListener("click", () => switchTab("profile"));
+  document.getElementById("home-cta").addEventListener("click", () => switchTab("profile"));
+
+  // Tezkor amallar o'z ishlov beruvchisiga ega — ular bu yerga tushmaydi.
+  el.querySelectorAll("[data-goto]:not(.quick)").forEach((node) => {
+    node.addEventListener("click", () => {
+      haptic("light");
+      switchTab(node.dataset.goto);
+    });
+  });
+
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
@@ -1006,79 +1071,105 @@ async function renderHome() {
   const green = matches.filter((m) => m.level === "green").length;
   const yellow = matches.filter((m) => m.level === "yellow").length;
   const total = green + yellow;
-
-  // Bitta ma'noli karta: to'rtta bir xil plitka o'rniga yashil/sariq
-  // nisbatini ko'rsatadigan chiziq — bir qarashda holatni bildiradi.
-  // Filtr qo'yilmagan bo'lsa qidiruv katalogdagi HAMMA dasturni qaytaradi.
-  // Ularni "sizga mos" deb ko'rsatish noto'g'ri bo'lardi — buning o'rniga
-  // filtrni sozlashga taklif qilamiz.
-  document.getElementById("home-summary").innerHTML = !hasFilter()
-    ? `<div class="summary empty-summary" data-goto="profile">
-         <div class="summary-ico">${icon("search")}</div>
-         <div class="summary-label">${t("home.summary_no_filter")}</div>
-         <div class="summary-hint">${t("home.summary_no_filter_hint")}</div>
-       </div>`
-    : total
-    ? `<div class="summary" data-goto="match">
-         <div class="summary-top">
-           <div class="summary-value">${total}</div>
-           <div class="summary-label">${t("home.summary_total")}</div>
-           <span class="summary-go">${icon("chevron")}</span>
-         </div>
-         <div class="split">
-           <span class="split-green" style="width:${total ? (green / total) * 100 : 0}%"></span>
-           <span class="split-amber" style="width:${total ? (yellow / total) * 100 : 0}%"></span>
-         </div>
-         <div class="summary-legend">
-           <span><i class="dot green"></i>${green} ${t("home.stat_green")}</span>
-           <span><i class="dot amber"></i>${yellow} ${t("home.stat_yellow")}</span>
-           <span class="summary-saved"><i class="dot accent"></i>${saved.length} ${t("home.stat_saved")}</span>
-         </div>
-       </div>`
-    : `<div class="summary empty-summary" data-goto="profile">
-         <div class="summary-label">${t("home.summary_empty")}</div>
-       </div>`;
-
-  el.querySelectorAll("#home-summary .summary").forEach((s) => {
-    s.addEventListener("click", () => {
-      haptic("light");
-      switchTab(s.dataset.goto);
-    });
-  });
-
-  // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin,
-  // faqat raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz:
-  // ro'yxat katalogdagi tasodifiy birinchi yozuv bo'lib qoladi.
-  const best = hasFilter() ? matches.find((m) => m.level === "green") || matches[0] : null;
-  if (best) {
-    document.getElementById("home-top").innerHTML = `
-      <div class="section-head"><span class="section-title">${t("home.section_top")}</span></div>
-      <div class="card">
-        <div class="card-top program-open" data-id="${best.id}" role="button" tabindex="0">
-          ${avatar(best.university, best.university_logo)}
-          <div class="card-body">
-            <div class="card-title">${escapeHtml(best.name)}${
-              best.abbreviation ? `<span class="abbr">${escapeHtml(best.abbreviation)}</span>` : ""
-            }</div>
-            <div class="card-sub">${escapeHtml(best.university)}</div>
-            <div class="meta-row">
-              <span class="pill ${best.level === "green" ? "green" : "amber"}">${
-                best.level === "green" ? icon("check") + t("match.green") : icon("spark") + t("match.yellow")
-              }</span>
-              <span class="pill"><span class="chip-flag">${flag(
-                best.country.iso_code
-              )}</span>${escapeHtml(countryName(best.country))}</span>
-            </div>
-          </div>
-          <span class="card-chevron">${icon("chevron")}</span>
-        </div>
-      </div>`;
-    bindProgramOpeners(document.getElementById("home-top"));
-  }
+  const greenShare = total ? (green / total) * 100 : 0;
 
   const upcoming = saved
     .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
     .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left);
+
+  // Filtr qo'yilmagan bo'lsa qidiruv katalogdagi HAMMA dasturni qaytaradi —
+  // ularni "sizga mos" deb ko'rsatish noto'g'ri bo'lardi, shuning uchun chiziqcha.
+  document.getElementById("hero-ring").innerHTML =
+    bigRing(ready ? greenShare : 0) +
+    `<div class="ring-core"><b>${ready ? compactNumber(total) : "—"}</b><span>${t(
+      "home.unit_program"
+    )}</span></div>`;
+
+  document.getElementById("mini-green-value").textContent = ready ? green : "—";
+  document.getElementById("mini-green-foot").innerHTML = `<span class="hx-tag">${
+    ready ? t("home.near_short", { n: yellow }) : t("home.setup_filter")
+  }</span>`;
+  const greenBar = document.getElementById("mini-green-bar");
+  greenBar.children[0].style.width = ready ? `${greenShare}%` : "0";
+  greenBar.children[1].style.width = ready ? `${100 - greenShare}%` : "0";
+
+  document.getElementById("mini-saved-value").textContent = saved.length;
+  document.getElementById("mini-saved-foot").innerHTML = `<span class="hx-tag">${
+    upcoming.length
+      ? t("home.deadline_short", { n: upcoming[0].nearest_deadline_days_left })
+      : t("home.deadline_none")
+  }</span>`;
+  document.getElementById("mini-saved-bar").children[0].style.width = saved.length
+    ? `${(upcoming.length / saved.length) * 100}%`
+    : "0";
+
+  if (upcoming.length) document.getElementById("hi-saved").classList.add("has-dot");
+
+  // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin, faqat
+  // raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz.
+  const best = ready ? matches.find((m) => m.level === "green") || matches[0] : null;
+  if (best) {
+    const facts = [
+      {
+        label: t("home.fact_country"),
+        value: `<span class="fx-flag">${flag(best.country.iso_code)}</span>`,
+      },
+      { label: t("home.fact_ielts"), value: best.ielts_min ? escapeHtml(String(best.ielts_min)) : "—" },
+      {
+        label: t("home.fact_tuition"),
+        value:
+          best.tuition_amount !== null && best.tuition_amount !== undefined
+            ? `${compactNumber(best.tuition_amount)}<i>${escapeHtml(best.tuition_currency || "")}</i>`
+            : "—",
+      },
+      {
+        label: t("home.fact_rank"),
+        value: best.university_ranking ? "#" + best.university_ranking : "—",
+      },
+    ];
+
+    document.getElementById("home-top").innerHTML = `
+      <div class="section-head"><span class="section-title">${t("home.section_top")}</span></div>
+      <div class="top-card">
+        <div class="top-head">
+          <div class="top-open program-open" data-id="${best.id}" role="button" tabindex="0">
+            ${avatar(best.university, best.university_logo)}
+            <div class="top-head-text">
+              <div class="top-title">${escapeHtml(best.name)}</div>
+              <div class="top-sub">${escapeHtml(best.university)}</div>
+            </div>
+          </div>
+          <button type="button" class="top-btn top-save" data-id="${best.id}" ${
+            best.saved ? "disabled" : ""
+          } aria-label="${escapeHtml(t("match.save"))}">
+            ${best.saved ? icon("check") : icon("plus")}
+          </button>
+          <button type="button" class="top-btn program-open" data-id="${best.id}"
+                  aria-label="${escapeHtml(t("match.details"))}">${icon("chevron")}</button>
+        </div>
+        <div class="top-facts">
+          ${facts
+            .map(
+              (f) => `<div class="top-fact">
+                <div class="top-fact-label">${escapeHtml(f.label)}</div>
+                <div class="top-fact-value">${f.value}</div>
+              </div>`
+            )
+            .join("")}
+        </div>
+      </div>`;
+
+    const topSave = document.querySelector(".top-save");
+    topSave.addEventListener("click", async () => {
+      haptic("light");
+      await api(`/saved/${topSave.dataset.id}`, { method: "POST" });
+      topSave.disabled = true;
+      topSave.innerHTML = icon("check");
+      haptic("success");
+      showToast(t("match.saved_toast"));
+    });
+    bindProgramOpeners(document.getElementById("home-top"));
+  }
 
   if (upcoming.length) {
     const n = upcoming[0];

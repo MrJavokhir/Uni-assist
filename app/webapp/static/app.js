@@ -17,9 +17,23 @@ const INIT_DATA = (tg && tg.initData) || "";
 // ham uni yopadi (Android klaviaturasida "Done" ko'rsatiladi).
 const TEXT_FIELD = "input, textarea, select, [contenteditable='true']";
 
-function dismissKeyboard() {
+function isFieldFocused() {
   const active = document.activeElement;
-  if (active && active.matches && active.matches("input, textarea")) active.blur();
+  return !!(active && active.matches && active.matches("input, textarea"));
+}
+
+// Klaviatura qachon yopilgani. Varaq foni shu vaqtga qaraydi: agar bosish
+// klaviaturani yopgan bo'lsa, o'sha bosish varaqni yopmasligi kerak.
+let lastKeyboardDismissAt = 0;
+
+function dismissKeyboard() {
+  if (!isFieldFocused()) return;
+  document.activeElement.blur();
+  lastKeyboardDismissAt = Date.now();
+}
+
+function keyboardJustDismissed() {
+  return Date.now() - lastKeyboardDismissAt < 400;
 }
 
 // Tugma/chip bosilganda klaviatura touchstart'da yopilsa, ekran siljib bosish
@@ -63,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 34;
+const ASSET_V = 35;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1402,10 +1416,33 @@ function ensureSheet() {
   const sheet = document.createElement("div");
   sheet.className = "sheet";
   document.body.append(backdrop, sheet);
-  backdrop.addEventListener("click", closeSheet);
+
+  // Klaviatura ochiq turganda fonga bosish AVVAL faqat klaviaturani yopadi,
+  // varaq ochiqligicha qoladi; ikkinchi bosishda varaq yopiladi.
+  // Ilgari bitta bosish ikki ishni birdan qilardi: hujjat darajasidagi
+  // `touchstart` klaviaturani yopar, o'sha bosishning `click`i esa varaqni
+  // ham yopib yuborardi. GPA konvertorda raqam yozib chetga bosilganda
+  // kalkulyator butunlay yopilib ketishi shundan edi.
+  // `touchstart` va `pointerdown` tartibi brauzerlarda bir xil emas, shuning
+  // uchun bayroqqa emas, klaviatura yopilgan vaqtga qaraymiz — bu tartibdan
+  // qat'i nazar ishlaydi.
+  backdrop.addEventListener("click", () => {
+    if (isFieldFocused() || keyboardJustDismissed()) {
+      dismissKeyboard();
+      return;
+    }
+    closeSheet();
+  });
+
   // Tepadagi "tutqich" yopish belgisiga o'xshaydi — uni bosganda ham yopilsin.
   sheet.addEventListener("click", (event) => {
     if (event.target.classList.contains("sheet-handle")) closeSheet();
+  });
+  // Varaq ichidagi bo'sh joyga bosilganda ham klaviatura yopilsin. Hujjat
+  // darajasidagi qoida `touchstart`ga bog'langan, ya'ni sichqonchada
+  // ishlamaydi; `pointerdown` esa barmoqni ham, sichqonchani ham qamraydi.
+  sheet.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest(TEXT_FIELD) && !event.target.closest(TAPPABLE)) dismissKeyboard();
   });
   return backdrop;
 }

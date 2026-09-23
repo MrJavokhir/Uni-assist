@@ -63,7 +63,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 31;
+const ASSET_V = 32;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -264,8 +264,6 @@ const I18N = {
     "profile.app_fee_hint": "Ariza to'lovi bo'lgan dasturlar ham mos keladimi?",
     "profile.yes": "Ha",
     "profile.no": "Yo'q",
-    "profile.completeness": "Profil to'ldirilgan",
-    "profile.header_hint": "To'liqroq profil — aniqroq tavsiya",
     "profile.reset": "Hammasini tozalash",
     "profile.reset_confirm": "Profildagi barcha tanlovlar o'chiriladi. Saqlangan dasturlarga tegilmaydi. Davom etamizmi?",
     "profile.reset_toast": "Profil tozalandi",
@@ -482,8 +480,6 @@ const I18N = {
     "profile.app_fee_hint": "Подходят ли программы с платной подачей заявки?",
     "profile.yes": "Да",
     "profile.no": "Нет",
-    "profile.completeness": "Профиль заполнен",
-    "profile.header_hint": "Чем полнее профиль, тем точнее подбор",
     "profile.countries_all": "Все страны",
     "profile.reset": "Очистить всё",
     "profile.reset_confirm": "Все данные профиля будут удалены. Сохранённые программы не тронем. Продолжить?",
@@ -701,8 +697,6 @@ const I18N = {
     "profile.app_fee_hint": "Are programs with an application fee acceptable?",
     "profile.yes": "Yes",
     "profile.no": "No",
-    "profile.completeness": "Profile complete",
-    "profile.header_hint": "A fuller profile means better matches",
     "profile.countries_all": "All countries",
     "profile.reset": "Reset everything",
     "profile.reset_confirm": "All profile choices will be cleared. Saved programs stay untouched. Continue?",
@@ -2031,10 +2025,6 @@ function renderProfile() {
   const cert = profile.language_certificates[0] || {};
   const certType = cert.type || "";
   const certScore = cert.score ?? "";
-  const pct = profileCompleteness();
-  const fullName = [TG_USER && TG_USER.first_name, TG_USER && TG_USER.last_name]
-    .filter(Boolean)
-    .join(" ");
   const feeValue =
     profile.application_fee_ok === null || profile.application_fee_ok === undefined
       ? ""
@@ -2055,27 +2045,6 @@ function renderProfile() {
     </div>`;
 
   el.innerHTML = `
-    <div class="profile-hero">
-      <div class="profile-id">
-        ${
-          TG_USER && TG_USER.photo_url
-            ? `<img class="profile-ava" src="${escapeHtml(TG_USER.photo_url)}" alt="">`
-            : `<div class="profile-ava profile-ava-text">${
-                escapeHtml(initials(fullName)) || icon("user")
-              }</div>`
-        }
-        <div class="profile-id-main">
-          <div class="profile-name">${escapeHtml(fullName || "—")}</div>
-          <div class="profile-tag">${
-            TG_USER && TG_USER.username ? "@" + escapeHtml(TG_USER.username) : t("profile.header_hint")
-          }</div>
-        </div>
-        <div class="profile-pct">${pct}%</div>
-      </div>
-      <div class="bar"><span style="width:${pct}%"></span></div>
-      <div class="profile-meter-label">${t("profile.completeness")}</div>
-    </div>
-
     ${profileSection("cap", t("profile.section_academic"))}
     <div class="group">
       <div class="field">

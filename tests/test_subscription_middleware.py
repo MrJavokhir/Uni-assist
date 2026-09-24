@@ -32,13 +32,13 @@ def _tg_user() -> TgUser:
     return TgUser(id=TG_ID, is_bot=False, first_name="Sanjar", username="sanjar")
 
 
-def _message_update(sent: list) -> tuple[Update, Message]:
+def _message_update(sent: list, text: str = "Salom") -> tuple[Update, Message]:
     message = Message(
         message_id=1,
         date=datetime.now(UTC),
         chat=Chat(id=TG_ID, type="private"),
         from_user=_tg_user(),
-        text="/start",
+        text=text,
     )
     # aiogram modellari frozen — javob yuborishni monkeypatch qilib kuzatamiz.
     async def answer(text, **kwargs):
@@ -102,7 +102,8 @@ async def test_blocks_unsubscribed_user(session) -> None:
     await session.commit()
 
     sent: list[str] = []
-    update, _ = _message_update(sent)
+    # Ataylab /start EMAS: /start til tanlash uchun ozod qilingan.
+    update, _ = _message_update(sent, text="Salom")
     result, calls = await _run(session, update, _FakeBot("left"))
 
     assert result is None
@@ -110,6 +111,35 @@ async def test_blocks_unsubscribed_user(session) -> None:
     assert len(sent) == 1
     # Kanal nomi endi xabar matnida emas, tugmada turadi.
     assert sent[0]
+
+
+@pytest.mark.asyncio
+async def test_start_is_never_blocked(session) -> None:
+    """Birinchi qadam — til tanlash, shuning uchun /start hech qachon
+    to'silmaydi. Aks holda yangi foydalanuvchi til tanlash oynasini umuman
+    ko'rmay, obuna so'rovini standart tilda olardi."""
+    session.add(RequiredChannel(title="Uni Assist", invite_url="https://t.me/uniassist_uz"))
+    await session.commit()
+
+    sent: list[str] = []
+    update, _ = _message_update(sent, text="/start")
+    result, calls = await _run(session, update, _FakeBot("left"))
+
+    assert result == "handled"
+    assert len(calls) == 1
+    assert sent == []
+
+
+@pytest.mark.asyncio
+async def test_start_with_deeplink_is_never_blocked(session) -> None:
+    session.add(RequiredChannel(title="Uni Assist", invite_url="https://t.me/uniassist_uz"))
+    await session.commit()
+
+    update, _ = _message_update([], text="/start ref123")
+    result, calls = await _run(session, update, _FakeBot("left"))
+
+    assert result == "handled"
+    assert len(calls) == 1
 
 
 @pytest.mark.asyncio

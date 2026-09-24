@@ -30,12 +30,29 @@ class DbSessionMiddleware(BaseMiddleware):
             return await handler(event, data)
 
 
+def _is_start_command(message: Message) -> bool:
+    """Xabar aynan /start buyrug'imi.
+
+    Deep-link ("/start ref123") va guruh ko'rinishi ("/start@bot") ham
+    hisobga olinadi, "/startgroup" kabi boshqa buyruqlar esa yo'q.
+    """
+    text = (message.text or "").strip()
+    if not text.startswith("/start"):
+        return False
+    command = text.split(maxsplit=1)[0].split("@", 1)[0]
+    return command == "/start"
+
+
 class SubscriptionMiddleware(BaseMiddleware):
     """Majburiy kanal obunasi tekshiruvi.
 
     Admin panelda faol kanal bo'lmasa — hech narsa qilmaydi. Bo'lsa va
     foydalanuvchi obuna bo'lmagan bo'lsa, handler'ga o'tkazmasdan obuna
     so'rovi xabarini ko'rsatadi.
+
+    Tekshiruvdan ozod: /start buyrug'i hamda til tanlash va "Tekshirish"
+    callback'lari. Ular birgalikda "avval til, keyin obuna" tartibini
+    ta'minlaydi — obuna so'rovi foydalanuvchi tushunadigan tilda chiqadi.
     """
 
     async def __call__(
@@ -58,6 +75,14 @@ class SubscriptionMiddleware(BaseMiddleware):
         raw_event = event.event if hasattr(event, "event") else event
         exempt = (SUBSCRIPTION_CHECK_CALLBACK, LANGUAGE_CALLBACK_PREFIX)
         if isinstance(raw_event, CallbackQuery) and (raw_event.data or "").startswith(exempt):
+            return await handler(event, data)
+
+        # /start ham ozod. Birinchi qadam — til tanlash; obuna so'rovi undan
+        # keyin, foydalanuvchi TANLAGAN tilda ko'rsatiladi
+        # (app/bot/handlers/language.py). Ilgari middleware /start ni ham
+        # to'sib qo'yardi va yangi foydalanuvchi til tanlash oynasini umuman
+        # ko'rmay, obuna so'rovini standart tilda olardi.
+        if isinstance(raw_event, Message) and _is_start_command(raw_event):
             return await handler(event, data)
 
         missing = await missing_channels(bot, session, redis_client, tg_user.id)

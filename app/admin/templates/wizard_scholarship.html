@@ -219,10 +219,18 @@
             </select>
           </div>
           <div class="col-md-8">
-            <label class="form-label">Qaysi universitetda o'qiladi</label>
+            <label class="form-label">Qaysi universitetda o'qiladi — o'zbekcha</label>
             <textarea name="universities_text" class="form-control" rows="2"
                       placeholder="Konsorsium a'zolari yoki tanlov qoidasi — har bir universitet alohida qatorda">{{ val('universities_text') }}</textarea>
-            <small class="form-hint">Masalan: "Germaniyadagi istalgan davlat tan olgan universitet", yoki konsorsium ro'yxati.</small>
+            <small class="form-hint">Masalan: "Germaniyadagi istalgan davlat tan olgan universitet", yoki konsorsium ro'yxati. Ruscha/inglizchasi bo'sh bo'lsa, ular ham shunga qaytadi.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Qaysi universitetda — ruscha</label>
+            <textarea name="universities_text_ru" class="form-control" rows="2">{{ val('universities_text_ru') }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Qaysi universitetda — inglizcha</label>
+            <textarea name="universities_text_en" class="form-control" rows="2">{{ val('universities_text_en') }}</textarea>
           </div>
         </div>
       </div>
@@ -281,15 +289,32 @@
           </div>
 
           <div class="col-md-4">
-            <label class="form-label">Kim tanlaydi</label>
+            <label class="form-label">Kim tanlaydi — o'zbekcha</label>
             <input type="text" name="selected_by" class="form-control" value="{{ val('selected_by') }}"
                    placeholder="masalan: Chevening kotibiyati va Toshkentdagi elchixona">
           </div>
-          <div class="col-md-8">
-            <label class="form-label">Talablar</label>
+          <div class="col-md-4">
+            <label class="form-label">Kim tanlaydi — ruscha</label>
+            <input type="text" name="selected_by_ru" class="form-control" value="{{ val('selected_by_ru') }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Kim tanlaydi — inglizcha</label>
+            <input type="text" name="selected_by_en" class="form-control" value="{{ val('selected_by_en') }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Talablar — o'zbekcha</label>
             <textarea name="requirements_text" class="form-control" rows="4"
                       placeholder="Har bir talab alohida qatorda">{{ val('requirements_text') }}</textarea>
-            <small class="form-hint">Mini App'da har bir qator alohida band bo'lib chiqadi.</small>
+            <small class="form-hint">Mini App'da har bir qator alohida band bo'lib chiqadi. Ruscha/inglizchasi bo'sh bo'lsa, ular ham shunga qaytadi.</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Talablar — ruscha</label>
+            <textarea name="requirements_text_ru" class="form-control" rows="4">{{ val('requirements_text_ru') }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Talablar — inglizcha</label>
+            <textarea name="requirements_text_en" class="form-control" rows="4">{{ val('requirements_text_en') }}</textarea>
           </div>
         </div>
       </div>

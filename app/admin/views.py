@@ -491,8 +491,14 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
         work_experience_years="Ish tajribasi (yil)",
         selection_stages="Tanlov bosqichlari",
         universities_text="Qaysi universitetda",
+        universities_text_ru="Qaysi universitetda (ru)",
+        universities_text_en="Qaysi universitetda (en)",
         selected_by="Kim tanlaydi",
+        selected_by_ru="Kim tanlaydi (ru)",
+        selected_by_en="Kim tanlaydi (en)",
         requirements_text="Talablar",
+        requirements_text_ru="Talablar (ru)",
+        requirements_text_en="Talablar (en)",
     )
     _scholarship_formatters = {
         Scholarship.name: format_scholarship_wizard_link,

@@ -112,8 +112,14 @@ COLUMNS: dict[str, list[str]] = {
         "university_choice",
         "application_linked_to_program",
         "universities_text",
+        "universities_text_ru",
+        "universities_text_en",
         "selected_by",
+        "selected_by_ru",
+        "selected_by_en",
         "requirements_text",
+        "requirements_text_ru",
+        "requirements_text_en",
         "source_url",
         "deadline_close",
         "intake_term",
@@ -219,8 +225,14 @@ SAMPLE_ROWS: dict[str, dict[str, str]] = {
         "university_choice": "user_chooses",
         "application_linked_to_program": "yes",
         "universities_text": "Buyuk Britaniyadagi istalgan universitet",
+        "universities_text_ru": "Любой университет Великобритании",
+        "universities_text_en": "Any university in the United Kingdom",
         "selected_by": "Chevening kotibiyati va Toshkentdagi elchixona",
+        "selected_by_ru": "Секретариат Chevening и посольство в Ташкенте",
+        "selected_by_en": "Chevening Secretariat and the embassy in Tashkent",
         "requirements_text": "Bakalavr diplomi|Kamida 2 yil ish tajribasi",
+        "requirements_text_ru": "Диплом бакалавра|Не менее 2 лет опыта работы",
+        "requirements_text_en": "Bachelor degree|At least two years of work experience",
         "source_url": "https://www.chevening.org/scholarship/uzbekistan/",
         "deadline_close": "2027-11-02",
         "intake_term": "2027 Autumn",
@@ -483,7 +495,7 @@ def _plan_scholarship(
 
     for column in (
         "description", "description_ru", "description_en", "logo_url",
-        "study_language", "selected_by", "currency",
+        "study_language", "selected_by", "selected_by_ru", "selected_by_en", "currency",
     ):
         if row[column]:
             values[column] = row[column]
@@ -491,7 +503,10 @@ def _plan_scholarship(
         code = _currency(row["currency"], "currency", errors)
         if code:
             values["currency"] = code
-    for column in ("universities_text", "requirements_text"):
+    for column in (
+        "universities_text", "universities_text_ru", "universities_text_en",
+        "requirements_text", "requirements_text_ru", "requirements_text_en",
+    ):
         if row[column]:
             values[column] = "\n".join(_split_list(row[column]))
     _check_url(row["logo_url"], "logo_url", errors)
@@ -1320,9 +1335,23 @@ async def export_csv(session: AsyncSession, kind: str) -> str:
                 "universities_text": LIST_SEPARATOR.join(
                     (item.universities_text or "").splitlines()
                 ),
+                "universities_text_ru": LIST_SEPARATOR.join(
+                    (item.universities_text_ru or "").splitlines()
+                ),
+                "universities_text_en": LIST_SEPARATOR.join(
+                    (item.universities_text_en or "").splitlines()
+                ),
                 "selected_by": item.selected_by or "",
+                "selected_by_ru": item.selected_by_ru or "",
+                "selected_by_en": item.selected_by_en or "",
                 "requirements_text": LIST_SEPARATOR.join(
                     (item.requirements_text or "").splitlines()
+                ),
+                "requirements_text_ru": LIST_SEPARATOR.join(
+                    (item.requirements_text_ru or "").splitlines()
+                ),
+                "requirements_text_en": LIST_SEPARATOR.join(
+                    (item.requirements_text_en or "").splitlines()
                 ),
                 "source_url": item.source_url or "",
                 "deadline_close": close.date_utc.date().isoformat() if close else "",

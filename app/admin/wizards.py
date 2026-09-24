@@ -754,8 +754,14 @@ def _scholarship_prefill_from_form(
         ),
         "application_linked_to_program": _checked(form, "application_linked_to_program"),
         "universities_text": form.get("universities_text") or "",
+        "universities_text_ru": form.get("universities_text_ru") or "",
+        "universities_text_en": form.get("universities_text_en") or "",
         "selected_by": _text(form, "selected_by") or "",
+        "selected_by_ru": _text(form, "selected_by_ru") or "",
+        "selected_by_en": _text(form, "selected_by_en") or "",
         "requirements_text": form.get("requirements_text") or "",
+        "requirements_text_ru": form.get("requirements_text_ru") or "",
+        "requirements_text_en": form.get("requirements_text_en") or "",
         "verified_by": _text(form, "verified_by") or "admin",
         "deadlines": [
             {
@@ -893,8 +899,14 @@ class ScholarshipWizard(BaseView):
             "university_choice": scholarship.university_choice.value,
             "application_linked_to_program": scholarship.application_linked_to_program,
             "universities_text": scholarship.universities_text or "",
+            "universities_text_ru": scholarship.universities_text_ru or "",
+            "universities_text_en": scholarship.universities_text_en or "",
             "selected_by": scholarship.selected_by or "",
+            "selected_by_ru": scholarship.selected_by_ru or "",
+            "selected_by_en": scholarship.selected_by_en or "",
             "requirements_text": scholarship.requirements_text or "",
+            "requirements_text_ru": scholarship.requirements_text_ru or "",
+            "requirements_text_en": scholarship.requirements_text_en or "",
             "verified_by": scholarship.verified_by or "admin",
             "deadlines": [
                 {
@@ -963,8 +975,14 @@ class ScholarshipWizard(BaseView):
         )
         scholarship.application_linked_to_program = _checked(form, "application_linked_to_program")
         scholarship.universities_text = _multiline(form, "universities_text")
+        scholarship.universities_text_ru = _multiline(form, "universities_text_ru")
+        scholarship.universities_text_en = _multiline(form, "universities_text_en")
         scholarship.selected_by = _text(form, "selected_by")
+        scholarship.selected_by_ru = _text(form, "selected_by_ru")
+        scholarship.selected_by_en = _text(form, "selected_by_en")
         scholarship.requirements_text = _multiline(form, "requirements_text")
+        scholarship.requirements_text_ru = _multiline(form, "requirements_text_ru")
+        scholarship.requirements_text_en = _multiline(form, "requirements_text_en")
         scholarship.source_url = source_url
         scholarship.verified_at = now
         scholarship.verified_by = _text(form, "verified_by") or "admin"

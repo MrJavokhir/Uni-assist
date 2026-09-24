@@ -99,11 +99,19 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
 
     # Qaysi universitet(lar)da o'qiladi: konsorsium a'zolari yoki tanlov qoidasi
     # ("Germaniyadagi istalgan davlat tan olgan universitet").
+    # Asosiy ustun o'zbekcha; `_ru`/`_en` bo'sh bo'lsa Mini App o'zbekchasiga
+    # qaytadi — `description` bilan bir xil qoida.
     universities_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    universities_text_ru: Mapped[str | None] = mapped_column(Text, nullable=True)
+    universities_text_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Kim tanlaydi: komissiya, elchixona, vazirlik.
     selected_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    selected_by_ru: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    selected_by_en: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Erkin matnli talablar — har bir qator alohida ko'rsatiladi.
     requirements_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    requirements_text_ru: Mapped[str | None] = mapped_column(Text, nullable=True)
+    requirements_text_en: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     age_limit: Mapped[int | None] = mapped_column(nullable=True)
     citizenship_eligible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

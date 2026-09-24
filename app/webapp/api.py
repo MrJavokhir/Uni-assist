@@ -73,6 +73,19 @@ def _field_out(field: Field | None) -> FieldOut | None:
     )
 
 
+def _localized(record: object, field: str, lang: str) -> str | None:
+    """`<field>`, `<field>_ru`, `<field>_en` dan foydalanuvchi tilidagisi.
+
+    Asosiy ustun o'zbekcha; tarjimasi bo'sh bo'lsa o'zbekchasiga qaytadi —
+    bo'sh joy ko'rsatgandan ko'ra tushunarli matn yaxshiroq.
+    """
+    if lang in ("ru", "en"):
+        translated = getattr(record, f"{field}_{lang}", None)
+        if translated:
+            return translated
+    return getattr(record, field)
+
+
 def _localized_notes(program: Program, lang: str) -> str | None:
     """Erkin izohni foydalanuvchi tilida qaytaradi, bo'lmasa o'zbekchasini.
 
@@ -452,9 +465,13 @@ async def list_scholarships(
                 if scholarship.duration_max_years is not None
                 else None,
                 selection_stages=scholarship.selection_stages,
-                universities_text=scholarship.universities_text,
-                selected_by=scholarship.selected_by,
-                requirements_text=scholarship.requirements_text,
+                universities_text=_localized(
+                    scholarship, "universities_text", user.ui_language.value
+                ),
+                selected_by=_localized(scholarship, "selected_by", user.ui_language.value),
+                requirements_text=_localized(
+                    scholarship, "requirements_text", user.ui_language.value
+                ),
                 countries=[
                     CountryOut(
                         id=c.id,

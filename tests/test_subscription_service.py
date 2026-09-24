@@ -2,7 +2,11 @@ import pytest
 from aiogram.exceptions import TelegramAPIError
 
 from app.db.models import RequiredChannel
-from app.services.subscription_service import derive_chat_id, missing_channels
+from app.services.subscription_service import (
+    derive_chat_id,
+    missing_channels,
+    normalize_chat_id,
+)
 
 
 class _FakeMember:
@@ -42,6 +46,33 @@ class _FakeBot:
 )
 def test_derive_chat_id(url: str, expected: str | None) -> None:
     assert derive_chat_id(url) == expected
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        # Asosiy holat: admin Chat ID maydoniga to'liq havolani yozib qo'ygan.
+        # Ilgari shu qiymat o'zgartirilmasdan Telegram'ga uzatilar va
+        # "chat not found" qaytarardi — majburiy obuna jimgina ishlamasdi.
+        ("https://t.me/javokhir_frames", "@javokhir_frames"),
+        ("t.me/uniassist_uz", "@uniassist_uz"),
+        ("telegram.me/some_channel", "@some_channel"),
+        ("  https://t.me/uniassist_uz  ", "@uniassist_uz"),
+        # "@"siz yozilgan nom
+        ("uniassist_uz", "@uniassist_uz"),
+        # To'g'ri kiritilgan qiymatlar o'zgarmaydi
+        ("@uniassist_uz", "@uniassist_uz"),
+        ("-1001234567890", "-1001234567890"),
+        # Aniqlab bo'lmaydiganlar
+        ("https://t.me/+AbCdEf123456", None),
+        ("https://t.me/joinchat/AbCdEf123456", None),
+        ("@x", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_normalize_chat_id(raw: str | None, expected: str | None) -> None:
+    assert normalize_chat_id(raw) == expected
 
 
 async def _add_channel(session, **kwargs) -> RequiredChannel:
@@ -96,6 +127,20 @@ async def test_explicit_chat_id_wins_over_url(session) -> None:
 
     assert len(missing) == 1
     assert bot.calls == [("-1001234567890", 42)]
+
+
+@pytest.mark.asyncio
+async def test_link_stored_in_chat_id_is_normalized(session) -> None:
+    """Productionda aynan shunday bo'lgan: admin Chat ID maydoniga havolani
+    yozgan, Telegram esa uni tanimay "chat not found" qaytargan va majburiy
+    obuna jimgina ishlamay qolgan."""
+    await _add_channel(session, chat_id="https://t.me/javokhir_frames")
+    bot = _FakeBot({"@javokhir_frames": "left"})
+
+    missing = await missing_channels(bot, session, None, 42)
+
+    assert len(missing) == 1
+    assert bot.calls == [("@javokhir_frames", 42)]
 
 
 @pytest.mark.asyncio

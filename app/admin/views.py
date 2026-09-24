@@ -1,3 +1,4 @@
+from aiogram import Bot
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
 from starlette.requests import Request
@@ -15,6 +16,7 @@ from app.admin.formatters import (
     format_university_wizard_link,
     format_verified_at,
 )
+from app.config import settings
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
     Country,
@@ -35,7 +37,12 @@ from app.db.models import (
     User,
 )
 from app.services.redis_client import redis_client
-from app.services.subscription_service import clear_all_cache, derive_chat_id
+from app.services.subscription_service import (
+    clear_all_cache,
+    derive_chat_id,
+    normalize_chat_id,
+    verify_channel_access,
+)
 
 # Enum ustunlar bazada `.value` sifatida saqlanadi (str_enum), shuning uchun
 # filtr qiymatlari ham aynan shu qiymatlar bo'lishi kerak.
@@ -700,19 +707,39 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
         self, data: dict, model: RequiredChannel, is_created: bool, request: Request
     ) -> None:
         url = (data.get("invite_url") or "").strip()
-        chat_id = (data.get("chat_id") or "").strip()
 
+        # Admin Chat ID maydoniga ko'pincha to'liq havola yoki "@"siz nom
+        # yozib qo'yadi. Ilgari bunday qiymat o'zgartirilmasdan saqlanar,
+        # Telegram esa uni tanimay "chat not found" qaytarardi — majburiy
+        # obuna jimgina ishlamay qolardi.
+        chat_id = normalize_chat_id(data.get("chat_id")) or derive_chat_id(url)
         if not chat_id:
-            derived = derive_chat_id(url)
-            if not derived:
-                raise ValueError(
-                    "Bu yopiq kanal havolasiga o'xshaydi — havoladan @username aniqlanmadi. "
-                    "Iltimos, kanalning raqamli Chat ID sini (-100... ko'rinishida) kiriting."
-                )
-            chat_id = derived
+            raise ValueError(
+                "Kanal identifikatorini aniqlab bo'lmadi. Ochiq kanal uchun havolani "
+                "(https://t.me/kanalnomi) kiriting, yopiq kanal uchun esa raqamli "
+                "Chat ID ni (-1001234567890 ko'rinishida) yozing."
+            )
+
+        # Sozlama noto'g'ri bo'lsa admin shu yerda bilsin. Aks holda xato
+        # faqat log'ga tushar, tekshiruv esa "fail-open" bo'lgani uchun
+        # hamma bemalol o'tib ketaverardi.
+        problem = await self._channel_access_problem(chat_id)
+        if problem:
+            raise ValueError(problem)
 
         data["invite_url"] = url
         data["chat_id"] = chat_id
+
+    @staticmethod
+    async def _channel_access_problem(chat_id: str) -> str | None:
+        """Bot kanalda a'zolikni o'qiy oladimi. Muammo matnini qaytaradi."""
+        if not settings.bot_token:
+            return None
+        bot = Bot(token=settings.bot_token)
+        try:
+            return await verify_channel_access(bot, chat_id)
+        finally:
+            await bot.session.close()
 
     async def after_model_change(
         self, data: dict, model: RequiredChannel, is_created: bool, request: Request

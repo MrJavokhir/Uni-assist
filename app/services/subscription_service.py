@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramAPIError
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest, TelegramForbiddenError
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,6 +36,8 @@ MEMBER_STATUSES = {"creator", "administrator", "member", "restricted"}
 CACHE_TTL_SECONDS = 300
 
 _PUBLIC_LINK = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me)/(?!\+|joinchat/)([A-Za-z0-9_]{4,})")
+_NUMERIC_ID = re.compile(r"^-?\d{5,}$")
+_USERNAME = re.compile(r"^[A-Za-z0-9_]{4,}$")
 
 
 @dataclass
@@ -52,6 +54,56 @@ def derive_chat_id(invite_url: str) -> str | None:
     """
     match = _PUBLIC_LINK.search(invite_url or "")
     return f"@{match.group(1)}" if match else None
+
+
+def normalize_chat_id(value: str | None) -> str | None:
+    """Admin kiritgan qiymatni Telegram API kutadigan ko'rinishga keltiradi.
+
+    Telegram faqat "@kanalnomi" yoki raqamli ID ni tushunadi. Admin esa
+    odatda Chat ID maydoniga to'liq havolani ("https://t.me/kanal") yoki
+    "@"siz nomni yozib qo'yadi — ilgari bunday qiymat o'zgartirilmasdan
+    uzatilar va Telegram "chat not found" qaytarardi. Natijada majburiy
+    obuna jimgina ishlamay qolardi.
+
+    Yopiq kanal havolasidan (t.me/+..., joinchat/...) username chiqmaydi,
+    shuning uchun None qaytadi — bunday kanal uchun raqamli ID kerak.
+    """
+    raw = (value or "").strip()
+    if not raw:
+        return None
+    if _NUMERIC_ID.match(raw):
+        return raw
+    derived = derive_chat_id(raw)
+    if derived:
+        return derived
+    if raw.startswith("@") and _USERNAME.match(raw[1:]):
+        return raw
+    if _USERNAME.match(raw):
+        return f"@{raw}"
+    return None
+
+
+async def verify_channel_access(bot: Bot, chat_id: str) -> str | None:
+    """Bot shu kanalda a'zolikni tekshira oladimi.
+
+    Xato matnini qaytaradi (admin ko'radi), hammasi joyida bo'lsa — None.
+    Ataylab aynan `get_chat_member` sinaladi: `get_chat` bot admin bo'lmasa
+    ham ishlayveradi, a'zolikni o'qish esa adminlikni talab qiladi.
+    """
+    try:
+        await bot.get_chat_member(chat_id, bot.id)
+    except TelegramForbiddenError:
+        return f"Bot {chat_id} kanaliga kira olmaydi. Botni kanalga administrator qilib qo'shing."
+    except TelegramBadRequest as err:
+        return (
+            f"Telegram {chat_id} bo'yicha javob berdi: {err.message}. "
+            "Kanal nomi to'g'riligini va bot o'sha kanalda administrator ekanini tekshiring."
+        )
+    except TelegramAPIError:
+        # Tarmoq yoki vaqtinchalik xato — saqlashga to'sqinlik qilmaymiz.
+        logger.exception("Kanalni tekshirib bo'lmadi: %s", chat_id)
+        return None
+    return None
 
 
 async def active_channels(session: AsyncSession) -> list[RequiredChannel]:
@@ -108,7 +160,9 @@ async def missing_channels(
 
     missing: list[ChannelInfo] = []
     for channel in channels:
-        chat_id = channel.chat_id or derive_chat_id(channel.invite_url)
+        # Bazada allaqachon noto'g'ri saqlangan qiymat ham shu yerda
+        # tuzatiladi — adminning qo'lda tahrirlashini kutmaymiz.
+        chat_id = normalize_chat_id(channel.chat_id) or derive_chat_id(channel.invite_url)
         if not chat_id:
             # Yopiq kanal uchun chat_id kiritilmagan — tekshirib bo'lmaydi.
             logger.warning("Kanal uchun chat_id aniqlanmadi: %s", channel.title)

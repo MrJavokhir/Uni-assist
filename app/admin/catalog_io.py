@@ -542,8 +542,9 @@ def _plan_scholarship(
             errors.append("stipend_period: faqat 'month' yoki 'year'")
 
     for column, upper in (
-        ("stipend_amount", 1_000_000),
-        ("stipend_max", 1_000_000),
+        # KRW/HUF/JPY kabi valyutalarda oylik stipendiya millionlarda bo'ladi.
+        ("stipend_amount", 100_000_000),
+        ("stipend_max", 100_000_000),
         ("duration_min_years", 15),
         ("duration_max_years", 15),
     ):

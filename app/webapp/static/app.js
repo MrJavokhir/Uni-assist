@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 39;
+const ASSET_V = 40;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -306,6 +306,9 @@ const I18N = {
     "program.years": "yil",
     "program.requirements": "Talablar",
     "program.requirements_docs": "Talablar va hujjatlar",
+    "program.req_gre": "GRE talab qilinadi",
+    "program.req_gre_score": "GRE: kamida {score}",
+    "program.req_prereq": "Tayyorgarlik yo'nalishi: {major}",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "Jahon reytingi (QS)",
     "program.language_certs": "Til sertifikati",
@@ -319,8 +322,6 @@ const I18N = {
     "match.missing_key.ielts_toefl": "IELTS yoki TOEFL",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
-    "program.gre": "GRE",
-    "program.prereq": "Oldingi ta'lim",
     "program.no_requirements": "Talablar kiritilmagan.",
     "program.costs": "Xarajatlar",
     "program.tuition": "Kontrakt (yiliga)",
@@ -367,13 +368,18 @@ const I18N = {
     "scholarships.money": "Moliyaviy qo'llab-quvvatlash",
     "scholarships.study": "O'qish",
     "scholarships.requirements": "Talablar",
+    "scholarships.req_language": "Til sertifikati: {score}",
+    "scholarships.req_work": "Kamida {years} yil ish tajribasi",
+    "scholarships.req_no_work": "Ish tajribasi talab qilinmaydi",
+    "scholarships.req_age": "Yosh chegarasi: {age} yosh",
+    "scholarships.req_stages": "Tanlov {n} bosqichdan iborat",
+    "scholarships.req_separate": "Universitetga alohida ariza topshiriladi",
+    "scholarships.req_one_application": "Bitta ariza — universitet ham, grant ham",
+    "scholarships.req_citizenship_ok": "O'zbekiston fuqarolari ariza bera oladi",
+    "scholarships.req_citizenship_no": "O'zbekiston fuqarolari uchun ochiq emas",
+    "scholarships.no_requirements": "Talablar kiritilmagan.",
     "scholarships.degree_levels": "Qaysi darajaga",
     "scholarships.duration": "Muddati",
-    "scholarships.lang_score": "Til bali",
-    "scholarships.work_exp": "Ish tajribasi",
-    "scholarships.stages": "Tanlov bosqichlari",
-    "scholarships.stages_count": "{n} bosqich",
-    "scholarships.years_count": "{years} yil",
     "scholarships.per_month": "oyiga",
     "scholarships.per_year": "yiliga",
     "scholarships.verify_hint": "Talablar har yili o'zgarishi mumkin — ariza berishdan oldin rasmiy saytdan tasdiqlang.",
@@ -381,14 +387,11 @@ const I18N = {
     "scholarships.deadlines": "Muddatlar",
     "scholarships.covers": "Qamrov",
     "scholarships.stipend": "Stipendiya",
-    "scholarships.age_limit": "Yosh chegarasi",
     "scholarships.uni_choice": "Universitetni kim tanlaydi",
     "scholarships.universities": "Qaysi universitetda",
     "scholarships.selected_by": "Kim tanlaydi",
     "scholarships.uni_choice.user_chooses": "Talabaning o'zi",
     "scholarships.uni_choice.assigned_by_scholarship": "Grant tayinlaydi",
-    "scholarships.separate_application": "Alohida ariza kerak",
-    "scholarships.for_uzbekistan": "O'zbekiston fuqarolari uchun",
     "scholarships.yes": "Ha",
     "scholarships.no": "Yo'q",
     "scholarships.not_specified": "Ko'rsatilmagan",
@@ -525,6 +528,9 @@ const I18N = {
     "program.years": "г.",
     "program.requirements": "Требования",
     "program.requirements_docs": "Требования и документы",
+    "program.req_gre": "Требуется GRE",
+    "program.req_gre_score": "GRE: не менее {score}",
+    "program.req_prereq": "Профильное направление: {major}",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "Мировой рейтинг (QS)",
     "program.language_certs": "Языковой сертификат",
@@ -538,8 +544,6 @@ const I18N = {
     "match.missing_key.ielts_toefl": "IELTS или TOEFL",
     "program.ielts_min": "Мин. IELTS",
     "program.toefl_min": "Мин. TOEFL",
-    "program.gre": "GRE",
-    "program.prereq": "Предыдущее образование",
     "program.no_requirements": "Требования не указаны.",
     "program.costs": "Расходы",
     "program.tuition": "Контракт (в год)",
@@ -586,13 +590,18 @@ const I18N = {
     "scholarships.money": "Финансирование",
     "scholarships.study": "Обучение",
     "scholarships.requirements": "Требования",
+    "scholarships.req_language": "Языковой сертификат: {score}",
+    "scholarships.req_work": "Не менее {years} лет опыта работы",
+    "scholarships.req_no_work": "Опыт работы не требуется",
+    "scholarships.req_age": "Возрастное ограничение: {age} лет",
+    "scholarships.req_stages": "Отбор состоит из {n} этапов",
+    "scholarships.req_separate": "В университет подаётся отдельная заявка",
+    "scholarships.req_one_application": "Одна заявка — и на университет, и на грант",
+    "scholarships.req_citizenship_ok": "Граждане Узбекистана могут подавать заявку",
+    "scholarships.req_citizenship_no": "Для граждан Узбекистана недоступна",
+    "scholarships.no_requirements": "Требования не указаны.",
     "scholarships.degree_levels": "Для каких степеней",
     "scholarships.duration": "Длительность",
-    "scholarships.lang_score": "Языковой балл",
-    "scholarships.work_exp": "Опыт работы",
-    "scholarships.stages": "Этапы отбора",
-    "scholarships.stages_count": "{n} этапа",
-    "scholarships.years_count": "{years} г.",
     "scholarships.per_month": "в месяц",
     "scholarships.per_year": "в год",
     "scholarships.verify_hint": "Требования могут меняться каждый год — перед подачей уточните на официальном сайте.",
@@ -600,14 +609,11 @@ const I18N = {
     "scholarships.deadlines": "Дедлайны",
     "scholarships.covers": "Покрытие",
     "scholarships.stipend": "Стипендия",
-    "scholarships.age_limit": "Возрастное ограничение",
     "scholarships.uni_choice": "Кто выбирает университет",
     "scholarships.universities": "В каком университете",
     "scholarships.selected_by": "Кто отбирает",
     "scholarships.uni_choice.user_chooses": "Сам студент",
     "scholarships.uni_choice.assigned_by_scholarship": "Назначает грант",
-    "scholarships.separate_application": "Нужна отдельная заявка",
-    "scholarships.for_uzbekistan": "Для граждан Узбекистана",
     "scholarships.yes": "Да",
     "scholarships.no": "Нет",
     "scholarships.not_specified": "Не указано",
@@ -744,6 +750,9 @@ const I18N = {
     "program.years": "yr",
     "program.requirements": "Requirements",
     "program.requirements_docs": "Requirements & documents",
+    "program.req_gre": "GRE is required",
+    "program.req_gre_score": "GRE: at least {score}",
+    "program.req_prereq": "Prior field of study: {major}",
     "program.ranking": "QS #{n}",
     "program.ranking_label": "World ranking (QS)",
     "program.language_certs": "Language certificate",
@@ -757,8 +766,6 @@ const I18N = {
     "match.missing_key.ielts_toefl": "IELTS or TOEFL",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
-    "program.gre": "GRE",
-    "program.prereq": "Prior degree",
     "program.no_requirements": "No requirements recorded.",
     "program.costs": "Costs",
     "program.tuition": "Tuition (per year)",
@@ -805,13 +812,18 @@ const I18N = {
     "scholarships.money": "Funding",
     "scholarships.study": "Study",
     "scholarships.requirements": "Requirements",
+    "scholarships.req_language": "Language certificate: {score}",
+    "scholarships.req_work": "At least {years} years of work experience",
+    "scholarships.req_no_work": "No work experience required",
+    "scholarships.req_age": "Age limit: {age}",
+    "scholarships.req_stages": "Selection has {n} stages",
+    "scholarships.req_separate": "A separate university application is required",
+    "scholarships.req_one_application": "One application covers both the place and the grant",
+    "scholarships.req_citizenship_ok": "Open to citizens of Uzbekistan",
+    "scholarships.req_citizenship_no": "Not open to citizens of Uzbekistan",
+    "scholarships.no_requirements": "No requirements listed.",
     "scholarships.degree_levels": "Degree levels",
     "scholarships.duration": "Duration",
-    "scholarships.lang_score": "Language score",
-    "scholarships.work_exp": "Work experience",
-    "scholarships.stages": "Selection stages",
-    "scholarships.stages_count": "{n} stages",
-    "scholarships.years_count": "{years} yr",
     "scholarships.per_month": "per month",
     "scholarships.per_year": "per year",
     "scholarships.verify_hint": "Requirements can change each year — confirm on the official site before applying.",
@@ -819,14 +831,11 @@ const I18N = {
     "scholarships.deadlines": "Deadlines",
     "scholarships.covers": "Coverage",
     "scholarships.stipend": "Stipend",
-    "scholarships.age_limit": "Age limit",
     "scholarships.uni_choice": "Who picks the university",
     "scholarships.universities": "Where you study",
     "scholarships.selected_by": "Who selects",
     "scholarships.uni_choice.user_chooses": "The student",
     "scholarships.uni_choice.assigned_by_scholarship": "The scholarship",
-    "scholarships.separate_application": "Separate application required",
-    "scholarships.for_uzbekistan": "Open to Uzbekistan citizens",
     "scholarships.yes": "Yes",
     "scholarships.no": "No",
     "scholarships.not_specified": "Not specified",
@@ -1668,31 +1677,29 @@ async function openProgramSheet(programId) {
     ? certRows + (bothCerts ? `<div class="sheet-note">${t("program.certs_either")}</div>` : "")
     : `<div class="sheet-empty">${t("program.no_language_req")}</div>`;
 
-  // Ariza hujjatlari (kalitlar, foydalanuvchi tilida) va admin yozgan
-  // qo'shimcha talablar — bitta ro'yxat: ikkalasi ham "arizaga nima kerak".
-  const checklist = [
+  // Talab ham, hujjat ham bitta savolga javob beradi — "arizaga nima kerak".
+  // Shuning uchun tizimli maydonlar ham, admin yozgan matn ham bitta ro'yxatga
+  // qo'shiladi; qiymati yo'q maydon umuman ko'rsatilmaydi.
+  const checklist = [];
+  if (req.gre_required) {
+    checklist.push(
+      req.gre_min !== null && req.gre_min !== undefined
+        ? t("program.req_gre_score", { score: req.gre_min })
+        : t("program.req_gre")
+    );
+  }
+  if (req.prereq_major) {
+    checklist.push(t("program.req_prereq", { major: req.prereq_major }));
+  }
+  checklist.push(
     ...(p.required_documents || []).map((d) => t("document." + d)),
-    ...(p.requirements || []),
-  ];
-  const extraRequirements = checklist.length
+    ...(p.requirements || [])
+  );
+  const requirements = checklist.length
     ? `<ul class="doc-list">${checklist
         .map((r) => `<li>${icon("check")}${escapeHtml(r)}</li>`)
         .join("")}</ul>`
-    : "";
-  const requirementRows =
-    (req.gre_required
-      ? row(
-          t("program.gre"),
-          req.gre_min !== null && req.gre_min !== undefined
-            ? `${t("scholarships.yes")} (${req.gre_min})`
-            : t("scholarships.yes")
-        )
-      : "") +
-    (req.prereq_major ? row(t("program.prereq"), escapeHtml(req.prereq_major)) : "");
-  const requirements =
-    requirementRows || extraRequirements
-      ? requirementRows + extraRequirements
-      : `<div class="sheet-empty">${t("program.no_requirements")}</div>`;
+    : `<div class="sheet-empty">${t("program.no_requirements")}</div>`;
 
   const cost = p.cost;
   const feeRow =
@@ -1890,7 +1897,6 @@ function openScholarshipSheet(s) {
   ensureSheet();
   const sheet = document.querySelector(".sheet");
 
-  const yesNo = (value) => (value ? t("scholarships.yes") : t("scholarships.no"));
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
 
@@ -1914,12 +1920,41 @@ function openScholarshipSheet(s) {
   ]
     .filter(Boolean)
     .join(" / ");
-  const workExp =
-    s.work_experience_years === null || s.work_experience_years === undefined
-      ? dash
-      : s.work_experience_years === 0
-        ? t("scholarships.no")
-        : t("scholarships.years_count", { years: s.work_experience_years });
+  // Talablar: tizimli maydonlar ham, admin yozgan matn ham bitta savolga
+  // javob beradi — "nima talab qilinadi". Shuning uchun ular bitta ro'yxatga
+  // qo'shiladi; qiymati yo'q maydon umuman ko'rsatilmaydi.
+  const requirementLines = [];
+  if (!s.citizenship_eligible) {
+    requirementLines.push(t("scholarships.req_citizenship_no"));
+  }
+  if (langScore) requirementLines.push(t("scholarships.req_language", { score: langScore }));
+  if (s.work_experience_years !== null && s.work_experience_years !== undefined) {
+    requirementLines.push(
+      s.work_experience_years === 0
+        ? t("scholarships.req_no_work")
+        : t("scholarships.req_work", { years: s.work_experience_years })
+    );
+  }
+  if (s.age_limit !== null && s.age_limit !== undefined) {
+    requirementLines.push(t("scholarships.req_age", { age: s.age_limit }));
+  }
+  if (s.selection_stages) {
+    requirementLines.push(t("scholarships.req_stages", { n: s.selection_stages }));
+  }
+  requirementLines.push(
+    t(
+      s.application_linked_to_program
+        ? "scholarships.req_separate"
+        : "scholarships.req_one_application"
+    )
+  );
+  requirementLines.push(...(s.requirements_text || "").split("\n").filter(Boolean));
+
+  const requirements = requirementLines.length
+    ? `<ul class="doc-list">${requirementLines
+        .map((line) => `<li>${icon("check")}${escapeHtml(line)}</li>`)
+        .join("")}</ul>`
+    : `<div class="sheet-empty">${t("scholarships.no_requirements")}</div>`;
 
   const deadlines = s.deadlines.length
     ? s.deadlines
@@ -1994,32 +2029,12 @@ function openScholarshipSheet(s) {
           ? row(t("scholarships.universities"), multiline(s.universities_text))
           : ""
       }
+      ${s.selected_by ? row(t("scholarships.selected_by"), escapeHtml(s.selected_by)) : ""}
     </div>
 
     <div class="sheet-section">
       <div class="sheet-section-title">${t("scholarships.requirements")}</div>
-      ${row(t("scholarships.lang_score"), langScore || dash)}
-      ${row(t("scholarships.work_exp"), workExp)}
-      ${row(
-        t("scholarships.age_limit"),
-        s.age_limit !== null && s.age_limit !== undefined ? s.age_limit : dash
-      )}
-      ${row(
-        t("scholarships.stages"),
-        s.selection_stages ? t("scholarships.stages_count", { n: s.selection_stages }) : dash
-      )}
-      ${row(t("scholarships.separate_application"), yesNo(s.application_linked_to_program))}
-      ${row(t("scholarships.for_uzbekistan"), yesNo(s.citizenship_eligible))}
-      ${s.selected_by ? row(t("scholarships.selected_by"), escapeHtml(s.selected_by)) : ""}
-      ${
-        s.requirements_text
-          ? `<ul class="doc-list">${s.requirements_text
-              .split("\n")
-              .filter(Boolean)
-              .map((line) => `<li>${icon("check")}${escapeHtml(line)}</li>`)
-              .join("")}</ul>`
-          : ""
-      }
+      ${requirements}
       <div class="sheet-note">${t("scholarships.verify_hint")}</div>
     </div>
 

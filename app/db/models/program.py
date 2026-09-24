@@ -50,6 +50,7 @@ INSTRUCTION_LANGUAGES: dict[str, str] = {
     "Polish": "Polyak tili",
     "Czech": "Chex tili",
     "Hungarian": "Venger tili",
+    "Malay": "Malay tili",
 }
 
 

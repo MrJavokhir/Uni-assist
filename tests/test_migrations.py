@@ -61,10 +61,16 @@ def test_canonical_and_unknown_languages_are_left_alone():
     assert language_migration.map_legacy_language(None) is None
 
 
-def test_migration_canonical_list_matches_app_constant():
+def test_migration_canonical_list_is_subset_of_app_constant():
+    """Migratsiyadagi ro'yxat ataylab muzlatilgan (o'sha paytdagi holat).
+
+    Ilova ro'yxatiga keyin yangi til qo'shilishi mumkin — bu migratsiyani
+    o'zgartirmaydi. Ammo migratsiya bilgan til ilovadan olib tashlansa,
+    bu xato: eski qatorlar kanonik ro'yxatdan tushib qolardi.
+    """
     from app.db.models import INSTRUCTION_LANGUAGES
 
-    assert language_migration.CANONICAL_LANGUAGES == set(INSTRUCTION_LANGUAGES)
+    assert language_migration.CANONICAL_LANGUAGES <= set(INSTRUCTION_LANGUAGES)
 
 
 def test_every_canonical_language_is_translated_in_mini_app():

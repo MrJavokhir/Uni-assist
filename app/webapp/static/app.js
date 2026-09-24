@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 35;
+const ASSET_V = 36;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -158,6 +158,7 @@ const LANGUAGE_NAMES = {
   Polish: { uz: "Polyak tili", ru: "Польский", en: "Polish" },
   Czech: { uz: "Chex tili", ru: "Чешский", en: "Czech" },
   Hungarian: { uz: "Venger tili", ru: "Венгерский", en: "Hungarian" },
+  Malay: { uz: "Malay tili", ru: "Малайский", en: "Malay" },
 };
 const LANGUAGE_ALIASES = {
   "ingliz tili": "English",

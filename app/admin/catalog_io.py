@@ -812,7 +812,11 @@ def _parse_program_details(
             errors.append("toefl_min: 1 dan 120 gacha butun son bo'lishi kerak")
 
     if row["tuition_amount"]:
-        amount = _positive_decimal(row["tuition_amount"], "tuition_amount", errors, 10_000_000)
+        # Chegara valyutaga bog'liq: koreys voni yoki indoneziya rupiyasida
+        # yillik kontrakt o'n millionlarda bo'ladi (Yonsei: 18 014 000 KRW).
+        amount = _positive_decimal(
+            row["tuition_amount"], "tuition_amount", errors, 1_000_000_000
+        )
         if amount is not None:
             related["cost"]["tuition_amount"] = amount
     if row["tuition_currency"]:
@@ -833,7 +837,7 @@ def _parse_program_details(
             values["has_application_fee"] = flag
     if row["application_fee_amount"]:
         fee = _positive_decimal(
-            row["application_fee_amount"], "application_fee_amount", errors, 100_000
+            row["application_fee_amount"], "application_fee_amount", errors, 10_000_000
         )
         if fee is not None:
             values["application_fee_amount"] = fee

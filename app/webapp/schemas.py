@@ -197,6 +197,10 @@ class ScholarshipOut(BaseModel):
     duration_min_years: float | None = None
     duration_max_years: float | None = None
     selection_stages: int | None = None
+    # Qaysi universitetda o'qiladi / kim tanlaydi / erkin matnli talablar
+    universities_text: str | None = None
+    selected_by: str | None = None
+    requirements_text: str | None = None
     # To'liq obyekt (faqat nom emas): Mini App bayroq chiqarishi uchun
     # iso_code, foydalanuvchi tilida ko'rsatishi uchun esa uchala nom kerak.
     countries: list[CountryOut]

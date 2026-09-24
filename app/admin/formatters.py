@@ -59,6 +59,20 @@ def format_program_wizard_link(model: object, attribute: str) -> Markup:
     )
 
 
+def format_scholarship_wizard_link(model: object, attribute: str) -> Markup:
+    """Grant nomini sehrgarga havola qiladi.
+
+    SQLAdmin'ning oddiy formasi grantning yarim maydonini bermaydi (IELTS,
+    o'qish tili, daraja, davomiylik, tanlov bosqichlari, muddatlar). Sehrgar
+    esa Mini App'da ko'rinadigan hamma narsani bitta sahifada beradi.
+    """
+    name = escape(getattr(model, attribute) or "—")
+    return Markup(
+        f"<a href='/admin/scholarship-wizard?scholarship_id={model.id}' "
+        f"title='Barcha maydonlari bilan tahrirlash'>{name}</a>"
+    )
+
+
 def format_ranking(model: object, attribute: str) -> Markup:
     value = getattr(model, attribute)
     if value is None:

@@ -1,12 +1,27 @@
 {% extends "sqladmin/layout.html" %}
 
+{% macro err(field) %}{% if field_errors and field_errors.get(field) %} is-invalid{% endif %}{% endmacro %}
+{% macro errmsg(field) %}{% if field_errors and field_errors.get(field) %}<div class="invalid-feedback d-block">{{ field_errors[field] }}</div>{% endif %}{% endmacro %}
+{% macro val(key) %}{{ (prefill[key] if prefill else '') or '' }}{% endmacro %}
+{% macro on(key) %}{% if prefill and prefill[key] %}checked{% endif %}{% endmacro %}
+
 {% block content %}
 <div class="col-12">
 <div class="ua-page">
 
-  <form method="post" class="ua-wizard">
+  {% if errors %}
+  <div class="alert alert-danger">
+    <strong>Saqlanmadi.</strong>
+    <ul class="mb-0 mt-1">{% for message in errors %}<li>{{ message }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
 
-    {# ---------- 1-qadam: asosiy ma'lumot ---------- #}
+  <form method="post" class="ua-wizard">
+    {% if prefill and prefill.id %}
+    <input type="hidden" name="scholarship_id" value="{{ prefill.id }}">
+    {% endif %}
+
+    {# ---------- 1: grant haqida ---------- #}
     <div class="card mb-3">
       <div class="card-header">
         <h3 class="card-title"><span class="ua-step">1</span> Grant haqida</h3>
@@ -15,51 +30,59 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label required">Grant nomi</label>
-            <input type="text" name="name" class="form-control" required placeholder="masalan: DAAD">
+            <input type="text" name="name" class="form-control{{ err('name') }}" required
+                   value="{{ val('name') }}" placeholder="masalan: Chevening Scholarship">
+            {{ errmsg('name') }}
             <small class="form-hint">Xuddi shu nomli grant bo'lsa, u yangilanadi.</small>
           </div>
           <div class="col-md-6">
             <label class="form-label required">Rasmiy manba havolasi</label>
-            <input type="url" name="source_url" class="form-control" required placeholder="https://...">
+            <input type="url" name="source_url" class="form-control{{ err('source_url') }}" required
+                   value="{{ val('source_url') }}" placeholder="https://...">
+            {{ errmsg('source_url') }}
           </div>
-          <div class="col-12">
-            <label class="form-label">Tavsif</label>
-            <textarea name="description" class="form-control" rows="4"
-                      placeholder="Nimalarni qoplaydi, kimlar ariza bera oladi, qanday talablar bor..."></textarea>
+
+          <div class="col-md-6">
+            <label class="form-label">Logotip havolasi</label>
+            <input type="url" name="logo_url" class="form-control{{ err('logo_url') }}"
+                   value="{{ val('logo_url') }}" placeholder="bo'sh bo'lsa saytdan olinadi">
+            {{ errmsg('logo_url') }}
           </div>
           <div class="col-md-6">
-            <label class="form-label">Qaysi davlat(lar)ga tegishli</label>
-            <select name="country_ids" class="form-select" multiple size="8">
+            <label class="form-label">Qaysi davlat(lar)da o'qiladi</label>
+            <select name="country_ids" class="form-select" multiple size="6">
               {% for country in countries %}
-              <option value="{{ country.id }}">{{ country.name_uz }}</option>
+              <option value="{{ country.id }}"
+                {% if prefill and country.id in prefill.country_ids %}selected{% endif %}>
+                {{ country.name_uz }}
+              </option>
               {% endfor %}
             </select>
-            <small class="form-hint">Bir nechtasini tanlash uchun Ctrl (Mac'da Cmd) bilan bosing.</small>
+            <small class="form-hint">Ctrl (Mac'da Cmd) bilan bir nechtasini tanlang.</small>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Tavsif — o'zbekcha</label>
+            <textarea name="description" class="form-control" rows="3"
+                      placeholder="Kim moliyalashtiradi, kimlar uchun, nimasi bilan mashhur...">{{ val('description') }}</textarea>
+            <small class="form-hint">Mini App'da shu matn ko'rinadi. Ruscha/inglizchasi bo'sh bo'lsa, ular ham shunga qaytadi.</small>
           </div>
           <div class="col-md-6">
-            <label class="form-label">Universitetni kim tanlaydi</label>
-            {# Ko'p uchraydigan holat birinchi (standart) turadi #}
-            <select name="university_choice" class="form-select">
-              <option value="user_chooses">Talabaning o'zi tanlaydi</option>
-              <option value="assigned_by_scholarship">Grant tayinlaydi</option>
-            </select>
-            <label class="form-check form-switch mt-3">
-              <input class="form-check-input" type="checkbox" name="citizenship_eligible" checked>
-              <span class="form-check-label">O'zbekiston fuqarolari ariza bera oladi</span>
-            </label>
-            <label class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" name="application_linked_to_program">
-              <span class="form-check-label">Grantga alohida ariza kerak</span>
-            </label>
+            <label class="form-label">Tavsif — ruscha</label>
+            <textarea name="description_ru" class="form-control" rows="3">{{ val('description_ru') }}</textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tavsif — inglizcha</label>
+            <textarea name="description_en" class="form-control" rows="3">{{ val('description_en') }}</textarea>
           </div>
         </div>
       </div>
     </div>
 
-    {# ---------- 2-qadam: moliyaviy qamrov ---------- #}
+    {# ---------- 2: pul ---------- #}
     <div class="card mb-3">
       <div class="card-header">
-        <h3 class="card-title"><span class="ua-step">2</span> Moliyaviy qamrov</h3>
+        <h3 class="card-title"><span class="ua-step">2</span> Nimalarni qoplaydi</h3>
       </div>
       <div class="card-body">
         <div class="row g-3">
@@ -67,7 +90,8 @@
             <label class="form-label">Qamrov turi</label>
             <select name="coverage_type" class="form-select">
               {% for coverage in coverage_types %}
-              <option value="{{ coverage.value }}">
+              <option value="{{ coverage.value }}"
+                {% if prefill and prefill.coverage_type == coverage.value %}selected{% endif %}>
                 {{ {'full': 'To\'liq', 'partial': 'Qisman', 'contract_only': 'Faqat kontrakt'}[coverage.value] }}
               </option>
               {% endfor %}
@@ -75,39 +99,55 @@
           </div>
           <div class="col-md-2">
             <label class="form-label">Qamrov (%)</label>
-            <input type="number" name="coverage_percent" class="form-control" placeholder="qisman bo'lsa">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Stipendiya (oyiga)</label>
-            <input type="number" step="0.01" name="stipend_amount" class="form-control">
-            <small class="form-hint">Aniq bilmasangiz bo'sh qoldiring.</small>
+            <input type="number" name="coverage_percent" class="form-control{{ err('coverage_percent') }}"
+                   value="{{ val('coverage_percent') }}" placeholder="qisman bo'lsa">
+            {{ errmsg('coverage_percent') }}
           </div>
           <div class="col-md-2">
+            <label class="form-label">Stipendiya (dan)</label>
+            <input type="number" step="0.01" name="stipend_amount"
+                   class="form-control{{ err('stipend_amount') }}" value="{{ val('stipend_amount') }}">
+            {{ errmsg('stipend_amount') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Stipendiya (gacha)</label>
+            <input type="number" step="0.01" name="stipend_max"
+                   class="form-control{{ err('stipend_max') }}" value="{{ val('stipend_max') }}">
+            {{ errmsg('stipend_max') }}
+            <small class="form-hint">Daraja bo'yicha farq qilsa.</small>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Davri</label>
+            <select name="stipend_period" class="form-select{{ err('stipend_period') }}">
+              <option value="month" {% if not prefill or prefill.stipend_period == 'month' %}selected{% endif %}>oyiga</option>
+              <option value="year" {% if prefill and prefill.stipend_period == 'year' %}selected{% endif %}>yiliga</option>
+            </select>
+            {{ errmsg('stipend_period') }}
+          </div>
+          <div class="col-md-1">
             <label class="form-label">Valyuta</label>
-            <input type="text" name="currency" class="form-control" value="USD" maxlength="3">
-          </div>
-          <div class="col-md-2">
-            <label class="form-label">Yosh chegarasi</label>
-            <input type="number" name="age_limit" class="form-control">
+            <input type="text" name="currency" class="form-control{{ err('currency') }}"
+                   value="{{ (prefill.currency if prefill else 'USD') }}" maxlength="3">
+            {{ errmsg('currency') }}
           </div>
 
           <div class="col-12">
             <label class="form-label">Qo'shimcha imtiyozlar</label>
             <div class="d-flex flex-wrap gap-4">
               <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="extras_flight">
+                <input class="form-check-input" type="checkbox" name="extras_flight" {{ on('extras_flight') }}>
                 <span class="form-check-label">Aviachipta</span>
               </label>
               <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="extras_insurance">
+                <input class="form-check-input" type="checkbox" name="extras_insurance" {{ on('extras_insurance') }}>
                 <span class="form-check-label">Sug'urta</span>
               </label>
               <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="extras_dormitory">
+                <input class="form-check-input" type="checkbox" name="extras_dormitory" {{ on('extras_dormitory') }}>
                 <span class="form-check-label">Yotoqxona</span>
               </label>
               <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="extras_language_course">
+                <input class="form-check-input" type="checkbox" name="extras_language_course" {{ on('extras_language_course') }}>
                 <span class="form-check-label">Til kursi</span>
               </label>
             </div>
@@ -116,10 +156,149 @@
       </div>
     </div>
 
-    {# ---------- 3-qadam: muddatlar ---------- #}
+    {# ---------- 3: o'qish ---------- #}
     <div class="card mb-3">
       <div class="card-header">
-        <h3 class="card-title"><span class="ua-step">3</span> Muddatlar</h3>
+        <h3 class="card-title"><span class="ua-step">3</span> Qayerda va qanday o'qiladi</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Qaysi darajalarga beriladi</label>
+            <div class="d-flex flex-wrap gap-3">
+              {% for level in degree_levels %}
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="deg_{{ level.value }}"
+                  {% if prefill and level.value in prefill.degree_levels %}checked{% endif %}>
+                <span class="form-check-label">
+                  {{ {'bachelor': 'Bakalavr', 'master': 'Magistratura', 'phd': 'PhD'}[level.value] }}
+                </span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">O'qish tili</label>
+            <select name="study_language" class="form-select{{ err('study_language') }}">
+              <option value="">— tanlanmagan —</option>
+              {% for code, label in languages.items() %}
+              <option value="{{ code }}"
+                {% if prefill and prefill.study_language == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {{ errmsg('study_language') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Davomiyligi (dan)</label>
+            <input type="number" step="0.5" name="duration_min_years"
+                   class="form-control{{ err('duration_min_years') }}" value="{{ val('duration_min_years') }}">
+            {{ errmsg('duration_min_years') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Davomiyligi (gacha)</label>
+            <input type="number" step="0.5" name="duration_max_years"
+                   class="form-control{{ err('duration_max_years') }}" value="{{ val('duration_max_years') }}">
+            {{ errmsg('duration_max_years') }}
+          </div>
+          <div class="col-md-1">
+            <label class="form-label">Yil</label>
+            <div class="form-control-plaintext text-muted">yil</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Universitetni kim tanlaydi</label>
+            <select name="university_choice" class="form-select">
+              <option value="user_chooses"
+                {% if not prefill or prefill.university_choice == 'user_chooses' %}selected{% endif %}>
+                Talabaning o'zi tanlaydi
+              </option>
+              <option value="assigned_by_scholarship"
+                {% if prefill and prefill.university_choice == 'assigned_by_scholarship' %}selected{% endif %}>
+                Grant tayinlaydi
+              </option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Qaysi universitetda o'qiladi</label>
+            <textarea name="universities_text" class="form-control" rows="2"
+                      placeholder="Konsorsium a'zolari yoki tanlov qoidasi — har bir universitet alohida qatorda">{{ val('universities_text') }}</textarea>
+            <small class="form-hint">Masalan: "Germaniyadagi istalgan davlat tan olgan universitet", yoki konsorsium ro'yxati.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---------- 4: talablar ---------- #}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><span class="ua-step">4</span> Talablar va tanlov</h3>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label">IELTS (kamida)</label>
+            <input type="number" step="0.5" name="ielts_min" class="form-control{{ err('ielts_min') }}"
+                   value="{{ val('ielts_min') }}">
+            {{ errmsg('ielts_min') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">TOEFL iBT</label>
+            <input type="number" name="toefl_min" class="form-control{{ err('toefl_min') }}"
+                   value="{{ val('toefl_min') }}">
+            {{ errmsg('toefl_min') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Ish tajribasi (yil)</label>
+            <input type="number" name="work_experience_years"
+                   class="form-control{{ err('work_experience_years') }}" value="{{ val('work_experience_years') }}">
+            {{ errmsg('work_experience_years') }}
+            <small class="form-hint">0 = talab qilinmaydi.</small>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Yosh chegarasi</label>
+            <input type="number" name="age_limit" class="form-control{{ err('age_limit') }}"
+                   value="{{ val('age_limit') }}">
+            {{ errmsg('age_limit') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">Tanlov bosqichlari</label>
+            <input type="number" name="selection_stages" class="form-control{{ err('selection_stages') }}"
+                   value="{{ val('selection_stages') }}">
+            {{ errmsg('selection_stages') }}
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="citizenship_eligible"
+                {% if not prefill or prefill.citizenship_eligible %}checked{% endif %}>
+              <span class="form-check-label">O'zbekiston uchun ochiq</span>
+            </label>
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="application_linked_to_program"
+                {{ on('application_linked_to_program') }}>
+              <span class="form-check-label">Alohida ariza kerak</span>
+            </label>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Kim tanlaydi</label>
+            <input type="text" name="selected_by" class="form-control" value="{{ val('selected_by') }}"
+                   placeholder="masalan: Chevening kotibiyati va Toshkentdagi elchixona">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Talablar</label>
+            <textarea name="requirements_text" class="form-control" rows="4"
+                      placeholder="Har bir talab alohida qatorda">{{ val('requirements_text') }}</textarea>
+            <small class="form-hint">Mini App'da har bir qator alohida band bo'lib chiqadi.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---------- 5: muddatlar ---------- #}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><span class="ua-step">5</span> Muddatlar</h3>
         <div class="card-actions">
           <button type="button" class="btn btn-sm btn-primary" id="add-deadline">+ Muddat qo'shish</button>
         </div>
@@ -130,13 +309,14 @@
       </div>
     </div>
 
-    {# ---------- 4-qadam ---------- #}
+    {# ---------- 6 ---------- #}
     <div class="card mb-3">
       <div class="card-body">
         <div class="row g-3 align-items-end">
           <div class="col-md-4">
             <label class="form-label">Kim tekshirdi</label>
-            <input type="text" name="verified_by" class="form-control" value="admin">
+            <input type="text" name="verified_by" class="form-control"
+                   value="{{ (prefill.verified_by if prefill else 'admin') }}">
           </div>
           <div class="col-md-8 text-end">
             <button type="submit" class="btn btn-primary">Grantni saqlash</button>
@@ -172,7 +352,7 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">Qabul davri</label>
-        <input type="text" name="d__i___intake" class="form-control" placeholder="2026 Fall">
+        <input type="text" name="d__i___intake" class="form-control" placeholder="2027 Autumn">
       </div>
     </div>
   </div>
@@ -184,20 +364,33 @@
     const empty = document.getElementById("deadlines-empty");
     const template = document.getElementById("deadline-template").innerHTML;
     const maxDeadlines = {{ max_deadlines }};
+    const saved = {{ (prefill.deadlines if prefill else []) | tojson }};
     let index = 0;
 
-    function addDeadline() {
-      if (index >= maxDeadlines) return;
+    function addDeadline(values) {
+      if (index >= maxDeadlines) return null;
       const html = template.replaceAll("__i__", index).replaceAll("__n__", index + 1);
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html;
-      list.appendChild(wrapper.firstElementChild);
+      const block = wrapper.firstElementChild;
+      if (values) {
+        block.querySelector(`[name="d${index}_type"]`).value = values.type;
+        block.querySelector(`[name="d${index}_date"]`).value = values.date;
+        block.querySelector(`[name="d${index}_intake"]`).value = values.intake;
+      }
+      list.appendChild(block);
       index += 1;
       empty.hidden = true;
       if (index >= maxDeadlines) document.getElementById("add-deadline").disabled = true;
+      return block;
     }
 
-    document.getElementById("add-deadline").addEventListener("click", addDeadline);
+    // Tahrirlashda bazadagi muddatlar darhol ko'rinadi.
+    saved.slice(0, maxDeadlines).forEach(addDeadline);
+
+    document.getElementById("add-deadline").addEventListener("click", function () {
+      addDeadline(null);
+    });
 
     list.addEventListener("click", function (event) {
       if (!event.target.classList.contains("remove-deadline")) return;

@@ -18,7 +18,16 @@ from app.admin.catalog_io import (
     parse_csv,
     template_csv,
 )
-from app.db.models import Country, DegreeLevel, Field, Program, University
+from app.db.models import (
+    Country,
+    CoverageType,
+    DegreeLevel,
+    Field,
+    Program,
+    Scholarship,
+    University,
+    UniversityChoiceType,
+)
 
 PROGRAMS_HEADER = (
     "country_iso,university_name,name,abbreviation,degree_level,field_code,"
@@ -424,3 +433,125 @@ async def test_export_then_import_with_details_is_unchanged(session: AsyncSessio
 
     assert not plan.has_errors, [(r.line, r.errors) for r in plan.rows if r.errors]
     assert {r.status for r in plan.rows} == {STATUS_UNCHANGED}
+
+
+# --------------------------------- grantlar ---------------------------------
+
+SCHOLARSHIPS_HEADER = (
+    "name,country_isos,description,description_ru,description_en,logo_url,coverage_type,"
+    "coverage_percent,stipend_amount,stipend_max,stipend_period,currency,ielts_min,toefl_min,"
+    "work_experience_years,degree_levels,study_language,duration_min_years,duration_max_years,"
+    "selection_stages,extras_flight,extras_insurance,extras_dormitory,extras_language_course,"
+    "age_limit,citizenship_eligible,university_choice,application_linked_to_program,"
+    "universities_text,selected_by,requirements_text,source_url,deadline_close,intake_term"
+)
+
+SCHOLARSHIP_ROW = (
+    "Chevening,GB,,,UK government scholarship,,full,,1500,,month,GBP,6.5,,2,master,English,"
+    "1,1,3,yes,no,no,no,,yes,user_chooses,yes,Any UK university,"
+    "Chevening Secretariat,Bachelor degree|Two years of work experience,"
+    "https://www.chevening.org/,2027-11-02,2027 Autumn"
+)
+
+
+async def _seed_gb(session: AsyncSession) -> None:
+    session.add(
+        Country(name_uz="Buyuk Britaniya", name_ru="Великобритания", name_en="UK", iso_code="GB")
+    )
+    await session.commit()
+
+
+@pytest.mark.anyio
+async def test_scholarship_is_created_with_all_details(session: AsyncSession) -> None:
+    await _seed_gb(session)
+    await _import(session, scholarships=_csv(SCHOLARSHIPS_HEADER, SCHOLARSHIP_ROW))
+
+    item = (
+        await session.execute(
+            select(Scholarship).where(Scholarship.name == "Chevening")
+        )
+    ).scalar_one()
+    await session.refresh(item, ["countries", "deadlines"])
+
+    assert item.coverage_type is CoverageType.FULL
+    assert item.university_choice is UniversityChoiceType.USER_CHOOSES
+    assert float(item.stipend_amount) == 1500
+    assert item.stipend_period == "month"
+    assert item.currency == "GBP"
+    assert float(item.ielts_min) == 6.5
+    assert item.work_experience_years == 2
+    assert item.degree_levels == ["master"]
+    assert item.study_language == "English"
+    assert item.selection_stages == 3
+    assert item.extras_flight is True
+    assert item.extras_insurance is False
+    assert item.citizenship_eligible is True
+    assert item.selected_by == "Chevening Secretariat"
+    assert item.universities_text == "Any UK university"
+    # `|` bilan ajratilgan talablar bazada alohida qatorlarga aylanadi.
+    assert item.requirements_text == "Bachelor degree\nTwo years of work experience"
+    assert [c.iso_code for c in item.countries] == ["GB"]
+    assert [d.date_utc.date().isoformat() for d in item.deadlines] == ["2027-11-02"]
+    assert item.verified_by == "tester"
+
+
+@pytest.mark.anyio
+async def test_scholarship_empty_cells_keep_existing_values(session: AsyncSession) -> None:
+    await _seed_gb(session)
+    await _import(session, scholarships=_csv(SCHOLARSHIPS_HEADER, SCHOLARSHIP_ROW))
+
+    # Faqat nom va bitta katak — qolgan hamma narsa o'z joyida qolishi kerak.
+    bare = "Chevening," + "," * 31 + ","
+    minimal = bare[: bare.index(",") + 1] + "," * 7 + "1700" + "," * 25
+    plan = await _plan(session, scholarships=_csv(SCHOLARSHIPS_HEADER, minimal))
+    assert [r.status for r in plan.rows] == [STATUS_UPDATE]
+    await apply_plan(session, plan, admin="tester")
+    await session.commit()
+
+    item = (
+        await session.execute(select(Scholarship).where(Scholarship.name == "Chevening"))
+    ).scalar_one()
+    await session.refresh(item, ["countries"])
+    assert float(item.stipend_amount) == 1700
+    # Bo'sh kataklar hech narsani o'chirmadi:
+    assert item.study_language == "English"
+    assert item.selected_by == "Chevening Secretariat"
+    assert [c.iso_code for c in item.countries] == ["GB"]
+
+
+@pytest.mark.anyio
+async def test_scholarship_export_then_import_is_unchanged(session: AsyncSession) -> None:
+    await _seed_gb(session)
+    await _import(session, scholarships=_csv(SCHOLARSHIPS_HEADER, SCHOLARSHIP_ROW))
+
+    exported = await export_csv(session, "scholarships")
+    plan = await _plan(session, scholarships=exported.encode("utf-8"))
+    assert [r.status for r in plan.rows] == [STATUS_UNCHANGED]
+
+
+@pytest.mark.anyio
+async def test_scholarship_invalid_values_are_errors(session: AsyncSession) -> None:
+    await _seed_gb(session)
+    bad = SCHOLARSHIP_ROW.replace(",full,", ",everything,").replace(",6.5,", ",6.3,")
+    plan = await _plan(session, scholarships=_csv(SCHOLARSHIPS_HEADER, bad))
+    assert [r.status for r in plan.rows] == [STATUS_ERROR]
+    messages = " ".join(plan.rows[0].errors)
+    assert "coverage_type" in messages
+    assert "ielts_min" in messages
+
+
+@pytest.mark.anyio
+async def test_scholarship_unknown_country_is_an_error(session: AsyncSession) -> None:
+    plan = await _plan(
+        session, scholarships=_csv(SCHOLARSHIPS_HEADER, SCHOLARSHIP_ROW)
+    )
+    assert [r.status for r in plan.rows] == [STATUS_ERROR]
+    assert "country_isos" in " ".join(plan.rows[0].errors)
+
+
+@pytest.mark.anyio
+async def test_scholarship_template_is_importable(session: AsyncSession) -> None:
+    """Shablon namunasi darhol import bo'lishi kerak (davlati bazada bo'lsa)."""
+    await _seed_gb(session)
+    plan = await _plan(session, scholarships=template_csv("scholarships").encode("utf-8"))
+    assert [r.status for r in plan.rows] == [STATUS_NEW], [r.errors for r in plan.rows]

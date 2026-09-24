@@ -97,6 +97,14 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
     extras_dormitory: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     extras_language_course: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Qaysi universitet(lar)da o'qiladi: konsorsium a'zolari yoki tanlov qoidasi
+    # ("Germaniyadagi istalgan davlat tan olgan universitet").
+    universities_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Kim tanlaydi: komissiya, elchixona, vazirlik.
+    selected_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Erkin matnli talablar — har bir qator alohida ko'rsatiladi.
+    requirements_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+
     age_limit: Mapped[int | None] = mapped_column(nullable=True)
     citizenship_eligible: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     university_choice: Mapped[UniversityChoiceType] = mapped_column(

@@ -452,6 +452,9 @@ async def list_scholarships(
                 if scholarship.duration_max_years is not None
                 else None,
                 selection_stages=scholarship.selection_stages,
+                universities_text=scholarship.universities_text,
+                selected_by=scholarship.selected_by,
+                requirements_text=scholarship.requirements_text,
                 countries=[
                     CountryOut(
                         id=c.id,

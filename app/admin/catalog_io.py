@@ -35,6 +35,7 @@ from app.db.models import (
     INSTRUCTION_LANGUAGES,
     REQUIRED_DOCUMENTS,
     Country,
+    CoverageType,
     Deadline,
     DeadlineType,
     DegreeLevel,
@@ -42,10 +43,13 @@ from app.db.models import (
     Program,
     ProgramCost,
     ProgramRequirement,
+    Scholarship,
+    ScholarshipDeadline,
     University,
+    UniversityChoiceType,
 )
 
-KINDS = ("countries", "universities", "programs")
+KINDS = ("countries", "universities", "programs", "scholarships")
 
 COLUMNS: dict[str, list[str]] = {
     "countries": ["iso_code", "name_uz", "name_ru", "name_en"],
@@ -78,6 +82,42 @@ COLUMNS: dict[str, list[str]] = {
         "required_documents",
         "requirements_text",
     ],
+    "scholarships": [
+        "name",
+        "country_isos",
+        "description",
+        "description_ru",
+        "description_en",
+        "logo_url",
+        "coverage_type",
+        "coverage_percent",
+        "stipend_amount",
+        "stipend_max",
+        "stipend_period",
+        "currency",
+        "ielts_min",
+        "toefl_min",
+        "work_experience_years",
+        "degree_levels",
+        "study_language",
+        "duration_min_years",
+        "duration_max_years",
+        "selection_stages",
+        "extras_flight",
+        "extras_insurance",
+        "extras_dormitory",
+        "extras_language_course",
+        "age_limit",
+        "citizenship_eligible",
+        "university_choice",
+        "application_linked_to_program",
+        "universities_text",
+        "selected_by",
+        "requirements_text",
+        "source_url",
+        "deadline_close",
+        "intake_term",
+    ],
 }
 
 # Bir katakda bir nechta qiymat (hujjatlar, talab qatorlari) shu belgi bilan ajratiladi.
@@ -89,6 +129,7 @@ KEY_COLUMNS: dict[str, list[str]] = {
     "countries": ["iso_code"],
     "universities": ["country_iso", "name"],
     "programs": ["country_iso", "university_name", "name", "degree_level"],
+    "scholarships": ["name"],
 }
 
 # Yangi yozuv yaratish uchun majburiy ustunlar (mavjudini yangilashda emas).
@@ -102,6 +143,7 @@ REQUIRED_FOR_NEW: dict[str, list[str]] = {
         "intake_term",
         "source_url",
     ],
+    "scholarships": ["coverage_type", "university_choice", "source_url"],
 }
 
 SAMPLE_ROWS: dict[str, dict[str, str]] = {
@@ -147,9 +189,50 @@ SAMPLE_ROWS: dict[str, dict[str, str]] = {
         "required_documents": "transcript|degree_certificate|cv|english_test",
         "requirements_text": "Bachelor's in computer science or related field",
     },
+    "scholarships": {
+        "name": "Chevening Scholarship",
+        "country_isos": "GB",
+        "description": "Buyuk Britaniya hukumatining bir yillik magistratura stipendiyasi.",
+        "description_ru": "",
+        "description_en": "UK government scholarship for a one-year master's degree.",
+        "logo_url": "",
+        "coverage_type": "full",
+        "coverage_percent": "",
+        "stipend_amount": "1500",
+        "stipend_max": "",
+        "stipend_period": "month",
+        "currency": "GBP",
+        "ielts_min": "6.5",
+        "toefl_min": "",
+        "work_experience_years": "2",
+        "degree_levels": "master",
+        "study_language": "English",
+        "duration_min_years": "1",
+        "duration_max_years": "1",
+        "selection_stages": "3",
+        "extras_flight": "yes",
+        "extras_insurance": "no",
+        "extras_dormitory": "no",
+        "extras_language_course": "no",
+        "age_limit": "",
+        "citizenship_eligible": "yes",
+        "university_choice": "user_chooses",
+        "application_linked_to_program": "yes",
+        "universities_text": "Buyuk Britaniyadagi istalgan universitet",
+        "selected_by": "Chevening kotibiyati va Toshkentdagi elchixona",
+        "requirements_text": "Bakalavr diplomi|Kamida 2 yil ish tajribasi",
+        "source_url": "https://www.chevening.org/scholarship/uzbekistan/",
+        "deadline_close": "2027-11-02",
+        "intake_term": "2027 Autumn",
+    },
 }
 
-KIND_LABELS = {"countries": "Davlatlar", "universities": "Universitetlar", "programs": "Dasturlar"}
+KIND_LABELS = {
+    "countries": "Davlatlar",
+    "universities": "Universitetlar",
+    "programs": "Dasturlar",
+    "scholarships": "Grantlar",
+}
 
 MAX_BYTES = 5 * 1024 * 1024
 MAX_ROWS = 5000
@@ -351,7 +434,204 @@ async def build_plan(
                     line, row, fields, universities, new_university_keys, programs, seen
                 )
             )
+
+    if files.get("scholarships"):
+        scholarships = {
+            _norm(item.name): item
+            for item in (
+                await session.execute(
+                    select(Scholarship).options(
+                        selectinload(Scholarship.countries),
+                        selectinload(Scholarship.deadlines),
+                    )
+                )
+            ).scalars()
+        }
+        seen_scholarships: set[str] = set()
+        for line, row in files["scholarships"]:
+            plan.rows.append(
+                _plan_scholarship(line, row, known_isos, scholarships, seen_scholarships)
+            )
     return plan
+
+
+def _plan_scholarship(
+    line: int,
+    row: dict[str, str],
+    known_isos: set[str],
+    scholarships: dict[str, Scholarship],
+    seen: set[str],
+) -> RowPlan:
+    name = row["name"]
+    result = RowPlan("scholarships", line, name or "—", STATUS_ERROR)
+    errors = result.errors
+
+    if not name:
+        errors.append("name: grant nomi bo'sh")
+
+    values: dict[str, Any] = {}
+    related: dict[str, Any] = {}
+
+    isos = [code.upper() for code in _split_list(row["country_isos"])]
+    unknown = [code for code in isos if code not in known_isos]
+    if unknown:
+        errors.append(
+            f"country_isos: {', '.join(unknown)} davlat(lar)i bazada ham, faylda ham yo'q"
+        )
+    if isos:
+        related["country_isos"] = isos
+
+    for column in (
+        "description", "description_ru", "description_en", "logo_url",
+        "study_language", "selected_by", "currency",
+    ):
+        if row[column]:
+            values[column] = row[column]
+    if row["currency"]:
+        code = _currency(row["currency"], "currency", errors)
+        if code:
+            values["currency"] = code
+    for column in ("universities_text", "requirements_text"):
+        if row[column]:
+            values[column] = "\n".join(_split_list(row[column]))
+    _check_url(row["logo_url"], "logo_url", errors)
+    _check_url(row["source_url"], "source_url", errors)
+    if row["source_url"]:
+        values["source_url"] = row["source_url"]
+
+    if row["coverage_type"]:
+        try:
+            values["coverage_type"] = CoverageType(row["coverage_type"].lower())
+        except ValueError:
+            errors.append(
+                f"coverage_type: {row['coverage_type']!r} noto'g'ri "
+                f"(ruxsat: {', '.join(c.value for c in CoverageType)})"
+            )
+    if row["university_choice"]:
+        try:
+            values["university_choice"] = UniversityChoiceType(row["university_choice"].lower())
+        except ValueError:
+            errors.append(
+                f"university_choice: {row['university_choice']!r} noto'g'ri "
+                f"(ruxsat: {', '.join(u.value for u in UniversityChoiceType)})"
+            )
+
+    if row["study_language"] and row["study_language"] not in INSTRUCTION_LANGUAGES:
+        errors.append(
+            f"study_language: {row['study_language']!r} ro'yxatda yo'q "
+            f"(ruxsat: {', '.join(INSTRUCTION_LANGUAGES)})"
+        )
+        values.pop("study_language", None)
+
+    if row["degree_levels"]:
+        levels = [level.lower() for level in _split_list(row["degree_levels"])]
+        allowed = {d.value for d in DegreeLevel}
+        wrong = [level for level in levels if level not in allowed]
+        if wrong:
+            errors.append(
+                f"degree_levels: {', '.join(wrong)} noto'g'ri "
+                f"(ruxsat: {', '.join(sorted(allowed))})"
+            )
+        else:
+            values["degree_levels"] = [d.value for d in DegreeLevel if d.value in levels]
+
+    if row["stipend_period"]:
+        if row["stipend_period"] in ("month", "year"):
+            values["stipend_period"] = row["stipend_period"]
+        else:
+            errors.append("stipend_period: faqat 'month' yoki 'year'")
+
+    for column, upper in (
+        ("stipend_amount", 1_000_000),
+        ("stipend_max", 1_000_000),
+        ("duration_min_years", 15),
+        ("duration_max_years", 15),
+    ):
+        if row[column]:
+            number = _positive_decimal(row[column], column, errors, upper)
+            if number is not None:
+                values[column] = number
+
+    if row["ielts_min"]:
+        ielts = _positive_decimal(row["ielts_min"], "ielts_min", errors, 9)
+        if ielts is not None:
+            if (ielts * 2) % 1:
+                errors.append("ielts_min: 0.5 qadam bilan bo'lishi kerak (6, 6.5, 7...)")
+            else:
+                values["ielts_min"] = ielts
+    for column, low, high in (
+        ("toefl_min", 1, 120),
+        ("coverage_percent", 1, 100),
+        ("selection_stages", 1, 10),
+        ("age_limit", 11, 99),
+        ("work_experience_years", 0, 50),
+    ):
+        if row[column]:
+            if row[column].isdigit() and low <= int(row[column]) <= high:
+                values[column] = int(row[column])
+            else:
+                errors.append(f"{column}: {low} dan {high} gacha butun son bo'lishi kerak")
+
+    for column in (
+        "extras_flight", "extras_insurance", "extras_dormitory", "extras_language_course",
+        "citizenship_eligible", "application_linked_to_program",
+    ):
+        if row[column]:
+            flag = _yes_no(row[column], column, errors)
+            if flag is not None:
+                values[column] = flag
+
+    if row["deadline_close"]:
+        try:
+            day = date.fromisoformat(row["deadline_close"])
+            related["deadline"] = {
+                "date_utc": datetime(day.year, day.month, day.day, tzinfo=UTC),
+                "intake_term": row["intake_term"] or "—",
+            }
+        except ValueError:
+            errors.append("deadline_close: sana YYYY-MM-DD ko'rinishida bo'lishi kerak")
+
+    if errors:
+        return result
+
+    key = _norm(name)
+    if key in seen:
+        errors.append("Faylda bu grant ikki marta uchraydi")
+        return result
+    seen.add(key)
+
+    result.related = related
+    existing = scholarships.get(key)
+    if existing is None:
+        missing = [c for c in REQUIRED_FOR_NEW["scholarships"] if not row[c]]
+        if missing:
+            errors.append(f"Yangi grant uchun majburiy: {', '.join(missing)}")
+            return result
+        result.status = STATUS_NEW
+        result.values = {"name": name, **values}
+        return result
+
+    result.target_id = existing.id
+    result.values = values
+    result.changes = _diff(existing, values)
+    if related.get("country_isos") and sorted(
+        c.iso_code.upper() for c in existing.countries
+    ) != sorted(set(related["country_isos"])):
+        result.changes["countries"] = (
+            ", ".join(sorted(c.iso_code for c in existing.countries)),
+            ", ".join(sorted(set(related["country_isos"]))),
+        )
+    if related.get("deadline"):
+        close = next(
+            (d for d in existing.deadlines if d.type == DeadlineType.APPLICATION_CLOSE), None
+        )
+        if close is None or close.date_utc.date() != related["deadline"]["date_utc"].date():
+            result.changes["deadline_close"] = (
+                close.date_utc.date().isoformat() if close else None,
+                related["deadline"]["date_utc"].date().isoformat(),
+            )
+    result.status = STATUS_UPDATE if result.changes else STATUS_UNCHANGED
+    return result
 
 
 def _plan_country(
@@ -847,6 +1127,62 @@ async def apply_plan(session: AsyncSession, plan: ImportPlan, admin: str) -> dic
             await _apply_related(session, program, row.related, now.date(), existing)
             saved[row.status] += 1
     await session.flush()
+
+    if by_kind["scholarships"]:
+        country_by_iso = {
+            c.iso_code.upper(): c for c in (await session.execute(select(Country))).scalars()
+        }
+        for row in by_kind["scholarships"]:
+            if row.status == STATUS_NEW:
+                scholarship = Scholarship(**row.values)
+                session.add(scholarship)
+            else:
+                scholarship = (
+                    await session.execute(
+                        select(Scholarship)
+                        .options(
+                            selectinload(Scholarship.countries),
+                            selectinload(Scholarship.deadlines),
+                        )
+                        .where(Scholarship.id == row.target_id)
+                    )
+                ).scalar_one()
+                for name, value in row.values.items():
+                    setattr(scholarship, name, value)
+            scholarship.verified_at = now
+            scholarship.verified_by = admin
+
+            isos = row.related.get("country_isos")
+            if isos:
+                scholarship.countries = [
+                    country_by_iso[iso] for iso in dict.fromkeys(isos) if iso in country_by_iso
+                ]
+            await session.flush()
+
+            deadline = row.related.get("deadline")
+            if deadline:
+                close = next(
+                    (
+                        d
+                        for d in (scholarship.deadlines if row.status == STATUS_UPDATE else [])
+                        if d.type == DeadlineType.APPLICATION_CLOSE
+                    ),
+                    None,
+                )
+                if close is None:
+                    session.add(
+                        ScholarshipDeadline(
+                            scholarship_id=scholarship.id,
+                            type=DeadlineType.APPLICATION_CLOSE,
+                            date_utc=deadline["date_utc"],
+                            intake_term=deadline["intake_term"],
+                        )
+                    )
+                else:
+                    close.date_utc = deadline["date_utc"]
+                    close.intake_term = deadline["intake_term"]
+            saved[row.status] += 1
+    await session.flush()
     return saved
 
 
@@ -936,6 +1272,60 @@ async def export_csv(session: AsyncSession, kind: str) -> str:
                 "requirements_text": LIST_SEPARATOR.join(
                     (p.requirements_text or "").splitlines()
                 ),
+            })
+    elif kind == "scholarships":
+        stmt = (
+            select(Scholarship)
+            .options(
+                selectinload(Scholarship.countries), selectinload(Scholarship.deadlines)
+            )
+            .order_by(Scholarship.name)
+        )
+        for item in (await session.execute(stmt)).scalars():
+            close = next(
+                (d for d in item.deadlines if d.type == DeadlineType.APPLICATION_CLOSE), None
+            )
+            rows.append({
+                "name": item.name,
+                "country_isos": LIST_SEPARATOR.join(
+                    sorted(c.iso_code for c in item.countries)
+                ),
+                "description": item.description or "",
+                "description_ru": item.description_ru or "",
+                "description_en": item.description_en or "",
+                "logo_url": item.logo_url or "",
+                "coverage_type": item.coverage_type.value,
+                "coverage_percent": _fmt(item.coverage_percent),
+                "stipend_amount": _fmt(item.stipend_amount),
+                "stipend_max": _fmt(item.stipend_max),
+                "stipend_period": item.stipend_period or "",
+                "currency": item.currency,
+                "ielts_min": _fmt(item.ielts_min),
+                "toefl_min": _fmt(item.toefl_min),
+                "work_experience_years": _fmt(item.work_experience_years),
+                "degree_levels": LIST_SEPARATOR.join(item.degree_levels or []),
+                "study_language": item.study_language or "",
+                "duration_min_years": _fmt(item.duration_min_years),
+                "duration_max_years": _fmt(item.duration_max_years),
+                "selection_stages": _fmt(item.selection_stages),
+                "extras_flight": _fmt_bool(item.extras_flight),
+                "extras_insurance": _fmt_bool(item.extras_insurance),
+                "extras_dormitory": _fmt_bool(item.extras_dormitory),
+                "extras_language_course": _fmt_bool(item.extras_language_course),
+                "age_limit": _fmt(item.age_limit),
+                "citizenship_eligible": _fmt_bool(item.citizenship_eligible),
+                "university_choice": item.university_choice.value,
+                "application_linked_to_program": _fmt_bool(item.application_linked_to_program),
+                "universities_text": LIST_SEPARATOR.join(
+                    (item.universities_text or "").splitlines()
+                ),
+                "selected_by": item.selected_by or "",
+                "requirements_text": LIST_SEPARATOR.join(
+                    (item.requirements_text or "").splitlines()
+                ),
+                "source_url": item.source_url or "",
+                "deadline_close": close.date_utc.date().isoformat() if close else "",
+                "intake_term": close.intake_term if close else "",
             })
     else:
         raise ValueError(f"Noma'lum tur: {kind}")

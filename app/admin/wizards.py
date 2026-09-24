@@ -637,6 +637,139 @@ class UniversityWizard(BaseView):
         return counters
 
 
+# --------------------------- grant formasi tekshiruvi ---------------------------
+
+
+def _validate_scholarship(form: FormData) -> dict[str, str]:
+    """Formani saqlashdan OLDIN tekshiradi — xato bo'lsa hech narsa yozilmaydi."""
+    errors: dict[str, str] = {}
+
+    if _text(form, "name") is None:
+        errors["name"] = "Grant nomi kiritilmagan"
+
+    source_url = _text(form, "source_url")
+    if source_url is None:
+        errors["source_url"] = "Rasmiy manba havolasi kiritilmagan"
+    elif not source_url.startswith(("http://", "https://")):
+        errors["source_url"] = "Havola http:// yoki https:// bilan boshlanishi kerak"
+
+    logo_url = _text(form, "logo_url")
+    if logo_url and not logo_url.startswith(("http://", "https://")):
+        errors["logo_url"] = "Logotip havolasi http:// yoki https:// bilan boshlanishi kerak"
+
+    percent = _integer(form, "coverage_percent")
+    if percent is not None and not 1 <= percent <= 100:
+        errors["coverage_percent"] = "Qamrov 1 dan 100 gacha bo'lishi kerak"
+
+    ielts = _number(form, "ielts_min")
+    if ielts is not None:
+        if not 0 < ielts <= 9:
+            errors["ielts_min"] = "IELTS 0 dan 9 gacha bo'lishi kerak"
+        elif (ielts * 2) % 1:
+            errors["ielts_min"] = "IELTS 0.5 qadam bilan bo'lishi kerak (6, 6.5, 7...)"
+
+    toefl = _integer(form, "toefl_min")
+    if toefl is not None and not 0 < toefl <= 120:
+        errors["toefl_min"] = "TOEFL 1 dan 120 gacha bo'lishi kerak"
+
+    stipend = _number(form, "stipend_amount")
+    stipend_max = _number(form, "stipend_max")
+    if stipend is not None and stipend <= 0:
+        errors["stipend_amount"] = "Stipendiya 0 dan katta bo'lishi kerak"
+    if stipend_max is not None and stipend is None:
+        errors["stipend_max"] = "Yuqori chegara bor, lekin quyi chegara kiritilmagan"
+    if stipend is not None and stipend_max is not None and stipend_max < stipend:
+        errors["stipend_max"] = "Yuqori chegara quyi chegaradan kichik bo'lmasin"
+    if stipend is not None and _text(form, "stipend_period") not in {"month", "year"}:
+        errors["stipend_period"] = "Stipendiya davrini tanlang (oyiga yoki yiliga)"
+
+    currency = _text(form, "currency")
+    if currency and (len(currency) != 3 or not currency.isalpha()):
+        errors["currency"] = "Valyuta uch harfli kod bo'lishi kerak (USD, EUR...)"
+
+    language = _text(form, "study_language")
+    if language and language not in INSTRUCTION_LANGUAGES:
+        errors["study_language"] = "Til ro'yxatdan tanlanishi kerak"
+
+    duration_min = _number(form, "duration_min_years")
+    duration_max = _number(form, "duration_max_years")
+    for key, value in (("duration_min_years", duration_min), ("duration_max_years", duration_max)):
+        if value is not None and not 0 < value < 15:
+            errors[key] = "Davomiylik 0 dan 15 yilgacha bo'lishi kerak"
+    if duration_min is not None and duration_max is not None and duration_max < duration_min:
+        errors["duration_max_years"] = "Yuqori chegara quyi chegaradan kichik bo'lmasin"
+
+    stages = _integer(form, "selection_stages")
+    if stages is not None and not 0 < stages <= 10:
+        errors["selection_stages"] = "Bosqichlar soni 1 dan 10 gacha bo'lishi kerak"
+
+    age = _integer(form, "age_limit")
+    if age is not None and not 10 < age < 100:
+        errors["age_limit"] = "Yosh chegarasi haqiqiy son bo'lishi kerak"
+
+    work = _integer(form, "work_experience_years")
+    if work is not None and not 0 <= work <= 50:
+        errors["work_experience_years"] = "Ish tajribasi 0 dan 50 yilgacha bo'lishi kerak"
+
+    return errors
+
+
+def _scholarship_prefill_from_form(
+    form: FormData, field_errors: dict[str, str]
+) -> dict[str, Any]:
+    """Xatodan keyin formani admin kiritgan qiymatlar bilan qayta ochadi."""
+    return {
+        "id": _integer(form, "scholarship_id"),
+        "name": _text(form, "name") or "",
+        "source_url": _text(form, "source_url") or "",
+        "logo_url": _text(form, "logo_url") or "",
+        "description": form.get("description") or "",
+        "description_ru": form.get("description_ru") or "",
+        "description_en": form.get("description_en") or "",
+        "country_ids": [int(v) for v in form.getlist("country_ids") if str(v).isdigit()],
+        "coverage_type": _text(form, "coverage_type") or CoverageType.FULL.value,
+        "coverage_percent": _text(form, "coverage_percent") or "",
+        "stipend_amount": _text(form, "stipend_amount") or "",
+        "stipend_max": _text(form, "stipend_max") or "",
+        "stipend_period": _text(form, "stipend_period") or "month",
+        "currency": _text(form, "currency") or "USD",
+        "extras_flight": _checked(form, "extras_flight"),
+        "extras_insurance": _checked(form, "extras_insurance"),
+        "extras_dormitory": _checked(form, "extras_dormitory"),
+        "extras_language_course": _checked(form, "extras_language_course"),
+        "ielts_min": _text(form, "ielts_min") or "",
+        "toefl_min": _text(form, "toefl_min") or "",
+        "work_experience_years": _text(form, "work_experience_years") or "",
+        "degree_levels": [
+            level.value for level in DegreeLevel if _checked(form, f"deg_{level.value}")
+        ],
+        "study_language": _text(form, "study_language") or "",
+        "duration_min_years": _text(form, "duration_min_years") or "",
+        "duration_max_years": _text(form, "duration_max_years") or "",
+        "selection_stages": _text(form, "selection_stages") or "",
+        "age_limit": _text(form, "age_limit") or "",
+        "citizenship_eligible": _checked(form, "citizenship_eligible"),
+        "university_choice": (
+            _text(form, "university_choice") or UniversityChoiceType.USER_CHOOSES.value
+        ),
+        "application_linked_to_program": _checked(form, "application_linked_to_program"),
+        "universities_text": form.get("universities_text") or "",
+        "selected_by": _text(form, "selected_by") or "",
+        "requirements_text": form.get("requirements_text") or "",
+        "verified_by": _text(form, "verified_by") or "admin",
+        "deadlines": [
+            {
+                "type": _text(form, f"d{index}_type") or DeadlineType.APPLICATION_CLOSE.value,
+                "date": _text(form, f"d{index}_date") or "",
+                "intake": _text(form, f"d{index}_intake") or "",
+            }
+            for index in range(MAX_DEADLINES)
+            if _text(form, f"d{index}_date")
+        ],
+        "_errors": field_errors,
+    }
+
+
 # ------------------------------ Grant sehrgari ------------------------------
 
 
@@ -647,40 +780,132 @@ class ScholarshipWizard(BaseView):
 
     @expose("/scholarship-wizard", methods=["GET", "POST"])
     async def wizard(self, request: Request):
+        # `?scholarship_id=` bo'lsa forma mavjud grant bilan to'ldiriladi —
+        # tahrirlash shu yerdan bajariladi.
+        scholarship_id = request.query_params.get("scholarship_id")
+        scholarship_id = int(scholarship_id) if (scholarship_id or "").isdigit() else None
+
+        errors: list[str] = []
+        field_errors: dict[str, str] = {}
+        prefill: dict[str, Any] | None = None
+
         async with async_session_factory() as session:
             if request.method == "POST":
                 form = await request.form()
-                try:
-                    created = await self._save(session, form)
-                    await session.commit()
-                except Exception as exc:  # noqa: BLE001
-                    await session.rollback()
-                    Flash.error(request, f"Saqlashda xatolik: {exc}")
-                else:
-                    Flash.success(
-                        request,
-                        f"'{created['name']}' saqlandi — {created['countries']} ta davlat, "
-                        f"{created['deadlines']} ta muddat.",
-                    )
-                    return RedirectResponse(request.url.path, status_code=303)
+                field_errors = _validate_scholarship(form)
+                if not field_errors:
+                    try:
+                        saved = await self._save(session, form)
+                        await session.commit()
+                    except Exception as exc:  # noqa: BLE001 — xabar adminga ko'rsatiladi
+                        await session.rollback()
+                        errors = [f"Saqlashda xatolik: {exc}"]
+                    else:
+                        Flash.success(
+                            request,
+                            f"'{saved['name']}' saqlandi — {saved['countries']} ta davlat, "
+                            f"{saved['deadlines']} ta muddat.",
+                        )
+                        # Saqlagandan keyin ham tahrirlash rejimida qolamiz.
+                        return RedirectResponse(
+                            f"{request.url.path}?scholarship_id={saved['id']}", status_code=303
+                        )
+
+                # Hech narsa saqlanmadi — forma admin kiritgan qiymatlar bilan
+                # qayta ochiladi (bazadagi eski holat bilan emas).
+                prefill = _scholarship_prefill_from_form(form, field_errors)
+                errors = errors or list(field_errors.values())
 
             countries = (
                 (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
             )
+            if prefill is None and scholarship_id:
+                prefill = await self._load(session, scholarship_id)
 
+        editing = bool(prefill and prefill.get("id"))
         return await self.templates.TemplateResponse(
             request,
             "wizard_scholarship.html",
             {
-                "title": "Grant qo'shish",
-                "subtitle": "Davlat stipendiyasi — barcha tafsilotlari bitta formada",
+                "title": f"{prefill['name']} — tahrirlash" if editing else "Grant qo'shish",
+                "subtitle": (
+                    "Mini App'da ko'rinadigan barcha maydonlar shu yerda"
+                    if editing
+                    else "Davlat stipendiyasi — barcha tafsilotlari bitta formada"
+                ),
                 "countries": countries,
                 "coverage_types": list(CoverageType),
                 "university_choices": list(UniversityChoiceType),
                 "deadline_types": list(DeadlineType),
+                "degree_levels": list(DegreeLevel),
+                "languages": INSTRUCTION_LANGUAGES,
                 "max_deadlines": MAX_DEADLINES,
+                "prefill": prefill,
+                "errors": errors,
+                "field_errors": field_errors,
             },
         )
+
+    async def _load(self, session: Any, scholarship_id: int) -> dict[str, Any] | None:
+        """Bazadagi grantni forma maydonlari ko'rinishiga o'giradi."""
+        scholarship = (
+            await session.execute(
+                select(Scholarship)
+                .options(
+                    selectinload(Scholarship.countries), selectinload(Scholarship.deadlines)
+                )
+                .where(Scholarship.id == scholarship_id)
+            )
+        ).scalar_one_or_none()
+        if scholarship is None:
+            return None
+
+        levels = scholarship.degree_levels or []
+        return {
+            "id": scholarship.id,
+            "name": scholarship.name,
+            "source_url": scholarship.source_url or "",
+            "logo_url": scholarship.logo_url or "",
+            "description": scholarship.description or "",
+            "description_ru": scholarship.description_ru or "",
+            "description_en": scholarship.description_en or "",
+            "country_ids": [country.id for country in scholarship.countries],
+            "coverage_type": scholarship.coverage_type.value,
+            "coverage_percent": _as_str(scholarship.coverage_percent),
+            "stipend_amount": _as_str(scholarship.stipend_amount),
+            "stipend_max": _as_str(scholarship.stipend_max),
+            "stipend_period": scholarship.stipend_period or "month",
+            "currency": scholarship.currency or "USD",
+            "extras_flight": scholarship.extras_flight,
+            "extras_insurance": scholarship.extras_insurance,
+            "extras_dormitory": scholarship.extras_dormitory,
+            "extras_language_course": scholarship.extras_language_course,
+            "ielts_min": _as_str(scholarship.ielts_min),
+            "toefl_min": _as_str(scholarship.toefl_min),
+            "work_experience_years": _as_str(scholarship.work_experience_years),
+            "degree_levels": levels,
+            "study_language": scholarship.study_language or "",
+            "duration_min_years": _as_str(scholarship.duration_min_years),
+            "duration_max_years": _as_str(scholarship.duration_max_years),
+            "selection_stages": _as_str(scholarship.selection_stages),
+            "age_limit": _as_str(scholarship.age_limit),
+            "citizenship_eligible": scholarship.citizenship_eligible,
+            "university_choice": scholarship.university_choice.value,
+            "application_linked_to_program": scholarship.application_linked_to_program,
+            "universities_text": scholarship.universities_text or "",
+            "selected_by": scholarship.selected_by or "",
+            "requirements_text": scholarship.requirements_text or "",
+            "verified_by": scholarship.verified_by or "admin",
+            "deadlines": [
+                {
+                    "type": deadline.type.value,
+                    "date": deadline.date_utc.date().isoformat(),
+                    "intake": deadline.intake_term,
+                }
+                for deadline in sorted(scholarship.deadlines, key=lambda d: d.date_utc)
+            ],
+            "_errors": {},
+        }
 
     async def _save(self, session: Any, form: FormData) -> dict[str, Any]:
         name = _text(form, "name")
@@ -695,20 +920,37 @@ class ScholarshipWizard(BaseView):
         # `countries` darhol yuklanadi: aks holda quyida unga qiymat berishda
         # SQLAlchemy lazy-load qilmoqchi bo'lib, async kontekstda
         # "greenlet_spawn has not been called" xatosini beradi.
-        existing = (
-            await session.execute(
-                select(Scholarship)
-                .options(selectinload(Scholarship.countries))
-                .where(Scholarship.name == name)
-            )
-        ).scalar_one_or_none()
+        scholarship_id = _integer(form, "scholarship_id")
+        query = select(Scholarship).options(selectinload(Scholarship.countries))
+        query = (
+            query.where(Scholarship.id == scholarship_id)
+            if scholarship_id
+            else query.where(Scholarship.name == name)
+        )
+        existing = (await session.execute(query)).scalar_one_or_none()
 
         scholarship = existing or Scholarship(name=name)
-        scholarship.description = _text(form, "description")
+        scholarship.name = name
+        scholarship.description = _multiline(form, "description")
+        scholarship.description_ru = _multiline(form, "description_ru")
+        scholarship.description_en = _multiline(form, "description_en")
+        scholarship.logo_url = _text(form, "logo_url")
         scholarship.coverage_type = _enum(form, "coverage_type", CoverageType) or CoverageType.FULL
         scholarship.coverage_percent = _integer(form, "coverage_percent")
         scholarship.stipend_amount = _number(form, "stipend_amount")
-        scholarship.currency = _text(form, "currency") or "USD"
+        scholarship.stipend_max = _number(form, "stipend_max")
+        scholarship.stipend_period = _text(form, "stipend_period")
+        scholarship.currency = (_text(form, "currency") or "USD").upper()
+        scholarship.ielts_min = _number(form, "ielts_min")
+        scholarship.toefl_min = _integer(form, "toefl_min")
+        scholarship.work_experience_years = _integer(form, "work_experience_years")
+        scholarship.degree_levels = [
+            level.value for level in DegreeLevel if _checked(form, f"deg_{level.value}")
+        ] or None
+        scholarship.study_language = _text(form, "study_language")
+        scholarship.duration_min_years = _number(form, "duration_min_years")
+        scholarship.duration_max_years = _number(form, "duration_max_years")
+        scholarship.selection_stages = _integer(form, "selection_stages")
         scholarship.extras_flight = _checked(form, "extras_flight")
         scholarship.extras_insurance = _checked(form, "extras_insurance")
         scholarship.extras_dormitory = _checked(form, "extras_dormitory")
@@ -720,6 +962,9 @@ class ScholarshipWizard(BaseView):
             or UniversityChoiceType.USER_CHOOSES
         )
         scholarship.application_linked_to_program = _checked(form, "application_linked_to_program")
+        scholarship.universities_text = _multiline(form, "universities_text")
+        scholarship.selected_by = _text(form, "selected_by")
+        scholarship.requirements_text = _multiline(form, "requirements_text")
         scholarship.source_url = source_url
         scholarship.verified_at = now
         scholarship.verified_by = _text(form, "verified_by") or "admin"
@@ -763,4 +1008,9 @@ class ScholarshipWizard(BaseView):
             )
             deadlines_added += 1
 
-        return {"name": name, "countries": len(countries), "deadlines": deadlines_added}
+        return {
+            "id": scholarship.id,
+            "name": name,
+            "countries": len(countries),
+            "deadlines": deadlines_added,
+        }

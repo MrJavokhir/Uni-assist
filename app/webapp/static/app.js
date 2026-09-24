@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 36;
+const ASSET_V = 37;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -382,6 +382,8 @@ const I18N = {
     "scholarships.stipend": "Stipendiya",
     "scholarships.age_limit": "Yosh chegarasi",
     "scholarships.uni_choice": "Universitetni kim tanlaydi",
+    "scholarships.universities": "Qaysi universitetda",
+    "scholarships.selected_by": "Kim tanlaydi",
     "scholarships.uni_choice.user_chooses": "Talabaning o'zi",
     "scholarships.uni_choice.assigned_by_scholarship": "Grant tayinlaydi",
     "scholarships.separate_application": "Alohida ariza kerak",
@@ -599,6 +601,8 @@ const I18N = {
     "scholarships.stipend": "Стипендия",
     "scholarships.age_limit": "Возрастное ограничение",
     "scholarships.uni_choice": "Кто выбирает университет",
+    "scholarships.universities": "В каком университете",
+    "scholarships.selected_by": "Кто отбирает",
     "scholarships.uni_choice.user_chooses": "Сам студент",
     "scholarships.uni_choice.assigned_by_scholarship": "Назначает грант",
     "scholarships.separate_application": "Нужна отдельная заявка",
@@ -816,6 +820,8 @@ const I18N = {
     "scholarships.stipend": "Stipend",
     "scholarships.age_limit": "Age limit",
     "scholarships.uni_choice": "Who picks the university",
+    "scholarships.universities": "Where you study",
+    "scholarships.selected_by": "Who selects",
     "scholarships.uni_choice.user_chooses": "The student",
     "scholarships.uni_choice.assigned_by_scholarship": "The scholarship",
     "scholarships.separate_application": "Separate application required",
@@ -1392,6 +1398,15 @@ function scholarshipCard(s) {
 
       ${extras ? `<div class="gr-extras">${extras}</div>` : ""}
     </div>`;
+}
+
+// Ko'p qatorli matn: har bir qator alohida satrda chiqadi.
+function multiline(text) {
+  return String(text)
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => escapeHtml(line))
+    .join("<br>");
 }
 
 function stipendText(s) {
@@ -1973,6 +1988,11 @@ function openScholarshipSheet(s) {
         s.study_language ? escapeHtml(instructionLanguage(s.study_language)) : dash
       )}
       ${row(t("scholarships.uni_choice"), t("scholarships.uni_choice." + s.university_choice))}
+      ${
+        s.universities_text
+          ? row(t("scholarships.universities"), multiline(s.universities_text))
+          : ""
+      }
     </div>
 
     <div class="sheet-section">
@@ -1989,6 +2009,16 @@ function openScholarshipSheet(s) {
       )}
       ${row(t("scholarships.separate_application"), yesNo(s.application_linked_to_program))}
       ${row(t("scholarships.for_uzbekistan"), yesNo(s.citizenship_eligible))}
+      ${s.selected_by ? row(t("scholarships.selected_by"), escapeHtml(s.selected_by)) : ""}
+      ${
+        s.requirements_text
+          ? `<ul class="doc-list">${s.requirements_text
+              .split("\n")
+              .filter(Boolean)
+              .map((line) => `<li>${icon("check")}${escapeHtml(line)}</li>`)
+              .join("")}</ul>`
+          : ""
+      }
       <div class="sheet-note">${t("scholarships.verify_hint")}</div>
     </div>
 

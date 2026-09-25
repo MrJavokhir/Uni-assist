@@ -6,7 +6,7 @@ faqat HTTP: fayl qabul qilish, oldindan ko'rish, tasdiqlash, yuklab berish.
 Oldindan ko'rish va tasdiqlash orasida fayl qayerda turadi:
   Redis'da, 30 daqiqa TTL bilan; kaliti tasodifiy token, token esa admin
   sessiyasida. Sabablari:
-    * sessiya cookie'ga sig'maydi (~4 KB, fayl esa 5 MB gacha);
+    * sessiya cookie'ga sig'maydi (~4 KB, fayl esa o'n megabaytlarcha bo'lishi mumkin);
     * Redis prod'da allaqachon bor (obuna keshi) — yangi infratuzilma yo'q;
     * bir nechta worker yoki qayta ishga tushishda ham ishlaydi (xotiradagi
       lug'atdan farqli o'laroq);
@@ -203,6 +203,7 @@ class CatalogImportView(BaseView):
                 "key_columns": KEY_COLUMNS,
                 "required_for_new": REQUIRED_FOR_NEW,
                 "max_rows": MAX_ROWS,
+                "max_mb": MAX_BYTES // (1024 * 1024),
                 "plan": plan,
                 "counts": plan.counts() if plan else None,
                 "token": token,

@@ -102,7 +102,7 @@
         <li><strong>Bo'sh katak mavjud qiymatni o'zgartirmaydi</strong> — import hech narsani o'chirmaydi. Qiymatni tozalash faqat adminkada.</li>
         <li>Mos kelgan yozuv yangilanadi, topilmasa yangisi yaratiladi. Nomlar katta-kichik harfga sezgir emas.</li>
         <li>Bir nechta fayl birga yuklansa, davlatlar → universitetlar → dasturlar tartibida ishlanadi: keyingisi oldingisida yaratilayotgan yozuvga tayana oladi.</li>
-        <li>Format: UTF-8 CSV (Excel'da "CSV UTF-8"), ajratuvchi <code>,</code> yoki <code>;</code>. Har fayl 5 MB / {{ max_rows }} qatorgacha.</li>
+        <li>Format: UTF-8 CSV (Excel'da "CSV UTF-8"), ajratuvchi <code>,</code> yoki <code>;</code>. Har fayl {{ max_mb }} MB / {{ max_rows }} qatorgacha.</li>
       </ul>
 
       <form method="post" action="{{ url_for('admin:view-catalog-io-preview') }}" enctype="multipart/form-data">

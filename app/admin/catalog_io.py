@@ -246,8 +246,11 @@ KIND_LABELS = {
     "scholarships": "Grantlar",
 }
 
-MAX_BYTES = 5 * 1024 * 1024
-MAX_ROWS = 5000
+# Chegaralar katalog o'sishiga qarab qo'yilgan: dasturlar eksporti 5000 qatordan
+# oshib ketgani uchun o'zimizning zaxira faylimizni qaytib import qilib
+# bo'lmay qolgan edi. Hozirgi eksport ~5,4 ming qator va ~3,8 MB.
+MAX_BYTES = 20 * 1024 * 1024
+MAX_ROWS = 20000
 
 STATUS_NEW = "new"
 STATUS_UPDATE = "update"
@@ -276,7 +279,10 @@ def parse_csv(data: bytes, kind: str) -> list[tuple[int, dict[str, str]]]:
     if kind not in COLUMNS:
         raise CsvFileError(f"Noma'lum tur: {kind}")
     if len(data) > MAX_BYTES:
-        raise CsvFileError(f"Fayl juda katta: {len(data) // 1024} KB (chegara 5 MB)")
+        raise CsvFileError(
+            f"Fayl juda katta: {len(data) // 1024} KB "
+            f"(chegara {MAX_BYTES // (1024 * 1024)} MB)"
+        )
     try:
         text = data.decode("utf-8-sig")
     except UnicodeDecodeError as exc:

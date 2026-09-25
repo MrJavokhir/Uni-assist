@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.catalog_io import (
+    MAX_ROWS,
     STATUS_ERROR,
     STATUS_NEW,
     STATUS_UNCHANGED,
@@ -303,6 +304,26 @@ def test_unknown_column_is_rejected():
 def test_missing_key_column_is_rejected():
     with pytest.raises(CsvFileError, match="Majburiy ustun"):
         parse_csv(_csv("name_uz,name_ru,name_en"), "countries")
+
+
+def _many_programs(count: int) -> bytes:
+    rows = [
+        f"DE,TU Munich,Dastur {i},M.Sc.,master,cs_it,English,2,2027 Winter,"
+        f"https://example.org/{i},,,"
+        for i in range(count)
+    ]
+    return _csv(PROGRAMS_HEADER, *rows)
+
+
+def test_file_larger_than_five_thousand_rows_is_accepted():
+    # Katalog o'sgani uchun chegara ko'tarilgan: o'z eksportimizni qaytib
+    # import qilib bo'lishi kerak, aks holda zaxira fayl ishlatilmaydi.
+    assert len(parse_csv(_many_programs(6000), "programs")) == 6000
+
+
+def test_file_over_the_row_limit_is_rejected():
+    with pytest.raises(CsvFileError, match="Qatorlar soni"):
+        parse_csv(_many_programs(MAX_ROWS + 1), "programs")
 
 
 # ------------------------------ eksport ------------------------------

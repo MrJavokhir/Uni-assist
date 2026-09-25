@@ -15,11 +15,10 @@
       ("/admin/program/list", "accent", "fa-solid fa-graduation-cap", total_programs, "Dastur"),
       ("/admin/university/list", "accent", "fa-solid fa-building-columns", total_universities, "Universitet"),
       ("/admin/scholarship/list", "green", "fa-solid fa-hand-holding-dollar", total_scholarships, "Grant"),
-      ("/admin/saved-program/list", "green", "fa-solid fa-bookmark", total_saved, "Saqlangan"),
-      ("/admin/report/list", "red" if open_reports else "amber", "fa-solid fa-triangle-exclamation", open_reports, "Signal")
+      ("/admin/saved-program/list", "green", "fa-solid fa-bookmark", total_saved, "Saqlangan")
     ] %}
     {% for url, tone, icon, value, label in kpis %}
-    <div class="col-6 col-lg-2">
+    <div class="col-6 col-lg">
       <a class="ua-kpi-link" href="{{ url }}">
         <div class="card h-100">
           <div class="ua-kpi">
@@ -110,7 +109,7 @@
 
   {# ---------- Jadvallar ---------- #}
   <div class="row row-cards">
-    <div class="col-12 col-lg-7">
+    <div class="col-12">
       <div class="card h-100">
         <div class="card-header">
           <h3 class="card-title">Tekshiruv talab qiladigan yozuvlar</h3>
@@ -149,35 +148,6 @@
       </div>
     </div>
 
-    <div class="col-12 col-lg-5">
-      <div class="card h-100">
-        <div class="card-header">
-          <h3 class="card-title">Foydalanuvchi signallari</h3>
-          <div class="card-actions"><a href="/admin/report/list" class="text-muted small">Barchasi</a></div>
-        </div>
-        {% if recent_reports %}
-        <div class="list-group list-group-flush">
-          {% for report in recent_reports %}
-          <a class="list-group-item list-group-item-action" href="/admin/report/edit/{{ report.id }}">
-            <div class="d-flex align-items-start">
-              <span class="ua-dot" style="background: var(--ua-red)"></span>
-              <div class="flex-fill">
-                <div class="fw-bold">{{ report.program_name or report.scholarship_name or "Noma'lum obyekt" }}</div>
-                <div class="text-muted small">{{ report.comment or "Izohsiz" }}</div>
-                <div class="text-muted small mt-1">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-              </div>
-            </div>
-          </a>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="ua-empty">
-          <i class="fa-solid fa-circle-check fs-2 d-block mb-2 ua-fresh"></i>
-          Yangi signal yo'q.
-        </div>
-        {% endif %}
-      </div>
-    </div>
   </div>
 
 </div>

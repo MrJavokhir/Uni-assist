@@ -13,7 +13,6 @@ from app.db.models.program import (
     ProgramCost,
     ProgramRequirement,
 )
-from app.db.models.report import Report, ReportStatus
 from app.db.models.scholarship import (
     CoverageType,
     Scholarship,
@@ -58,8 +57,6 @@ __all__ = [
     "Program",
     "ProgramCost",
     "ProgramRequirement",
-    "Report",
-    "ReportStatus",
     "RequiredChannel",
     "SavedProgram",
     "SavedProgramStatus",

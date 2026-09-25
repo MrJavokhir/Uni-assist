@@ -27,8 +27,6 @@ from app.db.models import (
     Field,
     LanguageCertType,
     Program,
-    Report,
-    ReportStatus,
     RequiredChannel,
     SavedProgramStatus,
     Scholarship,
@@ -70,11 +68,6 @@ _SERVICE_REQUEST_LABELS = {
     ServiceRequestStatus.CONTACTED: "Bog'lanildi",
     ServiceRequestStatus.DONE: "Bajarildi",
     ServiceRequestStatus.CANCELLED: "Bekor qilindi",
-}
-_REPORT_STATUS_LABELS = {
-    ReportStatus.NEW: "Yangi",
-    ReportStatus.REVIEWED: "Ko'rib chiqilgan",
-    ReportStatus.RESOLVED: "Hal qilingan",
 }
 _DEADLINE_LABELS = {
     DeadlineType.APPLICATION_OPEN: "Ariza ochilishi",
@@ -655,39 +648,6 @@ class UserAdmin(ModelView, model=User):
     }
     column_formatters = _user_formatters
     column_formatters_detail = _user_formatters
-
-class ReportAdmin(ModelView, model=Report):
-    """Foydalanuvchidan kelgan 'ma'lumot noto'g'ri' signallari."""
-
-    name = "Signal"
-    name_plural = "Ma'lumot noto'g'ri signallari"
-    icon = "fa-solid fa-triangle-exclamation"
-    can_create = False
-
-    column_list = [
-        Report.id,
-        Report.program,
-        Report.scholarship,
-        Report.user,
-        Report.comment,
-        Report.status,
-        Report.created_at,
-    ]
-    column_default_sort = [(Report.created_at, True)]
-    column_filters = [
-        StaticValuesFilter(Report.status, values=_choices(_REPORT_STATUS_LABELS), title="Holat")
-    ]
-    form_columns = [Report.status]
-    column_labels = _labels(
-        program="Dastur",
-        scholarship="Grant",
-        user="Kim yubordi",
-        comment="Izoh",
-        status="Holat",
-    )
-    column_formatters = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
-    column_formatters_detail = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
-
 
 class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     """Admission Kit sahifasidagi pullik xizmatlar.

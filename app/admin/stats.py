@@ -13,8 +13,6 @@ from app.db.models import (
     Program,
     ProgramCost,
     ProgramRequirement,
-    Report,
-    ReportStatus,
     SavedProgram,
     Scholarship,
     University,
@@ -24,7 +22,6 @@ from app.db.session import async_session_factory
 
 USER_CHART_DAYS = 14
 STALE_LIST_LIMIT = 8
-REPORT_LIST_LIMIT = 5
 INCOMPLETE_LIST_LIMIT = 8
 
 
@@ -103,12 +100,6 @@ class StatsView(BaseView):
             total_scholarships = await count(Scholarship)
             total_saved = await count(SavedProgram)
 
-            open_reports = (
-                await session.execute(
-                    select(func.count(Report.id)).where(Report.status == ReportStatus.NEW)
-                )
-            ).scalar_one()
-
             stale_programs = (
                 await session.execute(
                     select(func.count(Program.id)).where(Program.verified_at < stale_cutoff)
@@ -137,25 +128,6 @@ class StatsView(BaseView):
                     .join(Country, Country.id == University.country_id)
                     .group_by(Country.name_uz)
                     .order_by(func.count(Program.id).desc())
-                )
-            ).all()
-
-            # Shablonda lazy-load bo'lmasligi uchun kerakli ustunlarni darhol olamiz
-            # (sessiya yopilgach relationship'ga murojaat qilish xato beradi).
-            recent_reports = (
-                await session.execute(
-                    select(
-                        Report.id,
-                        Report.comment,
-                        Report.created_at,
-                        Program.name.label("program_name"),
-                        Scholarship.name.label("scholarship_name"),
-                    )
-                    .outerjoin(Program, Program.id == Report.program_id)
-                    .outerjoin(Scholarship, Scholarship.id == Report.scholarship_id)
-                    .where(Report.status == ReportStatus.NEW)
-                    .order_by(Report.created_at.desc())
-                    .limit(REPORT_LIST_LIMIT)
                 )
             ).all()
 
@@ -204,7 +176,6 @@ class StatsView(BaseView):
                 "total_programs": total_programs,
                 "total_scholarships": total_scholarships,
                 "total_saved": total_saved,
-                "open_reports": open_reports,
                 "stale_total": stale_programs + stale_scholarships,
                 "stale_days": VERIFIED_STALE_DAYS,
                 "chart_labels": chart_labels,
@@ -212,7 +183,6 @@ class StatsView(BaseView):
                 "country_labels": [row[0] for row in country_rows],
                 "country_values": [row[1] for row in country_rows],
                 "stale_records": stale_records,
-                "recent_reports": recent_reports,
                 "incomplete_total": incomplete_total,
                 "incomplete_programs": incomplete_programs,
                 "degree_labels": _DEGREE_LABELS,

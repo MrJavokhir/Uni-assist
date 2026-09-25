@@ -13,7 +13,6 @@ from app.admin.views import (
     CountryAdmin,
     FieldAdmin,
     ProgramAdmin,
-    ReportAdmin,
     RequiredChannelAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
@@ -78,7 +77,6 @@ for view in (
     UserAdmin,
     AdmissionServiceAdmin,
     ServiceRequestAdmin,
-    ReportAdmin,
     RequiredChannelAdmin,
 ):
     admin.add_view(view)

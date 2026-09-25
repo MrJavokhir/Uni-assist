@@ -402,9 +402,25 @@ class ProgramAdmin(ModelView, model=Program):
 
 
 class ScholarshipAdmin(ModelView, model=Scholarship):
+    """Grantlar — yon menyudagi YAGONA grant bo'limi.
+
+    Ilgari uchta alohida bo'lim bor edi: "Grant qo'shish" (sehrgar),
+    "Grantlar" (ro'yxat) va "Grant muddatlari". Uchalasi ham bitta narsaga
+    tegishli bo'lgani uchun admin qaysi biriga kirishni bilmay chalkashardi.
+    Endi hammasi shu ro'yxat orqali: nom ustiga bosilsa sehrgar ochiladi,
+    muddatlar ham o'sha yerda tahrirlanadi.
+    """
+
     name = "Grant"
     name_plural = "Grantlar"
     icon = "fa-solid fa-hand-holding-dollar"
+
+    # Tahrirlashning yagona yo'li — sehrgar. SQLAdmin'ning o'z formasi
+    # grantning yarmini ko'rsatadi (IELTS, o'qish tili, daraja, davomiylik,
+    # tanlov bosqichlari, muddatlar unda yo'q) — ikkisi yonma-yon turganda
+    # qaysi biri to'liq ekani bilinmasdi.
+    can_edit = False
+    can_view_details = False
 
     column_list = [
         Scholarship.id,
@@ -527,9 +543,20 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
 
 
 class ScholarshipDeadlineAdmin(ModelView, model=ScholarshipDeadline):
+    """Grant muddatlari — yon menyuda KO'RSATILMAYDI.
+
+    Muddatlar grant sehrgarida, grantning o'z formasi ichida tahrirlanadi —
+    alohida bo'lim bo'lib turgani ortiqcha edi va "qaysi grantga tegishli"
+    degan savolni tug'dirardi. Sahifa manzili ishlayveradi
+    (/admin/scholarship-deadline/list) — bazani tekshirish uchun asqotadi.
+    """
+
     name = "Grant muddati"
     name_plural = "Grant muddatlari"
     icon = "fa-solid fa-calendar-check"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
 
     column_list = [
         ScholarshipDeadline.id,

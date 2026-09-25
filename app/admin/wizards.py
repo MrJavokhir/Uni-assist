@@ -780,9 +780,20 @@ def _scholarship_prefill_from_form(
 
 
 class ScholarshipWizard(BaseView):
+    """Grantni barcha maydonlari bilan kiritish/tahrirlash formasi.
+
+    Yon menyuda KO'RSATILMAYDI: "Grantlar" ro'yxati bilan yonma-yon turganda
+    ikkalasi bitta narsaga o'xshab chalkashtirardi. Bu yerga ikki yo'l bilan
+    kelinadi — ro'yxatdagi "+ Yangi grant" tugmasi (yangi yozuv) yoki grant
+    nomi ustiga bosish (tahrirlash).
+    """
+
     name = "Grant qo'shish"
     identity = "scholarship-wizard"
     icon = "fa-solid fa-wand-magic-sparkles"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
 
     @expose("/scholarship-wizard", methods=["GET", "POST"])
     async def wizard(self, request: Request):

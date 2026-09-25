@@ -68,6 +68,8 @@ for view in (CountryAdmin, UniversityAdmin, ProgramAdmin, FieldAdmin):
 # Katalogni ommaviy kiritish va zaxiralash (katalog kodda emas — faqat adminka).
 admin.add_base_view(CatalogImportView)
 
+# Grant sehrgari va muddatlar yon menyuda ko'rinmaydi — ikkalasi ham
+# "Grantlar" ro'yxati orqali ochiladi (uchta alohida bo'lim chalkash edi).
 admin.add_base_view(ScholarshipWizard)
 for view in (
     ScholarshipAdmin,

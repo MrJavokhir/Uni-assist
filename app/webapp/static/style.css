@@ -1789,3 +1789,115 @@ button.sch-card:active { transform: scale(0.985); }
   .finding-step { opacity: 1; color: var(--text); }
   .finding-bar > span { width: 100%; }
 }
+
+/* ============ Filtr qo'yilmagan holat ============ */
+
+/* Dasturlar ro'yxati tepasida: filtr yo'qligini ochiq aytadi va sozlashga
+   olib boradi. Chap chetidagi rangli chiziq `.alert` bilan bir xil uslubda,
+   lekin bu ogohlantirish emas — shuning uchun rangi brend rangi. */
+.filter-cta {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  border-left: 3px solid var(--accent);
+}
+
+.filter-cta-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.filter-cta-head > div { min-width: 0; }
+
+.filter-cta-ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.filter-cta-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.filter-cta-text {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--hint);
+}
+
+/* ============ Birinchi kirishda yo'naltirish ============ */
+
+.onb {
+  padding-bottom: 4px;
+  text-align: center;
+}
+
+.onb-ico {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 2px auto 14px;
+  border-radius: 20px;
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: var(--shadow-accent);
+}
+.onb-ico .ico { width: 26px; height: 26px; }
+
+.onb-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.onb-text {
+  margin-top: 8px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--hint);
+}
+
+.onb-steps {
+  list-style: none;
+  margin: 18px 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.onb-step {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+.onb-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.onb .btn-block { margin-top: 8px; }

@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 42;
+const ASSET_V = 43;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -293,6 +293,16 @@ const I18N = {
 
     "match.empty_title": "Mos dastur topilmadi",
     "match.empty_text": "Profilingizni to'ldiring — shunda sizga mos dasturlarni topa olaman.",
+    "match.no_filter_title": "Filtr hali qo'yilmagan",
+    "match.no_filter_text": "Hozir butun katalog ko'rsatilyapti. Filtrni sozlasangiz, faqat darajangiz, yo'nalishingiz va tanlagan davlatlaringizga mos dasturlar qoladi.",
+    "match.no_filter_cta": "Filtrni sozlash",
+    "onboard.title": "Keling, sizga mos dasturlarni topamiz",
+    "onboard.text": "Bir daqiqa vaqt oling. Bir necha savolga javob bersangiz, katalogdan aynan sizga to'g'ri keladigan dasturlar ajratiladi.",
+    "onboard.step1": "Daraja va yo'nalishni tanlaysiz",
+    "onboard.step2": "Bahoingiz va til sertifikatingizni kiritasiz",
+    "onboard.step3": "Qaysi davlatlarda o'qimoqchi ekaningizni belgilaysiz",
+    "onboard.cta": "Filtrni sozlash",
+    "onboard.skip": "Keyinroq",
     "match.save": "Saqlash",
     "match.saved": "Saqlangan",
     "match.missing": "Yetishmayapti: {list}",
@@ -515,6 +525,16 @@ const I18N = {
 
     "match.empty_title": "Программы не найдены",
     "match.empty_text": "Заполните профиль — и я подберу подходящие программы.",
+    "match.no_filter_title": "Фильтр ещё не настроен",
+    "match.no_filter_text": "Сейчас показан весь каталог. Настройте фильтр — останутся только программы, подходящие по вашей ступени, направлению и выбранным странам.",
+    "match.no_filter_cta": "Настроить фильтр",
+    "onboard.title": "Давайте подберём подходящие программы",
+    "onboard.text": "Это займёт минуту. Ответьте на несколько вопросов, и из каталога останутся только те программы, которые вам подходят.",
+    "onboard.step1": "Выберете ступень и направление",
+    "onboard.step2": "Укажете свой балл и языковой сертификат",
+    "onboard.step3": "Отметите страны, где хотите учиться",
+    "onboard.cta": "Настроить фильтр",
+    "onboard.skip": "Позже",
     "match.save": "Сохранить",
     "match.saved": "Сохранено",
     "match.missing": "Не хватает: {list}",
@@ -737,6 +757,16 @@ const I18N = {
 
     "match.empty_title": "No programs found",
     "match.empty_text": "Fill in your profile and I'll find programs that fit you.",
+    "match.no_filter_title": "No filter set yet",
+    "match.no_filter_text": "You are seeing the whole catalogue. Set up your filter and only programmes matching your degree level, field and chosen countries will remain.",
+    "match.no_filter_cta": "Set up filter",
+    "onboard.title": "Let's find programmes that fit you",
+    "onboard.text": "It takes a minute. Answer a few questions and the catalogue narrows down to the programmes that actually fit you.",
+    "onboard.step1": "Pick your degree level and field",
+    "onboard.step2": "Add your grade and language certificate",
+    "onboard.step3": "Choose the countries you want to study in",
+    "onboard.cta": "Set up filter",
+    "onboard.skip": "Later",
     "match.save": "Save",
     "match.saved": "Saved",
     "match.missing": "Missing: {list}",
@@ -1194,6 +1224,36 @@ async function renderHome() {
 
 // ============ Match ============
 
+// Filtr qo'yilmaganda `/match` butun katalogni qaytaradi — ro'yxat to'la
+// ko'rinadi va foydalanuvchi buni "menga moslashtirilgan" deb o'ylaydi.
+// Shuning uchun ro'yxat tepasida nima bo'layotgani ochiq aytiladi.
+function noFilterNote() {
+  if (hasFilter()) return "";
+  return `
+    <div class="filter-cta">
+      <div class="filter-cta-head">
+        <span class="filter-cta-ico">${icon("spark")}</span>
+        <div>
+          <div class="filter-cta-title">${t("match.no_filter_title")}</div>
+          <div class="filter-cta-text">${t("match.no_filter_text")}</div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-accent btn-block" id="match-filter-cta">
+        ${t("match.no_filter_cta")}
+      </button>
+    </div>`;
+}
+
+function bindFilterCta(root) {
+  const btn = root.querySelector("#match-filter-cta");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      switchTab("profile");
+    });
+  }
+}
+
 async function renderMatch() {
   const el = document.getElementById("view-match");
   el.innerHTML = skeletons(4);
@@ -1209,7 +1269,7 @@ async function renderMatch() {
     return;
   }
 
-  el.innerHTML = matches
+  el.innerHTML = noFilterNote() + matches
     .map((m) => {
       const isGreen = m.level === "green";
       // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
@@ -1282,6 +1342,7 @@ async function renderMatch() {
     });
   });
 
+  bindFilterCta(el);
   bindProgramOpeners(el);
 }
 
@@ -1506,6 +1567,51 @@ function showSheet(html, sheet, options) {
   } catch (e) {
     /* eski klientlar */
   }
+}
+
+// ============ Birinchi kirishda yo'naltirish ============
+
+// Filtrsiz ilova "hamma dasturlar ro'yxati" bo'lib qoladi va yangi
+// foydalanuvchi uning nima uchun kerakligini tushunmaydi. Shuning uchun
+// ilova ochilganda filtr bo'sh bo'lsa, birinchi bo'lib shu oyna chiqadi.
+// Sessiyada bir marta: sahifalar orasida yurganda qayta ochilmasin.
+let onboardingShown = false;
+
+function openOnboardingSheet() {
+  onboardingShown = true;
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  const steps = [1, 2, 3]
+    .map(
+      (n) => `
+      <li class="onb-step"><span class="onb-num">${n}</span><span>${t("onboard.step" + n)}</span></li>`
+    )
+    .join("");
+
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="onb">
+      <div class="onb-ico">${icon("spark")}</div>
+      <div class="onb-title">${t("onboard.title")}</div>
+      <div class="onb-text">${t("onboard.text")}</div>
+      <ol class="onb-steps">${steps}</ol>
+      <button type="button" class="btn btn-accent btn-block" id="onb-cta">${t("onboard.cta")}</button>
+      <button type="button" class="btn btn-quiet btn-block" id="onb-skip">${t("onboard.skip")}</button>
+    </div>
+  `,
+    sheet
+  );
+
+  document.getElementById("onb-cta").addEventListener("click", () => {
+    haptic("light");
+    closeSheet();
+    switchTab("profile");
+  });
+  document.getElementById("onb-skip").addEventListener("click", () => {
+    haptic("light");
+    closeSheet();
+  });
 }
 
 // ============ GPA konvertor ============
@@ -2655,6 +2761,11 @@ async function init() {
   await renderHome();
 
   tabbar.removeAttribute("aria-busy");
+
+  // Filtr bo'sh bo'lsa — birinchi qadam sifatida yo'naltirish oynasi.
+  // Filtr qo'yilgach bu oyna boshqa chiqmaydi, shuning uchun alohida
+  // "ko'rsatilgan" belgisini saqlash shart emas.
+  if (!hasFilter() && !onboardingShown) openOnboardingSheet();
 }
 
 init().catch((err) => {

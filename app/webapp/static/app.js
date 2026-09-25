@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 46;
+const ASSET_V = 47;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -2748,17 +2748,36 @@ function bindKitBack(root) {
   }
 }
 
-function servicePrice(service) {
+// Narx bitta satr matn: gradientli kartada u sarlavha ustidagi "ko'z qoshi"
+// (eyebrow) bo'lib turadi, shuning uchun alohida teglar kerak emas.
+function servicePriceText(service) {
   if (service.price_amount === null || service.price_amount === undefined) {
-    return `<span class="kit-price kit-price-ask">${t("kit.price_ask")}</span>`;
+    return escapeHtml(t("kit.price_ask"));
   }
-  const note = service.price_note
-    ? `<span class="kit-price-note">${escapeHtml(service.price_note)}</span>`
-    : "";
-  return `<span class="kit-price">${Number(service.price_amount).toLocaleString()} ${escapeHtml(
+  const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
     service.price_currency
-  )}${note}</span>`;
+  )}`;
+  return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
 }
+
+// Fondagi izometrik kub — shaffof, faqat bezak. Chiziq qalinligi
+// `vector-effect` tufayli masshtabdan qat'i nazar bir xil qoladi.
+function svcCube(x, y, size) {
+  return `
+    <g transform="translate(${x} ${y}) scale(${size})" vector-effect="non-scaling-stroke">
+      <path d="M 0 -1 L 0.866 -0.5 L 0.866 0.5 L 0 1 L -0.866 0.5 L -0.866 -0.5 Z"
+            vector-effect="non-scaling-stroke"/>
+      <path fill="none" d="M 0 -1 L 0 0 M 0 0 L 0.866 0.5 M 0 0 L -0.866 0.5"
+            vector-effect="non-scaling-stroke"/>
+    </g>`;
+}
+
+const SVC_ART = `
+  <svg class="svc-art" viewBox="0 0 170 150" aria-hidden="true" focusable="false"
+       fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.34)" stroke-width="1.1"
+       stroke-linejoin="round">
+    ${svcCube(122, 30, 30)}${svcCube(64, 104, 19)}${svcCube(146, 100, 13)}
+  </svg>`;
 
 async function renderKit() {
   const el = document.getElementById("view-kit");
@@ -2793,27 +2812,25 @@ async function renderKit() {
     </div>
     ${services
       .map(
-        (service) => `
-      <div class="card kit-card">
-        <div class="kit-card-title">${escapeHtml(service.title)}</div>
-        ${
-          service.description
-            ? `<div class="kit-card-text">${escapeHtml(service.description)}</div>`
-            : ""
-        }
-        <div class="kit-card-foot">
-          ${servicePrice(service)}
-          <button type="button" class="btn ${
-            service.requested ? "btn-done" : "btn-soft"
-          } kit-btn" data-id="${service.id}" ${service.requested ? "disabled" : ""}>
-            ${
-              service.requested
-                ? icon("check") + t("kit.requested")
-                : icon("plus") + t("kit.request")
-            }
+        (service, index) => `
+      <article class="svc-card svc-card-${(index % 4) + 1}">
+        ${SVC_ART}
+        <span class="svc-rail">${String(index + 1).padStart(2, "0")}</span>
+        <div class="svc-body">
+          <div class="svc-eyebrow">${servicePriceText(service)}</div>
+          <div class="svc-title">${escapeHtml(service.title)}</div>
+          ${
+            service.description
+              ? `<div class="svc-text">${escapeHtml(service.description)}</div>`
+              : ""
+          }
+          <button type="button" class="svc-btn kit-btn${
+            service.requested ? " is-done" : ""
+          }" data-id="${service.id}" ${service.requested ? "disabled" : ""}>
+            ${service.requested ? icon("check") + t("kit.requested") : t("kit.request")}
           </button>
         </div>
-      </div>`
+      </article>`
       )
       .join("")}
     <div class="disclaimer">${icon("shield")}<span>${t("kit.note")}</span></div>`;
@@ -2825,7 +2842,7 @@ async function renderKit() {
       haptic("light");
       await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
       btn.disabled = true;
-      btn.className = "btn btn-done kit-btn";
+      btn.classList.add("is-done");
       btn.innerHTML = icon("check") + t("kit.requested");
       haptic("success");
       showToast(t("kit.requested_toast"));

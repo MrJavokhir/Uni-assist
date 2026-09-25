@@ -169,9 +169,20 @@ def _enum(form: FormData, key: str, enum_cls: Any) -> Any | None:
 
 
 class UniversityWizard(BaseView):
+    """Universitetni dasturlari bilan birga kiritish/tahrirlash formasi.
+
+    Yon menyuda KO'RSATILMAYDI — "Universitetlar" ro'yxati bilan yonma-yon
+    turganda ikkita alohida bo'limga o'xshab chalkashtirardi. Bu yerga
+    ro'yxatdagi "+ Yangi universitet" tugmasi yoki universitet nomi (qatori)
+    ustiga bosish orqali kelinadi. Grantlarda ham shunday qilingan.
+    """
+
     name = "Universitet qo'shish"
     identity = "university-wizard"
     icon = "fa-solid fa-wand-magic-sparkles"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
 
     @expose("/university-wizard", methods=["GET", "POST"])
     async def wizard(self, request: Request):

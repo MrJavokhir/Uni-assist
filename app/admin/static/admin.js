@@ -65,21 +65,23 @@
     (col || sidebar).remove();
   }
 
-  // "Grantlar" ro'yxatidagi qo'shish tugmasi SQLAdmin'ning o'z formasiga emas,
-  // sehrgarga olib borishi kerak: oddiy forma grantning yarim maydonini
-  // bermaydi (IELTS, o'qish tili, daraja, davomiylik, muddatlar unda yo'q).
-  // Shablon forklanmaydi — havola DOM'da almashtiriladi; JS ishlamay qolsa
-  // tugma eski formaga olib boradi, ya'ni buzilmaydi.
+  // Ro'yxatdagi qo'shish tugmasi SQLAdmin'ning o'z formasiga emas, sehrgarga
+  // olib borishi kerak. Oddiy forma yozuvning yarmini bermaydi: grantda
+  // IELTS, o'qish tili, daraja, davomiylik va muddatlar yo'q; universitetda
+  // esa dasturlarni umuman qo'shib bo'lmaydi. Shablon forklanmaydi — havola
+  // DOM'da almashtiriladi; JS ishlamay qolsa tugma eski formaga olib boradi,
+  // ya'ni hech narsa buzilmaydi.
   var CREATE_TO_WIZARD = {
-    "/admin/scholarship/create": "/admin/scholarship-wizard",
+    "/admin/scholarship/create": ["/admin/scholarship-wizard", "+ Yangi grant"],
+    "/admin/university/create": ["/admin/university-wizard", "+ Yangi universitet"],
   };
 
   function pointCreateToWizard() {
     document.querySelectorAll("a[href]").forEach(function (link) {
       var target = CREATE_TO_WIZARD[new URL(link.href, location.origin).pathname];
       if (!target) return;
-      link.setAttribute("href", target);
-      link.textContent = "+ Yangi grant";
+      link.setAttribute("href", target[0]);
+      link.textContent = target[1];
     });
   }
 

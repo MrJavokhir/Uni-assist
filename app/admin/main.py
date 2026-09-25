@@ -57,10 +57,11 @@ admin = Admin(
 )
 
 # Yon menyu tartibi shu qo'shilish tartibidan kelib chiqadi va u ataylab
-# tekis (bo'limlarsiz): sehrgar -> katalog -> grantlar -> qolgani.
+# tekis (bo'limlarsiz): katalog -> grantlar -> qolgani. Sehrgarlar menyuda
+# ko'rinmaydi — ularga tegishli ro'yxat orqali kelinadi.
 admin.add_base_view(StatsView)
-# "Universitet qo'shish" — universitetni dasturlari, talablari, xarajatlari va
-# muddatlari bilan kiritish/tahrirlashning yagona joyi.
+# Universitetni dasturlari, talablari, xarajatlari va muddatlari bilan
+# kiritish/tahrirlashning yagona joyi. "Universitetlar" ro'yxatidan ochiladi.
 admin.add_base_view(UniversityWizard)
 
 for view in (CountryAdmin, UniversityAdmin, ProgramAdmin, FieldAdmin):

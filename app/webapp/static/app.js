@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 43;
+const ASSET_V = 44;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -294,8 +294,8 @@ const I18N = {
     "match.empty_title": "Mos dastur topilmadi",
     "match.empty_text": "Profilingizni to'ldiring — shunda sizga mos dasturlarni topa olaman.",
     "match.no_filter_title": "Filtr hali qo'yilmagan",
-    "match.no_filter_text": "Hozir butun katalog ko'rsatilyapti. Filtrni sozlasangiz, faqat darajangiz, yo'nalishingiz va tanlagan davlatlaringizga mos dasturlar qoladi.",
-    "match.no_filter_cta": "Filtrni sozlash",
+    "match.no_filter_count": "Butun katalog: {n} ta dastur, sizga moslanmagan",
+    "match.no_filter_cta": "Sozlash",
     "onboard.title": "Keling, sizga mos dasturlarni topamiz",
     "onboard.text": "Bir daqiqa vaqt oling. Bir necha savolga javob bersangiz, katalogdan aynan sizga to'g'ri keladigan dasturlar ajratiladi.",
     "onboard.step1": "Daraja va yo'nalishni tanlaysiz",
@@ -526,8 +526,8 @@ const I18N = {
     "match.empty_title": "Программы не найдены",
     "match.empty_text": "Заполните профиль — и я подберу подходящие программы.",
     "match.no_filter_title": "Фильтр ещё не настроен",
-    "match.no_filter_text": "Сейчас показан весь каталог. Настройте фильтр — останутся только программы, подходящие по вашей ступени, направлению и выбранным странам.",
-    "match.no_filter_cta": "Настроить фильтр",
+    "match.no_filter_count": "Весь каталог: {n} программ, без подбора под вас",
+    "match.no_filter_cta": "Настроить",
     "onboard.title": "Давайте подберём подходящие программы",
     "onboard.text": "Это займёт минуту. Ответьте на несколько вопросов, и из каталога останутся только те программы, которые вам подходят.",
     "onboard.step1": "Выберете ступень и направление",
@@ -758,8 +758,8 @@ const I18N = {
     "match.empty_title": "No programs found",
     "match.empty_text": "Fill in your profile and I'll find programs that fit you.",
     "match.no_filter_title": "No filter set yet",
-    "match.no_filter_text": "You are seeing the whole catalogue. Set up your filter and only programmes matching your degree level, field and chosen countries will remain.",
-    "match.no_filter_cta": "Set up filter",
+    "match.no_filter_count": "Whole catalogue: {n} programmes, not matched to you",
+    "match.no_filter_cta": "Set up",
     "onboard.title": "Let's find programmes that fit you",
     "onboard.text": "It takes a minute. Answer a few questions and the catalogue narrows down to the programmes that actually fit you.",
     "onboard.step1": "Pick your degree level and field",
@@ -1227,31 +1227,37 @@ async function renderHome() {
 // Filtr qo'yilmaganda `/match` butun katalogni qaytaradi — ro'yxat to'la
 // ko'rinadi va foydalanuvchi buni "menga moslashtirilgan" deb o'ylaydi.
 // Shuning uchun ro'yxat tepasida nima bo'layotgani ochiq aytiladi.
-function noFilterNote() {
+function noFilterNote(total) {
   if (hasFilter()) return "";
+  // Katta karta + keng tugma ko'rinishi har qanday ilovaga yopishtirsa
+  // bo'ladigan umumiy blokka o'xshardi. Bu esa natijalar sahifasining o'z
+  // elementi: joriy filtr holatini va nechta dastur ko'rinayotganini
+  // ko'rsatadigan ixcham chiziq. Butun chiziq bosiladi.
   return `
-    <div class="filter-cta">
-      <div class="filter-cta-head">
-        <span class="filter-cta-ico">${icon("spark")}</span>
-        <div>
-          <div class="filter-cta-title">${t("match.no_filter_title")}</div>
-          <div class="filter-cta-text">${t("match.no_filter_text")}</div>
-        </div>
-      </div>
-      <button type="button" class="btn btn-accent btn-block" id="match-filter-cta">
-        ${t("match.no_filter_cta")}
-      </button>
+    <div class="fx-bar" id="match-filter-cta" role="button" tabindex="0">
+      <span class="fx-bar-mark">${icon("search")}</span>
+      <span class="fx-bar-text">
+        <span class="fx-bar-title">${t("match.no_filter_title")}</span>
+        <span class="fx-bar-sub">${t("match.no_filter_count", { n: total })}</span>
+      </span>
+      <span class="fx-bar-go">${t("match.no_filter_cta")}${icon("chevron")}</span>
     </div>`;
 }
 
 function bindFilterCta(root) {
-  const btn = root.querySelector("#match-filter-cta");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      haptic("light");
-      switchTab("profile");
-    });
-  }
+  const bar = root.querySelector("#match-filter-cta");
+  if (!bar) return;
+  const open = () => {
+    haptic("light");
+    switchTab("profile");
+  };
+  bar.addEventListener("click", open);
+  bar.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open();
+    }
+  });
 }
 
 async function renderMatch() {
@@ -1269,7 +1275,7 @@ async function renderMatch() {
     return;
   }
 
-  el.innerHTML = noFilterNote() + matches
+  el.innerHTML = noFilterNote(matches.length) + matches
     .map((m) => {
       const isGreen = m.level === "green";
       // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
@@ -1592,7 +1598,7 @@ function openOnboardingSheet() {
     `
     <div class="sheet-handle"></div>
     <div class="onb">
-      <div class="onb-ico">${icon("spark")}</div>
+      <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
       <div class="onb-title">${t("onboard.title")}</div>
       <div class="onb-text">${t("onboard.text")}</div>
       <ol class="onb-steps">${steps}</ol>
@@ -2758,14 +2764,20 @@ async function init() {
   updateNavLabels();
   bindTabs();
   bindLangSwitch();
+
+  // Filtr bo'sh bo'lsa — birinchi qadam sifatida yo'naltirish oynasi.
+  // ATAYLAB `renderHome()` dan OLDIN: bosh sahifa /match va /saved
+  // so'rovlarini kutadi, oyna esa ularsiz ham chiqaverishi mumkin.
+  // Ilgari oyna shu ikki so'rov tugashini kutib, sezilarli kechikardi.
+  // Bu yerda profil, davlatlar va yo'nalishlar allaqachon yuklangan,
+  // ya'ni "Filtrni sozlash" bosilsa Profil sahifasi darhol chiziladi.
+  // Filtr qo'yilgach oyna boshqa chiqmaydi, shuning uchun alohida
+  // "ko'rsatilgan" belgisini saqlash shart emas.
+  if (!hasFilter() && !onboardingShown) openOnboardingSheet();
+
   await renderHome();
 
   tabbar.removeAttribute("aria-busy");
-
-  // Filtr bo'sh bo'lsa — birinchi qadam sifatida yo'naltirish oynasi.
-  // Filtr qo'yilgach bu oyna boshqa chiqmaydi, shuning uchun alohida
-  // "ko'rsatilgan" belgisini saqlash shart emas.
-  if (!hasFilter() && !onboardingShown) openOnboardingSheet();
 }
 
 init().catch((err) => {

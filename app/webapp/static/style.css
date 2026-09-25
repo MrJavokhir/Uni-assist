@@ -1792,49 +1792,64 @@ button.sch-card:active { transform: scale(0.985); }
 
 /* ============ Filtr qo'yilmagan holat ============ */
 
-/* Dasturlar ro'yxati tepasida: filtr yo'qligini ochiq aytadi va sozlashga
-   olib boradi. Chap chetidagi rangli chiziq `.alert` bilan bir xil uslubda,
-   lekin bu ogohlantirish emas — shuning uchun rangi brend rangi. */
-.filter-cta {
-  background: var(--card);
-  border-radius: var(--r-lg);
-  padding: 14px;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-sm);
-  border-left: 3px solid var(--accent);
-}
-
-.filter-cta-head {
+/* Natijalar sahifasining o'z elementi: joriy filtr holatini ko'rsatadigan
+   ixcham chiziq. Ataylab karta EMAS — kartalar ro'yxatidan ajralib tursin va
+   "istalgan ilovaga yopishtirsa bo'ladigan blok" ko'rinishida bo'lmasin.
+   Uzuq-uzuq chegara "bu yer hali to'ldirilmagan" degan ma'noni beradi. */
+.fx-bar {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  align-items: center;
+  gap: 11px;
   margin-bottom: 12px;
+  padding: 11px 12px;
+  border-radius: var(--r-md);
+  border: 1.5px dashed var(--accent);
+  background: var(--accent-soft);
+  cursor: pointer;
+  transition: transform 0.12s ease;
 }
-.filter-cta-head > div { min-width: 0; }
+.fx-bar:active { transform: scale(0.99); }
 
-.filter-cta-ico {
+.fx-bar-mark {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   flex: none;
-  border-radius: 11px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-radius: 9px;
+  color: var(--on-accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
+.fx-bar-mark .ico { width: 16px; height: 16px; }
 
-.filter-cta-title {
-  font-size: 14px;
+.fx-bar-text { flex: 1; min-width: 0; }
+
+.fx-bar-title {
+  display: block;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--text);
 }
 
-.filter-cta-text {
-  margin-top: 3px;
-  font-size: 12.5px;
-  line-height: 1.4;
+.fx-bar-sub {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  line-height: 1.3;
   color: var(--hint);
 }
+
+.fx-bar-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.fx-bar-go .ico { width: 14px; height: 14px; }
 
 /* ============ Birinchi kirishda yo'naltirish ============ */
 
@@ -1843,18 +1858,17 @@ button.sch-card:active { transform: scale(0.985); }
   text-align: center;
 }
 
+/* 3D ikonka — boshqa 3D ikonkalar bilan bir xil soya bilan "ko'tarilib"
+   turadi. Ilgari bu yerda gradientli kvadrat ichida chiziqli belgi turardi. */
 .onb-ico {
-  display: grid;
-  place-items: center;
-  width: 58px;
-  height: 58px;
+  display: block;
+  width: 78px;
+  height: 78px;
   margin: 2px auto 14px;
-  border-radius: 20px;
-  color: var(--on-accent);
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: var(--shadow-accent);
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(16, 20, 40, 0.3))
+          drop-shadow(0 2px 3px rgba(16, 20, 40, 0.18));
 }
-.onb-ico .ico { width: 26px; height: 26px; }
 
 .onb-title {
   font-size: 19px;

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models import (
+    AdmissionService,
     Country,
     DegreeLevel,
     Field,
@@ -15,6 +16,7 @@ from app.db.models import (
     SavedProgram,
     SavedProgramStatus,
     Scholarship,
+    ServiceRequest,
     UiLanguage,
     University,
     UniversityRankRange,
@@ -46,6 +48,7 @@ from app.webapp.schemas import (
     SavedStatusIn,
     ScholarshipDeadlineOut,
     ScholarshipOut,
+    ServiceOut,
 )
 
 router = APIRouter()
@@ -645,3 +648,72 @@ async def delete_saved(
         await session.delete(saved)
         await session.commit()
     return {"deleted": True}
+
+
+# ============ Admission Kit ============
+#
+# Xizmatlar katalogi bazada turadi va adminkadan boshqariladi (matn, narx,
+# tartib, faollik). Shuning uchun matnlar SERVER tomonida foydalanuvchi
+# tiliga o'giriladi — Mini App'dagi lug'at bu yerda yordam bera olmaydi.
+#
+# To'lov tizimi ulanmagan: "Buyurtma berish" faqat so'rov yozadi, admin
+# ro'yxatni ko'rib foydalanuvchi bilan o'zi bog'lanadi.
+
+
+@router.get("/services", response_model=list[ServiceOut])
+async def list_services(
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+) -> list[ServiceOut]:
+    stmt = (
+        select(AdmissionService)
+        .where(AdmissionService.is_active.is_(True))
+        .order_by(AdmissionService.sort_order, AdmissionService.id)
+    )
+    services = (await session.execute(stmt)).scalars().all()
+
+    requested_rows = (
+        await session.execute(
+            select(ServiceRequest.service_id).where(ServiceRequest.user_id == user.id)
+        )
+    ).scalars().all()
+    requested = set(requested_rows)
+
+    lang = user.ui_language.value
+    return [
+        ServiceOut(
+            id=service.id,
+            code=service.code,
+            title=_localized(service, "title", lang) or service.title_uz,
+            description=_localized(service, "description", lang),
+            price_amount=float(service.price_amount) if service.price_amount is not None else None,
+            price_currency=service.price_currency,
+            price_note=_localized(service, "price_note", lang),
+            requested=service.id in requested,
+        )
+        for service in services
+    ]
+
+
+@router.post("/services/{service_id}/request", status_code=201)
+async def request_service(
+    service_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    service = await session.get(AdmissionService, service_id)
+    if service is None or not service.is_active:
+        raise HTTPException(status_code=404, detail="Xizmat topilmadi")
+
+    # Ikki marta bosilsa yangi yozuv yaratilmaydi — adminda bir odam bir
+    # xizmat bo'yicha takror-takror ko'rinib qolmasin.
+    existing = (
+        await session.execute(
+            select(ServiceRequest).where(
+                ServiceRequest.user_id == user.id, ServiceRequest.service_id == service_id
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        session.add(ServiceRequest(user_id=user.id, service_id=service_id))
+        await session.commit()
+    return {"requested": True}

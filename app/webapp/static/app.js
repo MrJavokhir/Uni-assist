@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 44;
+const ASSET_V = 45;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -207,6 +207,16 @@ const I18N = {
     "home.alert_title": "Yaqinlashayotgan muddat",
     "home.alert_body": "{program} · {days} kun qoldi",
     "home.section_shortcuts": "Tezkor amallar",
+    "nav.kit": "Admission Kit",
+    "kit.title": "Admission Kit",
+    "kit.subtitle": "Ariza topshirishda yordam beradigan qo'llanmalar va xizmatlar.",
+    "kit.price_ask": "Narx kelishiladi",
+    "kit.request": "Buyurtma berish",
+    "kit.requested": "So'rov yuborilgan",
+    "kit.requested_toast": "So'rovingiz qabul qilindi — tez orada bog'lanamiz",
+    "kit.empty_title": "Xizmatlar hali qo'shilmagan",
+    "kit.empty_text": "Tez orada bu yerda qo'llanmalar va yordam xizmatlari paydo bo'ladi.",
+    "kit.note": "To'lov ilovada emas: buyurtma bergach, siz bilan bog'lanamiz.",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
@@ -439,6 +449,16 @@ const I18N = {
     "home.alert_title": "Приближается дедлайн",
     "home.alert_body": "{program} · осталось {days} дн.",
     "home.section_shortcuts": "Быстрые действия",
+    "nav.kit": "Admission Kit",
+    "kit.title": "Admission Kit",
+    "kit.subtitle": "Руководства и услуги, которые помогут с подачей заявки.",
+    "kit.price_ask": "Цена по договорённости",
+    "kit.request": "Оставить заявку",
+    "kit.requested": "Заявка отправлена",
+    "kit.requested_toast": "Заявка принята — скоро свяжемся с вами",
+    "kit.empty_title": "Услуги пока не добавлены",
+    "kit.empty_text": "Скоро здесь появятся руководства и услуги поддержки.",
+    "kit.note": "Оплата не в приложении: после заявки мы свяжемся с вами.",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
@@ -671,6 +691,16 @@ const I18N = {
     "home.alert_title": "Deadline approaching",
     "home.alert_body": "{program} · {days} day(s) left",
     "home.section_shortcuts": "Quick actions",
+    "nav.kit": "Admission Kit",
+    "kit.title": "Admission Kit",
+    "kit.subtitle": "Guides and services that help you through the application.",
+    "kit.price_ask": "Price on request",
+    "kit.request": "Request",
+    "kit.requested": "Request sent",
+    "kit.requested_toast": "Request received — we will contact you shortly",
+    "kit.empty_title": "No services yet",
+    "kit.empty_text": "Guides and support services will appear here soon.",
+    "kit.note": "Payment is not taken in the app: we contact you after the request.",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
@@ -1030,11 +1060,11 @@ async function renderHome() {
     <div id="home-alert"></div>
 
     <div class="hx-grid">
-      <div class="hx-recap" data-goto="match" role="button" tabindex="0">
-        <div class="hx-recap-title">${t("home.recap_title")}</div>
-        <div class="hx-recap-text">${t("home.recap_text")}</div>
+      <div class="hx-recap" data-goto="kit" role="button" tabindex="0">
+        <div class="hx-recap-title">${t("kit.title")}</div>
+        <div class="hx-recap-text">${t("kit.subtitle")}</div>
         <div class="hx-recap-art">
-          <img src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
+          <img src="icon-kit.png?v=${ASSET_V}" alt="" aria-hidden="true">
         </div>
         <span class="hx-recap-cta">${t("home.recap_cta")}</span>
       </div>
@@ -2693,11 +2723,97 @@ async function resetProfile() {
   showToast(t("profile.reset_toast"));
 }
 
+// ============ Admission Kit ============
+//
+// Xizmatlar katalogi BAZADA va adminkadan boshqariladi, shuning uchun
+// matnlar serverdan foydalanuvchi tilida tayyor keladi — bu yerdagi lug'at
+// faqat interfeys elementlariga tegishli.
+//
+// To'lov ilovada undirilmaydi: "Buyurtma berish" so'rov yozadi, admin esa
+// "Xizmat so'rovlari" bo'limida ko'rib, foydalanuvchi bilan bog'lanadi.
+
+function servicePrice(service) {
+  if (service.price_amount === null || service.price_amount === undefined) {
+    return `<span class="kit-price kit-price-ask">${t("kit.price_ask")}</span>`;
+  }
+  const note = service.price_note
+    ? `<span class="kit-price-note">${escapeHtml(service.price_note)}</span>`
+    : "";
+  return `<span class="kit-price">${Number(service.price_amount).toLocaleString()} ${escapeHtml(
+    service.price_currency
+  )}${note}</span>`;
+}
+
+async function renderKit() {
+  const el = document.getElementById("view-kit");
+  el.innerHTML = skeletons(3);
+
+  const services = await api("/services");
+
+  if (!services.length) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">${icon("kit")}</div>
+        <div class="empty-title">${t("kit.empty_title")}</div>
+        <div class="empty-text">${t("kit.empty_text")}</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="kit-head">
+      <img class="kit-head-ico" src="icon-kit.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      <div>
+        <div class="kit-head-title">${t("kit.title")}</div>
+        <div class="kit-head-sub">${t("kit.subtitle")}</div>
+      </div>
+    </div>
+    ${services
+      .map(
+        (service) => `
+      <div class="card kit-card">
+        <div class="kit-card-title">${escapeHtml(service.title)}</div>
+        ${
+          service.description
+            ? `<div class="kit-card-text">${escapeHtml(service.description)}</div>`
+            : ""
+        }
+        <div class="kit-card-foot">
+          ${servicePrice(service)}
+          <button type="button" class="btn ${
+            service.requested ? "btn-done" : "btn-soft"
+          } kit-btn" data-id="${service.id}" ${service.requested ? "disabled" : ""}>
+            ${
+              service.requested
+                ? icon("check") + t("kit.requested")
+                : icon("plus") + t("kit.request")
+            }
+          </button>
+        </div>
+      </div>`
+      )
+      .join("")}
+    <div class="disclaimer">${icon("shield")}<span>${t("kit.note")}</span></div>`;
+
+  el.querySelectorAll(".kit-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      haptic("light");
+      await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
+      btn.disabled = true;
+      btn.className = "btn btn-done kit-btn";
+      btn.innerHTML = icon("check") + t("kit.requested");
+      haptic("success");
+      showToast(t("kit.requested_toast"));
+    });
+  });
+}
+
 // ============ Navigation ============
 
 const RENDERERS = {
   home: renderHome,
   match: renderMatch,
+  kit: renderKit,
   scholarships: renderScholarships,
   saved: renderSaved,
   profile: renderProfile,

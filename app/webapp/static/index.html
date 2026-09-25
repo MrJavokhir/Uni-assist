@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <title>Uni Assist</title>
-<link rel="icon" type="image/png" href="favicon.png?v=44" />
-<link rel="apple-touch-icon" href="logo-mark.png?v=44" />
+<link rel="icon" type="image/png" href="favicon.png?v=45" />
+<link rel="apple-touch-icon" href="logo-mark.png?v=45" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="stylesheet" href="style.css?v=44" />
+<link rel="stylesheet" href="style.css?v=45" />
 </head>
 <body>
 
@@ -64,12 +64,15 @@
   <symbol id="i-lang" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 6h9M7.5 4.5V6M9.5 6c-.6 4-3 6.6-6 8M6 10.5c1.2 2.2 3 3.6 5.5 4.3M12.5 20l4-9 4 9M14 17.2h5"/>
   </symbol>
+  <symbol id="i-kit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.8 2.2h7.2A1.5 1.5 0 0 1 19 9.7V18a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 18z"/><path d="M11 12.8h4M13 10.8v4"/>
+  </symbol>
 </svg>
 
 <div id="app">
   <header class="topbar">
     <div class="brand">
-      <img class="brand-mark" src="logo-mark.png?v=44" alt="" width="30" height="30">
+      <img class="brand-mark" src="logo-mark.png?v=45" alt="" width="30" height="30">
       <span>Uni Assist</span>
     </div>
     <select id="lang-switch" class="lang-switch" aria-label="Language">
@@ -82,6 +85,7 @@
   <main id="views">
     <section id="view-home" class="view"></section>
     <section id="view-match" class="view" hidden></section>
+    <section id="view-kit" class="view" hidden></section>
     <section id="view-scholarships" class="view" hidden></section>
     <section id="view-saved" class="view" hidden></section>
     <section id="view-profile" class="view" hidden></section>
@@ -95,6 +99,10 @@
     <button type="button" data-tab="match" class="tab" aria-label="Programs">
       <svg class="tab-ico"><use href="#i-search"/></svg>
       <span class="tab-label" data-i18n="nav.match"></span>
+    </button>
+    <button type="button" data-tab="kit" class="tab" aria-label="Admission Kit">
+      <svg class="tab-ico"><use href="#i-kit"/></svg>
+      <span class="tab-label" data-i18n="nav.kit"></span>
     </button>
     <button type="button" data-tab="scholarships" class="tab" aria-label="Scholarships">
       <svg class="tab-ico"><use href="#i-award"/></svg>
@@ -110,6 +118,6 @@
     </button>
   </nav>
 </div>
-<script src="app.js?v=44"></script>
+<script src="app.js?v=45"></script>
 </body>
 </html>

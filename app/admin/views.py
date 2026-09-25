@@ -19,6 +19,7 @@ from app.admin.formatters import (
 from app.config import settings
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
+    AdmissionService,
     Country,
     CoverageType,
     DeadlineType,
@@ -32,6 +33,8 @@ from app.db.models import (
     SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
+    ServiceRequest,
+    ServiceRequestStatus,
     UiLanguage,
     University,
     User,
@@ -61,6 +64,12 @@ _SAVED_STATUS_LABELS = {
     SavedProgramStatus.APPLIED: "Ariza berilgan",
     SavedProgramStatus.REJECTED: "Rad etilgan",
     SavedProgramStatus.ACCEPTED: "Qabul qilingan",
+}
+_SERVICE_REQUEST_LABELS = {
+    ServiceRequestStatus.NEW: "Yangi",
+    ServiceRequestStatus.CONTACTED: "Bog'lanildi",
+    ServiceRequestStatus.DONE: "Bajarildi",
+    ServiceRequestStatus.CANCELLED: "Bekor qilindi",
 }
 _REPORT_STATUS_LABELS = {
     ReportStatus.NEW: "Yangi",
@@ -651,6 +660,128 @@ class ReportAdmin(ModelView, model=Report):
     )
     column_formatters = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
     column_formatters_detail = {Report.status: enum_label(_REPORT_STATUS_LABELS)}
+
+
+class AdmissionServiceAdmin(ModelView, model=AdmissionService):
+    """Admission Kit sahifasidagi pullik xizmatlar.
+
+    Mini App shu jadvaldan o'qiydi: xizmat qo'shish, matnini tahrirlash,
+    narxini o'zgartirish yoki vaqtincha o'chirish uchun deploy kerak emas.
+
+    `code` — barqaror kalit, Mini App ikonkani shu bo'yicha tanlaydi.
+    Uni o'zgartirmang: nom tahrirlanaveradi, kod esa o'zgarmasligi kerak.
+
+    Narx BO'SH qoldirilsa, Mini App "Narx kelishiladi" deb yozadi. 0 yozib
+    qo'yish "bepul" degan boshqa ma'no beradi.
+
+    DIQQAT: to'lov tizimi ulanmagan. Narx faqat ko'rsatish uchun, pul
+    ilovada undirilmaydi — foydalanuvchi "Buyurtma berish"ni bosadi va
+    "Xizmat so'rovlari" bo'limida paydo bo'ladi.
+    """
+
+    name = "Xizmat"
+    name_plural = "Admission Kit xizmatlari"
+    icon = "fa-solid fa-briefcase"
+
+    column_list = [
+        AdmissionService.id,
+        AdmissionService.title_uz,
+        AdmissionService.code,
+        AdmissionService.price_amount,
+        AdmissionService.price_currency,
+        AdmissionService.sort_order,
+        AdmissionService.is_active,
+    ]
+    column_searchable_list = [AdmissionService.title_uz, AdmissionService.code]
+    column_sortable_list = [AdmissionService.sort_order, AdmissionService.price_amount]
+    column_default_sort = [(AdmissionService.sort_order, False)]
+    column_filters = [BooleanFilter(AdmissionService.is_active, title="Faol")]
+    form_columns = [
+        AdmissionService.code,
+        AdmissionService.title_uz,
+        AdmissionService.title_ru,
+        AdmissionService.title_en,
+        AdmissionService.description_uz,
+        AdmissionService.description_ru,
+        AdmissionService.description_en,
+        AdmissionService.price_amount,
+        AdmissionService.price_currency,
+        AdmissionService.price_note_uz,
+        AdmissionService.price_note_ru,
+        AdmissionService.price_note_en,
+        AdmissionService.sort_order,
+        AdmissionService.is_active,
+    ]
+    column_labels = _labels(
+        code="Kod",
+        title_uz="Nomi (uz)",
+        title_ru="Nomi (ru)",
+        title_en="Nomi (en)",
+        description_uz="Tavsifi (uz)",
+        description_ru="Tavsifi (ru)",
+        description_en="Tavsifi (en)",
+        price_amount="Narxi",
+        price_currency="Valyuta",
+        price_note_uz="Narx izohi (uz)",
+        price_note_ru="Narx izohi (ru)",
+        price_note_en="Narx izohi (en)",
+        sort_order="Tartib",
+        is_active="Faol",
+    )
+    form_args = {
+        "code": {
+            "description": (
+                "Lotin kichik harflar va _ (masalan cv_guide). Mini App ikonkani shu "
+                "kod bo'yicha tanlaydi — keyin o'zgartirmang."
+            )
+        },
+        "price_amount": {
+            "description": "Bo'sh qoldirsangiz, ilovada «Narx kelishiladi» deb chiqadi."
+        },
+        "price_currency": {"description": "UZS, USD, EUR..."},
+        "price_note_uz": {"description": "Narx yonidagi qisqa izoh: «bir marta», «1 soat»."},
+        "sort_order": {"description": "Ro'yxatdagi o'rni: kichigi yuqorida."},
+        "is_active": {"description": "O'chirilsa, xizmat ilovada ko'rinmaydi."},
+    }
+    column_formatters = {AdmissionService.is_active: format_bool}
+    column_formatters_detail = {AdmissionService.is_active: format_bool}
+
+
+class ServiceRequestAdmin(ModelView, model=ServiceRequest):
+    """Foydalanuvchilarning Admission Kit xizmatlariga so'rovlari.
+
+    Bu to'lov emas, qiziqish: foydalanuvchi ilovada "Buyurtma berish"ni
+    bosgan, siz u bilan bog'lanib holatni yangilab borasiz. Yangi yozuv
+    faqat shu yerdan yaratilmaydi — u ilovadan keladi.
+    """
+
+    name = "Xizmat so'rovi"
+    name_plural = "Xizmat so'rovlari"
+    icon = "fa-solid fa-handshake"
+    can_create = False
+
+    column_list = [
+        ServiceRequest.id,
+        ServiceRequest.service,
+        ServiceRequest.user,
+        ServiceRequest.status,
+        ServiceRequest.created_at,
+    ]
+    column_default_sort = [(ServiceRequest.created_at, True)]
+    column_filters = [
+        StaticValuesFilter(
+            ServiceRequest.status, values=_choices(_SERVICE_REQUEST_LABELS), title="Holat"
+        )
+    ]
+    form_columns = [ServiceRequest.status, ServiceRequest.admin_note]
+    column_labels = _labels(
+        service="Xizmat",
+        user="Kim so'ragan",
+        status="Holat",
+        admin_note="Ishchi izoh",
+    )
+    column_formatters = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
+    column_formatters_detail = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
 
 
 class RequiredChannelAdmin(ModelView, model=RequiredChannel):

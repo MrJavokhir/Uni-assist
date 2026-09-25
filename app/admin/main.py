@@ -9,6 +9,7 @@ from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
 from app.admin.stats import StatsView
 from app.admin.views import (
+    AdmissionServiceAdmin,
     CountryAdmin,
     FieldAdmin,
     ProgramAdmin,
@@ -16,6 +17,7 @@ from app.admin.views import (
     RequiredChannelAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
+    ServiceRequestAdmin,
     UniversityAdmin,
     UserAdmin,
 )
@@ -71,6 +73,8 @@ for view in (
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     UserAdmin,
+    AdmissionServiceAdmin,
+    ServiceRequestAdmin,
     ReportAdmin,
     RequiredChannelAdmin,
 ):

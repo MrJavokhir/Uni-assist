@@ -22,6 +22,11 @@ from app.db.models.scholarship import (
     program_scholarship,
     scholarship_country,
 )
+from app.db.models.service import (
+    AdmissionService,
+    ServiceRequest,
+    ServiceRequestStatus,
+)
 from app.db.models.university import University
 from app.db.models.user import (
     LanguageCertType,
@@ -39,6 +44,7 @@ from app.db.models.user import (
 __all__ = [
     "INSTRUCTION_LANGUAGES",
     "REQUIRED_DOCUMENTS",
+    "AdmissionService",
     "Base",
     "Country",
     "CoverageType",
@@ -59,6 +65,8 @@ __all__ = [
     "SavedProgramStatus",
     "Scholarship",
     "ScholarshipDeadline",
+    "ServiceRequest",
+    "ServiceRequestStatus",
     "UiLanguage",
     "University",
     "UniversityChoiceType",

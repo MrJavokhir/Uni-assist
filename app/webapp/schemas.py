@@ -211,3 +211,22 @@ class ScholarshipOut(BaseModel):
     nearest_deadline: str | None
     nearest_deadline_days_left: int | None
     deadlines: list[ScholarshipDeadlineOut]
+
+
+class ServiceOut(BaseModel):
+    """Admission Kit sahifasidagi bitta xizmat.
+
+    Matnlar server tomonida foydalanuvchi tiliga o'girilgan holda keladi —
+    katalog bazada turgani uchun Mini App ularni tarjima qila olmaydi.
+    """
+
+    id: int
+    code: str
+    title: str
+    description: str | None = None
+    # Narx ko'rsatilmagan bo'lsa null — Mini App "Narx kelishiladi" deb yozadi.
+    price_amount: float | None = None
+    price_currency: str
+    price_note: str | None = None
+    # Foydalanuvchi bu xizmatga allaqachon so'rov yuborganmi.
+    requested: bool = False

@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 45;
+const ASSET_V = 46;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -209,6 +209,8 @@ const I18N = {
     "home.section_shortcuts": "Tezkor amallar",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
+    "kit.back": "Bosh sahifa",
+    "error.title": "Ma'lumotni yuklab bo'lmadi",
     "kit.subtitle": "Ariza topshirishda yordam beradigan qo'llanmalar va xizmatlar.",
     "kit.price_ask": "Narx kelishiladi",
     "kit.request": "Buyurtma berish",
@@ -451,6 +453,8 @@ const I18N = {
     "home.section_shortcuts": "Быстрые действия",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
+    "kit.back": "На главную",
+    "error.title": "Не удалось загрузить данные",
     "kit.subtitle": "Руководства и услуги, которые помогут с подачей заявки.",
     "kit.price_ask": "Цена по договорённости",
     "kit.request": "Оставить заявку",
@@ -693,6 +697,8 @@ const I18N = {
     "home.section_shortcuts": "Quick actions",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
+    "kit.back": "Back to home",
+    "error.title": "Could not load the data",
     "kit.subtitle": "Guides and services that help you through the application.",
     "kit.price_ask": "Price on request",
     "kit.request": "Request",
@@ -2732,6 +2738,16 @@ async function resetProfile() {
 // To'lov ilovada undirilmaydi: "Buyurtma berish" so'rov yozadi, admin esa
 // "Xizmat so'rovlari" bo'limida ko'rib, foydalanuvchi bilan bog'lanadi.
 
+function bindKitBack(root) {
+  const back = root.querySelector("#kit-back");
+  if (back) {
+    back.addEventListener("click", () => {
+      haptic("light");
+      switchTab("home");
+    });
+  }
+}
+
 function servicePrice(service) {
   if (service.price_amount === null || service.price_amount === undefined) {
     return `<span class="kit-price kit-price-ask">${t("kit.price_ask")}</span>`;
@@ -2752,15 +2768,22 @@ async function renderKit() {
 
   if (!services.length) {
     el.innerHTML = `
+      <button type="button" class="kit-back" id="kit-back">
+        ${icon("chevron")}<span>${t("kit.back")}</span>
+      </button>
       <div class="empty">
         <div class="empty-ico">${icon("kit")}</div>
         <div class="empty-title">${t("kit.empty_title")}</div>
         <div class="empty-text">${t("kit.empty_text")}</div>
       </div>`;
+    bindKitBack(el);
     return;
   }
 
   el.innerHTML = `
+    <button type="button" class="kit-back" id="kit-back">
+      ${icon("chevron")}<span>${t("kit.back")}</span>
+    </button>
     <div class="kit-head">
       <img class="kit-head-ico" src="icon-kit.png?v=${ASSET_V}" alt="" aria-hidden="true">
       <div>
@@ -2794,6 +2817,8 @@ async function renderKit() {
       )
       .join("")}
     <div class="disclaimer">${icon("shield")}<span>${t("kit.note")}</span></div>`;
+
+  bindKitBack(el);
 
   el.querySelectorAll(".kit-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -2835,7 +2860,21 @@ async function switchTab(tabName) {
   });
   window.scrollTo({ top: 0, behavior: "smooth" });
   const render = RENDERERS[tabName];
-  if (render) await render();
+  if (!render) return;
+  try {
+    await render();
+  } catch (err) {
+    // Xato ushlanmasa sahifa skeletonlarda qotib qolardi va foydalanuvchi
+    // nima bo'lganini bilmasdi — Admission Kit aynan shunday "ishlamay"
+    // turgandi (serverdagi AttributeError 500 qaytargan).
+    console.error(err);
+    document.getElementById(`view-${tabName}`).innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">${icon("clock")}</div>
+        <div class="empty-title">${t("error.title")}</div>
+        <div class="empty-text">${escapeHtml(err.message)}</div>
+      </div>`;
+  }
 }
 
 function bindTabs() {

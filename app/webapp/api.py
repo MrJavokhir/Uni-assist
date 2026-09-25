@@ -89,6 +89,22 @@ def _localized(record: object, field: str, lang: str) -> str | None:
     return getattr(record, field)
 
 
+def _localized_uz(record: object, field: str, lang: str) -> str | None:
+    """Uchala tili ham qo'shimchali ustunlar uchun til tanlash.
+
+    `_localized()` dan farqi: u asosiy ustunni QO'SHIMCHASIZ deb hisoblaydi
+    (`Program.notes` + `notes_ru`/`notes_en`). Ma'lumotnoma jadvallarida esa
+    o'zbekchasi ham qo'shimchali bo'ladi (`Field.name_uz` kabi) — u yerda
+    `_localized()` mavjud bo'lmagan `record.name` ni so'rab AttributeError
+    beradi.
+    """
+    if lang in ("ru", "en"):
+        translated = getattr(record, f"{field}_{lang}", None)
+        if translated:
+            return translated
+    return getattr(record, f"{field}_uz")
+
+
 def _localized_notes(program: Program, lang: str) -> str | None:
     """Erkin izohni foydalanuvchi tilida qaytaradi, bo'lmasa o'zbekchasini.
 
@@ -683,11 +699,11 @@ async def list_services(
         ServiceOut(
             id=service.id,
             code=service.code,
-            title=_localized(service, "title", lang) or service.title_uz,
-            description=_localized(service, "description", lang),
+            title=_localized_uz(service, "title", lang),
+            description=_localized_uz(service, "description", lang),
             price_amount=float(service.price_amount) if service.price_amount is not None else None,
             price_currency=service.price_currency,
-            price_note=_localized(service, "price_note", lang),
+            price_note=_localized_uz(service, "price_note", lang),
             requested=service.id in requested,
         )
         for service in services

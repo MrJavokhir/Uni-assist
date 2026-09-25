@@ -1998,3 +1998,25 @@ button.sch-card:active { transform: scale(0.985); }
 }
 
 .kit-btn { flex: none; }
+
+/* Admission Kit pastki panelda yo'q, shuning uchun sahifaning o'zida
+   qaytish yo'li bo'lishi kerak. Strelka chapga qaratiladi. */
+.kit-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 10px -6px;
+  padding: 6px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+.kit-back .ico {
+  width: 16px;
+  height: 16px;
+  transform: rotate(180deg);
+}

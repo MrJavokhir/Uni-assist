@@ -988,11 +988,12 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 12px;
-  /* `stretch` (standart) bo'lsa chapdagi karta o'ng ustunning balandligiga
-     cho'ziladi. O'ng ustun esa ma'lumot kelgach balandlashadi, natijada
-     Admission Kit kartasi har safar kattarib-kichrayardi. `start` bilan u
-     o'z ixcham balandligida qoladi va boshqa hech narsaga bog'liq emas. */
-  align-items: start;
+  /* Ikkala ustun bir xil balandlikda tugaydi (standart `stretch`).
+     Ilgari bu sakrashga sabab bo'lardi: o'ng ustun ma'lumot kelgach
+     balandlashar va chapdagi kartani ham cho'zardi. Endi sakrash yo'q,
+     chunki `.hx-mini-foot` da yorliq joyi oldindan band qilingan —
+     o'ng ustunning balandligi yuklanishdan oldin ham, keyin ham bir xil. */
+  align-items: stretch;
 }
 .hx-side {
   display: grid;
@@ -1961,27 +1962,29 @@ button.sch-card:active { transform: scale(0.985); }
   color: var(--hint);
 }
 
-/* Xizmat kartasi.
+/* Xizmat kartasi — "hujjat/talon" ko'rinishida.
 
-   Ilgari har bir karta to'liq gradient bilan bo'yalar, ustida shaffof
-   izometrik "kub" bezaklari suzar va o'ng chetda vertikal raqam turardi.
-   Uchta muammo bor edi: to'rtta to'yingan gradient ketma-ket kelganda
-   sahifa chalkash ko'rinardi; kublar matn ostiga tushib, sarlavhaga soya
-   qo'yishga majbur qilardi; vertikal raqam esa 26px joy egallab hech
-   qanday ma'no bermasdi. Eng muhimi — bu ilovaning qolgan qismiga
-   (yumshoq fondagi oq kartalar) umuman o'xshamasdi.
+   Ikki bosqich orqali shu yechimga kelindi. Birinchi variant to'liq gradient
+   fon + suzuvchi izometrik kublar edi: matn bezak ustida qolib, soya qo'yishga
+   majbur qilardi. Ikkinchisi oq karta + yumshoq soya edi — o'qiladigan, lekin
+   har qanday shablonga o'xshab ketardi.
 
-   Endi karta oddiy kartalar bilan bir xil: oq fon, yupqa chegara. Rang
-   faqat belgi sifatida qoladi — yuqori chekkadagi ingichka chiziq, raqam
-   doirachasi va tugma. Matn to'q rangda, shuning uchun soya kerak emas. */
+   Shuning uchun bu yerda soya UMUMAN ishlatilmaydi: kartalarni bir-biridan
+   CHEGARA ajratadi va u xizmatning o'z rangida. Rang faqat chegara, raqam
+   ramkasi va tugmada — fon toza qoladi.
+
+   Xarakter uchun ikkita element: pastki qatordan oldingi PUNKTIR chiziq
+   (talonning yirtiladigan qismi kabi) va ramkaga olingan tartib raqami.
+   Bo'lim mazmuniga — ariza hujjatlari to'plamiga — mos tushadi. */
 .svc-card {
   position: relative;
-  overflow: hidden;
-  border-radius: var(--r-xl);
+  border-radius: 16px;
   margin-bottom: 12px;
+  padding: 16px;
   background: var(--card);
-  border: 1px solid var(--separator);
-  box-shadow: var(--shadow-sm);
+  /* color-mix'ni tushunmaydigan brauzer uchun zaxira */
+  border: 1.5px solid var(--separator);
+  border-color: color-mix(in srgb, var(--svc) 34%, transparent);
 }
 
 /* Xizmatning "rangi" — faqat shu ikki o'zgaruvchida. */
@@ -1990,114 +1993,101 @@ button.sch-card:active { transform: scale(0.985); }
 .svc-card-3 { --svc: #e8722f; --svc-2: #e8a72f; }
 .svc-card-4 { --svc: #d93f86; --svc-2: #9b5cf6; }
 
-/* Yuqori chekkadagi imzo chizig'i va uning ostidagi juda yengil rang dog'i.
-   Karta oq bo'lib qolaveradi, lekin bir-biridan ajralib turadi. */
-.svc-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 4px;
-  background: linear-gradient(90deg, var(--svc), var(--svc-2));
-}
-.svc-card::after {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 120px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--svc) 7%, transparent),
-    transparent
-  );
-  pointer-events: none;
-}
-
-.svc-body {
-  position: relative;
-  padding: 18px 16px 16px;
-}
-
 .svc-top {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 11px;
 }
 
-/* Tartib raqami — ilgari chetdagi vertikal yorliq edi, endi sarlavha
-   yonidagi doiracha: o'qiladi va joy egallamaydi. */
+/* Tartib raqami — to'ldirilgan emas, RAMKALI: karta chegarasi bilan bitta
+   tilda gapiradi. */
 .svc-num {
   flex: none;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  font-size: 13px;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1.5px solid;
+  border-color: color-mix(in srgb, var(--svc) 45%, transparent);
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   color: var(--svc);
-  background: color-mix(in srgb, var(--svc) 13%, transparent);
 }
-
-.svc-heading { min-width: 0; flex: 1; }
 
 .svc-title {
   margin: 0;
-  font-size: 17px;
+  min-width: 0;
+  font-size: 16.5px;
   font-weight: 750;
   letter-spacing: -0.02em;
   line-height: 1.25;
   color: var(--text);
 }
 
-/* Narx — sarlavha ustidagi "eyebrow" emas, uning ostidagi aniq ma'lumot. */
-.svc-price {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--surface);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--hint);
-}
-
 .svc-text {
-  margin: 12px 0 0;
+  margin: 11px 0 0;
   font-size: 13.5px;
   line-height: 1.5;
   color: var(--hint);
 }
 
+/* Yirtiladigan chiziq + narx va amal bitta qatorda. Ilgari tugma butun
+   kenglikni egallardi va to'rtta karta to'rtta katta rangli to'singa
+   aylanardi. */
+.svc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1.5px dashed;
+  border-top-color: color-mix(in srgb, var(--svc) 28%, transparent);
+}
+
+.svc-price {
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--hint);
+}
+
 .svc-btn {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 14px;
-  padding: 12px 18px;
-  border: 0;
-  border-radius: 13px;
+  gap: 4px;
+  padding: 9px 14px;
+  border: 1.5px solid var(--svc);
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--svc), var(--svc-2));
+  color: var(--svc);
+  background: transparent;
   cursor: pointer;
-  transition: transform 0.12s ease, filter 0.18s ease;
+  transition: transform 0.12s ease, background 0.16s ease, color 0.16s ease;
 }
-.svc-btn:active { transform: scale(0.98); filter: brightness(0.94); }
-.svc-btn .ico { width: 15px; height: 15px; }
+.svc-btn .ico { width: 14px; height: 14px; }
+.svc-btn:active {
+  transform: scale(0.97);
+  background: var(--svc);
+  color: #ffffff;
+}
 
-/* So'rov yuborilgan: bu endi tugma emas, tasdiq. Shuning uchun rangsiz
-   va yashil belgi bilan — bosib bo'lmasligi ko'rinib turadi. */
+/* So'rov yuborilgan: bu endi tugma emas, tasdiq — shuning uchun ramkasiz. */
 .svc-btn.is-done {
+  border-color: transparent;
   background: var(--green-soft);
   color: var(--green);
   cursor: default;
 }
-.svc-btn.is-done:active { transform: none; filter: none; }
+.svc-btn.is-done:active { transform: none; }
 
 /* Admission Kit pastki panelda yo'q, shuning uchun sahifaning o'zida
    qaytish yo'li bo'lishi kerak. Strelka chapga qaratiladi. */

@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 49;
+const ASSET_V = 50;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -2795,23 +2795,25 @@ async function renderKit() {
       .map(
         (service, index) => `
       <article class="svc-card svc-card-${(index % 4) + 1}">
-        <div class="svc-body">
-          <div class="svc-top">
-            <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
-            <div class="svc-heading">
-              <h3 class="svc-title">${escapeHtml(service.title)}</h3>
-              <span class="svc-price">${servicePriceText(service)}</span>
-            </div>
-          </div>
-          ${
-            service.description
-              ? `<p class="svc-text">${escapeHtml(service.description)}</p>`
-              : ""
-          }
+        <div class="svc-top">
+          <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
+          <h3 class="svc-title">${escapeHtml(service.title)}</h3>
+        </div>
+        ${
+          service.description
+            ? `<p class="svc-text">${escapeHtml(service.description)}</p>`
+            : ""
+        }
+        <div class="svc-foot">
+          <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${
             service.requested ? " is-done" : ""
           }" data-id="${service.id}" ${service.requested ? "disabled" : ""}>
-            ${service.requested ? icon("check") + t("kit.requested") : t("kit.request")}
+            ${
+              service.requested
+                ? icon("check") + t("kit.requested")
+                : t("kit.request") + icon("chevron")
+            }
           </button>
         </div>
       </article>`

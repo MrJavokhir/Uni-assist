@@ -10,8 +10,12 @@ from app.admin.csv_views import CatalogImportView
 from app.admin.stats import StatsView
 from app.admin.views import (
     AdmissionServiceAdmin,
+    BalanceTransactionAdmin,
+    BotAdminAdmin,
     CountryAdmin,
     FieldAdmin,
+    PaymentAdmin,
+    PaymentSettingsAdmin,
     ProgramAdmin,
     RequiredChannelAdmin,
     ScholarshipAdmin,
@@ -77,6 +81,10 @@ for view in (
     UserAdmin,
     AdmissionServiceAdmin,
     ServiceRequestAdmin,
+    PaymentSettingsAdmin,
+    PaymentAdmin,
+    BalanceTransactionAdmin,
+    BotAdminAdmin,
     RequiredChannelAdmin,
 ):
     admin.add_view(view)

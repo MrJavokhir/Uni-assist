@@ -2,6 +2,14 @@ from app.db.base import Base
 from app.db.models.channel import RequiredChannel
 from app.db.models.country import Country
 from app.db.models.field import Field
+from app.db.models.payment import (
+    BalanceTransaction,
+    BotAdmin,
+    Payment,
+    PaymentSettings,
+    PaymentStatus,
+    TransactionKind,
+)
 from app.db.models.program import (
     INSTRUCTION_LANGUAGES,
     REQUIRED_DOCUMENTS,
@@ -44,7 +52,9 @@ __all__ = [
     "INSTRUCTION_LANGUAGES",
     "REQUIRED_DOCUMENTS",
     "AdmissionService",
+    "BalanceTransaction",
     "Base",
+    "BotAdmin",
     "Country",
     "CoverageType",
     "Deadline",
@@ -54,6 +64,9 @@ __all__ = [
     "GpaScale",
     "LanguageCertType",
     "OtherTestType",
+    "Payment",
+    "PaymentSettings",
+    "PaymentStatus",
     "Program",
     "ProgramCost",
     "ProgramRequirement",
@@ -64,6 +77,7 @@ __all__ = [
     "ScholarshipDeadline",
     "ServiceRequest",
     "ServiceRequestStatus",
+    "TransactionKind",
     "UiLanguage",
     "University",
     "UniversityChoiceType",

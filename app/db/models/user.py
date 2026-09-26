@@ -104,6 +104,19 @@ class User(TimestampMixin, Base):
     # True = to'lovga rozi, False = faqat bepul ariza, None = tanlanmagan.
     application_fee_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
+    # Balans: faqat tasdiqlangan to'lov orqali oshadi va Admission Kit
+    # xizmatlariga sarflanadi. Har bir o'zgarish `balance_transactions` da
+    # yoziladi, shuning uchun qoldiqni tarix bilan solishtirib tekshirish
+    # mumkin (app/db/models/payment.py).
+    balance: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=0, server_default="0"
+    )
+    # Botdagi `/blockuser` buyrug'i qo'yadi: bloklangan odamdan to'lov
+    # qabul qilinmaydi.
+    is_blocked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     field: Mapped["Field | None"] = relationship()
     target_countries: Mapped[list["Country"]] = relationship(secondary=user_target_country)
     language_certificates: Mapped[list["UserLanguageCertificate"]] = relationship(

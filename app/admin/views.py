@@ -20,12 +20,17 @@ from app.config import settings
 from app.db.models import (
     INSTRUCTION_LANGUAGES,
     AdmissionService,
+    BalanceTransaction,
+    BotAdmin,
     Country,
     CoverageType,
     DeadlineType,
     DegreeLevel,
     Field,
     LanguageCertType,
+    Payment,
+    PaymentSettings,
+    PaymentStatus,
     Program,
     RequiredChannel,
     SavedProgramStatus,
@@ -33,6 +38,7 @@ from app.db.models import (
     ScholarshipDeadline,
     ServiceRequest,
     ServiceRequestStatus,
+    TransactionKind,
     UiLanguage,
     University,
     User,
@@ -62,6 +68,17 @@ _SAVED_STATUS_LABELS = {
     SavedProgramStatus.APPLIED: "Ariza berilgan",
     SavedProgramStatus.REJECTED: "Rad etilgan",
     SavedProgramStatus.ACCEPTED: "Qabul qilingan",
+}
+_PAYMENT_STATUS_LABELS = {
+    PaymentStatus.AWAITING_RECEIPT: "Chek kutilmoqda",
+    PaymentStatus.SUBMITTED: "Tekshiruvda",
+    PaymentStatus.APPROVED: "Tasdiqlangan",
+    PaymentStatus.REJECTED: "Rad etilgan",
+}
+_TRANSACTION_KIND_LABELS = {
+    TransactionKind.TOPUP: "To'ldirish",
+    TransactionKind.SERVICE: "Xizmat uchun",
+    TransactionKind.ADJUSTMENT: "Qo'lda to'g'irlash",
 }
 _SERVICE_REQUEST_LABELS = {
     ServiceRequestStatus.NEW: "Yangi",
@@ -586,6 +603,8 @@ class UserAdmin(ModelView, model=User):
         User.id,
         User.telegram_id,
         User.username,
+        User.balance,
+        User.is_blocked,
         User.created_at,
     ]
     column_details_list = [
@@ -603,6 +622,8 @@ class UserAdmin(ModelView, model=User):
         User.age,
         User.university_rank_range,
         User.application_fee_ok,
+        User.balance,
+        User.is_blocked,
         User.target_countries,
         User.language_certificates,
         User.other_tests,
@@ -638,6 +659,8 @@ class UserAdmin(ModelView, model=User):
         age="Yosh",
         university_rank_range="Universitet reytingi",
         application_fee_ok="Ariza to'loviga rozi",
+        balance="Balans",
+        is_blocked="Bloklangan",
         target_countries="Maqsad davlatlar",
         language_certificates="Til sertifikatlari",
         other_tests="Boshqa testlar",
@@ -646,6 +669,7 @@ class UserAdmin(ModelView, model=User):
     _user_formatters = {
         User.ui_language: enum_label(_UI_LANG_LABELS),
         User.degree_level: enum_label(_DEGREE_LABELS),
+        User.is_blocked: format_bool,
     }
     column_formatters = _user_formatters
     column_formatters_detail = _user_formatters
@@ -770,6 +794,165 @@ class ServiceRequestAdmin(ModelView, model=ServiceRequest):
     )
     column_formatters = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
     column_formatters_detail = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
+
+
+class PaymentSettingsAdmin(ModelView, model=PaymentSettings):
+    """Karta rekvizitlari — botdagi /topup javobida aynan shular chiqadi.
+
+    Jadval BITTA qatorli: yaratish va o'chirish o'chirilgan, faqat mavjud
+    yozuv tahrirlanadi. Bir nechta qator bo'lsa, qaysi biri amal qilishi
+    chalkash bo'lardi.
+    """
+
+    name = "To'lov sozlamasi"
+    name_plural = "To'lov sozlamalari"
+    icon = "fa-solid fa-credit-card"
+    can_create = False
+    can_delete = False
+
+    column_list = [
+        PaymentSettings.card_number,
+        PaymentSettings.card_holder,
+        PaymentSettings.min_amount,
+        PaymentSettings.currency,
+        PaymentSettings.updated_at,
+    ]
+    form_columns = [
+        PaymentSettings.card_number,
+        PaymentSettings.card_holder,
+        PaymentSettings.min_amount,
+        PaymentSettings.currency,
+    ]
+    column_labels = _labels(
+        card_number="Karta raqami",
+        card_holder="Karta egasi",
+        min_amount="Eng kam summa",
+        currency="Valyuta",
+    )
+    form_args = {
+        "card_number": {
+            "description": "Bot xabarida shundayligicha ko'rsatiladi: 9860 0201 0994 3405"
+        },
+        "card_holder": {"description": "Kartadagi ism-familiya."},
+        "min_amount": {"description": "Bundan kam summa botda qabul qilinmaydi."},
+    }
+
+
+class BotAdminAdmin(ModelView, model=BotAdmin):
+    """Botda /approve, /reject va /blockuser yoza oladigan odamlar.
+
+    Adminka logini bilan bog'liq EMAS — bu Telegram tomonidagi ruxsat.
+    Chek kelganda xabar aynan shu ro'yxatdagilarga yuboriladi, shuning
+    uchun ro'yxat bo'sh bo'lsa hech kim xabar olmaydi.
+
+    Telegram ID ni bilish uchun: @userinfobot ga yozing.
+    """
+
+    name = "Bot admini"
+    name_plural = "Bot adminlari"
+    icon = "fa-solid fa-user-shield"
+
+    column_list = [BotAdmin.id, BotAdmin.telegram_id, BotAdmin.title, BotAdmin.is_active]
+    column_searchable_list = [BotAdmin.title]
+    form_columns = [BotAdmin.telegram_id, BotAdmin.title, BotAdmin.is_active]
+    column_labels = _labels(
+        telegram_id="Telegram ID",
+        title="Izoh (kim)",
+        is_active="Faol",
+    )
+    form_args = {
+        "telegram_id": {"description": "Raqamli ID. Bilmasangiz @userinfobot ga yozing."},
+        "title": {"description": "Eslatma uchun: ism yoki lavozim."},
+        "is_active": {"description": "O'chirilsa, chek xabarlari kelmaydi va buyruqlar ishlamaydi."},
+    }
+    column_formatters = {BotAdmin.is_active: format_bool}
+    column_formatters_detail = {BotAdmin.is_active: format_bool}
+
+
+class PaymentAdmin(ModelView, model=Payment):
+    """Balans to'ldirish urinishlari.
+
+    Yozuvlar botdan keladi, shuning uchun bu yerda yaratilmaydi. Odatda
+    tasdiqlash ham botda (/approve) bo'ladi — bu sahifa ko'rib chiqish va
+    tarixni tekshirish uchun.
+
+    DIQQAT: bu yerda holatni qo'lda o'zgartirish BALANSGA TEGMAYDI. Balans
+    faqat botdagi /approve orqali to'ldiriladi, aks holda qoldiq va
+    tranzaksiyalar tarixi bir-biriga mos kelmay qolardi.
+    """
+
+    name = "To'lov"
+    name_plural = "To'lovlar"
+    icon = "fa-solid fa-receipt"
+    can_create = False
+
+    column_list = [
+        Payment.id,
+        Payment.user,
+        Payment.amount,
+        Payment.currency,
+        Payment.status,
+        Payment.created_at,
+    ]
+    column_default_sort = [(Payment.created_at, True)]
+    column_filters = [
+        StaticValuesFilter(
+            Payment.status, values=_choices(_PAYMENT_STATUS_LABELS), title="Holat"
+        )
+    ]
+    form_columns = [Payment.admin_note]
+    column_labels = _labels(
+        user="Kim",
+        amount="Summa",
+        currency="Valyuta",
+        status="Holat",
+        receipt_file_id="Chek fayli",
+        receipt_kind="Fayl turi",
+        reviewed_by="Kim ko'rdi",
+        admin_note="Ishchi izoh",
+    )
+    column_formatters = {Payment.status: enum_label(_PAYMENT_STATUS_LABELS)}
+    column_formatters_detail = {Payment.status: enum_label(_PAYMENT_STATUS_LABELS)}
+
+
+class BalanceTransactionAdmin(ModelView, model=BalanceTransaction):
+    """Balansdagi har bir o'zgarish — faqat o'qish uchun.
+
+    Tahrirlash ATAYLAB yopiq: bu yozuvlar qoldiqning izohi, ularni qo'lda
+    o'zgartirish balans bilan tarixni bir-biriga qarama-qarshi qilib
+    qo'yardi.
+    """
+
+    name = "Tranzaksiya"
+    name_plural = "Balans tarixi"
+    icon = "fa-solid fa-arrow-right-arrow-left"
+    can_create = False
+    can_edit = False
+    can_delete = False
+
+    column_list = [
+        BalanceTransaction.id,
+        BalanceTransaction.user,
+        BalanceTransaction.kind,
+        BalanceTransaction.amount,
+        BalanceTransaction.balance_after,
+        BalanceTransaction.created_at,
+    ]
+    column_default_sort = [(BalanceTransaction.created_at, True)]
+    column_filters = [
+        StaticValuesFilter(
+            BalanceTransaction.kind, values=_choices(_TRANSACTION_KIND_LABELS), title="Turi"
+        )
+    ]
+    column_labels = _labels(
+        user="Kim",
+        kind="Turi",
+        amount="O'zgarish",
+        balance_after="Keyingi qoldiq",
+        note="Izoh",
+    )
+    column_formatters = {BalanceTransaction.kind: enum_label(_TRANSACTION_KIND_LABELS)}
+    column_formatters_detail = {BalanceTransaction.kind: enum_label(_TRANSACTION_KIND_LABELS)}
 
 
 class RequiredChannelAdmin(ModelView, model=RequiredChannel):

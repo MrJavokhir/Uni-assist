@@ -8,6 +8,16 @@ if (tg) {
   } catch (e) {
     /* older Telegram clients */
   }
+  // Telegram'da pastga svayp ilovani yig'ib yuboradi. iOS'ning `<select>`
+  // tanlagichida g'ildirakni aylantirish ham shunday svayp deb qabul
+  // qilinardi: profil filtrida yo'nalish tanlamoqchi bo'lgan odam ilovadan
+  // chiqib ketar, qayta ochilganda esa hammasi boshidan yuklanardi.
+  // Bot API 7.7 dan oldingi klientlarda bu metod yo'q.
+  try {
+    tg.disableVerticalSwipes();
+  } catch (e) {
+    /* Bot API < 7.7 */
+  }
 }
 const INIT_DATA = (tg && tg.initData) || "";
 
@@ -77,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 50;
+const ASSET_V = 51;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1634,7 +1644,9 @@ function openOnboardingSheet() {
     `
     <div class="sheet-handle"></div>
     <div class="onb">
-      <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      <div class="onb-art">
+        <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      </div>
       <div class="onb-title">${t("onboard.title")}</div>
       <div class="onb-text">${t("onboard.text")}</div>
       <ol class="onb-steps">${steps}</ol>

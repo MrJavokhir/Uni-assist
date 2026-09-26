@@ -1961,116 +1961,143 @@ button.sch-card:active { transform: scale(0.985); }
   color: var(--hint);
 }
 
-/* Xizmat kartasi: gradient fon, ustida shaffof izometrik kublar, o'ng
-   chetda vertikal raqam va pastda yumaloq tugma. Ilgari bu oddiy oq karta
-   edi — ro'yxat juda quruq ko'rinardi.
+/* Xizmat kartasi.
 
-   To'rtta rang navbatlashadi (svc-card-1..4), shunda xizmatlar bir-biridan
-   ajralib turadi va sahifa bir xil binafsha bloklar qatoriga aylanmaydi. */
+   Ilgari har bir karta to'liq gradient bilan bo'yalar, ustida shaffof
+   izometrik "kub" bezaklari suzar va o'ng chetda vertikal raqam turardi.
+   Uchta muammo bor edi: to'rtta to'yingan gradient ketma-ket kelganda
+   sahifa chalkash ko'rinardi; kublar matn ostiga tushib, sarlavhaga soya
+   qo'yishga majbur qilardi; vertikal raqam esa 26px joy egallab hech
+   qanday ma'no bermasdi. Eng muhimi — bu ilovaning qolgan qismiga
+   (yumshoq fondagi oq kartalar) umuman o'xshamasdi.
+
+   Endi karta oddiy kartalar bilan bir xil: oq fon, yupqa chegara. Rang
+   faqat belgi sifatida qoladi — yuqori chekkadagi ingichka chiziq, raqam
+   doirachasi va tugma. Matn to'q rangda, shuning uchun soya kerak emas. */
 .svc-card {
   position: relative;
   overflow: hidden;
   border-radius: var(--r-xl);
   margin-bottom: 12px;
-  color: #ffffff;
-  box-shadow: var(--shadow-md);
+  background: var(--card);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-sm);
 }
 
-.svc-card-1 { background: linear-gradient(135deg, #635bff 0%, #9b5cf6 100%); }
-.svc-card-2 { background: linear-gradient(135deg, #2f80ed 0%, #56ccf2 100%); }
-.svc-card-3 { background: linear-gradient(135deg, #f2704a 0%, #f2c14a 100%); }
-.svc-card-4 { background: linear-gradient(135deg, #e84393 0%, #a55eea 100%); }
+/* Xizmatning "rangi" — faqat shu ikki o'zgaruvchida. */
+.svc-card-1 { --svc: #635bff; --svc-2: #9b5cf6; }
+.svc-card-2 { --svc: #2f7de8; --svc-2: #35b8e8; }
+.svc-card-3 { --svc: #e8722f; --svc-2: #e8a72f; }
+.svc-card-4 { --svc: #d93f86; --svc-2: #9b5cf6; }
 
-/* Bezak: o'ng yuqori burchakda, kontent ostida qoladi. */
-.svc-art {
+/* Yuqori chekkadagi imzo chizig'i va uning ostidagi juda yengil rang dog'i.
+   Karta oq bo'lib qolaveradi, lekin bir-biridan ajralib turadi. */
+.svc-card::before {
+  content: "";
   position: absolute;
-  top: 0;
-  right: 24px;
-  width: 170px;
-  height: 100%;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--svc), var(--svc-2));
+}
+.svc-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 120px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--svc) 7%, transparent),
+    transparent
+  );
   pointer-events: none;
-}
-
-/* Vertikal raqam — namunadagi "ALL TASKS" chizig'i o'rnida. */
-.svc-rail {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 26px;
-  display: grid;
-  place-items: center;
-  background: rgba(255, 255, 255, 0.16);
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .svc-body {
   position: relative;
-  /* O'ngdan vertikal yorliqqa joy qoldiriladi. */
-  padding: 18px 44px 18px 18px;
+  padding: 18px 16px 16px;
 }
 
-.svc-eyebrow {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.82);
+.svc-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
+
+/* Tartib raqami — ilgari chetdagi vertikal yorliq edi, endi sarlavha
+   yonidagi doiracha: o'qiladi va joy egallamaydi. */
+.svc-num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--svc);
+  background: color-mix(in srgb, var(--svc) 13%, transparent);
+}
+
+.svc-heading { min-width: 0; flex: 1; }
 
 .svc-title {
-  margin-top: 3px;
-  font-size: 19px;
-  font-weight: 800;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 750;
   letter-spacing: -0.02em;
-  line-height: 1.22;
-  /* Matn kublar ustida turadi — soya o'qishni yengillashtiradi. */
-  text-shadow: 0 1px 6px rgba(16, 20, 40, 0.18);
+  line-height: 1.25;
+  color: var(--text);
+}
+
+/* Narx — sarlavha ustidagi "eyebrow" emas, uning ostidagi aniq ma'lumot. */
+.svc-price {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--hint);
 }
 
 .svc-text {
-  margin-top: 7px;
-  max-width: 28em;
-  font-size: 13px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 6px rgba(16, 20, 40, 0.16);
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--hint);
 }
 
-/* Yumaloq shaffof tugma — namunadagi "Today's Task" kabi. */
 .svc-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: 100%;
   margin-top: 14px;
-  padding: 10px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 999px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 13px;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.2);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: linear-gradient(135deg, var(--svc), var(--svc-2));
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.18s ease;
+  transition: transform 0.12s ease, filter 0.18s ease;
 }
-.svc-btn:active { transform: scale(0.96); }
+.svc-btn:active { transform: scale(0.98); filter: brightness(0.94); }
 .svc-btn .ico { width: 15px; height: 15px; }
 
-/* So'rov yuborilgan holat: tugma bosilmaydi, shuning uchun tinchroq. */
+/* So'rov yuborilgan: bu endi tugma emas, tasdiq. Shuning uchun rangsiz
+   va yashil belgi bilan — bosib bo'lmasligi ko'rinib turadi. */
 .svc-btn.is-done {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.24);
-  color: rgba(255, 255, 255, 0.8);
+  background: var(--green-soft);
+  color: var(--green);
   cursor: default;
 }
-.svc-btn.is-done:active { transform: none; }
+.svc-btn.is-done:active { transform: none; filter: none; }
 
 /* Admission Kit pastki panelda yo'q, shuning uchun sahifaning o'zida
    qaytish yo'li bo'lishi kerak. Strelka chapga qaratiladi. */

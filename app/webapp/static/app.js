@@ -77,7 +77,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 48;
+const ASSET_V = 49;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -2760,25 +2760,6 @@ function servicePriceText(service) {
   return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
 }
 
-// Fondagi izometrik kub — shaffof, faqat bezak. Chiziq qalinligi
-// `vector-effect` tufayli masshtabdan qat'i nazar bir xil qoladi.
-function svcCube(x, y, size) {
-  return `
-    <g transform="translate(${x} ${y}) scale(${size})" vector-effect="non-scaling-stroke">
-      <path d="M 0 -1 L 0.866 -0.5 L 0.866 0.5 L 0 1 L -0.866 0.5 L -0.866 -0.5 Z"
-            vector-effect="non-scaling-stroke"/>
-      <path fill="none" d="M 0 -1 L 0 0 M 0 0 L 0.866 0.5 M 0 0 L -0.866 0.5"
-            vector-effect="non-scaling-stroke"/>
-    </g>`;
-}
-
-const SVC_ART = `
-  <svg class="svc-art" viewBox="0 0 170 150" aria-hidden="true" focusable="false"
-       fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.34)" stroke-width="1.1"
-       stroke-linejoin="round">
-    ${svcCube(122, 30, 30)}${svcCube(64, 104, 19)}${svcCube(146, 100, 13)}
-  </svg>`;
-
 async function renderKit() {
   const el = document.getElementById("view-kit");
   el.innerHTML = skeletons(3);
@@ -2814,14 +2795,17 @@ async function renderKit() {
       .map(
         (service, index) => `
       <article class="svc-card svc-card-${(index % 4) + 1}">
-        ${SVC_ART}
-        <span class="svc-rail">${String(index + 1).padStart(2, "0")}</span>
         <div class="svc-body">
-          <div class="svc-eyebrow">${servicePriceText(service)}</div>
-          <div class="svc-title">${escapeHtml(service.title)}</div>
+          <div class="svc-top">
+            <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
+            <div class="svc-heading">
+              <h3 class="svc-title">${escapeHtml(service.title)}</h3>
+              <span class="svc-price">${servicePriceText(service)}</span>
+            </div>
+          </div>
           ${
             service.description
-              ? `<div class="svc-text">${escapeHtml(service.description)}</div>`
+              ? `<p class="svc-text">${escapeHtml(service.description)}</p>`
               : ""
           }
           <button type="button" class="svc-btn kit-btn${

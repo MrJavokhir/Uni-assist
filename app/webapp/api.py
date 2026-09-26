@@ -1,10 +1,14 @@
+import logging
 from datetime import UTC, datetime
+from html import escape
 
+from aiogram import Bot
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.config import settings
 from app.db.models import (
     AdmissionService,
     Country,
@@ -23,6 +27,7 @@ from app.db.models import (
     User,
 )
 from app.db.session import get_session
+from app.services import payment_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
 from app.services.timezone_utils import format_tashkent
@@ -34,6 +39,7 @@ from app.services.user_service import (
 from app.webapp.auth import InitDataError, validate_init_data
 from app.webapp.schemas import (
     CountryOut,
+    FeedbackIn,
     FieldOut,
     GpaConvertOut,
     LanguageCertOut,
@@ -49,7 +55,10 @@ from app.webapp.schemas import (
     ScholarshipDeadlineOut,
     ScholarshipOut,
     ServiceOut,
+    ServiceRequestResult,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -166,9 +175,41 @@ async def get_current_user(
     )
 
 
-@router.get("/me", response_model=ProfileOut)
-async def get_me(user: User = Depends(get_current_user)) -> ProfileOut:
+# Bot foydalanuvchi nomi Telegram'ning `initDataUnsafe` da YO'Q, shuning
+# uchun serverdan aniqlanadi. Jarayon davomida o'zgarmaydi — bir marta
+# so'ralib keshlanadi, aks holda har bir /me so'rovida Telegram'ga
+# murojaat qilinardi.
+_bot_username: str | None = None
+_bot_username_checked = False
+
+
+async def _get_bot_username() -> str | None:
+    global _bot_username, _bot_username_checked
+    if _bot_username_checked:
+        return _bot_username
+    _bot_username_checked = True
+    if not settings.bot_token:
+        return None
+    bot = Bot(token=settings.bot_token)
+    try:
+        me = await bot.get_me()
+        _bot_username = me.username
+    except Exception:
+        logger.exception("Bot foydalanuvchi nomini aniqlab bo'lmadi")
+    finally:
+        await bot.session.close()
+    return _bot_username
+
+
+async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
+    """Profil javobi. Valyuta to'lov sozlamalaridan olinadi — balans va
+    narxlar hamma joyda bir xil valyutada ko'rsatilishi uchun."""
+    settings_row = await payment_service.get_settings(session)
     return ProfileOut(
+        balance=float(user.balance or 0),
+        balance_currency=settings_row.currency,
+        is_blocked=bool(user.is_blocked),
+        bot_username=await _get_bot_username(),
         ui_language=user.ui_language.value,
         degree_level=user.degree_level.value if user.degree_level else None,
         field_id=user.field_id,
@@ -183,6 +224,13 @@ async def get_me(user: User = Depends(get_current_user)) -> ProfileOut:
             LanguageCertOut(type=c.type.value, score=float(c.score)) for c in user.language_certificates
         ],
     )
+
+
+@router.get("/me", response_model=ProfileOut)
+async def get_me(
+    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+) -> ProfileOut:
+    return await _profile_out(session, user)
 
 
 @router.patch("/me", response_model=ProfileOut)
@@ -244,7 +292,7 @@ async def update_me(
     # yuklangan relationship'lar (target_countries/language_certificates)
     # commit'lardan keyin o'zi yangilanmaydi — javobdan oldin qo'lda yangilaymiz.
     await session.refresh(user, attribute_names=["target_countries", "language_certificates"])
-    return await get_me(user)
+    return await _profile_out(session, user)
 
 
 @router.post("/me/reset", response_model=ProfileOut)
@@ -270,7 +318,7 @@ async def reset_me(
 
     await set_target_countries(session, user, [])
     await session.refresh(user, attribute_names=["target_countries", "language_certificates"])
-    return await get_me(user)
+    return await _profile_out(session, user)
 
 
 @router.get("/gpa/convert", response_model=GpaConvertOut)
@@ -710,18 +758,22 @@ async def list_services(
     ]
 
 
-@router.post("/services/{service_id}/request", status_code=201)
+@router.post("/services/{service_id}/request", response_model=ServiceRequestResult, status_code=201)
 async def request_service(
     service_id: int,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
-) -> dict:
+) -> ServiceRequestResult:
     service = await session.get(AdmissionService, service_id)
     if service is None or not service.is_active:
         raise HTTPException(status_code=404, detail="Xizmat topilmadi")
 
-    # Ikki marta bosilsa yangi yozuv yaratilmaydi — adminda bir odam bir
-    # xizmat bo'yicha takror-takror ko'rinib qolmasin.
+    if user.is_blocked:
+        raise HTTPException(status_code=403, detail="Hisobingiz bloklangan")
+
+    # Ikki marta bosilsa yangi yozuv YARATILMAYDI va pul QAYTA YECHILMAYDI.
+    # Tugma bosilgandan keyin o'chsa ham, tarmoq uzilib qayta yuborilsa ham
+    # foydalanuvchidan ikki marta olinmasligi kerak.
     existing = (
         await session.execute(
             select(ServiceRequest).where(
@@ -729,7 +781,67 @@ async def request_service(
             )
         )
     ).scalar_one_or_none()
-    if existing is None:
-        session.add(ServiceRequest(user_id=user.id, service_id=service_id))
-        await session.commit()
-    return {"requested": True}
+    if existing is not None:
+        return ServiceRequestResult(requested=True, balance=float(user.balance or 0))
+
+    try:
+        new_balance = await payment_service.charge_service(session, user, service)
+    except payment_service.InsufficientBalance as exc:
+        # 402 Payment Required — Mini App shu kod bo'yicha "balansni
+        # to'ldiring" oynasini ko'rsatadi.
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": "insufficient_balance",
+                "needed": float(exc.needed),
+                "available": float(exc.available),
+            },
+        ) from exc
+
+    session.add(ServiceRequest(user_id=user.id, service_id=service_id))
+    await session.commit()
+    return ServiceRequestResult(
+        requested=True,
+        balance=float(new_balance),
+        charged=float(service.price_amount) if service.price_amount is not None else None,
+    )
+
+
+@router.post("/feedback", status_code=201)
+async def send_feedback(
+    payload: FeedbackIn,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Foydalanuvchi fikri — to'g'ridan-to'g'ri bot adminlariga yuboriladi.
+
+    Alohida jadval ATAYLAB yaratilmadi: fikr o'qilib, javob berilishi kerak
+    bo'lgan narsa. Adminkada yotganidan ko'ra Telegram'ga darhol yetgani
+    foydaliroq.
+    """
+    text = (payload.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=422, detail="Matn bo'sh")
+    if len(text) > 2000:
+        text = text[:2000] + "..."
+
+    admin_ids = await payment_service.active_admin_ids(session)
+    if not admin_ids or not settings.bot_token:
+        logger.warning("Fikr yuborilmadi: bot adminlari ro'yxati yoki token bo'sh")
+        return {"sent": False}
+
+    bot = Bot(token=settings.bot_token)
+    try:
+        header = (
+            "💬 <b>Yangi fikr</b>\n\n"
+            f"👤 @{user.username or '—'}\n"
+            f"🆔 <code>{user.telegram_id}</code>\n\n"
+        )
+        for admin_id in admin_ids:
+            try:
+                await bot.send_message(admin_id, header + escape(text), parse_mode="HTML")
+            except Exception:
+                logger.exception("Adminga fikr yetmadi: %s", admin_id)
+    finally:
+        await bot.session.close()
+    return {"sent": True}

@@ -18,6 +18,14 @@ class ProfileOut(BaseModel):
     application_fee_ok: bool | None
     target_country_ids: list[int]
     language_certificates: list[LanguageCertOut]
+    # Hisob: balans faqat BOTDA to'ldiriladi (/topup), Mini App uni
+    # ko'rsatadi va xizmatlarga sarflaydi.
+    balance: float
+    balance_currency: str
+    is_blocked: bool
+    # Do'stlarni taklif qilish havolasi uchun. Telegram buni
+    # `initDataUnsafe` da bermaydi, shuning uchun server aniqlaydi.
+    bot_username: str | None = None
 
 
 class ProfileIn(BaseModel):
@@ -230,3 +238,16 @@ class ServiceOut(BaseModel):
     price_note: str | None = None
     # Foydalanuvchi bu xizmatga allaqachon so'rov yuborganmi.
     requested: bool = False
+
+
+class ServiceRequestResult(BaseModel):
+    """Xizmat buyurtma qilingandan keyingi javob."""
+
+    requested: bool
+    # Balansdan yechilgan bo'lsa yangi qoldiq, aks holda o'zgarmagan qoldiq.
+    balance: float
+    charged: float | None = None
+
+
+class FeedbackIn(BaseModel):
+    text: str

@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 52;
+const ASSET_V = 53;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -220,6 +220,32 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "Bosh sahifa",
+    "profile.no_name": "Foydalanuvchi",
+    "account.balance": "Hisobim",
+    "account.topup_hint": "To'ldirish botda: /topup buyrug'ini yozing",
+    "account.filter": "Qidiruv filtri",
+    "account.filter_sub": "Daraja, yo'nalish, baho, davlatlar",
+    "account.language": "Til",
+    "account.invite": "Do'stlarni taklif qilish",
+    "account.invite_sub": "Botni ulashing",
+    "account.invite_text": "Chet elda o'qish uchun dastur va grant qidiryapsizmi? Uni Assist yordam beradi.",
+    "account.invite_unavailable": "Havolani olishning imkoni bo'lmadi",
+    "account.help": "Yordam va FAQ",
+    "account.feedback": "Fikr bildirish",
+    "account.feedback_hint": "Taklif yoki muammo bo'lsa yozing — xabaringiz to'g'ridan-to'g'ri jamoaga boradi.",
+    "account.feedback_placeholder": "Fikringizni yozing...",
+    "account.feedback_send": "Yuborish",
+    "account.feedback_sent": "Rahmat! Fikringiz yuborildi",
+    "kit.need_balance": "Balans yetmaydi",
+    "kit.need_balance_text": "Bu xizmat uchun {needed} kerak, hisobingizda {available} bor. Botda /topup yozib to'ldiring.",
+    "faq.q1": "Dasturlar qayerdan olingan?",
+    "faq.a1": "Har bir dastur universitetning rasmiy sahifasidan kiritilgan. Ko'rsatilmagan ma'lumot to'qilmaydi — bo'sh qoldiriladi.",
+    "faq.q2": "Filtrni qanday sozlayman?",
+    "faq.a2": "Bosh sahifadagi «Qidiruvni sozlash» tugmasi orqali. Daraja, yo'nalish, baho va davlatlarni belgilasangiz, faqat sizga mos dasturlar qoladi.",
+    "faq.q3": "Balansni qanday to'ldiraman?",
+    "faq.a3": "Botga /topup yozing, summani kiriting va kartaga o'tkazing. So'ng /chekyubor orqali chek rasmini yuboring — admin tekshirgach balans to'ldiriladi.",
+    "faq.q4": "Admission Kit nima?",
+    "faq.a4": "Ariza topshirishda yordam beradigan qo'llanmalar va xizmatlar: motivatsion xat, CV, mentor bilan maslahat va to'liq yordam.",
     "error.title": "Ma'lumotni yuklab bo'lmadi",
     "kit.subtitle": "Ariza topshirishda yordam beradigan qo'llanmalar va xizmatlar.",
     "kit.price_ask": "Narx kelishiladi",
@@ -464,6 +490,32 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "На главную",
+    "profile.no_name": "Пользователь",
+    "account.balance": "Мой счёт",
+    "account.topup_hint": "Пополнение в боте: отправьте команду /topup",
+    "account.filter": "Фильтр поиска",
+    "account.filter_sub": "Ступень, направление, балл, страны",
+    "account.language": "Язык",
+    "account.invite": "Пригласить друзей",
+    "account.invite_sub": "Поделитесь ботом",
+    "account.invite_text": "Ищете программу или грант для учёбы за рубежом? Uni Assist поможет.",
+    "account.invite_unavailable": "Не удалось получить ссылку",
+    "account.help": "Помощь и FAQ",
+    "account.feedback": "Оставить отзыв",
+    "account.feedback_hint": "Напишите предложение или проблему — сообщение придёт напрямую команде.",
+    "account.feedback_placeholder": "Напишите ваше мнение...",
+    "account.feedback_send": "Отправить",
+    "account.feedback_sent": "Спасибо! Отзыв отправлен",
+    "kit.need_balance": "Недостаточно средств",
+    "kit.need_balance_text": "Для этой услуги нужно {needed}, на счету {available}. Пополните через /topup в боте.",
+    "faq.q1": "Откуда взяты программы?",
+    "faq.a1": "Каждая программа внесена с официальной страницы университета. Неуказанные данные не выдумываются — поле остаётся пустым.",
+    "faq.q2": "Как настроить фильтр?",
+    "faq.a2": "Через кнопку «Настроить поиск» на главной. Укажите ступень, направление, балл и страны — останутся только подходящие программы.",
+    "faq.q3": "Как пополнить счёт?",
+    "faq.a3": "Отправьте боту /topup, укажите сумму и переведите на карту. Затем через /chekyubor отправьте фото чека — после проверки баланс пополнится.",
+    "faq.q4": "Что такое Admission Kit?",
+    "faq.a4": "Руководства и услуги для подачи заявки: мотивационное письмо, CV, консультация с ментором и полное сопровождение.",
     "error.title": "Не удалось загрузить данные",
     "kit.subtitle": "Руководства и услуги, которые помогут с подачей заявки.",
     "kit.price_ask": "Цена по договорённости",
@@ -708,6 +760,32 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "Back to home",
+    "profile.no_name": "User",
+    "account.balance": "My balance",
+    "account.topup_hint": "Top up in the bot: send the /topup command",
+    "account.filter": "Search filter",
+    "account.filter_sub": "Degree, field, grade, countries",
+    "account.language": "Language",
+    "account.invite": "Invite friends",
+    "account.invite_sub": "Share the bot",
+    "account.invite_text": "Looking for a programme or scholarship to study abroad? Uni Assist helps.",
+    "account.invite_unavailable": "Could not get the link",
+    "account.help": "Help & FAQ",
+    "account.feedback": "Send feedback",
+    "account.feedback_hint": "Tell us a suggestion or a problem — it goes straight to the team.",
+    "account.feedback_placeholder": "Write your feedback...",
+    "account.feedback_send": "Send",
+    "account.feedback_sent": "Thank you! Your feedback was sent",
+    "kit.need_balance": "Not enough balance",
+    "kit.need_balance_text": "This service costs {needed}, your balance is {available}. Top up with /topup in the bot.",
+    "faq.q1": "Where does the programme data come from?",
+    "faq.a1": "Every programme is entered from the university's official page. Anything not stated there is left empty rather than guessed.",
+    "faq.q2": "How do I set up the filter?",
+    "faq.a2": "Use «Set up your search» on the home screen. Once you set degree, field, grade and countries, only matching programmes remain.",
+    "faq.q3": "How do I top up my balance?",
+    "faq.a3": "Send /topup to the bot, enter the amount and transfer to the card. Then send the receipt photo via /chekyubor — the balance is credited after review.",
+    "faq.q4": "What is the Admission Kit?",
+    "faq.a4": "Guides and services for your application: motivation letter, CV, mentor sessions and full support.",
     "error.title": "Could not load the data",
     "kit.subtitle": "Guides and services that help you through the application.",
     "kit.price_ask": "Price on request",
@@ -1131,7 +1209,7 @@ async function renderHome() {
     </div>
   `;
 
-  document.getElementById("home-cta").addEventListener("click", () => switchTab("profile"));
+  document.getElementById("home-cta").addEventListener("click", () => switchTab("filter"));
 
   // Tezkor amallar o'z ishlov beruvchisiga ega — ular bu yerga tushmaydi.
   el.querySelectorAll("[data-goto]:not(.quick)").forEach((node) => {
@@ -1295,7 +1373,7 @@ function bindFilterCta(root) {
   if (!bar) return;
   const open = () => {
     haptic("light");
-    switchTab("profile");
+    switchTab("filter");
   };
   bar.addEventListener("click", open);
   bar.addEventListener("keydown", (event) => {
@@ -1658,7 +1736,7 @@ function openOnboardingSheet() {
   document.getElementById("onb-cta").addEventListener("click", () => {
     haptic("light");
     closeSheet();
-    switchTab("profile");
+    switchTab("filter");
   });
   document.getElementById("onb-skip").addEventListener("click", () => {
     haptic("light");
@@ -2326,8 +2404,11 @@ function profileSection(iconName, title) {
 
 const RANK_RANGES = ["1-100", "101-300", "301-500", "500+"];
 
-function renderProfile() {
-  const el = document.getElementById("view-profile");
+// Filtr endi ALOHIDA sahifa: pastki panelda yo'q, unga faqat bosh
+// sahifadan va Dasturlar ro'yxatidagi ogohlantirishdan kiriladi. Profil
+// tabi esa akkaunt menyusi bo'lib qoldi (renderProfile).
+function renderFilter() {
+  const el = document.getElementById("view-filter");
   const cert = profile.language_certificates[0] || {};
   const certType = cert.type || "";
   const certScore = cert.score ?? "";
@@ -2351,6 +2432,9 @@ function renderProfile() {
     </div>`;
 
   el.innerHTML = `
+    <button type="button" class="kit-back" id="filter-back">
+      ${icon("chevron")}<span>${t("kit.back")}</span>
+    </button>
     ${profileSection("cap", t("profile.section_academic"))}
     <div class="group">
       <div class="field">
@@ -2554,6 +2638,10 @@ function renderProfile() {
   document.getElementById("gpa-value-input").addEventListener("input", updateGpaPreview);
   document.getElementById("find-programs-btn").addEventListener("click", findPrograms);
   document.getElementById("reset-profile-btn").addEventListener("click", resetProfile);
+  document.getElementById("filter-back").addEventListener("click", () => {
+    haptic("light");
+    switchTab("home");
+  });
 
   updateGpaPreview();
 }
@@ -2734,7 +2822,7 @@ async function resetProfile() {
   // Yo'nalishlar ro'yxati darajaga bog'liq edi — daraja tozalangach uni
   // to'liq ro'yxatga qaytaramiz.
   await loadMajors(null);
-  renderProfile();
+  renderFilter();
   haptic("success");
   showToast(t("profile.reset_toast"));
 }
@@ -2768,6 +2856,42 @@ function servicePriceText(service) {
     service.price_currency
   )}`;
   return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
+}
+
+// `api()` xatoni "API 402: {...}" ko'rinishida beradi — tafsilotni
+// shundan ajratib olamiz. Boshqa xatolarda null qaytadi.
+function insufficientBalance(err) {
+  const message = String(err && err.message ? err.message : "");
+  if (!message.startsWith("API 402")) return null;
+  try {
+    const body = JSON.parse(message.slice(message.indexOf("{")));
+    const detail = body.detail || body;
+    if (detail.error !== "insufficient_balance") return null;
+    return { needed: detail.needed, available: detail.available };
+  } catch (e) {
+    return null;
+  }
+}
+
+function openNeedBalanceSheet(short) {
+  const currency = (profile && profile.balance_currency) || "";
+  const money = (value) => `${Number(value).toLocaleString()} ${escapeHtml(currency)}`;
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("kit.need_balance")}</div>
+    <div class="sheet-text">${t("kit.need_balance_text", {
+      needed: money(short.needed),
+      available: money(short.available),
+    })}</div>
+    <button type="button" class="btn btn-quiet btn-block" id="need-close">
+      ${t("onboard.skip")}
+    </button>`,
+    sheet
+  );
+  document.getElementById("need-close").addEventListener("click", closeSheet);
 }
 
 async function renderKit() {
@@ -2836,19 +2960,214 @@ async function renderKit() {
   el.querySelectorAll(".kit-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       haptic("light");
-      await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
       btn.disabled = true;
-      btn.classList.add("is-done");
-      btn.innerHTML = icon("check") + t("kit.requested");
-      haptic("success");
-      showToast(t("kit.requested_toast"));
+      try {
+        const result = await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
+        // Narxi bor xizmat balansdan yechiladi — profildagi qoldiq
+        // eskirib qolmasligi uchun darhol yangilaymiz.
+        if (profile && typeof result.balance === "number") profile.balance = result.balance;
+        btn.classList.add("is-done");
+        btn.innerHTML = icon("check") + t("kit.requested");
+        haptic("success");
+        showToast(t("kit.requested_toast"));
+      } catch (err) {
+        btn.disabled = false;
+        haptic("error");
+        // Server 402 va tafsilot qaytaradi: qancha kerak, qancha bor.
+        const short = insufficientBalance(err);
+        if (short) openNeedBalanceSheet(short);
+        else showToast(err.message);
+      }
     });
+  });
+}
+
+// ============ Profil: akkaunt menyusi ============
+//
+// Bu sahifada QIDIRUV SOZLAMALARI YO'Q — ular alohida "filter" sahifasida
+// (renderFilter). Bu yerda faqat hisob bilan bog'liq narsalar: balans,
+// til, do'stlarni taklif qilish, yordam va fikr bildirish.
+//
+// Balans BOTDA to'ldiriladi (/topup). Mini App ichida to'lov qabul
+// qilinmaydi: chek qo'lda tekshiriladi va bu bot suhbatida qulayroq.
+
+function profileRow(id, iconName, title, value, extraClass) {
+  return `
+    <button type="button" class="acc-row ${extraClass || ""}" id="${id}">
+      <span class="acc-ico">${icon(iconName)}</span>
+      <span class="acc-text">
+        <span class="acc-title">${title}</span>
+        ${value ? `<span class="acc-value">${value}</span>` : ""}
+      </span>
+      ${icon("chevron", "acc-chevron")}
+    </button>`;
+}
+
+function renderProfile() {
+  const el = document.getElementById("view-profile");
+  const name = (TG_USER && TG_USER.first_name) || "";
+  const username = TG_USER && TG_USER.username;
+  const balance = `${Number(profile.balance || 0).toLocaleString()} ${escapeHtml(
+    profile.balance_currency || ""
+  )}`;
+
+  el.innerHTML = `
+    <div class="acc-head">
+      <div class="acc-avatar">${escapeHtml(initials(name)) || icon("user")}</div>
+      <div class="acc-head-text">
+        <div class="acc-name">${escapeHtml(name) || t("profile.no_name")}</div>
+        <div class="acc-sub">${username ? "@" + escapeHtml(username) : ""}</div>
+      </div>
+    </div>
+
+    <div class="acc-balance">
+      <div class="acc-balance-label">${t("account.balance")}</div>
+      <div class="acc-balance-value">${balance}</div>
+      <div class="acc-balance-hint">${t("account.topup_hint")}</div>
+    </div>
+
+    <div class="acc-group">
+      ${profileRow("acc-filter", "search", t("account.filter"), t("account.filter_sub"))}
+      ${profileRow("acc-lang", "lang", t("account.language"), LANG_LABELS[lang] || lang)}
+      ${profileRow("acc-invite", "spark", t("account.invite"), t("account.invite_sub"))}
+      ${profileRow("acc-help", "shield", t("account.help"), "")}
+      ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
+    </div>`;
+
+  document.getElementById("acc-filter").addEventListener("click", () => {
+    haptic("light");
+    switchTab("filter");
+  });
+  document.getElementById("acc-lang").addEventListener("click", openLanguageSheet);
+  document.getElementById("acc-invite").addEventListener("click", shareBot);
+  document.getElementById("acc-help").addEventListener("click", openHelpSheet);
+  document.getElementById("acc-feedback").addEventListener("click", openFeedbackSheet);
+}
+
+const LANG_LABELS = { uz: "O'zbekcha", ru: "Русский", en: "English" };
+
+function openLanguageSheet() {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("account.language")}</div>
+    <div class="acc-group">
+      ${["uz", "ru", "en"]
+        .map(
+          (code) => `
+        <button type="button" class="acc-row lang-pick${code === lang ? " is-active" : ""}"
+                data-lang="${code}">
+          <span class="acc-text"><span class="acc-title">${LANG_LABELS[code]}</span></span>
+          ${code === lang ? icon("check", "acc-chevron") : ""}
+        </button>`
+        )
+        .join("")}
+    </div>`,
+    sheet
+  );
+
+  sheet.querySelectorAll(".lang-pick").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      haptic("light");
+      lang = btn.dataset.lang;
+      document.getElementById("lang-switch").value = lang;
+      await api("/me", { method: "PATCH", body: JSON.stringify({ ui_language: lang }) });
+      closeSheet();
+      updateNavLabels();
+      await switchTab("profile");
+    });
+  });
+}
+
+// Bot foydalanuvchi nomi Telegram'ning `initDataUnsafe` da YO'Q — u
+// serverdan `/me` javobi bilan keladi (api.py `_get_bot_username`).
+function botLink() {
+  const username = profile && profile.bot_username;
+  return username ? `https://t.me/${username}` : null;
+}
+
+function shareBot() {
+  haptic("light");
+  const link = botLink();
+  if (!link) {
+    showToast(t("account.invite_unavailable"));
+    return;
+  }
+  const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(
+    t("account.invite_text")
+  )}`;
+  try {
+    tg.openTelegramLink(url);
+  } catch (e) {
+    window.open(url, "_blank");
+  }
+}
+
+function openHelpSheet() {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  const items = [1, 2, 3, 4]
+    .map(
+      (n) => `
+    <div class="faq-item">
+      <div class="faq-q">${t("faq.q" + n)}</div>
+      <div class="faq-a">${t("faq.a" + n)}</div>
+    </div>`
+    )
+    .join("");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("account.help")}</div>
+    ${items}`,
+    sheet,
+    { tall: true }
+  );
+}
+
+function openFeedbackSheet() {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("account.feedback")}</div>
+    <div class="sheet-sub">${t("account.feedback_hint")}</div>
+    <textarea id="fb-text" class="fb-text" rows="5"
+              placeholder="${escapeHtml(t("account.feedback_placeholder"))}"></textarea>
+    <button type="button" class="btn btn-accent btn-block" id="fb-send">
+      ${t("account.feedback_send")}
+    </button>`,
+    sheet
+  );
+
+  document.getElementById("fb-send").addEventListener("click", async () => {
+    const text = document.getElementById("fb-text").value.trim();
+    if (!text) return;
+    const btn = document.getElementById("fb-send");
+    btn.disabled = true;
+    try {
+      await api("/feedback", { method: "POST", body: JSON.stringify({ text }) });
+      closeSheet();
+      haptic("success");
+      showToast(t("account.feedback_sent"));
+    } catch (err) {
+      btn.disabled = false;
+      haptic("error");
+      showToast(err.message);
+    }
   });
 }
 
 // ============ Navigation ============
 
 const RENDERERS = {
+  filter: renderFilter,
   home: renderHome,
   match: renderMatch,
   kit: renderKit,

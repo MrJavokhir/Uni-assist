@@ -87,3 +87,31 @@ def test_every_canonical_language_is_translated_in_mini_app():
     entry = re.compile(r"^\s+(\w+): \{ uz: .+, ru: .+, en: .+ \},$", re.MULTILINE)
     translated = set(entry.findall(block))
     assert set(INSTRUCTION_LANGUAGES) <= translated
+
+
+def test_migration_chain_has_single_head():
+    """Zanjir bitta uchga ega bo'lishi kerak.
+
+    Ikki migratsiya bir xil `down_revision` ga ulansa, zanjir ikkiga
+    bo'linadi va `alembic upgrade head` "Multiple heads" bilan yiqiladi.
+    Bu xato deploy paytida chiqadi: entrypoint `set -e` bilan ishlagani
+    uchun servis umuman ko'tarilmaydi.
+    """
+    import re
+
+    revisions: dict[str, str] = {}
+    downs: list[str] = []
+    for path in VERSIONS.glob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        rev = re.search(r"^revision: str = ['\"]([^'\"]+)", text, re.MULTILINE)
+        down = re.search(r"^down_revision[^=]*=\s*['\"]([^'\"]+)", text, re.MULTILINE)
+        if rev:
+            revisions[rev.group(1)] = path.name
+        if down:
+            downs.append(down.group(1))
+
+    heads = [rev for rev in revisions if rev not in downs]
+    assert len(heads) == 1, f"Bir nechta head: {sorted(revisions[h] for h in heads)}"
+
+    duplicates = {d for d in downs if downs.count(d) > 1}
+    assert not duplicates, f"Bir xil down_revision'ga ulangan migratsiyalar: {duplicates}"

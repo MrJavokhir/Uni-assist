@@ -2112,3 +2112,169 @@ button.sch-card:active { transform: scale(0.985); }
   height: 16px;
   transform: rotate(180deg);
 }
+
+/* ============ Profil: akkaunt menyusi ============ */
+
+.acc-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 14px;
+}
+
+.acc-avatar {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--on-accent);
+  background: linear-gradient(140deg, var(--accent), var(--accent-2));
+}
+.acc-avatar .ico { width: 24px; height: 24px; }
+
+.acc-head-text { min-width: 0; }
+.acc-name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.acc-sub {
+  font-size: 13px;
+  color: var(--hint);
+}
+
+/* Balans kartasi. To'ldirish botda bo'lgani uchun bu yerda tugma YO'Q —
+   faqat qoldiq va nima qilish kerakligi yoziladi. */
+.acc-balance {
+  border-radius: var(--r-xl);
+  padding: 18px;
+  margin-bottom: 14px;
+  color: var(--on-accent);
+  background: linear-gradient(140deg, var(--accent) 0%, var(--accent-2) 100%);
+  box-shadow: var(--shadow-accent);
+}
+.acc-balance-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+.acc-balance-value {
+  margin-top: 4px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.acc-balance-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.acc-group {
+  background: var(--card);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.acc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: none;
+  border-bottom: 1px solid var(--separator);
+  background: none;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.acc-row:last-child { border-bottom: none; }
+.acc-row:active { background: var(--surface); }
+
+.acc-ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.acc-ico .ico { width: 17px; height: 17px; }
+
+.acc-text { flex: 1; min-width: 0; }
+.acc-title {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.acc-value {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--hint);
+}
+
+.acc-chevron {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--hint);
+  opacity: 0.55;
+}
+
+/* Til tanlashda faol qator brend rangida. */
+.lang-pick.is-active .acc-title { color: var(--accent); }
+.lang-pick .acc-chevron { color: var(--accent); opacity: 1; }
+
+/* ============ Yordam va fikr ============ */
+
+.faq-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--separator);
+}
+.faq-item:last-child { border-bottom: none; }
+
+.faq-q {
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.faq-a {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--hint);
+}
+
+.fb-text {
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--separator);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  resize: vertical;
+}
+.fb-text:focus {
+  outline: none;
+  border-color: var(--accent);
+}

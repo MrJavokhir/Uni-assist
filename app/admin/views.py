@@ -126,10 +126,11 @@ def _labels(**extra: str) -> dict[str, str]:
 # Yon menyu asosan TEKIS: ochilib-yopiladigan bo'limlar har bir sahifaga
 # yetib borish uchun ortiqcha bosish talab qiladi.
 #
-# YAGONA istisno — to'lov bo'limlari. Ular uchta va doim birga
-# ishlatiladi (sozlama -> to'lov -> tarix), menyuda esa uchta alohida
-# qator bo'lib, qolganlarini pastga surib yuborardi. Shuning uchun
-# faqat ular bitta "To'lovlar" guruhiga yig'ilgan.
+# Istisno — bir-biriga bog'liq, doim ketma-ket ishlatiladigan bo'limlar.
+# Ular menyuda alohida qator bo'lib, qolganlarini pastga surib yuborardi:
+#   "To'lovlar"      — sozlama -> to'lov -> balans tarixi
+#   "Admission Kit"  — xizmatlar -> ularga kelgan so'rovlar
+# Qolgan hamma sahifa tekis ro'yxatda qoladi.
 #
 # Dastur talablari/xarajatlari/muddatlari uchun alohida sahifa YO'Q: ular
 # "Universitet qo'shish" sehrgarida, o'z dasturi bilan bitta joyda kiritiladi.
@@ -696,6 +697,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     """
 
     name = "Xizmat"
+    category = "Admission Kit"
     name_plural = "Admission Kit xizmatlari"
     icon = "fa-solid fa-briefcase"
 
@@ -772,6 +774,7 @@ class ServiceRequestAdmin(ModelView, model=ServiceRequest):
     """
 
     name = "Xizmat so'rovi"
+    category = "Admission Kit"
     name_plural = "Xizmat so'rovlari"
     icon = "fa-solid fa-handshake"
     can_create = False

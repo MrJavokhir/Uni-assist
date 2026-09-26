@@ -123,9 +123,13 @@ def _choices(labels: dict) -> list[tuple[str, str]]:
 def _labels(**extra: str) -> dict[str, str]:
     return {**_COMMON_LABELS, **extra}
 
-# Yon menyuda `category` ATAYLAB ishlatilmaydi — hamma sahifa bitta tekis
-# ro'yxatda turadi. Ochilib-yopiladigan bo'limlar har bir sahifaga yetib
-# borish uchun ortiqcha bosish talab qilardi.
+# Yon menyu asosan TEKIS: ochilib-yopiladigan bo'limlar har bir sahifaga
+# yetib borish uchun ortiqcha bosish talab qiladi.
+#
+# YAGONA istisno — to'lov bo'limlari. Ular uchta va doim birga
+# ishlatiladi (sozlama -> to'lov -> tarix), menyuda esa uchta alohida
+# qator bo'lib, qolganlarini pastga surib yuborardi. Shuning uchun
+# faqat ular bitta "To'lovlar" guruhiga yig'ilgan.
 #
 # Dastur talablari/xarajatlari/muddatlari uchun alohida sahifa YO'Q: ular
 # "Universitet qo'shish" sehrgarida, o'z dasturi bilan bitta joyda kiritiladi.
@@ -805,6 +809,7 @@ class PaymentSettingsAdmin(ModelView, model=PaymentSettings):
     """
 
     name = "To'lov sozlamasi"
+    category = "To'lovlar"
     name_plural = "To'lov sozlamalari"
     icon = "fa-solid fa-credit-card"
     can_create = False
@@ -882,6 +887,7 @@ class PaymentAdmin(ModelView, model=Payment):
     """
 
     name = "To'lov"
+    category = "To'lovlar"
     name_plural = "To'lovlar"
     icon = "fa-solid fa-receipt"
     can_create = False
@@ -924,6 +930,7 @@ class BalanceTransactionAdmin(ModelView, model=BalanceTransaction):
     """
 
     name = "Tranzaksiya"
+    category = "To'lovlar"
     name_plural = "Balans tarixi"
     icon = "fa-solid fa-arrow-right-arrow-left"
     can_create = False

@@ -988,6 +988,11 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 12px;
+  /* `stretch` (standart) bo'lsa chapdagi karta o'ng ustunning balandligiga
+     cho'ziladi. O'ng ustun esa ma'lumot kelgach balandlashadi, natijada
+     Admission Kit kartasi har safar kattarib-kichrayardi. `start` bilan u
+     o'z ixcham balandligida qoladi va boshqa hech narsaga bog'liq emas. */
+  align-items: start;
 }
 .hx-side {
   display: grid;
@@ -1102,7 +1107,13 @@ body {
   letter-spacing: -0.03em;
   line-height: 1;
 }
-.hx-mini-foot { margin-top: 6px; }
+/* Yorliq ("100 close", "No deadline") faqat ma'lumot kelgach paydo bo'ladi.
+   Joyi oldindan band qilinmasa, kichik kartalar yuklanish paytida past,
+   keyin balandroq bo'lib sakrab turardi. */
+.hx-mini-foot {
+  margin-top: 6px;
+  min-height: 22px;
+}
 
 .hx-tag {
   display: inline-block;

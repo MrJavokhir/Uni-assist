@@ -4,8 +4,9 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.redis import RedisStorage
 
-from app.bot.handlers import language, reminders, start, subscription
+from app.bot.handlers import language, payment, reminders, start, subscription
 from app.bot.middlewares import DbSessionMiddleware, SubscriptionMiddleware
 from app.config import settings
 from app.db.session import async_session_factory
@@ -22,13 +23,17 @@ def create_dispatcher() -> Dispatcher:
     # Profil kiritish, mos dasturlarni ko'rish va saqlash endi Mini App orqali
     # (app/webapp) amalga oshiriladi — bot faqat uni ochish tugmasini va
     # deadline eslatmalarini (push xabar sifatida) beradi.
-    dispatcher = Dispatcher()
+    # FSM holati Redis'da: to'lov oqimi bir necha xabardan iborat, konteyner
+    # esa har deployda qayta ishga tushadi. Xotiradagi holat yo'qolib,
+    # foydalanuvchi summani kiritgandan keyin "osilib" qolardi.
+    dispatcher = Dispatcher(storage=RedisStorage(redis_client))
     # Tartib muhim: avval DB sessiyasi ochiladi, keyin obuna tekshiruvi undan
     # foydalanadi. Majburiy kanal sozlanmagan bo'lsa middleware shaffof ishlaydi.
     dispatcher.update.middleware(DbSessionMiddleware())
     dispatcher.update.middleware(SubscriptionMiddleware())
 
     dispatcher.include_router(language.router)
+    dispatcher.include_router(payment.router)
     dispatcher.include_router(subscription.router)
     dispatcher.include_router(start.router)
     dispatcher.include_router(reminders.router)

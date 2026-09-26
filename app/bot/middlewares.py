@@ -30,6 +30,19 @@ class DbSessionMiddleware(BaseMiddleware):
             return await handler(event, data)
 
 
+# Admin buyruqlari obuna tekshiruvidan ozod: admin kanalga a'zo bo'lmasligi
+# mumkin, lekin chekni tasdiqlay olishi shart.
+_ADMIN_COMMANDS = ("/approve", "/reject", "/blockuser")
+
+
+def _is_admin_command(message: Message) -> bool:
+    text = (message.text or "").strip()
+    if not text.startswith("/"):
+        return False
+    command = text.split(maxsplit=1)[0].split("@", 1)[0]
+    return command in _ADMIN_COMMANDS
+
+
 def _is_start_command(message: Message) -> bool:
     """Xabar aynan /start buyrug'imi.
 
@@ -53,6 +66,9 @@ class SubscriptionMiddleware(BaseMiddleware):
     Tekshiruvdan ozod: /start buyrug'i hamda til tanlash va "Tekshirish"
     callback'lari. Ular birgalikda "avval til, keyin obuna" tartibini
     ta'minlaydi — obuna so'rovi foydalanuvchi tushunadigan tilda chiqadi.
+
+    Admin buyruqlari (/approve, /reject, /blockuser) ham ozod: admin
+    kanalga a'zo bo'lmasligi mumkin, lekin chekni tasdiqlay olishi shart.
     """
 
     async def __call__(
@@ -82,7 +98,9 @@ class SubscriptionMiddleware(BaseMiddleware):
         # (app/bot/handlers/language.py). Ilgari middleware /start ni ham
         # to'sib qo'yardi va yangi foydalanuvchi til tanlash oynasini umuman
         # ko'rmay, obuna so'rovini standart tilda olardi.
-        if isinstance(raw_event, Message) and _is_start_command(raw_event):
+        if isinstance(raw_event, Message) and (
+            _is_start_command(raw_event) or _is_admin_command(raw_event)
+        ):
             return await handler(event, data)
 
         missing = await missing_channels(bot, session, redis_client, tg_user.id)

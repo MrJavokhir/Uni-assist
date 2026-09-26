@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 51;
+const ASSET_V = 52;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1644,9 +1644,7 @@ function openOnboardingSheet() {
     `
     <div class="sheet-handle"></div>
     <div class="onb">
-      <div class="onb-art">
-        <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
-      </div>
+      <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
       <div class="onb-title">${t("onboard.title")}</div>
       <div class="onb-text">${t("onboard.text")}</div>
       <ol class="onb-steps">${steps}</ol>

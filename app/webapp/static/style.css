@@ -1870,34 +1870,18 @@ button.sch-card:active { transform: scale(0.985); }
   text-align: center;
 }
 
-/* Yumshoq plitka: ikonka PNG'i shaffof, oyna yuzasi esa oq — ikonka tekis
-   oq ustida "yotib qolgandek" ko'rinardi. Rangli plitka unga yer beradi,
-   soya esa ko'tarilib turganini ko'rsatadi. Bosh sahifadagi 3D ikonkalar
-   ham shu uslubda (`.hx-recap-art`). */
-.onb-art {
-  display: grid;
-  place-items: center;
-  width: 104px;
-  height: 104px;
-  margin: 2px auto 16px;
-  border-radius: 28px;
-  background: var(--accent-soft);
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--accent) 16%, transparent),
-    color-mix(in srgb, var(--accent-2) 13%, transparent)
-  );
-}
-
+/* Ikonka fonsiz, oynaning o'z yuzasida turadi. Ilgari orqasiga rangli
+   plitka qo'yilgandi, lekin u ikonkani "ramkaga" solib qo'yardi.
+   Ko'tarilib turgan taassurotni endi faqat soya beradi: yumshoq uzoq
+   soya hajm hosil qiladi, tig'iz yaqin soya esa chetini ajratadi. */
 .onb-ico {
   display: block;
-  width: 72px;
-  height: 72px;
+  width: 88px;
+  height: 88px;
+  margin: 2px auto 16px;
   object-fit: contain;
-  /* Ikki qatlam: yumshoq uzoq soya hajm beradi, tig'iz yaqin soya
-     ikonkaning chetini plitkadan ajratadi. */
-  filter: drop-shadow(0 10px 16px rgba(16, 20, 40, 0.34))
-          drop-shadow(0 3px 4px rgba(16, 20, 40, 0.2));
+  filter: drop-shadow(0 12px 18px rgba(16, 20, 40, 0.32))
+          drop-shadow(0 3px 5px rgba(16, 20, 40, 0.2));
 }
 
 .onb-title {

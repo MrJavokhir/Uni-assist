@@ -578,13 +578,14 @@ class UserAdmin(ModelView, model=User):
     icon = "fa-solid fa-user"
     can_create = False
 
+    # Ro'yxatda faqat foydalanuvchini TANIB OLADIGAN ustunlar. Til, daraja va
+    # yo'nalish bu yerdan olib tashlandi: ular profil ma'lumoti va ko'pchilikda
+    # bo'sh ("—") turardi, jadvalni esa kengaytirib yuborardi. Kerak bo'lsa
+    # tafsilot sahifasida hammasi bor.
     column_list = [
         User.id,
         User.telegram_id,
         User.username,
-        User.ui_language,
-        User.degree_level,
-        User.field,
         User.created_at,
     ]
     column_details_list = [

@@ -34,7 +34,7 @@
               <th>Xizmat</th>
               <th>Narxi</th>
               <th>Joriy fayl</th>
-              <th class="w-1">PDF yuklash</th>
+              <th class="w-1">PDF</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
             </tr>
           </thead>
@@ -68,15 +68,19 @@
                 <span class="text-muted">PDF yo'q — qo'lda bajariladigan xizmat</span>
                 {% endif %}
               </td>
-              <td>
+              <td class="ua-kit-upload">
+                {# Fayl maydoni tugma ICHIDA yashirin: katakda ikkita boshqaruv
+                   sig'masdan bir-birining ustiga chiqib ketardi. Fayl tanlangan
+                   zahoti forma yuboriladi — alohida "Yuborish" tugmasi ortiqcha. #}
                 <form method="post" action="{{ url_for('admin:view-admission-kit-upload') }}"
-                      enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                      enctype="multipart/form-data">
                   <input type="hidden" name="service_id" value="{{ row.id }}">
-                  <input type="file" name="file" accept="application/pdf,.pdf" class="form-control form-control-sm"
-                         title="PDF qo'llanma fayli" aria-label="PDF qo'llanma fayli" required>
-                  <button type="submit" class="btn btn-sm btn-primary text-nowrap">
-                    {% if row.file %}Almashtirish{% else %}Yuklash{% endif %}
-                  </button>
+                  <label class="btn btn-sm btn-primary text-nowrap">
+                    {% if row.file %}Almashtirish{% else %}PDF yuklash{% endif %}
+                    <input type="file" name="file" accept="application/pdf,.pdf"
+                           class="ua-kit-file" aria-label="PDF qo'llanma fayli"
+                           onchange="if (this.files.length) this.form.submit();">
+                  </label>
                 </form>
                 {% if row.file %}
                 <form method="post" action="{{ url_for('admin:view-admission-kit-delete-file') }}" class="mt-2">

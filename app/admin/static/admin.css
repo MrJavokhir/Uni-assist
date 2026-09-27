@@ -477,3 +477,17 @@ body {
   margin-bottom: 4px;
 }
 .ua-doc { margin-bottom: 0; }
+
+/* ---- Admission Kit: PDF yuklash ----
+   Fayl maydoni TUGMA ICHIDA yashirin. Ilgari katakda fayl maydoni va
+   tugma yonma-yon turardi va ikkalasi sig'masdan, "Choose file" yozuvi
+   tugmaning tagiga kirib ketardi. Endi katakda bitta tugma: bosiladi,
+   fayl tanlanadi, forma o'zi yuboriladi. */
+.ua-kit-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.ua-kit-upload .btn { margin-bottom: 0; }

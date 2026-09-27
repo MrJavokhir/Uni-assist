@@ -11,6 +11,10 @@ Sahifa xizmat TURI bo'yicha ikkiga bo'lingan:
 Ilgari ikkalasi bitta jadvalda edi va mentor yonida ham fayl yuklash
 tugmasi turardi — nimaga nima kerakligi bilinmasdi.
 
+Uchinchi bo'lim — uchrashuv vaqtlari. U faqat «Vaqt tanlansin» yoqilgan
+xizmatlar uchun ko'rinadi: qolganlariga vaqt tushunchasi yo'q va bo'sh
+jadval faqat chalkashtirardi.
+
 Pastdagi so'rovlar ro'yxatida FAQAT REQUEST turidagilar bo'ladi.
 Qo'llanma sotib olinganda adminning qiladigan ishi yo'q (fayl avtomatik
 yuboriladi), shuning uchun u ro'yxatni to'ldirib yubormasligi kerak —
@@ -28,6 +32,7 @@ Fayl qayerda saqlanadi va nega — `app/db/models/service.py`.
 """
 
 import logging
+from datetime import UTC, datetime
 
 from sqladmin import BaseView, expose
 from sqladmin.flash import Flash
@@ -41,9 +46,11 @@ from app.db.models import (
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
+    ServiceSlot,
 )
 from app.db.session import async_session_factory
-from app.services import kit_service
+from app.services import booking_service, kit_service
+from app.services.timezone_utils import from_tashkent, to_tashkent
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +139,47 @@ class AdmissionKitView(BaseView):
                 }
                 (guides if service.kind == ServiceKind.FILE else manual).append(row)
 
+            # Uchrashuv vaqtlari — faqat "Vaqt tanlansin" yoqilgan
+            # xizmatlar uchun. Qolganlarida bo'sh jadval chalkashtirardi.
+            booking_services = [s for s in services if s.requires_booking]
+            slot_groups = []
+            for service in booking_services:
+                rows_for_service = (
+                    (
+                        await session.execute(
+                            select(ServiceSlot)
+                            .where(ServiceSlot.service_id == service.id)
+                            .options(
+                                selectinload(ServiceSlot.request).selectinload(ServiceRequest.user)
+                            )
+                            .order_by(ServiceSlot.starts_at)
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                slot_groups.append(
+                    {
+                        "service_id": service.id,
+                        "title": service.title_uz,
+                        "slots": [
+                            {
+                                "id": slot.id,
+                                "local": to_tashkent(slot.starts_at),
+                                "duration": slot.duration_minutes,
+                                "note": slot.note,
+                                "taken_by": (
+                                    str(slot.request.user)
+                                    if slot.request and slot.request.user
+                                    else None
+                                ),
+                                "is_past": slot.starts_at <= datetime.now(UTC),
+                            }
+                            for slot in rows_for_service
+                        ],
+                    }
+                )
+
             # So'rovlar ro'yxatida FAQAT qo'lda bajariladigan xizmatlar:
             # qo'llanma sotib olinganda admin hech narsa qilmaydi.
             request_filter = AdmissionService.kind == ServiceKind.REQUEST
@@ -172,6 +220,11 @@ class AdmissionKitView(BaseView):
                         row.status.value, (row.status.value, "bg-secondary-lt")
                     ),
                     "status_value": row.status.value,
+                    "slot": (
+                        to_tashkent(row.slot.starts_at).strftime("%d.%m.%Y %H:%M")
+                        if row.slot
+                        else None
+                    ),
                 }
                 for row in purchase_rows
             ]
@@ -185,6 +238,7 @@ class AdmissionKitView(BaseView):
                 "guides": guides,
                 "manual": manual,
                 "purchases": purchases,
+                "slot_groups": slot_groups,
                 "requests_total": total_requests,
                 "recent_limit": RECENT_REQUESTS,
                 "show_all": show_all,
@@ -352,4 +406,65 @@ class AdmissionKitView(BaseView):
                 return back
             row.status = status
             await session.commit()
+        return back
+
+    @expose("/admission-kit/add-slot", methods=["POST"], identity="admission-kit-add-slot")
+    async def add_slot(self, request: Request):
+        """Yangi uchrashuv oynasi.
+
+        Vaqt formadan mintaqasiz keladi ("2026-10-05T14:00") va Toshkent
+        vaqti deb qabul qilinadi — qarang: `timezone_utils.from_tashkent`.
+        """
+        form = await request.form()
+        back = self._back(request, form)
+        service_id = _int(form.get("service_id"))
+        raw = str(form.get("starts_at") or "").strip()
+        duration = _int(form.get("duration")) or 60
+        note = str(form.get("note") or "").strip() or None
+
+        if service_id is None or not raw:
+            Flash.error(request, "Sana va vaqtni kiriting.")
+            return back
+        try:
+            local = datetime.fromisoformat(raw)
+        except ValueError:
+            Flash.error(request, "Sana formati noto'g'ri.")
+            return back
+
+        starts_at = from_tashkent(local)
+        if starts_at <= datetime.now(UTC):
+            # O'tib ketgan vaqt ilovada baribir ko'rinmaydi — uni qo'shib
+            # qo'yish adminga "qo'shildi" deb yolg'on aytardi.
+            Flash.error(request, "O'tib ketgan vaqtni qo'shib bo'lmaydi.")
+            return back
+
+        async with async_session_factory() as session:
+            service = await session.get(AdmissionService, service_id)
+            if service is None:
+                Flash.error(request, "Xizmat topilmadi.")
+                return back
+            await booking_service.add_slot(session, service_id, starts_at, duration, note)
+            await session.commit()
+            Flash.success(request, f"«{service.title_uz}» uchun {local:%d.%m.%Y %H:%M} qo'shildi.")
+        return back
+
+    @expose("/admission-kit/delete-slot", methods=["POST"], identity="admission-kit-delete-slot")
+    async def delete_slot(self, request: Request):
+        form = await request.form()
+        back = self._back(request, form)
+        slot_id = _int(form.get("slot_id"))
+        if slot_id is None:
+            return back
+
+        async with async_session_factory() as session:
+            removed = await booking_service.delete_slot(session, slot_id)
+            await session.commit()
+        if not removed:
+            # Band qilingan oyna o'chirilmaydi: odam pul to'lagan va o'sha
+            # vaqtga yozilgan.
+            Flash.error(
+                request,
+                "Band qilingan vaqtni o'chirib bo'lmaydi. Uchrashuvni bekor qilish kerak "
+                "bo'lsa, so'rov holatini o'zgartiring va odam bilan gaplashing.",
+            )
         return back

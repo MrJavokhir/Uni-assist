@@ -705,6 +705,11 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
                    yuboriladi va sizga so'rov kelmaydi.
       So'rov    -> pul yechiladi, keyin siz foydalanuvchi bilan
                    bog'lanasiz (so'rov «Admission Kit» sahifasi pastida).
+
+    «Vaqt tanlansin» — 1:1 uchrashuvlar uchun. Yoqilsa, foydalanuvchi
+    buyurtma berishdan oldin bo'sh vaqtlardan birini tanlaydi. Bo'sh vaqt
+    qolmasa xizmat sotib olinmaydi, shuning uchun vaqtlarni «Admission
+    Kit» sahifasidagi «Uchrashuv vaqtlari» bo'limida to'ldirib turing.
     """
 
     name = "Xizmat"
@@ -722,6 +727,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         AdmissionService.title_uz,
         AdmissionService.code,
         AdmissionService.kind,
+        AdmissionService.requires_booking,
         AdmissionService.price_amount,
         AdmissionService.price_currency,
         AdmissionService.sort_order,
@@ -734,6 +740,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     form_columns = [
         AdmissionService.code,
         AdmissionService.kind,
+        AdmissionService.requires_booking,
         AdmissionService.title_uz,
         AdmissionService.title_ru,
         AdmissionService.title_en,
@@ -751,6 +758,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     column_labels = _labels(
         code="Kod",
         kind="Turi",
+        requires_booking="Vaqt tanlansin",
         title_uz="Nomi (uz)",
         title_ru="Nomi (ru)",
         title_en="Nomi (en)",
@@ -772,6 +780,13 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
                 "yuboriladi. «So'rov» — pul yechiladi, keyin siz bog'lanasiz."
             )
         },
+        "requires_booking": {
+            "description": (
+                "1:1 uchrashuvlar uchun. Yoqilsa, foydalanuvchi buyurtma berishdan oldin "
+                "bo'sh vaqtlardan birini tanlaydi. Vaqtlar «Admission Kit» sahifasida "
+                "kiritiladi. Qo'llanmalarga taalluqli emas."
+            )
+        },
         "code": {
             "description": (
                 "Lotin kichik harflar va _ (masalan cv_guide). Mini App ikonkani shu "
@@ -791,6 +806,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     }
     _service_formatters = {
         AdmissionService.is_active: format_bool,
+        AdmissionService.requires_booking: format_bool,
         AdmissionService.kind: enum_label(_SERVICE_KIND_LABELS),
     }
     column_formatters = _service_formatters

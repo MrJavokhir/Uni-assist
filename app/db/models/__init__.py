@@ -35,6 +35,7 @@ from app.db.models.service import (
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
+    ServiceSlot,
 )
 from app.db.models.university import University
 from app.db.models.user import (
@@ -81,6 +82,7 @@ __all__ = [
     "ServiceKind",
     "ServiceRequest",
     "ServiceRequestStatus",
+    "ServiceSlot",
     "TransactionKind",
     "UiLanguage",
     "University",

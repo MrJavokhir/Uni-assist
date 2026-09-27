@@ -249,6 +249,32 @@ class ServiceOut(BaseModel):
     has_file: bool = False
     file_name: str | None = None
     file_size: int | None = None
+    # Buyurtma berishdan oldin uchrashuv vaqti tanlanadimi (1:1 mentor).
+    requires_booking: bool = False
+    # Nechta bo'sh vaqt qolgan. 0 bo'lsa ilova buyurtmaga yo'l qo'ymaydi —
+    # vaqtsiz pul olib bo'lmaydi.
+    free_slots: int = 0
+
+
+class SlotOut(BaseModel):
+    """Bo'sh uchrashuv oynasi.
+
+    Sana va vaqt SERVER tomonida Toshkent vaqtiga o'girilib, foydalanuvchi
+    tilida tayyorlanadi: ilova qurilma vaqt mintaqasiga tayansa, chet elda
+    turgan foydalanuvchi boshqa vaqtni ko'rardi.
+    """
+
+    id: int
+    date_label: str
+    time_label: str
+    duration_minutes: int
+    note: str | None = None
+
+
+class ServiceRequestIn(BaseModel):
+    """Buyurtma tafsiloti. Vaqt tanlanadigan xizmatlarda `slot_id` shart."""
+
+    slot_id: int | None = None
 
 
 class ServiceRequestResult(BaseModel):
@@ -260,6 +286,8 @@ class ServiceRequestResult(BaseModel):
     charged: float | None = None
     # PDF xizmat bo'lsa, ilova darhol yetkazishni so'raydi.
     has_file: bool = False
+    # Band qilingan vaqt — tasdiq oynasida ko'rsatiladi.
+    slot_label: str | None = None
 
 
 class ServiceDeliveryResult(BaseModel):

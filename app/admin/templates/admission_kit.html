@@ -197,7 +197,97 @@
     </div>
   </div>
 
-  {# ======================= 3. So'rovlar ======================= #}
+  {# ======================= 3. Uchrashuv vaqtlari ======================= #}
+  {% if slot_groups %}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Uchrashuv vaqtlari</h3>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">
+        Foydalanuvchi buyurtma berishda shu ro'yxatdan bo'sh vaqt tanlaydi.
+        Bo'sh vaqt qolmasa xizmat sotib olinmaydi — ro'yxatni to'ldirib turing.
+        Vaqtlar Toshkent bo'yicha.
+      </p>
+
+      {% for group in slot_groups %}
+      <h4 class="ua-csv-kind">{{ group.title }}</h4>
+
+      <form method="post" action="{{ url_for('admin:view-admission-kit-add-slot') }}"
+            class="row g-2 align-items-end mb-3">
+        <input type="hidden" name="service_id" value="{{ group.service_id }}">
+        {{ keep_all() }}
+        <div class="col-auto">
+          <label class="form-label">Sana va vaqt</label>
+          <input type="datetime-local" name="starts_at" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-auto">
+          <label class="form-label">Davomiyligi (daq.)</label>
+          <input type="number" name="duration" value="60" min="15" step="15"
+                 class="form-control form-control-sm" style="width: 110px">
+        </div>
+        <div class="col-auto">
+          <label class="form-label">Izoh</label>
+          <input type="text" name="note" maxlength="120" placeholder="Zoom / Telegram"
+                 class="form-control form-control-sm">
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-sm btn-primary">Vaqt qo'shish</button>
+        </div>
+      </form>
+
+      {% if not group.slots %}
+      <div class="alert alert-warning">
+        Bo'sh vaqt yo'q — ilovada bu xizmatni hozir sotib olib bo'lmaydi.
+      </div>
+      {% else %}
+      <div class="table-responsive mb-3">
+        <table class="table table-sm table-vcenter">
+          <thead>
+            <tr>
+              <th>Sana va vaqt</th>
+              <th>Davomiyligi</th>
+              <th>Izoh</th>
+              <th>Holati</th>
+              <th class="w-1"><span class="visually-hidden">Amallar</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for slot in group.slots %}
+            <tr{% if slot.is_past %} class="text-muted"{% endif %}>
+              <td class="text-nowrap">{{ slot.local.strftime("%d.%m.%Y %H:%M") }}</td>
+              <td>{{ slot.duration }} daq.</td>
+              <td>{{ slot.note or "—" }}</td>
+              <td>
+                {% if slot.taken_by %}
+                <span class="badge bg-blue-lt">band</span> {{ slot.taken_by }}
+                {% elif slot.is_past %}
+                <span class="badge bg-secondary-lt">o'tib ketgan</span>
+                {% else %}
+                <span class="badge bg-green-lt">bo'sh</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if not slot.taken_by %}
+                <form method="post" action="{{ url_for('admin:view-admission-kit-delete-slot') }}">
+                  <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                  {{ keep_all() }}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">O'chirish</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# ======================= 4. So'rovlar ======================= #}
   <div class="card mb-3">
     <div class="card-header">
       <h3 class="card-title">
@@ -235,6 +325,7 @@
               <th>Sana</th>
               <th>Foydalanuvchi</th>
               <th>Xizmat</th>
+              <th>Uchrashuv</th>
               <th>Holat</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
             </tr>
@@ -245,6 +336,9 @@
               <td class="text-muted text-nowrap">{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
               <td>{{ p.user }}</td>
               <td>{{ p.service }}</td>
+              <td class="text-nowrap">
+                {% if p.slot %}{{ p.slot }}{% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
               <td><span class="badge {{ p.status[1] }}">{{ p.status[0] }}</span></td>
               <td>
                 {# Holat shu yerda almashadi. Ilgari buning uchun sqladmin

@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 56;
+const ASSET_V = 57;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -269,6 +269,15 @@ const I18N = {
     "kit.open_bot": "Botni ochish",
     "kit.soon": "Tez orada",
     "kit.pdf_soon_hint": "Qo'llanma tayyorlanmoqda — tez orada ochiladi.",
+    "kit.pick_time": "Vaqtni tanlang",
+    "kit.pick_time_text": "Uchrashuv uchun qulay vaqtni tanlang. Tanlaganingizdan keyin narx hisobingizdan yechiladi.",
+    "kit.no_slots": "Hozircha bo'sh vaqt yo'q",
+    "kit.no_slots_text": "Yangi vaqtlar qo'shilishi bilan bu yerda paydo bo'ladi.",
+    "kit.slots_left": "{count} ta bo'sh vaqt",
+    "kit.slot_taken": "Bu vaqtni boshqa birov band qildi. Boshqasini tanlang.",
+    "kit.booked_title": "Yozildingiz",
+    "kit.booked_text": "Uchrashuv vaqti: {slot}. Tez orada siz bilan bog'lanamiz.",
+    "kit.minutes": "{count} daqiqa",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
@@ -554,6 +563,15 @@ const I18N = {
     "kit.open_bot": "Открыть бот",
     "kit.soon": "Скоро",
     "kit.pdf_soon_hint": "Руководство готовится — скоро будет доступно.",
+    "kit.pick_time": "Выберите время",
+    "kit.pick_time_text": "Выберите удобное время встречи. После выбора стоимость спишется с баланса.",
+    "kit.no_slots": "Свободного времени пока нет",
+    "kit.no_slots_text": "Как только появятся новые слоты, они будут здесь.",
+    "kit.slots_left": "свободных слотов: {count}",
+    "kit.slot_taken": "Это время успели занять. Выберите другое.",
+    "kit.booked_title": "Вы записаны",
+    "kit.booked_text": "Время встречи: {slot}. Скоро свяжемся с вами.",
+    "kit.minutes": "{count} мин",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
@@ -839,6 +857,15 @@ const I18N = {
     "kit.open_bot": "Open the bot",
     "kit.soon": "Coming soon",
     "kit.pdf_soon_hint": "The guide is being prepared — it will open soon.",
+    "kit.pick_time": "Pick a time",
+    "kit.pick_time_text": "Choose a time that works for you. The price is taken from your balance once you pick.",
+    "kit.no_slots": "No free times yet",
+    "kit.no_slots_text": "New slots will show up here as soon as they are added.",
+    "kit.slots_left": "{count} slots free",
+    "kit.slot_taken": "Someone just took that time. Please pick another.",
+    "kit.booked_title": "You are booked",
+    "kit.booked_text": "Meeting time: {slot}. We will contact you shortly.",
+    "kit.minutes": "{count} min",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
@@ -3038,6 +3065,16 @@ function serviceFileRow(service) {
     </div>`;
 }
 
+// Vaqt tanlanadigan xizmat (1:1 mentor). Bo'sh vaqt qolmagan bo'lsa
+// buyurtma qabul qilinmaydi: vaqtsiz pul olib bo'lmaydi.
+function needsBooking(service) {
+  return !isGuide(service) && service.requires_booking;
+}
+
+function isFullyBooked(service) {
+  return needsBooking(service) && !service.requested && !service.free_slots;
+}
+
 function serviceBtnInner(service) {
   if (isGuide(service)) {
     if (isSoon(service)) return icon("clock") + t("kit.soon");
@@ -3045,9 +3082,10 @@ function serviceBtnInner(service) {
       ? icon("download") + t("kit.download")
       : icon("lock") + t("kit.buy");
   }
-  return service.requested
-    ? icon("check") + t("kit.requested")
-    : t("kit.request") + icon("chevron");
+  if (service.requested) return icon("check") + t("kit.requested");
+  if (isFullyBooked(service)) return icon("clock") + t("kit.no_slots");
+  if (needsBooking(service)) return icon("clock") + t("kit.pick_time");
+  return t("kit.request") + icon("chevron");
 }
 
 function serviceBtnClass(service) {
@@ -3055,13 +3093,36 @@ function serviceBtnClass(service) {
     if (isSoon(service)) return " is-done";
     return service.requested ? " is-get" : " is-buy";
   }
-  return service.requested ? " is-done" : "";
+  if (service.requested || isFullyBooked(service)) return " is-done";
+  return "";
 }
 
-// Tugma bosilmaydigan ikki holat: qo'llanma hali tayyor emas va
-// qo'lda bajariladigan xizmatga so'rov allaqachon yuborilgan.
+// Tugma bosilmaydigan holatlar: qo'llanma hali tayyor emas, so'rov
+// allaqachon yuborilgan yoki bo'sh vaqt qolmagan.
 function serviceBtnDisabled(service) {
-  return isSoon(service) || (!isGuide(service) && service.requested);
+  return (
+    isSoon(service) || (!isGuide(service) && service.requested) || isFullyBooked(service)
+  );
+}
+
+// Vaqt tanlanadigan xizmatda qancha joy qolganini kartada ko'rsatamiz —
+// "hoziroq tanlash kerak" degan signal.
+function serviceSlotRow(service) {
+  if (!needsBooking(service) || service.requested) return "";
+  return `
+    <div class="svc-file">
+      ${icon("clock")}
+      <span class="svc-file-text">
+        <span class="svc-file-name">${
+          service.free_slots
+            ? t("kit.slots_left", { count: service.free_slots })
+            : t("kit.no_slots")
+        }</span>
+        <span class="svc-file-hint">${
+          service.free_slots ? t("kit.pick_time_text") : t("kit.no_slots_text")
+        }</span>
+      </span>
+    </div>`;
 }
 
 // Sotib olingandan keyin kartani JOYIDA yangilaymiz. Butun sahifani qayta
@@ -3134,6 +3195,135 @@ function openPdfSentSheet() {
   document.getElementById("pdf-close").addEventListener("click", closeSheet);
 }
 
+// Vaqt tanlash oynasi. Vaqtlar ro'yxat bilan birga emas, AYNAN shu
+// paytda o'qiladi: ular tez o'zgaradi (boshqa birov band qilishi mumkin)
+// va eskirgan ro'yxatdan tanlash xatoga olib borardi.
+async function openSlotSheet(serviceId, btn) {
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("kit.pick_time")}</div>
+    <div class="sheet-text">${t("kit.pick_time_text")}</div>
+    <div id="slot-list">${skeletons(3)}</div>`,
+    sheet,
+    { tall: true }
+  );
+
+  let slots = [];
+  try {
+    slots = await api(`/services/${serviceId}/slots`);
+  } catch (err) {
+    document.getElementById("slot-list").innerHTML =
+      `<div class="sheet-text">${escapeHtml(err.message)}</div>`;
+    return;
+  }
+
+  const list = document.getElementById("slot-list");
+  if (!list) return;
+
+  if (!slots.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-ico">${icon("clock")}</div>
+        <div class="empty-title">${t("kit.no_slots")}</div>
+        <div class="empty-text">${t("kit.no_slots_text")}</div>
+      </div>`;
+    return;
+  }
+
+  // Bir kunning vaqtlari birga tursin — ro'yxat sana bo'yicha guruhlanadi.
+  const byDate = [];
+  slots.forEach((slot) => {
+    const last = byDate[byDate.length - 1];
+    if (last && last.date === slot.date_label) last.items.push(slot);
+    else byDate.push({ date: slot.date_label, items: [slot] });
+  });
+
+  list.innerHTML = byDate
+    .map(
+      (group) => `
+      <div class="slot-day">
+        <div class="slot-day-title">${escapeHtml(group.date)}</div>
+        <div class="slot-row">
+          ${group.items
+            .map(
+              (slot) => `
+            <button type="button" class="slot-btn" data-slot="${slot.id}">
+              <span class="slot-time">${escapeHtml(slot.time_label)}</span>
+              <span class="slot-meta">${t("kit.minutes", {
+                count: slot.duration_minutes,
+              })}${slot.note ? ` · ${escapeHtml(slot.note)}` : ""}</span>
+            </button>`
+            )
+            .join("")}
+        </div>
+      </div>`
+    )
+    .join("");
+
+  list.querySelectorAll(".slot-btn").forEach((slotBtn) => {
+    slotBtn.addEventListener("click", async () => {
+      haptic("light");
+      list.querySelectorAll(".slot-btn").forEach((b) => (b.disabled = true));
+      await bookService(serviceId, slotBtn.dataset.slot, btn, list);
+    });
+  });
+}
+
+// Band qilish va to'lov BITTA so'rovda: server ikkalasini bir tranzaksiyada
+// bajaradi, shuning uchun vaqt band bo'lib ulgursa pul ham yechilmaydi.
+async function bookService(serviceId, slotId, btn, list) {
+  try {
+    const result = await api(`/services/${serviceId}/request`, {
+      method: "POST",
+      body: JSON.stringify({ slot_id: Number(slotId) }),
+    });
+    if (profile && typeof result.balance === "number") profile.balance = result.balance;
+    refreshKitBalance();
+    closeSheet();
+    unlockServiceCard(btn, false);
+    haptic("success");
+    openBookedSheet(result.slot_label);
+  } catch (err) {
+    haptic("error");
+    const short = insufficientBalance(err);
+    if (short) {
+      closeSheet();
+      openNeedBalanceSheet(short);
+      return;
+    }
+    if (String(err.message).startsWith("API 409")) {
+      // Oxirgi soniyada band bo'ldi — ro'yxatni yangilab, qaytadan
+      // tanlashga imkon beramiz.
+      showToast(t("kit.slot_taken"));
+      await openSlotSheet(serviceId, btn);
+      return;
+    }
+    list.querySelectorAll(".slot-btn").forEach((b) => (b.disabled = false));
+    showToast(err.message);
+  }
+}
+
+function openBookedSheet(slotLabel) {
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("kit.booked_title")}</div>
+    <div class="sheet-text">${t("kit.booked_text", {
+      slot: escapeHtml(slotLabel || ""),
+    })}</div>
+    <button type="button" class="btn btn-quiet btn-block" id="booked-close">
+      ${t("onboard.skip")}
+    </button>`,
+    sheet
+  );
+  document.getElementById("booked-close").addEventListener("click", closeSheet);
+}
+
 async function renderKit() {
   const el = document.getElementById("view-kit");
   el.innerHTML = skeletons(3);
@@ -3175,11 +3365,13 @@ async function renderKit() {
             : ""
         }
         ${serviceFileRow(service)}
+        ${serviceSlotRow(service)}
         <div class="svc-foot">
           <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
             data-id="${service.id}"
             data-guide="${isGuide(service) ? "1" : "0"}"
+            data-booking="${needsBooking(service) ? "1" : "0"}"
             data-file="${service.has_file ? "1" : "0"}"
             data-owned="${service.requested ? "1" : "0"}"
             ${serviceBtnDisabled(service) ? "disabled" : ""}>
@@ -3201,6 +3393,13 @@ async function renderKit() {
       // faqat fayl botga qayta yuboriladi.
       if (btn.dataset.owned === "1" && btn.dataset.guide === "1") {
         await deliverPdf(btn.dataset.id, btn);
+        return;
+      }
+
+      // Vaqt tanlanadigan xizmat: avval oyna tanlanadi, pul esa
+      // tanlangandan keyin yechiladi.
+      if (btn.dataset.booking === "1") {
+        await openSlotSheet(btn.dataset.id, btn);
         return;
       }
 

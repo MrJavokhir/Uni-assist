@@ -12,6 +12,8 @@ Xizmatning turi ANIQ maydonda — `AdmissionService.kind`:
                 avtomatik, qiladigan ishi yo'q.
     REQUEST  -> qo'lda bajariladigan xizmat (mentor, ariza yordami).
                 Pul yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
+                `requires_booking` yoqilgan bo'lsa, foydalanuvchi buyurtma
+                berishdan oldin bo'sh vaqtlardan birini tanlaydi.
 
 Avval tur alohida maydonsiz, "PDF biriktirilganmi" degan qoida bilan
 aniqlanardi. Bu ikki joyda yiqildi: adminkada har bir xizmat yonida fayl
@@ -20,9 +22,19 @@ qo'llanma oddiy "buyurtma" bo'lib, qulfsiz va narxsiz o'tib ketardi.
 """
 
 import enum
+from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, LargeBinary, Numeric, String, Text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    LargeBinary,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, str_enum
@@ -78,6 +90,12 @@ class AdmissionService(TimestampMixin, Base):
     kind: Mapped[ServiceKind] = mapped_column(
         str_enum(ServiceKind, "service_kind"), nullable=False, default=ServiceKind.REQUEST
     )
+
+    # Uchrashuv vaqti kelishiladigan xizmatlar uchun (masalan 1:1 mentor).
+    # Yoqilgan bo'lsa, buyurtma berish uchun bo'sh vaqt tanlash SHART —
+    # bo'sh vaqt qolmagan bo'lsa, xizmat sotib olinmaydi. Aks holda odam
+    # pul to'lab, keyin "qachon?" degan savol bilan qolardi.
+    requires_booking: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -140,6 +158,47 @@ class ServiceFile(TimestampMixin, Base):
         return self.filename
 
 
+class ServiceSlot(TimestampMixin, Base):
+    """Xizmat uchun bo'sh vaqt (uchrashuv oynasi).
+
+    Vaqtlarni ADMIN kiritadi — foydalanuvchi faqat bo'shlaridan birini
+    tanlaydi. Kalendar bilan integratsiya yo'q: mentorning haqiqiy
+    bandligini bilmasdan avtomatik vaqt taklif qilish noto'g'ri bo'lardi.
+
+    Band qilinganini `request_id` ko'rsatadi. Aloqa aynan shu tomonda,
+    chunki "bu vaqt bandmi" degan savolga javob shu yerda bo'lishi kerak:
+    UNIQUE cheklov bitta vaqtni ikki kishiga berib yuborishning oldini
+    oladi, band qilish esa `WHERE request_id IS NULL` bilan bajariladi —
+    ikki odam bir vaqtda bossa, biri yutadi, ikkinchisidan pul
+    yechilmaydi.
+    """
+
+    __tablename__ = "service_slots"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    service_id: Mapped[int] = mapped_column(
+        ForeignKey("admission_services.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+
+    # UTC'da saqlanadi, foydalanuvchiga Toshkent vaqtida ko'rsatiladi
+    # (app/services/timezone_utils.py).
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    # "Zoom", "Telegram call" kabi qisqa izoh — foydalanuvchiga ko'rinadi.
+    note: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    # Band qilgan buyurtma. NULL — vaqt bo'sh.
+    request_id: Mapped[int | None] = mapped_column(
+        ForeignKey("service_requests.id", ondelete="SET NULL"), unique=True, nullable=True
+    )
+
+    service: Mapped["AdmissionService"] = relationship()
+    request: Mapped["ServiceRequest | None"] = relationship(back_populates="slot")
+
+    def __str__(self) -> str:
+        return self.starts_at.isoformat(sep=" ", timespec="minutes")
+
+
 class ServiceRequest(TimestampMixin, Base):
     """Foydalanuvchining xizmatni SOTIB OLGANI.
 
@@ -169,6 +228,10 @@ class ServiceRequest(TimestampMixin, Base):
 
     service: Mapped["AdmissionService"] = relationship()
     user: Mapped["User"] = relationship()
+    # Vaqt tanlanadigan xizmatlarda — band qilingan oyna.
+    slot: Mapped["ServiceSlot | None"] = relationship(
+        back_populates="request", uselist=False, lazy="selectin"
+    )
 
     def __str__(self) -> str:
         return f"So'rov #{self.id}"

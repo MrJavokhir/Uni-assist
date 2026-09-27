@@ -23,13 +23,14 @@ from app.db.models import (
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
+    ServiceSlot,
     UiLanguage,
     University,
     UniversityRankRange,
     User,
 )
 from app.db.session import get_session
-from app.services import kit_service, payment_service
+from app.services import booking_service, kit_service, payment_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
 from app.services.timezone_utils import format_tashkent
@@ -58,7 +59,9 @@ from app.webapp.schemas import (
     ScholarshipOut,
     ServiceDeliveryResult,
     ServiceOut,
+    ServiceRequestIn,
     ServiceRequestResult,
+    SlotOut,
 )
 
 logger = logging.getLogger(__name__)
@@ -726,9 +729,19 @@ async def delete_saved(
 # Xizmatning turi `AdmissionService.kind` maydonida:
 #   FILE     -> narx balansdan yechiladi va PDF botda yuboriladi;
 #   REQUEST  -> narx yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
+#               `requires_booking` yoqilgan bo'lsa (1:1 mentor), avval
+#               bo'sh vaqtlardan biri tanlanadi va band qilinadi.
 #
 # Qulf SERVERDA tekshiriladi. Ilovadagi qulf faqat ko'rinish: fayl berish
 # oldidan egalik har safar qaytadan so'raladi.
+
+
+def _slot_label(slot: ServiceSlot | None, lang: str) -> str | None:
+    """Band qilingan vaqtning bir qatorlik ko'rinishi: "05.10.2026, dushanba 14:00"."""
+    if slot is None:
+        return None
+    date_label, time_label = booking_service.labels(slot, lang)
+    return f"{date_label} {time_label}"
 
 
 @router.get("/services", response_model=list[ServiceOut])
@@ -749,6 +762,10 @@ async def list_services(
     ).scalars().all()
     requested = set(requested_rows)
 
+    # Bo'sh vaqtlar bir so'rovda sanaladi: har qator uchun alohida
+    # so'rov yuborish ro'yxatni sekinlashtirardi.
+    slot_counts = await booking_service.free_counts(session)
+
     lang = user.ui_language.value
     return [
         ServiceOut(
@@ -766,14 +783,50 @@ async def list_services(
             has_file=service.file is not None,
             file_name=service.file.filename if service.file else None,
             file_size=service.file.size_bytes if service.file else None,
+            requires_booking=service.requires_booking,
+            free_slots=slot_counts.get(service.id, 0),
         )
         for service in services
     ]
 
 
+@router.get("/services/{service_id}/slots", response_model=list[SlotOut])
+async def list_slots(
+    service_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> list[SlotOut]:
+    """Xizmatning bo'sh uchrashuv vaqtlari.
+
+    Alohida endpoint: vaqtlar tez o'zgaradi (boshqa birov band qilishi
+    mumkin), shuning uchun ular xizmatlar ro'yxati bilan birga emas,
+    foydalanuvchi tanlash oynasini ochganda o'qiladi.
+    """
+    service = await session.get(AdmissionService, service_id)
+    if service is None or not service.is_active:
+        raise HTTPException(status_code=404, detail="Xizmat topilmadi")
+
+    lang = user.ui_language.value
+    slots = await booking_service.free_slots(session, service_id)
+    result = []
+    for slot in slots:
+        date_label, time_label = booking_service.labels(slot, lang)
+        result.append(
+            SlotOut(
+                id=slot.id,
+                date_label=date_label,
+                time_label=time_label,
+                duration_minutes=slot.duration_minutes,
+                note=slot.note,
+            )
+        )
+    return result
+
+
 @router.post("/services/{service_id}/request", response_model=ServiceRequestResult, status_code=201)
 async def request_service(
     service_id: int,
+    payload: ServiceRequestIn | None = None,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ServiceRequestResult:
@@ -804,9 +857,21 @@ async def request_service(
         raise HTTPException(status_code=409, detail="Qo'llanma hali tayyor emas")
 
     if existing is not None:
+        # Takroriy bosish: yangi vaqt band qilinmaydi va pul yechilmaydi.
+        booked = existing.slot
         return ServiceRequestResult(
-            requested=True, balance=float(user.balance or 0), has_file=has_file
+            requested=True,
+            balance=float(user.balance or 0),
+            has_file=has_file,
+            slot_label=_slot_label(booked, user.ui_language.value) if booked else None,
         )
+
+    needs_slot = service.requires_booking and not is_file_service
+    slot_id = payload.slot_id if payload else None
+    if needs_slot and slot_id is None:
+        # Vaqtsiz pul olib bo'lmaydi: odam to'lab, keyin "qachon?" degan
+        # savol bilan qolardi.
+        raise HTTPException(status_code=400, detail="Uchrashuv vaqtini tanlang")
 
     try:
         new_balance = await payment_service.charge_service(session, user, service)
@@ -822,22 +887,35 @@ async def request_service(
             },
         ) from exc
 
-    session.add(
-        ServiceRequest(
-            user_id=user.id,
-            service_id=service_id,
-            # Fayl o'sha zahoti yetkaziladi, adminning qiladigan ishi
-            # yo'q — yozuv darhol yopiq holatda. Adminka ro'yxatida faqat
-            # qo'lda bajariladigan xizmatlar ko'rinadi.
-            status=(ServiceRequestStatus.DONE if is_file_service else ServiceRequestStatus.NEW),
-        )
+    service_request = ServiceRequest(
+        user_id=user.id,
+        service_id=service_id,
+        # Fayl o'sha zahoti yetkaziladi, adminning qiladigan ishi
+        # yo'q — yozuv darhol yopiq holatda. Adminka ro'yxatida faqat
+        # qo'lda bajariladigan xizmatlar ko'rinadi.
+        status=(ServiceRequestStatus.DONE if is_file_service else ServiceRequestStatus.NEW),
     )
+    session.add(service_request)
+    await session.flush()
+
+    slot_label = None
+    if needs_slot:
+        try:
+            await booking_service.claim(session, slot_id, service_id, service_request.id)
+        except booking_service.SlotTaken as exc:
+            # Hali COMMIT qilinmagan: xato bilan chiqish yechilgan pulni
+            # ham, yaratilgan so'rovni ham bekor qiladi.
+            raise HTTPException(status_code=409, detail={"error": "slot_taken"}) from exc
+        slot = await session.get(ServiceSlot, slot_id)
+        slot_label = _slot_label(slot, user.ui_language.value)
+
     await session.commit()
     return ServiceRequestResult(
         requested=True,
         balance=float(new_balance),
         charged=float(service.price_amount) if service.price_amount is not None else None,
         has_file=has_file,
+        slot_label=slot_label,
     )
 
 

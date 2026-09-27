@@ -2990,20 +2990,6 @@ function openNeedBalanceSheet(short) {
   document.getElementById("need-close").addEventListener("click", closeSheet);
 }
 
-// Narx aynan shu qoldiqdan yechiladi, shuning uchun u sahifada ko'rinib
-// turadi: "Sotib olish"ni bosgan odam avval hisobini bilishi kerak.
-function kitBalanceText() {
-  if (!profile) return "";
-  return `${Number(profile.balance || 0).toLocaleString()} ${escapeHtml(
-    profile.balance_currency || ""
-  )}`;
-}
-
-function refreshKitBalance() {
-  const el = document.getElementById("kit-balance");
-  if (el) el.textContent = kitBalanceText();
-}
-
 // PDF o'lchami odam o'qiydigan ko'rinishda: "2.3 MB" yoki "740 KB".
 function fileSizeLabel(bytes) {
   if (!bytes) return "";
@@ -3156,9 +3142,6 @@ async function renderKit() {
 
   if (!services.length) {
     el.innerHTML = `
-      <button type="button" class="kit-back" id="kit-back">
-        ${icon("chevron")}<span>${t("kit.back")}</span>
-      </button>
       <div class="empty">
         <div class="empty-ico">${icon("kit")}</div>
         <div class="empty-title">${t("kit.empty_title")}</div>
@@ -3168,21 +3151,13 @@ async function renderKit() {
     return;
   }
 
+  // Sarlavha bandi (orqaga + nom + balans) OLIB TASHLANGAN: sahifaga bosh
+  // sahifadagi "Admission Kit" kartasi orqali kelinadi, ya'ni nom takror
+  // edi; orqaga qaytish pastdagi panelda bor; balans esa Profil sahifasida
+  // ko'rsatiladi. Mablag' yetmasa server 402 qaytaradi va ilova qancha
+  // kerakligini alohida oynada aytadi — shuning uchun uni bu yerda doim
+  // ko'rsatib turish shart emas.
   el.innerHTML = `
-    <button type="button" class="kit-back" id="kit-back">
-      ${icon("chevron")}<span>${t("kit.back")}</span>
-    </button>
-    <div class="kit-head">
-      <img class="kit-head-ico" src="icon-kit.png?v=${ASSET_V}" alt="" aria-hidden="true">
-      <div>
-        <div class="kit-head-title">${t("kit.title")}</div>
-        <div class="kit-head-sub">${t("kit.subtitle")}</div>
-      </div>
-      <div class="kit-balance">
-        <span class="kit-balance-label">${t("account.balance")}</span>
-        <span class="kit-balance-value" id="kit-balance">${kitBalanceText()}</span>
-      </div>
-    </div>
     ${services
       .map(
         (service, index) => `
@@ -3232,10 +3207,10 @@ async function renderKit() {
       btn.disabled = true;
       try {
         const result = await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
-        // Narxi bor xizmat balansdan yechiladi — profildagi qoldiq
-        // eskirib qolmasligi uchun darhol yangilaymiz.
+        // Narxi bor xizmat balansdan yechiladi. Qoldiq Admission Kit
+        // sahifasida ko'rsatilmaydi, lekin Profil sahifasi shu qiymatni
+        // o'qiydi — shuning uchun uni darhol yangilab qo'yamiz.
         if (profile && typeof result.balance === "number") profile.balance = result.balance;
-        refreshKitBalance();
         haptic("success");
         unlockServiceCard(btn, Boolean(result.has_file));
         if (result.has_file) {
@@ -3348,7 +3323,6 @@ function openLanguageSheet() {
     btn.addEventListener("click", async () => {
       haptic("light");
       lang = btn.dataset.lang;
-      document.getElementById("lang-switch").value = lang;
       await api("/me", { method: "PATCH", body: JSON.stringify({ ui_language: lang }) });
       closeSheet();
       updateNavLabels();
@@ -3490,18 +3464,6 @@ function bindTabs() {
   });
 }
 
-function bindLangSwitch() {
-  const select = document.getElementById("lang-switch");
-  select.value = lang;
-  select.addEventListener("change", async () => {
-    lang = select.value;
-    await api("/me", { method: "PATCH", body: JSON.stringify({ ui_language: lang }) });
-    updateNavLabels();
-    const active = document.querySelector(".tab.active");
-    await switchTab(active ? active.dataset.tab : "home");
-  });
-}
-
 async function init() {
   if (!INIT_DATA) {
     document.getElementById("app").innerHTML = `
@@ -3525,7 +3487,6 @@ async function init() {
 
   updateNavLabels();
   bindTabs();
-  bindLangSwitch();
 
   // Filtr bo'sh bo'lsa — birinchi qadam sifatida yo'naltirish oynasi.
   // ATAYLAB `renderHome()` dan OLDIN: bosh sahifa /match va /saved

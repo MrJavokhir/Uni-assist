@@ -36,6 +36,7 @@ from app.db.models import (
     SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
+    ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
     TransactionKind,
@@ -53,6 +54,11 @@ from app.services.subscription_service import (
 
 # Enum ustunlar bazada `.value` sifatida saqlanadi (str_enum), shuning uchun
 # filtr qiymatlari ham aynan shu qiymatlar bo'lishi kerak.
+_SERVICE_KIND_LABELS = {
+    ServiceKind.FILE: "Yuklab olinadigan qo'llanma",
+    ServiceKind.REQUEST: "So'rov (qo'lda bajariladi)",
+}
+
 _DEGREE_LABELS = {
     DegreeLevel.BACHELOR: "Bakalavr",
     DegreeLevel.MASTER: "Magistratura",
@@ -694,10 +700,11 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     Narx ko'rsatilgan bo'lsa, foydalanuvchi sotib olganda summa uning
     BALANSIDAN yechiladi (balans botda /topup bilan to'ldiriladi).
 
-    Xizmatning turi shu yerda tanlanmaydi — unga PDF biriktirilgani hal
-    qiladi ("Qo'llanma fayllari" bo'limi):
-      PDF bor  -> qulflangan mahsulot, sotib olingach botda yuboriladi;
-      PDF yo'q -> qo'lda bajariladigan xizmat, siz o'zingiz bog'lanasiz.
+    "Turi" maydoni xizmat nima bilan tugashini belgilaydi:
+      Qo'llanma -> ilovada qulflangan turadi; sotib olingach PDF botda
+                   yuboriladi va sizga so'rov kelmaydi.
+      So'rov    -> pul yechiladi, keyin siz foydalanuvchi bilan
+                   bog'lanasiz (so'rov «Admission Kit» sahifasi pastida).
     """
 
     name = "Xizmat"
@@ -714,6 +721,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         AdmissionService.id,
         AdmissionService.title_uz,
         AdmissionService.code,
+        AdmissionService.kind,
         AdmissionService.price_amount,
         AdmissionService.price_currency,
         AdmissionService.sort_order,
@@ -725,6 +733,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     column_filters = [BooleanFilter(AdmissionService.is_active, title="Faol")]
     form_columns = [
         AdmissionService.code,
+        AdmissionService.kind,
         AdmissionService.title_uz,
         AdmissionService.title_ru,
         AdmissionService.title_en,
@@ -741,6 +750,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     ]
     column_labels = _labels(
         code="Kod",
+        kind="Turi",
         title_uz="Nomi (uz)",
         title_ru="Nomi (ru)",
         title_en="Nomi (en)",
@@ -756,6 +766,12 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         is_active="Faol",
     )
     form_args = {
+        "kind": {
+            "description": (
+                "«Qo'llanma» — ilovada qulflangan turadi, sotib olingach PDF botda "
+                "yuboriladi. «So'rov» — pul yechiladi, keyin siz bog'lanasiz."
+            )
+        },
         "code": {
             "description": (
                 "Lotin kichik harflar va _ (masalan cv_guide). Mini App ikonkani shu "
@@ -773,8 +789,12 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         "sort_order": {"description": "Ro'yxatdagi o'rni: kichigi yuqorida."},
         "is_active": {"description": "O'chirilsa, xizmat ilovada ko'rinmaydi."},
     }
-    column_formatters = {AdmissionService.is_active: format_bool}
-    column_formatters_detail = {AdmissionService.is_active: format_bool}
+    _service_formatters = {
+        AdmissionService.is_active: format_bool,
+        AdmissionService.kind: enum_label(_SERVICE_KIND_LABELS),
+    }
+    column_formatters = _service_formatters
+    column_formatters_detail = _service_formatters
 
 
 class ServiceRequestAdmin(ModelView, model=ServiceRequest):

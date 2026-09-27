@@ -20,6 +20,7 @@ from app.db.models import (
     SavedProgram,
     SavedProgramStatus,
     Scholarship,
+    ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
     UiLanguage,
@@ -722,10 +723,9 @@ async def delete_saved(
 # tartib, faollik). Shuning uchun matnlar SERVER tomonida foydalanuvchi
 # tiliga o'giriladi — Mini App'dagi lug'at bu yerda yordam bera olmaydi.
 #
-# Ikki xil xizmat bor va ularning turi ALOHIDA maydon bilan belgilanmaydi —
-# PDF biriktirilgani hal qiladi (qarang: app/db/models/service.py):
-#   PDF bor  -> narx balansdan yechiladi va fayl botda yuboriladi;
-#   PDF yo'q -> narx yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
+# Xizmatning turi `AdmissionService.kind` maydonida:
+#   FILE     -> narx balansdan yechiladi va PDF botda yuboriladi;
+#   REQUEST  -> narx yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
 #
 # Qulf SERVERDA tekshiriladi. Ilovadagi qulf faqat ko'rinish: fayl berish
 # oldidan egalik har safar qaytadan so'raladi.
@@ -759,6 +759,7 @@ async def list_services(
             price_amount=float(service.price_amount) if service.price_amount is not None else None,
             price_currency=service.price_currency,
             price_note=_localized_uz(service, "price_note", lang),
+            kind=service.kind.value,
             requested=service.id in requested,
             # `service.file` modelda selectin bilan yuklanadi, baytlarsiz —
             # bu yerda faqat metama'lumot ishlatiladi.
@@ -794,6 +795,14 @@ async def request_service(
         )
     ).scalar_one_or_none()
     has_file = service.file is not None
+    is_file_service = service.kind == ServiceKind.FILE
+
+    if is_file_service and not has_file:
+        # Fayl xizmati, lekin PDF hali yuklanmagan. Pul olib, berishga
+        # narsa bo'lmasligi kerak — ilova bunday xizmatni "tez orada" deb
+        # ko'rsatadi, bu esa o'sha qoidaning server tomondagi nusxasi.
+        raise HTTPException(status_code=409, detail="Qo'llanma hali tayyor emas")
+
     if existing is not None:
         return ServiceRequestResult(
             requested=True, balance=float(user.balance or 0), has_file=has_file
@@ -817,10 +826,10 @@ async def request_service(
         ServiceRequest(
             user_id=user.id,
             service_id=service_id,
-            # PDF o'sha zahoti yetkaziladi, shuning uchun so'rov ochiq
-            # qolmaydi: admin ro'yxatida faqat qo'lda bajariladigan
-            # xizmatlar "Yangi" bo'lib turishi kerak.
-            status=ServiceRequestStatus.DONE if has_file else ServiceRequestStatus.NEW,
+            # Fayl o'sha zahoti yetkaziladi, adminning qiladigan ishi
+            # yo'q — yozuv darhol yopiq holatda. Adminka ro'yxatida faqat
+            # qo'lda bajariladigan xizmatlar ko'rinadi.
+            status=(ServiceRequestStatus.DONE if is_file_service else ServiceRequestStatus.NEW),
         )
     )
     await session.commit()

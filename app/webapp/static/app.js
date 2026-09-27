@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 55;
+const ASSET_V = 56;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -267,6 +267,8 @@ const I18N = {
     "kit.sent_text": "Qo'llanma bot suhbatiga yuborildi — u yerda ochib, telefoningizga saqlashingiz mumkin.",
     "kit.sent_toast": "PDF botga yuborildi",
     "kit.open_bot": "Botni ochish",
+    "kit.soon": "Tez orada",
+    "kit.pdf_soon_hint": "Qo'llanma tayyorlanmoqda — tez orada ochiladi.",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
@@ -550,6 +552,8 @@ const I18N = {
     "kit.sent_text": "Руководство отправлено в чат с ботом — там его можно открыть и сохранить на телефон.",
     "kit.sent_toast": "PDF отправлен в бот",
     "kit.open_bot": "Открыть бот",
+    "kit.soon": "Скоро",
+    "kit.pdf_soon_hint": "Руководство готовится — скоро будет доступно.",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
@@ -833,6 +837,8 @@ const I18N = {
     "kit.sent_text": "The guide was sent to your chat with the bot — open it there and save it to your phone.",
     "kit.sent_toast": "PDF sent to the bot",
     "kit.open_bot": "Open the bot",
+    "kit.soon": "Coming soon",
+    "kit.pdf_soon_hint": "The guide is being prepared — it will open soon.",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
@@ -3005,34 +3011,50 @@ function fileSizeLabel(bytes) {
   return `${Math.max(Math.round(bytes / 1024), 1)} KB`;
 }
 
-// Qulf belgisi faqat PDF'li xizmatlarda: qo'lda bajariladigan xizmatda
-// "qulf" degan tushuncha yo'q, u sotib olingach ham fayl bermaydi.
+// Xizmatning turi serverdan keladi (`kind`). Qulf FAYL turidagilarda
+// doim ko'rinadi — hatto PDF hali yuklanmagan bo'lsa ham. Ilgari qulf
+// "fayl biriktirilganmi" ga bog'liq edi va PDF yuklanmagan qo'llanma
+// oddiy buyurtmaga o'xshab, qulfsiz turardi.
+function isGuide(service) {
+  return service.kind === "file";
+}
+
+// Fayl turidagi xizmat, lekin PDF hali yo'q — sotib olishga yo'l
+// qo'yilmaydi: pul olib, berishga narsa bo'lmasligi kerak.
+function isSoon(service) {
+  return isGuide(service) && !service.has_file;
+}
+
 function serviceTag(service) {
-  if (!service.has_file) return "";
+  if (!isGuide(service)) return "";
   return service.requested
     ? `<span class="svc-tag is-open">${icon("check")}${t("kit.unlocked")}</span>`
     : `<span class="svc-tag is-locked">${icon("lock")}${t("kit.locked")}</span>`;
 }
 
 function serviceFileRow(service) {
-  if (!service.has_file) return "";
+  if (!isGuide(service)) return "";
   const size = fileSizeLabel(service.file_size);
   // Fayl nomi ataylab ko'rsatilmaydi: u adminka uchun ish nomi
   // ("cv_guide_v3_final.pdf") va foydalanuvchiga hech narsa aytmaydi.
+  let hint = t("kit.pdf_locked_hint");
+  if (isSoon(service)) hint = t("kit.pdf_soon_hint");
+  else if (service.requested) hint = t("kit.pdf_open_hint");
   return `
     <div class="svc-file">
       ${icon("file")}
       <span class="svc-file-text">
-        <span class="svc-file-name">${t("kit.pdf_label")}${size ? ` · ${size}` : ""}</span>
-        <span class="svc-file-hint">${
-          service.requested ? t("kit.pdf_open_hint") : t("kit.pdf_locked_hint")
+        <span class="svc-file-name">${t("kit.pdf_label")}${
+          size && !isSoon(service) ? ` · ${size}` : ""
         }</span>
+        <span class="svc-file-hint">${hint}</span>
       </span>
     </div>`;
 }
 
 function serviceBtnInner(service) {
-  if (service.has_file) {
+  if (isGuide(service)) {
+    if (isSoon(service)) return icon("clock") + t("kit.soon");
     return service.requested
       ? icon("download") + t("kit.download")
       : icon("lock") + t("kit.buy");
@@ -3043,8 +3065,17 @@ function serviceBtnInner(service) {
 }
 
 function serviceBtnClass(service) {
-  if (service.has_file) return service.requested ? " is-get" : " is-buy";
+  if (isGuide(service)) {
+    if (isSoon(service)) return " is-done";
+    return service.requested ? " is-get" : " is-buy";
+  }
   return service.requested ? " is-done" : "";
+}
+
+// Tugma bosilmaydigan ikki holat: qo'llanma hali tayyor emas va
+// qo'lda bajariladigan xizmatga so'rov allaqachon yuborilgan.
+function serviceBtnDisabled(service) {
+  return isSoon(service) || (!isGuide(service) && service.requested);
 }
 
 // Sotib olingandan keyin kartani JOYIDA yangilaymiz. Butun sahifani qayta
@@ -3156,7 +3187,7 @@ async function renderKit() {
       .map(
         (service, index) => `
       <article class="svc-card svc-card-${(index % 4) + 1}${
-        service.has_file && !service.requested ? " is-locked" : ""
+        isGuide(service) && !service.requested ? " is-locked" : ""
       }">
         <div class="svc-top">
           <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
@@ -3173,9 +3204,10 @@ async function renderKit() {
           <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
             data-id="${service.id}"
+            data-guide="${isGuide(service) ? "1" : "0"}"
             data-file="${service.has_file ? "1" : "0"}"
             data-owned="${service.requested ? "1" : "0"}"
-            ${!service.has_file && service.requested ? "disabled" : ""}>
+            ${serviceBtnDisabled(service) ? "disabled" : ""}>
             ${serviceBtnInner(service)}
           </button>
         </div>
@@ -3190,9 +3222,9 @@ async function renderKit() {
     btn.addEventListener("click", async () => {
       haptic("light");
 
-      // Allaqachon sotib olingan PDF — pul qayta yechilmaydi, faqat fayl
-      // botga qayta yuboriladi.
-      if (btn.dataset.owned === "1" && btn.dataset.file === "1") {
+      // Allaqachon sotib olingan qo'llanma — pul qayta yechilmaydi,
+      // faqat fayl botga qayta yuboriladi.
+      if (btn.dataset.owned === "1" && btn.dataset.guide === "1") {
         await deliverPdf(btn.dataset.id, btn);
         return;
       }

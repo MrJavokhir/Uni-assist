@@ -236,11 +236,16 @@ class ServiceOut(BaseModel):
     price_amount: float | None = None
     price_currency: str
     price_note: str | None = None
+    # "file" — yuklab olinadigan qo'llanma: qulflangan turadi, sotib
+    # olingach PDF botda yuboriladi. "request" — qo'lda bajariladigan
+    # xizmat: buyurtma bergach admin bog'lanadi.
+    kind: str = "request"
     # Foydalanuvchi bu xizmatni allaqachon sotib olganmi (yoki so'rov
-    # yuborganmi). PDF xizmatlar uchun bu "qulf ochilgan" degani.
+    # yuborganmi). Fayl xizmatlar uchun bu "qulf ochilgan" degani.
     requested: bool = False
-    # PDF biriktirilganmi. Biriktirilgan bo'lsa, xizmat yuklab olinadigan
-    # mahsulot: sotib olinmaguncha ilovada qulflangan turadi.
+    # PDF haqiqatan biriktirilganmi. `kind == "file"` bo'lsa-yu fayl hali
+    # yuklanmagan bo'lsa, ilova "tez orada" deb ko'rsatadi va sotib
+    # olishga yo'l qo'ymaydi — pul olib, berishga narsa bo'lmasligi kerak.
     has_file: bool = False
     file_name: str | None = None
     file_size: int | None = None

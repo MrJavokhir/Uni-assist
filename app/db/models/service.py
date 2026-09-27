@@ -4,17 +4,19 @@ Katalog KODDA emas, bazada: xizmat qo'shish, matnini tahrirlash, narxini
 o'zgartirish va vaqtincha o'chirish — hammasi admin panel orqali. Shuning
 uchun narx yoki ro'yxat o'zgarganda deploy kerak emas.
 
-Xizmatning ikki turi bor va ular ALOHIDA maydon bilan belgilanmaydi —
-PDF biriktirilgan-biriktirilmagani hal qiladi:
+Xizmatning turi ANIQ maydonda — `AdmissionService.kind`:
 
-    PDF biriktirilgan  -> raqamli mahsulot. Balansdan pul yechiladi va fayl
-                          shu zahoti botda yuboriladi. Sotib olinmaguncha
-                          ilovada QULFLANGAN turadi.
-    PDF yo'q           -> qo'lda bajariladigan xizmat (mentor, yordam).
-                          Pul yechiladi, keyin admin bog'lanadi.
+    FILE     -> yuklab olinadigan qo'llanma. Ilovada doim QULFLANGAN
+                turadi, sotib olinganda pul balansdan yechiladi va PDF
+                botda yuboriladi. Adminga so'rov ketmaydi: yetkazish
+                avtomatik, qiladigan ishi yo'q.
+    REQUEST  -> qo'lda bajariladigan xizmat (mentor, ariza yordami).
+                Pul yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
 
-Shu qaror ataylab: adminga "bu qanday xizmat" degan qo'shimcha tanlov
-bermaydi — fayl yuklandi, demak yuklab olinadigan mahsulot.
+Avval tur alohida maydonsiz, "PDF biriktirilganmi" degan qoida bilan
+aniqlanardi. Bu ikki joyda yiqildi: adminkada har bir xizmat yonida fayl
+yuklash tugmasi turardi (mentorga ham), ilovada esa PDF hali yuklanmagan
+qo'llanma oddiy "buyurtma" bo'lib, qulfsiz va narxsiz o'tib ketardi.
 """
 
 import enum
@@ -27,6 +29,13 @@ from app.db.base import Base, TimestampMixin, str_enum
 
 if TYPE_CHECKING:
     from app.db.models.user import User
+
+
+class ServiceKind(str, enum.Enum):
+    """Xizmat nima bilan tugaydi: fayl beriladimi yoki odam bog'lanadimi."""
+
+    FILE = "file"
+    REQUEST = "request"
 
 
 class ServiceRequestStatus(str, enum.Enum):
@@ -63,6 +72,12 @@ class AdmissionService(TimestampMixin, Base):
     price_note_uz: Mapped[str | None] = mapped_column(String(60), nullable=True)
     price_note_ru: Mapped[str | None] = mapped_column(String(60), nullable=True)
     price_note_en: Mapped[str | None] = mapped_column(String(60), nullable=True)
+
+    # Sukut bo'yicha REQUEST: yangi xizmat yaratilganda unga fayl
+    # biriktirilmagan bo'ladi, demak uni qulflab qo'yish noto'g'ri bo'lardi.
+    kind: Mapped[ServiceKind] = mapped_column(
+        str_enum(ServiceKind, "service_kind"), nullable=False, default=ServiceKind.REQUEST
+    )
 
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

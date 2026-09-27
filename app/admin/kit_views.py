@@ -1,9 +1,20 @@
-"""Admission Kit — bitta sahifa: xizmatlar, ularning PDF fayllari va sotib olishlar.
+"""Admission Kit — bitta sahifa: qo'llanmalar, xizmatlar va so'rovlar.
 
 Ilgari bu uchta alohida bo'lim edi va yon menyuda uchta qator egallardi.
 Amalda ular doim birga ishlatiladi: xizmat yaratiladi -> unga PDF
 biriktiriladi -> kim sotib olgani ko'riladi. Shuning uchun hammasi shu
 sahifada.
+
+Sahifa xizmat TURI bo'yicha ikkiga bo'lingan:
+  * qo'llanmalar (FILE)  — faqat ular yonida PDF yuklash turadi;
+  * xizmatlar (REQUEST)  — ularga fayl biriktirilmaydi.
+Ilgari ikkalasi bitta jadvalda edi va mentor yonida ham fayl yuklash
+tugmasi turardi — nimaga nima kerakligi bilinmasdi.
+
+Pastdagi so'rovlar ro'yxatida FAQAT REQUEST turidagilar bo'ladi.
+Qo'llanma sotib olinganda adminning qiladigan ishi yo'q (fayl avtomatik
+yuboriladi), shuning uchun u ro'yxatni to'ldirib yubormasligi kerak —
+o'rniga qo'llanma qatorida "sotib olganlar" soni ko'rinadi.
 
 Xizmat matnlari (uch tilda nom, tavsif, narx izohi) bu yerda tahrirlanmaydi
 — ular uchun sqladmin'ning o'z formasi ochiladi. Sabab: o'nlab maydonni
@@ -24,7 +35,7 @@ from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from app.db.models import AdmissionService, ServiceRequest
+from app.db.models import AdmissionService, ServiceKind, ServiceRequest
 from app.db.session import async_session_factory
 from app.services import kit_service
 
@@ -75,14 +86,28 @@ class AdmissionKitView(BaseView):
                 .all()
             )
 
-            rows = [
-                {
+            # Qo'llanma nechta marta sotib olingani — qator boshiga bitta
+            # so'rov yubormaslik uchun hammasi birdan sanaladi.
+            bought = dict(
+                (
+                    await session.execute(
+                        select(ServiceRequest.service_id, func.count()).group_by(
+                            ServiceRequest.service_id
+                        )
+                    )
+                ).all()
+            )
+
+            guides, manual = [], []
+            for service in services:
+                row = {
                     "id": service.id,
                     "title": service.title_uz,
                     "code": service.code,
                     "is_active": service.is_active,
                     "price": service.price_amount,
                     "currency": service.price_currency,
+                    "bought": bought.get(service.id, 0),
                     "file": (
                         {
                             "filename": service.file.filename,
@@ -93,13 +118,17 @@ class AdmissionKitView(BaseView):
                         else None
                     ),
                 }
-                for service in services
-            ]
+                (guides if service.kind == ServiceKind.FILE else manual).append(row)
 
-            requests_rows = (
+            # So'rovlar ro'yxatida FAQAT qo'lda bajariladigan xizmatlar:
+            # qo'llanma sotib olinganda admin hech narsa qilmaydi.
+            request_filter = AdmissionService.kind == ServiceKind.REQUEST
+            purchase_rows = (
                 (
                     await session.execute(
                         select(ServiceRequest)
+                        .join(ServiceRequest.service)
+                        .where(request_filter)
                         .options(
                             selectinload(ServiceRequest.service),
                             selectinload(ServiceRequest.user),
@@ -113,7 +142,12 @@ class AdmissionKitView(BaseView):
             )
 
             total_requests = (
-                await session.execute(select(func.count()).select_from(ServiceRequest))
+                await session.execute(
+                    select(func.count())
+                    .select_from(ServiceRequest)
+                    .join(ServiceRequest.service)
+                    .where(request_filter)
+                )
             ).scalar_one()
 
             purchases = [
@@ -126,7 +160,7 @@ class AdmissionKitView(BaseView):
                         row.status.value, (row.status.value, "bg-secondary-lt")
                     ),
                 }
-                for row in requests_rows
+                for row in purchase_rows
             ]
 
         return await self.templates.TemplateResponse(
@@ -134,8 +168,9 @@ class AdmissionKitView(BaseView):
             "admission_kit.html",
             {
                 "title": "Admission Kit",
-                "subtitle": "Xizmatlar, PDF qo'llanmalar va sotib olishlar",
-                "rows": rows,
+                "subtitle": "Qo'llanmalar, xizmatlar va so'rovlar",
+                "guides": guides,
+                "manual": manual,
                 "purchases": purchases,
                 "requests_total": total_requests,
                 "recent_limit": RECENT_REQUESTS,

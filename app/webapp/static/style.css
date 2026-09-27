@@ -948,6 +948,41 @@ body {
 .hero-pill span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero-pill .ico { width: 15px; height: 15px; flex: none; opacity: 0.85; }
 
+/* Filtr hali sozlanmagan holat: halqa ham, foiz ham yo'q — ustun bo'lib
+   joylashgan taklif. Ilgari o'ng tomonda bo'sh oq halqa ichida chiziqcha
+   turardi va u buzilgan elementdek ko'rinardi. */
+.hero-invite {
+  display: block;
+  padding: 20px 18px 22px;
+}
+
+.hero-lead {
+  margin: 0 0 6px;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.hero-note {
+  font-size: 13.5px;
+  line-height: 1.45;
+  opacity: 0.88;
+  margin-bottom: 16px;
+}
+
+/* Bu holatda tugma yagona amal — shuning uchun to'ldirilgan va butun enda. */
+.hero-pill-solid {
+  width: 100%;
+  justify-content: center;
+  background: #ffffff;
+  color: var(--accent);
+  padding: 12px 16px;
+  font-size: 14px;
+}
+.hero-pill-solid:active { background: rgba(255, 255, 255, 0.88); }
+.hero-pill-solid .ico { opacity: 1; }
+
 /* Katta halqa: chetida oq chiziq, o'rtasida karta rangidagi doira. */
 .ring-lg {
   position: relative;

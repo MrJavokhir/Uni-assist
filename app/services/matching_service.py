@@ -1,6 +1,10 @@
-"""Oddiy filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi bo'yicha
-dasturlarni tanlaydi va til sertifikati bo'yicha
-🟢 Mos / 🟡 Yaqin / 🔴 Mos emas toifalariga ajratadi.
+"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + TIL BALI
+bo'yicha dasturlarni tanlaydi va 🟢 Mos / 🟡 Yaqin / 🔴 Mos emas toifalariga
+ajratadi.
+
+Til bali profilda ko'rsatilgan bo'lsa, u yetmaydigan dasturlar ro'yxatga
+umuman tushmaydi (faqat yorliq bilan belgilanmaydi). Ko'rsatilmagan bo'lsa
+hech narsa yashirilmaydi.
 
 🔴 toifadagilar (tuzatib bo'lmaydigan to'siq — o'tgan deadline)
 chaqiruvchi tomonda foydalanuvchiga ko'rsatilmaydi.
@@ -40,6 +44,9 @@ class MatchResult:
     level: MatchLevel
     missing: list[str] = field(default_factory=list)
 
+
+# `_language_gap` qaytaradigan kalitlar. Ular "til talabi bajarilmadi" degani.
+LANGUAGE_MISSING_KEYS = frozenset({"ielts", "toefl", "ielts_toefl"})
 
 # Profildagi reyting oralig'i -> (eng yuqori o'rin, eng quyi o'rin). None = chegarasiz.
 RANK_BOUNDS: dict[UniversityRankRange, tuple[int, int | None]] = {
@@ -95,7 +102,21 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
     best_ielts = _best_score(user, LanguageCertType.IELTS)
     best_toefl = _best_score(user, LanguageCertType.TOEFL)
 
-    return [_classify(program, best_ielts, best_toefl) for program in programs]
+    results = [_classify(program, best_ielts, best_toefl) for program in programs]
+
+    # Til bali KIRITILGAN bo'lsa — u yetmaydigan dasturlar ro'yxatdan butunlay
+    # chiqariladi. Ilgari ular "🟡 Yaqin" yorlig'i bilan qolaverar edi va
+    # foydalanuvchi "IELTS 6 yozdim, lekin 7 talab qiladigan dasturlar hamon
+    # chiqyapti — filtr ishlamayapti" deb hisoblardi. Ball KIRITILMAGAN bo'lsa
+    # hech narsa yashirilmaydi: aks holda yangi foydalanuvchi bo'sh ro'yxat
+    # ko'rardi.
+    #
+    # Talabi umuman ko'rsatilmagan dastur qoladi — "ma'lum emas" degani "talab
+    # bajarilmadi" degani emas, va kartada bu ochiq yozib qo'yiladi.
+    if best_ielts is not None or best_toefl is not None:
+        results = [r for r in results if not (set(r.missing) & LANGUAGE_MISSING_KEYS)]
+
+    return results
 
 
 def _best_score(user: User, cert_type: LanguageCertType) -> float | None:

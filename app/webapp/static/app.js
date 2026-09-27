@@ -308,6 +308,7 @@ const I18N = {
     "home.profile_progress": "Profil to'ldirilgan",
     "home.section_top": "Eng mos dastur",
     "home.setup_filter": "Qidiruvni sozlash",
+    "home.empty_text": "Yo'nalish, daraja va davlatni tanlang — ro'yxat shunga qarab toraytiriladi.",
     "home.refine_filter": "Filtrni to'ldirish",
 
     "profile.section_academic": "Ta'lim",
@@ -590,6 +591,7 @@ const I18N = {
     "home.profile_progress": "Профиль заполнен",
     "home.section_top": "Лучшее совпадение",
     "home.setup_filter": "Настроить поиск",
+    "home.empty_text": "Выберите направление, уровень и страну — список сузится под вас.",
     "home.refine_filter": "Дополнить фильтр",
 
     "profile.section_academic": "Образование",
@@ -872,6 +874,7 @@ const I18N = {
     "home.profile_progress": "Profile complete",
     "home.section_top": "Best match",
     "home.setup_filter": "Set up your search",
+    "home.empty_text": "Pick a field, level and country — the list narrows down to fit you.",
     "home.refine_filter": "Refine your filter",
 
     "profile.section_academic": "Academic",
@@ -1173,19 +1176,35 @@ async function renderHome() {
   // tashlandi: ikkala tugma ham pastdagi tab panelida bor edi, ism esa
   // Profil sahifasida ko'rinadi. Sahifa darhol asosiy kartadan boshlanadi.
   el.innerHTML = `
-    <div class="hero home-hero">
-      <div class="hero-main">
-        <div class="hero-chip">${icon("spark")}<span>${t("home.profile_progress")}</span></div>
-        <div class="hero-big">${pct}<span>%</span></div>
-        <button type="button" class="hero-pill" id="home-cta">
-          <span>${t(ready ? "home.refine_filter" : "home.setup_filter")}</span>${icon("chevron")}
-        </button>
-      </div>
-      <div class="ring-lg" id="hero-ring">
-        ${bigRing(0)}
-        <div class="ring-core"><b>—</b><span>${t("home.unit_program")}</span></div>
-      </div>
-    </div>
+    ${
+      // Filtr hali sozlanmagan bo'lsa halqa ham, foiz ham ko'rsatilmaydi.
+      // Ilgari bu yerda bo'sh oq halqa ichida chiziqcha turardi — u xuddi
+      // yuklanmay qolgan yoki buzilgan elementdek ko'rinardi. Hisoblab
+      // ko'rsatadigan narsa yo'q ekan, o'rniga aniq taklif turadi.
+      ready
+        ? `<div class="hero home-hero">
+             <div class="hero-main">
+               <div class="hero-chip">${icon("spark")}<span>${t(
+                 "home.profile_progress"
+               )}</span></div>
+               <div class="hero-big">${pct}<span>%</span></div>
+               <button type="button" class="hero-pill" id="home-cta">
+                 <span>${t("home.refine_filter")}</span>${icon("chevron")}
+               </button>
+             </div>
+             <div class="ring-lg" id="hero-ring">
+               ${bigRing(0)}
+               <div class="ring-core"><b>—</b><span>${t("home.unit_program")}</span></div>
+             </div>
+           </div>`
+        : `<div class="hero home-hero hero-invite">
+             <div class="hero-lead">${t("onboard.title")}</div>
+             <div class="hero-note">${t("home.empty_text")}</div>
+             <button type="button" class="hero-pill hero-pill-solid" id="home-cta">
+               <span>${t("home.setup_filter")}</span>${icon("chevron")}
+             </button>
+           </div>`
+    }
 
     <div id="home-alert"></div>
 
@@ -1273,13 +1292,16 @@ async function renderHome() {
     .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
     .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left);
 
-  // Filtr qo'yilmagan bo'lsa qidiruv katalogdagi HAMMA dasturni qaytaradi —
-  // ularni "sizga mos" deb ko'rsatish noto'g'ri bo'lardi, shuning uchun chiziqcha.
-  document.getElementById("hero-ring").innerHTML =
-    bigRing(ready ? greenShare : 0) +
-    `<div class="ring-core"><b>${ready ? compactNumber(total) : "—"}</b><span>${t(
-      "home.unit_program"
-    )}</span></div>`;
+  // Halqa faqat filtr sozlangan holatda chiziladi — aks holda bu element
+  // umuman yo'q (hero o'rniga taklif ko'rsatiladi).
+  const ringEl = document.getElementById("hero-ring");
+  if (ringEl) {
+    ringEl.innerHTML =
+      bigRing(greenShare) +
+      `<div class="ring-core"><b>${compactNumber(total)}</b><span>${t(
+        "home.unit_program"
+      )}</span></div>`;
+  }
 
   document.getElementById("mini-green-value").textContent = ready ? green : "—";
   document.getElementById("mini-green-foot").innerHTML = `<span class="hx-tag">${
@@ -2502,7 +2524,10 @@ function renderFilter() {
       </div>
       <div class="field">
         <label>${t("profile.gpa_value")}</label>
-        <input type="number" inputmode="decimal" step="0.01" id="gpa-value-input" placeholder="—" value="${
+        <!-- cert-score-input bilan bir xil sabab: type="number" da
+             vergulli lokalda nuqta yo'qolib, "3.5" -> "35" bo'lardi. -->
+        <input type="text" inputmode="decimal" autocomplete="off"
+               id="gpa-value-input" placeholder="—" value="${
           profile.gpa_raw ?? ""
         }" />
         <div id="gpa-preview"></div>
@@ -2525,7 +2550,12 @@ function renderFilter() {
       </div>
       <div class="field" id="cert-score-field" ${certType ? "" : "hidden"}>
         <label>${t("profile.lang_cert_score")}</label>
-        <input type="number" inputmode="decimal" step="0.1" id="cert-score-input" placeholder="—" value="${certScore}" />
+        <!-- ATAYLAB type="text": type="number" da qurilma lokali vergul
+             ishlatsa, iOS "." bosilishini shunchaki yutib yuborardi va
+             "7.5" o'rniga "75" qolardi. Endi vergul ham, nuqta ham
+             qabul qilinadi va o'qishda nuqtaga keltiriladi. -->
+        <input type="text" inputmode="decimal" autocomplete="off"
+               id="cert-score-input" placeholder="—" value="${certScore}" />
       </div>
     </div>
 
@@ -2707,9 +2737,27 @@ function activeChips(containerId) {
   return Array.from(document.querySelectorAll(`#${containerId} .chip.active`)).map((c) => c.dataset.value);
 }
 
+/** Matn maydonidan o'nlik sonni o'qiydi.
+ *
+ * Maydonlar `type="text"`: vergulli lokalda `type="number"` nuqtani yutib
+ * yuborardi. Shuning uchun vergul ham qabul qilinadi va bu yerda nuqtaga
+ * keltiriladi. Raqam, nuqta va verguldan boshqa hamma narsa tashlanadi.
+ */
+function decimalValue(el) {
+  if (!el) return "";
+  const raw = String(el.value || "")
+    .replace(/,/g, ".")
+    .replace(/[^0-9.]/g, "");
+  // Bir nechta nuqta yozilsa — birinchisidan keyingilari tashlanadi.
+  const first = raw.indexOf(".");
+  return first === -1
+    ? raw
+    : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, "");
+}
+
 async function updateGpaPreview() {
   const scale = activeChip("gpa-scale-chips");
-  const value = document.getElementById("gpa-value-input").value;
+  const value = decimalValue(document.getElementById("gpa-value-input"));
   const box = document.getElementById("gpa-preview");
   if (!scale || !value) {
     box.innerHTML = "";
@@ -2747,7 +2795,7 @@ async function saveProfile() {
   const gpaValue = document.getElementById("gpa-value-input").value;
   const certType = activeChip("cert-type-chips");
   const certScoreEl = document.getElementById("cert-score-input");
-  const certScore = certScoreEl ? certScoreEl.value : "";
+  const certScore = decimalValue(certScoreEl);
   const fee = activeChip("fee-chips");
 
   if (degree) payload.degree_level = degree;

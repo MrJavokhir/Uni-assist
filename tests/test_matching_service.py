@@ -213,23 +213,51 @@ async def test_toefl_is_enough_when_both_certificates_accepted(session: AsyncSes
     assert results[0].level == MatchLevel.GREEN
 
 
-async def test_yellow_when_no_accepted_certificate_meets_minimum(session: AsyncSession):
+async def test_hidden_when_no_accepted_certificate_meets_minimum(session: AsyncSession):
+    """Ball kiritilgan, lekin yetmaydi — dastur ro'yxatga umuman tushmaydi.
+
+    Ilgari bunday dastur "🟡 Yaqin" yorlig'i bilan qolaverardi va
+    foydalanuvchi filtrni ishlamayapti deb hisoblardi.
+    """
     await _make_program(session, ielts_min=7.0, toefl_min=90)
     user = await _make_user(session, ielts_score=6.5, toefl_score=80)
 
     results = await find_matches(session, user)
 
-    assert results[0].level == MatchLevel.YELLOW
-    assert results[0].missing == ["ielts_toefl"]
+    assert results == []
 
 
-async def test_toefl_only_program_reports_toefl(session: AsyncSession):
+async def test_toefl_only_program_hidden_for_ielts_holder(session: AsyncSession):
+    """Faqat TOEFL qabul qiladigan dastur — IELTS egasiga ko'rsatilmaydi."""
     await _make_program(session, ielts_min=None, toefl_min=100)
     user = await _make_user(session, ielts_score=8.0)
 
     results = await find_matches(session, user)
 
-    assert results[0].missing == ["toefl"]
+    assert results == []
+
+
+async def test_program_without_language_requirement_is_kept(session: AsyncSession):
+    """Talabi ko'rsatilmagan dastur qoladi: "ma'lum emas" != "talab bajarilmadi"."""
+    await _make_program(session, ielts_min=None, toefl_min=None)
+    user = await _make_user(session, ielts_score=6.0)
+
+    results = await find_matches(session, user)
+
+    assert len(results) == 1
+    assert results[0].level == MatchLevel.GREEN
+
+
+async def test_nothing_hidden_when_user_has_no_certificate(session: AsyncSession):
+    """Ball kiritilmagan bo'lsa hech narsa yashirilmaydi — aks holda yangi
+    foydalanuvchi bo'sh ro'yxat ko'rardi."""
+    await _make_program(session, ielts_min=9.0)
+    user = await _make_user(session, ielts_score=None)
+
+    results = await find_matches(session, user)
+
+    assert len(results) == 1
+    assert results[0].level == MatchLevel.YELLOW
 
 
 async def test_rank_range_keeps_matching_and_unranked_universities(session: AsyncSession):

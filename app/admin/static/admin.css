@@ -491,3 +491,7 @@ body {
   pointer-events: none;
 }
 .ua-kit-upload .btn { margin-bottom: 0; }
+
+/* So'rov holati jadval ichida almashadi — tanlagich qisilib, yorliq
+   o'qilmay qolmasligi uchun eng kam kenglik. */
+.ua-kit-status { min-width: 140px; }

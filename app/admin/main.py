@@ -52,7 +52,33 @@ app.include_router(webapp_api_router, prefix="/api/webapp", tags=["webapp"])
 app.mount("/webapp", NoCacheStaticFiles(directory=str(WEBAPP_STATIC_DIR), html=True), name="webapp")
 app.mount("/admin-assets", NoCacheStaticFiles(directory=str(ADMIN_STATIC_DIR)), name="admin-assets")
 
-admin = Admin(
+
+class UniAssistAdmin(Admin):
+    """Saqlangandan keyin qayerga qaytish.
+
+    Sqladmin sukut bo'yicha o'zining ro'yxat sahifasiga qaytaradi. Admission
+    Kit bo'limida bunday ro'yxat sahifasi menyuda yo'q va u alohida bo'lim
+    taassurotini berardi: "Tahrirlash" bosilgan odam saqlab bo'lgach
+    boshqa sahifada qolib ketardi. Shuning uchun bu ikki model uchun
+    qaytish manzili Admission Kit sahifasiga burib yuboriladi.
+
+    Formadagi "Bekor qilish" havolasi shablonda — u admin.js'da
+    almashtiriladi (sqladmin shablonlari forklanmasligi uchun).
+    """
+
+    KIT_IDENTITIES = ("admission-service", "service-request")
+
+    @staticmethod
+    def get_save_redirect_url(request, form, model_view, obj):
+        identity = request.path_params.get("identity")
+        if identity in UniAssistAdmin.KIT_IDENTITIES and form.get("save") == "Save":
+            return request.url_for("admin:view-admission-kit")
+        return Admin.get_save_redirect_url(
+            request=request, form=form, model_view=model_view, obj=obj
+        )
+
+
+admin = UniAssistAdmin(
     app,
     engine,
     title="Uni Assist Admin",

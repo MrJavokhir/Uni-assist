@@ -16,7 +16,7 @@
 
       row.dataset.uaHref = target.getAttribute("href");
       row.addEventListener("click", function (event) {
-        if (event.target.closest("a, button, input, label, .dropdown")) return;
+        if (event.target.closest("a, button, input, select, label, .dropdown")) return;
         if (window.getSelection && String(window.getSelection())) return;
         window.location.href = row.dataset.uaHref;
       });
@@ -85,10 +85,31 @@
     });
   }
 
+  // 5. Admission Kit formalari ("Yangi xizmat", "Tahrirlash") sqladmin'ning
+  //    o'z ro'yxat sahifasiga qaytaradi. U sahifa menyuda yo'q va alohida
+  //    bo'lim taassurotini beradi, shuning uchun "Bekor qilish" havolasi
+  //    Admission Kit sahifasiga burib yuboriladi. Saqlagandan keyingi
+  //    qaytish server tomonda hal qilingan (app/admin/main.py).
+  //    Shablon forklanmaydi — havola DOM'da almashtiriladi.
+  var KIT_IDENTITIES = ["admission-service", "service-request"];
+
+  function pointCancelToKit() {
+    var path = location.pathname;
+    var inKitForm = KIT_IDENTITIES.some(function (identity) {
+      return path.indexOf("/admin/" + identity + "/") === 0;
+    });
+    if (!inKitForm) return;
+
+    document.querySelectorAll('form a[href*="/list"]').forEach(function (link) {
+      link.setAttribute("href", "/admin/admission-kit");
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     enableRowClick();
     enableSearchShortcut();
     moveFiltersToHeader();
     pointCreateToWizard();
+    pointCancelToKit();
   });
 })();

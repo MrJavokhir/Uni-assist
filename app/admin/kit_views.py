@@ -16,12 +16,13 @@ Qo'llanma sotib olinganda adminning qiladigan ishi yo'q (fayl avtomatik
 yuboriladi), shuning uchun u ro'yxatni to'ldirib yubormasligi kerak —
 o'rniga qo'llanma qatorida "sotib olganlar" soni ko'rinadi.
 
-Xizmat matnlari (uch tilda nom, tavsif, narx izohi) bu yerda tahrirlanmaydi
-— ular uchun sqladmin'ning o'z formasi ochiladi. Sabab: o'nlab maydonni
-jadval ichiga tiqishtirish sahifani o'qib bo'lmaydigan qiladi, forma esa
-allaqachon bor va ishlaydi. `AdmissionServiceAdmin` va `ServiceRequestAdmin`
-menyudan yashirilgan (`is_visible`), lekin marshrutlari joyida — wizard'lar
-bilan bir xil yondashuv.
+Sahifadan CHIQIB ketiladigan yagona joy — xizmat matnlarini (uch tilda
+nom, tavsif, narx izohi) tahrirlaydigan forma. O'nlab maydonni jadval
+ichiga tiqishtirib bo'lmaydi, sqladmin formasi esa allaqachon bor va
+ishlaydi. Undan tashqari hamma amal shu yerda bajariladi: holat, faollik,
+o'chirish. Sqladmin ro'yxat sahifalariga havola ATAYLAB qo'yilmagan —
+ular alohida bo'lim taassurotini berardi (saqlangandan keyin ham o'sha
+yerga qaytarardi, qarang: `app/admin/main.py`).
 
 Fayl qayerda saqlanadi va nega — `app/db/models/service.py`.
 """
@@ -35,14 +36,19 @@ from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from app.db.models import AdmissionService, ServiceKind, ServiceRequest
+from app.db.models import (
+    AdmissionService,
+    ServiceKind,
+    ServiceRequest,
+    ServiceRequestStatus,
+)
 from app.db.session import async_session_factory
 from app.services import kit_service
 
 logger = logging.getLogger(__name__)
 
 # So'rovlar vaqt o'tib yuzlab bo'lib ketadi. Sahifada oxirgilari ko'rinadi,
-# qolganiga to'liq ro'yxatdan kiriladi.
+# "hammasini ko'rsatish" esa ?all=1 bilan SHU sahifani ochadi.
 RECENT_REQUESTS = 30
 
 _STATUS_LABELS = {
@@ -73,6 +79,7 @@ class AdmissionKitView(BaseView):
 
     @expose("/admission-kit", methods=["GET"], identity="admission-kit")
     async def page(self, request: Request):
+        show_all = request.query_params.get("all") == "1"
         async with async_session_factory() as session:
             services = (
                 (
@@ -108,6 +115,11 @@ class AdmissionKitView(BaseView):
                     "price": service.price_amount,
                     "currency": service.price_currency,
                     "bought": bought.get(service.id, 0),
+                    # Sotib olingan xizmatni o'chirish xarid tarixini ham
+                    # olib ketadi (FK CASCADE). Shuning uchun o'chirish
+                    # faqat hech kim sotib olmagan xizmatda taklif qilinadi
+                    # — qolganini "faol emas" qilish kifoya.
+                    "can_delete": bought.get(service.id, 0) == 0,
                     "file": (
                         {
                             "filename": service.file.filename,
@@ -134,7 +146,7 @@ class AdmissionKitView(BaseView):
                             selectinload(ServiceRequest.user),
                         )
                         .order_by(ServiceRequest.id.desc())
-                        .limit(RECENT_REQUESTS)
+                        .limit(None if show_all else RECENT_REQUESTS)
                     )
                 )
                 .scalars()
@@ -159,6 +171,7 @@ class AdmissionKitView(BaseView):
                     "status": _STATUS_LABELS.get(
                         row.status.value, (row.status.value, "bg-secondary-lt")
                     ),
+                    "status_value": row.status.value,
                 }
                 for row in purchase_rows
             ]
@@ -174,14 +187,28 @@ class AdmissionKitView(BaseView):
                 "purchases": purchases,
                 "requests_total": total_requests,
                 "recent_limit": RECENT_REQUESTS,
+                "show_all": show_all,
+                "statuses": [(s.value, _STATUS_LABELS[s.value][0]) for s in ServiceRequestStatus],
                 "max_mb": kit_service.MAX_PDF_BYTES // (1024 * 1024),
             },
         )
 
+    def _back(self, request: Request, form=None) -> RedirectResponse:
+        """Har bir amal SHU sahifaga qaytadi.
+
+        "Hammasini ko'rsatish" holati yo'qolmasligi kerak: uzun ro'yxatda
+        holatni o'zgartirgan odam yana qisqartirilgan ko'rinishga tushib
+        qolsa, qayerda ishlayotganini yo'qotadi.
+        """
+        url = request.url_for("admin:view-admission-kit")
+        if form is not None and form.get("all") == "1":
+            url = url.include_query_params(all="1")
+        return RedirectResponse(url, status_code=303)
+
     @expose("/admission-kit/upload", methods=["POST"], identity="admission-kit-upload")
     async def upload(self, request: Request):
-        back = RedirectResponse(request.url_for("admin:view-admission-kit"), status_code=303)
         form = await request.form()
+        back = self._back(request, form)
         service_id = _int(form.get("service_id"))
         upload = form.get("file")
 
@@ -213,8 +240,8 @@ class AdmissionKitView(BaseView):
 
     @expose("/admission-kit/delete-file", methods=["POST"], identity="admission-kit-delete-file")
     async def delete_file(self, request: Request):
-        back = RedirectResponse(request.url_for("admin:view-admission-kit"), status_code=303)
         form = await request.form()
+        back = self._back(request, form)
         service_id = _int(form.get("service_id"))
         if service_id is None:
             return back
@@ -228,4 +255,101 @@ class AdmissionKitView(BaseView):
             await session.commit()
             if removed:
                 Flash.success(request, f"«{service.title_uz}» fayli o'chirildi.")
+        return back
+
+    @expose("/admission-kit/toggle-active", methods=["POST"], identity="admission-kit-toggle")
+    async def toggle_active(self, request: Request):
+        """Xizmatni ilovada ko'rsatish / yashirish.
+
+        Sotib olingan xizmatni o'chirish o'rniga shu ishlatiladi: ilovada
+        ko'rinmaydi, xarid tarixi esa joyida qoladi.
+        """
+        form = await request.form()
+        back = self._back(request, form)
+        service_id = _int(form.get("service_id"))
+        if service_id is None:
+            return back
+
+        async with async_session_factory() as session:
+            service = await session.get(AdmissionService, service_id)
+            if service is None:
+                Flash.error(request, "Xizmat topilmadi.")
+                return back
+            service.is_active = not service.is_active
+            state = "faol" if service.is_active else "faol emas"
+            await session.commit()
+            Flash.success(request, f"«{service.title_uz}» endi {state}.")
+        return back
+
+    @expose(
+        "/admission-kit/delete-service", methods=["POST"], identity="admission-kit-delete-service"
+    )
+    async def delete_service(self, request: Request):
+        """Xizmatni butunlay o'chirish.
+
+        Faqat hech kim sotib olmagan xizmat o'chiriladi. Aks holda FK
+        CASCADE xarid yozuvlarini ham olib ketardi va "kim nima uchun
+        to'lagan" degan savolga javob qolmasdi — sahifadagi tugma ham
+        shunday xizmatda ko'rsatilmaydi, bu esa o'sha qoidaning server
+        tomondagi nusxasi.
+        """
+        form = await request.form()
+        back = self._back(request, form)
+        service_id = _int(form.get("service_id"))
+        if service_id is None:
+            return back
+
+        async with async_session_factory() as session:
+            service = await session.get(AdmissionService, service_id)
+            if service is None:
+                Flash.error(request, "Xizmat topilmadi.")
+                return back
+
+            bought = (
+                await session.execute(
+                    select(func.count())
+                    .select_from(ServiceRequest)
+                    .where(ServiceRequest.service_id == service_id)
+                )
+            ).scalar_one()
+            if bought:
+                Flash.error(
+                    request,
+                    f"«{service.title_uz}» {bought} marta sotib olingan — o'chirib bo'lmaydi. "
+                    "Ilovadan yashirish uchun «Faol emas» qiling.",
+                )
+                return back
+
+            title = service.title_uz
+            await session.delete(service)
+            await session.commit()
+            Flash.success(request, f"«{title}» o'chirildi.")
+        return back
+
+    @expose("/admission-kit/set-status", methods=["POST"], identity="admission-kit-set-status")
+    async def set_status(self, request: Request):
+        """So'rov holatini SHU sahifada o'zgartirish.
+
+        Ilgari buning uchun sqladmin formasiga o'tilardi va saqlagandan
+        keyin odam boshqa ro'yxat sahifasida qolib ketardi.
+        """
+        form = await request.form()
+        back = self._back(request, form)
+        request_id = _int(form.get("request_id"))
+        raw_status = str(form.get("status") or "")
+        try:
+            status = ServiceRequestStatus(raw_status)
+        except ValueError:
+            Flash.error(request, "Noma'lum holat.")
+            return back
+        if request_id is None:
+            return back
+
+        async with async_session_factory() as session:
+            row = await session.get(ServiceRequest, request_id)
+            if row is None:
+                Flash.error(request, "So'rov topilmadi.")
+                return back
+            row.status = status
+            await session.commit()
         return back

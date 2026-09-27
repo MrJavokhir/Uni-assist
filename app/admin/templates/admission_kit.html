@@ -17,6 +17,36 @@
   {% endif %}
 {% endmacro %}
 
+{# "Hammasini ko'rsatish" holati har bir amaldan keyin saqlanib qolishi
+   kerak — uzun ro'yxatda ishlagan odam qisqartirilgan ko'rinishga tushib
+   qolsa, qayerda turganini yo'qotadi. #}
+{% macro keep_all() %}
+  <input type="hidden" name="all" value="{{ '1' if show_all else '' }}">
+{% endmacro %}
+
+{% macro row_actions(row) %}
+  <a href="{{ url_for('admin:edit', identity='admission-service', pk=row.id) }}"
+     class="btn btn-sm btn-outline-secondary">Tahrirlash</a>
+  <form method="post" action="{{ url_for('admin:view-admission-kit-toggle') }}" class="d-inline">
+    <input type="hidden" name="service_id" value="{{ row.id }}">
+    {{ keep_all() }}
+    <button type="submit" class="btn btn-sm btn-outline-secondary">
+      {% if row.is_active %}Yashirish{% else %}Ko'rsatish{% endif %}
+    </button>
+  </form>
+  {% if row.can_delete %}
+  {# Sotib olingan xizmat o'chirilmaydi: xarid tarixi u bilan ketardi. #}
+  <form method="post" action="{{ url_for('admin:view-admission-kit-delete-service') }}" class="d-inline">
+    <input type="hidden" name="service_id" value="{{ row.id }}">
+    {{ keep_all() }}
+    <button type="submit" class="btn btn-sm btn-outline-danger"
+            onclick="return confirm('Xizmat butunlay olib tashlanadi. Davom etamizmi?')">
+      O'chirish
+    </button>
+  </form>
+  {% endif %}
+{% endmacro %}
+
 {% macro service_cell(row) %}
   <div>{{ row.title }}</div>
   <div class="text-muted small">
@@ -109,10 +139,7 @@
                 </form>
                 {% endif %}
               </td>
-              <td>
-                <a href="{{ url_for('admin:edit', identity='admission-service', pk=row.id) }}"
-                   class="btn btn-sm btn-outline-secondary text-nowrap">Tahrirlash</a>
-              </td>
+              <td class="text-nowrap">{{ row_actions(row) }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -160,21 +187,13 @@
                 {% if row.bought %}<span class="badge bg-blue-lt">{{ row.bought }}</span>
                 {% else %}<span class="text-muted">—</span>{% endif %}
               </td>
-              <td>
-                <a href="{{ url_for('admin:edit', identity='admission-service', pk=row.id) }}"
-                   class="btn btn-sm btn-outline-secondary text-nowrap">Tahrirlash</a>
-              </td>
+              <td class="text-nowrap">{{ row_actions(row) }}</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
       {% endif %}
-
-      <div class="text-muted small mt-2">
-        O'chirish va ommaviy amallar —
-        <a href="{{ url_for('admin:list', identity='admission-service') }}">to'liq ro'yxatda</a>.
-      </div>
     </div>
   </div>
 
@@ -187,9 +206,17 @@
       </h3>
       {% if requests_total > recent_limit %}
       <div class="card-actions">
-        <a href="{{ url_for('admin:list', identity='service-request') }}" class="btn btn-sm btn-outline-secondary">
-          Hammasi
+        {# Hammasi SHU sahifada ochiladi — alohida ro'yxat sahifasiga
+           yuborish boshqa bo'limga tushgandek taassurot berardi. #}
+        {% if show_all %}
+        <a href="{{ url_for('admin:view-admission-kit') }}" class="btn btn-sm btn-outline-secondary">
+          Oxirgi {{ recent_limit }} tasi
         </a>
+        {% else %}
+        <a href="{{ url_for('admin:view-admission-kit') }}?all=1" class="btn btn-sm btn-outline-secondary">
+          Hammasi ({{ requests_total }})
+        </a>
+        {% endif %}
       </div>
       {% endif %}
     </div>
@@ -220,15 +247,29 @@
               <td>{{ p.service }}</td>
               <td><span class="badge {{ p.status[1] }}">{{ p.status[0] }}</span></td>
               <td>
-                <a href="{{ url_for('admin:edit', identity='service-request', pk=p.id) }}"
-                   class="btn btn-sm btn-outline-secondary">Holat</a>
+                {# Holat shu yerda almashadi. Ilgari buning uchun sqladmin
+                   formasiga o'tilardi va saqlagandan keyin odam boshqa
+                   ro'yxat sahifasida qolib ketardi. #}
+                <form method="post" action="{{ url_for('admin:view-admission-kit-set-status') }}">
+                  <input type="hidden" name="request_id" value="{{ p.id }}">
+                  {{ keep_all() }}
+                  <select name="status" class="form-select form-select-sm ua-kit-status"
+                          aria-label="So'rov holati"
+                          onchange="this.form.submit();">
+                    {% for value, label in statuses %}
+                    <option value="{{ value }}" {% if value == p.status_value %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </form>
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      {% if requests_total > recent_limit %}
+      {% if requests_total > recent_limit and not show_all %}
       <div class="text-muted small">Oxirgi {{ recent_limit }} tasi ko'rsatildi.</div>
       {% endif %}
       {% endif %}

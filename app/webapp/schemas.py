@@ -26,6 +26,11 @@ class ProfileOut(BaseModel):
     # Do'stlarni taklif qilish havolasi uchun. Telegram buni
     # `initDataUnsafe` da bermaydi, shuning uchun server aniqlaydi.
     bot_username: str | None = None
+    # Taklif dasturi. Havola SERVER tomonida yig'iladi: unda foydalanuvchi
+    # o'zgartira olmaydigan taklif kodi bor.
+    referral_link: str | None = None
+    referral_bonus: float = 0
+    referral_count: int = 0
 
 
 class ProfileIn(BaseModel):

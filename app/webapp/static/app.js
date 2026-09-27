@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 57;
+const ASSET_V = 58;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -227,7 +227,9 @@ const I18N = {
     "account.filter_sub": "Daraja, yo'nalish, baho, davlatlar",
     "account.language": "Til",
     "account.invite": "Do'stlarni taklif qilish",
-    "account.invite_sub": "Botni ulashing",
+    "account.invite_sub": "Har bir do'st uchun {bonus}",
+    "account.invite_sub_plain": "Botni ulashing",
+    "account.invite_count": "{count} ta do'st qo'shilgan · {bonus} har biri uchun",
     "account.invite_text": "Chet elda o'qish uchun dastur va grant qidiryapsizmi? Uni Assist yordam beradi.",
     "account.invite_unavailable": "Havolani olishning imkoni bo'lmadi",
     "account.help": "Yordam va FAQ",
@@ -521,7 +523,9 @@ const I18N = {
     "account.filter_sub": "Ступень, направление, балл, страны",
     "account.language": "Язык",
     "account.invite": "Пригласить друзей",
-    "account.invite_sub": "Поделитесь ботом",
+    "account.invite_sub": "{bonus} за каждого друга",
+    "account.invite_sub_plain": "Поделитесь ботом",
+    "account.invite_count": "друзей: {count} · {bonus} за каждого",
     "account.invite_text": "Ищете программу или грант для учёбы за рубежом? Uni Assist поможет.",
     "account.invite_unavailable": "Не удалось получить ссылку",
     "account.help": "Помощь и FAQ",
@@ -815,7 +819,9 @@ const I18N = {
     "account.filter_sub": "Degree, field, grade, countries",
     "account.language": "Language",
     "account.invite": "Invite friends",
-    "account.invite_sub": "Share the bot",
+    "account.invite_sub": "{bonus} for every friend",
+    "account.invite_sub_plain": "Share the bot",
+    "account.invite_count": "{count} friends joined · {bonus} each",
     "account.invite_text": "Looking for a programme or scholarship to study abroad? Uni Assist helps.",
     "account.invite_unavailable": "Could not get the link",
     "account.help": "Help & FAQ",
@@ -3478,7 +3484,7 @@ function renderProfile() {
     <div class="acc-group">
       ${profileRow("acc-filter", "search", t("account.filter"), t("account.filter_sub"))}
       ${profileRow("acc-lang", "lang", t("account.language"), LANG_LABELS[lang] || lang)}
-      ${profileRow("acc-invite", "spark", t("account.invite"), t("account.invite_sub"))}
+      ${profileRow("acc-invite", "spark", t("account.invite"), inviteSubtitle())}
       ${profileRow("acc-help", "shield", t("account.help"), "")}
       ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
     </div>`;
@@ -3532,9 +3538,28 @@ function openLanguageSheet() {
 
 // Bot foydalanuvchi nomi Telegram'ning `initDataUnsafe` da YO'Q — u
 // serverdan `/me` javobi bilan keladi (api.py `_get_bot_username`).
+// Taklif havolasi — oddiy bot havolasidan farqli o'laroq, unda taklif
+// kodi bor va shu bo'yicha mukofot hisoblanadi. Kod SERVERDA yig'iladi,
+// shuning uchun uni o'zgartirib bo'lmaydi.
 function botLink() {
+  if (profile && profile.referral_link) return profile.referral_link;
   const username = profile && profile.bot_username;
   return username ? `https://t.me/${username}` : null;
+}
+
+// Taklif qatorining izohi: mukofot summasi, taklif qilinganlar bo'lsa —
+// ularning soni ham. Mukofot 0 bo'lsa (dastur to'xtatilgan) pul haqida
+// umuman gapirilmaydi.
+function inviteSubtitle() {
+  const bonus = Number((profile && profile.referral_bonus) || 0);
+  if (!bonus) return t("account.invite_sub_plain");
+  const money = `${bonus.toLocaleString()} ${escapeHtml(
+    (profile && profile.balance_currency) || ""
+  )}`;
+  const count = Number((profile && profile.referral_count) || 0);
+  return count
+    ? t("account.invite_count", { count: count, bonus: money })
+    : t("account.invite_sub", { bonus: money });
 }
 
 function shareBot() {

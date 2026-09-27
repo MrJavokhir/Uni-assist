@@ -85,6 +85,7 @@ _TRANSACTION_KIND_LABELS = {
     TransactionKind.TOPUP: "To'ldirish",
     TransactionKind.SERVICE: "Xizmat uchun",
     TransactionKind.ADJUSTMENT: "Qo'lda to'g'irlash",
+    TransactionKind.REFERRAL: "Taklif mukofoti",
 }
 _SERVICE_REQUEST_LABELS = {
     ServiceRequestStatus.NEW: "Yangi",
@@ -616,6 +617,7 @@ class UserAdmin(ModelView, model=User):
         User.username,
         User.balance,
         User.is_blocked,
+        User.referred_by,
         User.created_at,
     ]
     column_details_list = [
@@ -635,6 +637,7 @@ class UserAdmin(ModelView, model=User):
         User.application_fee_ok,
         User.balance,
         User.is_blocked,
+        User.referred_by,
         User.target_countries,
         User.language_certificates,
         User.other_tests,
@@ -672,6 +675,7 @@ class UserAdmin(ModelView, model=User):
         application_fee_ok="Ariza to'loviga rozi",
         balance="Balans",
         is_blocked="Bloklangan",
+        referred_by="Kim taklif qilgan",
         target_countries="Maqsad davlatlar",
         language_certificates="Til sertifikatlari",
         other_tests="Boshqa testlar",
@@ -881,6 +885,7 @@ class PaymentSettingsAdmin(ModelView, model=PaymentSettings):
         PaymentSettings.card_holder,
         PaymentSettings.min_amount,
         PaymentSettings.currency,
+        PaymentSettings.referral_bonus,
         PaymentSettings.updated_at,
     ]
     form_columns = [
@@ -888,12 +893,14 @@ class PaymentSettingsAdmin(ModelView, model=PaymentSettings):
         PaymentSettings.card_holder,
         PaymentSettings.min_amount,
         PaymentSettings.currency,
+        PaymentSettings.referral_bonus,
     ]
     column_labels = _labels(
         card_number="Karta raqami",
         card_holder="Karta egasi",
         min_amount="Eng kam summa",
         currency="Valyuta",
+        referral_bonus="Taklif mukofoti",
     )
     form_args = {
         "card_number": {
@@ -901,6 +908,13 @@ class PaymentSettingsAdmin(ModelView, model=PaymentSettings):
         },
         "card_holder": {"description": "Kartadagi ism-familiya."},
         "min_amount": {"description": "Bundan kam summa botda qabul qilinmaydi."},
+        "referral_bonus": {
+            "description": (
+                "Taklif havolasi bilan kelgan har bir yangi odam uchun taklif qilganning "
+                "balansiga qo'shiladi. Mukofot odam KANALGA A'ZO BO'LGANDAN keyin "
+                "beriladi va bir marta. 0 qilsangiz, taklif dasturi to'xtaydi."
+            )
+        },
     }
 
 

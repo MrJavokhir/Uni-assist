@@ -13,6 +13,7 @@ from app.bot.handlers.start import start_keyboard
 from app.bot.keyboards import LANGUAGE_CALLBACK_PREFIX, subscription_keyboard
 from app.db.models import UiLanguage
 from app.i18n import t
+from app.services import referral_service
 from app.services.redis_client import redis_client
 from app.services.subscription_service import missing_channels
 from app.services.user_service import get_or_create_user
@@ -44,6 +45,11 @@ async def choose_language(callback: CallbackQuery, session: AsyncSession) -> Non
             reply_markup=subscription_keyboard(missing, lang),
         )
         return
+
+    # Obuna to'siqsiz o'tildi — taklif mukofotini shu yerda beramiz.
+    # Mukofot ataylab obunadan KEYIN: qarang app/services/referral_service.py
+    await referral_service.reward_and_notify(session, callback.bot, user)
+    await session.commit()
 
     await callback.message.edit_text(
         t("start.welcome", lang, name=callback.from_user.full_name),

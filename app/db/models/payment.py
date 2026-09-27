@@ -36,6 +36,8 @@ class TransactionKind(str, enum.Enum):
     SERVICE = "service"
     # Admin qo'lda to'g'irlagan.
     ADJUSTMENT = "adjustment"
+    # Do'st taklif qilgani uchun mukofot.
+    REFERRAL = "referral"
 
 
 class PaymentSettings(TimestampMixin, Base):
@@ -52,6 +54,13 @@ class PaymentSettings(TimestampMixin, Base):
     card_holder: Mapped[str] = mapped_column(String(120), nullable=False, default="")
     min_amount: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False, default=10000)
     currency: Mapped[str] = mapped_column(String(10), nullable=False, default="UZS")
+
+    # Taklif qilgan odamga beriladigan mukofot. Kodga yozib qo'yilmagan:
+    # summani o'zgartirish yoki dasturni butunlay to'xtatish (0 qilib
+    # qo'yish) uchun deploy kerak bo'lmasligi kerak.
+    referral_bonus: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False, default=1000, server_default="1000"
+    )
 
     def __str__(self) -> str:
         return f"Karta {self.card_number}" if self.card_number else "To'lov sozlamalari"

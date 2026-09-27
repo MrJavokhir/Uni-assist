@@ -15,5 +15,7 @@
   "reminder.dismiss_button": "❌ Не нужно",
   "reminder.done_confirm": "Отлично! Больше не буду напоминать про эту программу.",
   "reminder.dismiss_confirm": "Программа убрана из сохранённых.",
-  "language.saved": "Язык сохранён"
+  "language.saved": "Язык сохранён",
+  "referral.earned": "🎉 Ваш друг присоединился к боту!\n\nНа счёт зачислено {amount}.\nТекущий баланс: {balance}",
+  "referral.welcome": "Вас пригласил друг — добро пожаловать!"
 }

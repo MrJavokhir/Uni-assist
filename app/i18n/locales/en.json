@@ -15,5 +15,7 @@
   "reminder.dismiss_button": "❌ Not needed",
   "reminder.done_confirm": "Great! I won't remind you about this program anymore.",
   "reminder.dismiss_confirm": "Program removed from your saved list.",
-  "language.saved": "Language saved"
+  "language.saved": "Language saved",
+  "referral.earned": "🎉 Your friend joined the bot!\n\n{amount} was added to your balance.\nCurrent balance: {balance}",
+  "referral.welcome": "A friend invited you — welcome!"
 }

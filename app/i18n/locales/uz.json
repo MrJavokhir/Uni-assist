@@ -15,5 +15,7 @@
   "reminder.dismiss_button": "❌ Kerak emas",
   "reminder.done_confirm": "Ajoyib! Endi bu dastur bo'yicha eslatma yubormayman.",
   "reminder.dismiss_confirm": "Dastur saqlanganlar ro'yxatidan olib tashlandi.",
-  "language.saved": "Til saqlandi"
+  "language.saved": "Til saqlandi",
+  "referral.earned": "🎉 Do'stingiz botga qo'shildi!\n\nHisobingizga {amount} qo'shildi.\nJoriy balans: {balance}",
+  "referral.welcome": "Sizni do'stingiz taklif qildi — xush kelibsiz!"
 }

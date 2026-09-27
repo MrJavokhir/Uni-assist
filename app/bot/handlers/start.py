@@ -2,13 +2,16 @@ import time
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from aiogram import Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandObject, CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.keyboards import language_keyboard
 from app.config import settings
+from app.db.models import User
 from app.i18n import t
+from app.services import referral_service
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
@@ -44,17 +47,33 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, session: AsyncSession) -> None:
+async def cmd_start(message: Message, session: AsyncSession, command: CommandObject) -> None:
     """/start — birinchi qadam har doim til tanlash.
 
     Obuna tekshiruvi ham, xush kelibsiz xabari ham tildan keyin bo'ladi:
     aks holda foydalanuvchi o'zi tushunmaydigan tilda kanal so'rovini
     ko'rardi. /start qayta berilsa tilni almashtirish imkonini ham beradi.
+
+    Taklif havolasi (`/start ref123`) FAQAT birinchi kirishda hisobga
+    olinadi, shuning uchun foydalanuvchi bor-yo'qligi yaratishdan OLDIN
+    tekshiriladi: aks holda eski foydalanuvchi ham "taklif qilingan" bo'lib
+    qolardi va do'stlar bir-birini taklif qilib pul yig'ishi mumkin edi.
     """
-    await get_or_create_user(
+    is_new = (
+        await session.execute(select(User.id).where(User.telegram_id == message.from_user.id))
+    ).scalar_one_or_none() is None
+
+    user = await get_or_create_user(
         session,
         message.from_user.id,
         message.from_user.username,
         language_code=message.from_user.language_code,
     )
+
+    if is_new:
+        referrer_id = referral_service.parse_payload(command.args)
+        if referrer_id is not None:
+            await referral_service.attach(session, user, referrer_id)
+            await session.commit()
+
     await message.answer(CHOOSE_LANGUAGE, reply_markup=language_keyboard())

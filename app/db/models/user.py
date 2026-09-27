@@ -117,7 +117,25 @@ class User(TimestampMixin, Base):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
+    # Taklif qilgan odam. Faqat BIRINCHI /start da, taklif havolasi bilan
+    # kelgan YANGI foydalanuvchiga yoziladi — keyin o'zgarmaydi.
+    referred_by_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    # Taklif qilgan odamga pul berilganmi. Mukofot obunadan KEYIN beriladi,
+    # shuning uchun "kim taklif qilgan" va "pul berilgan" alohida turadi.
+    # Shartli UPDATE bilan yoqiladi: tugma bir necha marta bosilsa ham pul
+    # bir marta beriladi.
+    referral_rewarded: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     field: Mapped["Field | None"] = relationship()
+    # `remote_side` kerak: bog'lanish o'z jadvaliga ishora qiladi va
+    # qaysi tomoni "ota" ekanini SQLAlchemy o'zi aniqlay olmaydi.
+    referred_by: Mapped["User | None"] = relationship(
+        remote_side="User.id", foreign_keys=[referred_by_id]
+    )
     target_countries: Mapped[list["Country"]] = relationship(secondary=user_target_country)
     language_certificates: Mapped[list["UserLanguageCertificate"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

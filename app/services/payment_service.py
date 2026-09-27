@@ -156,6 +156,18 @@ async def approve_payment(
     return Decimal(str(transaction.balance_after))
 
 
+async def reward_referral(
+    session: AsyncSession, user: User, amount: Decimal, note: str
+) -> Decimal:
+    """Taklif mukofotini balansga qo'shadi.
+
+    Bu yerda turibdi, chunki balans faqat `_apply()` orqali o'zgaradi —
+    tarix bilan qoldiq doim mos bo'lishi kerak (modul boshidagi izoh).
+    """
+    transaction = await _apply(session, user, amount, TransactionKind.REFERRAL, note=note)
+    return Decimal(str(transaction.balance_after))
+
+
 async def reject_payment(
     session: AsyncSession, payment: Payment, admin_telegram_id: int, note: str | None = None
 ) -> None:

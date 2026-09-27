@@ -30,7 +30,7 @@ from app.db.models import (
     User,
 )
 from app.db.session import get_session
-from app.services import booking_service, kit_service, payment_service
+from app.services import booking_service, kit_service, payment_service, referral_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
 from app.services.timezone_utils import format_tashkent
@@ -211,11 +211,15 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
     """Profil javobi. Valyuta to'lov sozlamalaridan olinadi — balans va
     narxlar hamma joyda bir xil valyutada ko'rsatilishi uchun."""
     settings_row = await payment_service.get_settings(session)
+    bot_username = await _get_bot_username()
     return ProfileOut(
         balance=float(user.balance or 0),
         balance_currency=settings_row.currency,
         is_blocked=bool(user.is_blocked),
-        bot_username=await _get_bot_username(),
+        bot_username=bot_username,
+        referral_link=referral_service.build_link(bot_username, user.telegram_id),
+        referral_bonus=float(settings_row.referral_bonus or 0),
+        referral_count=await referral_service.count_invited(session, user),
         ui_language=user.ui_language.value,
         degree_level=user.degree_level.value if user.degree_level else None,
         field_id=user.field_id,

@@ -21,13 +21,14 @@ from app.db.models import (
     SavedProgramStatus,
     Scholarship,
     ServiceRequest,
+    ServiceRequestStatus,
     UiLanguage,
     University,
     UniversityRankRange,
     User,
 )
 from app.db.session import get_session
-from app.services import payment_service
+from app.services import kit_service, payment_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
 from app.services.timezone_utils import format_tashkent
@@ -54,6 +55,7 @@ from app.webapp.schemas import (
     SavedStatusIn,
     ScholarshipDeadlineOut,
     ScholarshipOut,
+    ServiceDeliveryResult,
     ServiceOut,
     ServiceRequestResult,
 )
@@ -720,8 +722,13 @@ async def delete_saved(
 # tartib, faollik). Shuning uchun matnlar SERVER tomonida foydalanuvchi
 # tiliga o'giriladi — Mini App'dagi lug'at bu yerda yordam bera olmaydi.
 #
-# To'lov tizimi ulanmagan: "Buyurtma berish" faqat so'rov yozadi, admin
-# ro'yxatni ko'rib foydalanuvchi bilan o'zi bog'lanadi.
+# Ikki xil xizmat bor va ularning turi ALOHIDA maydon bilan belgilanmaydi —
+# PDF biriktirilgani hal qiladi (qarang: app/db/models/service.py):
+#   PDF bor  -> narx balansdan yechiladi va fayl botda yuboriladi;
+#   PDF yo'q -> narx yechiladi, keyin admin foydalanuvchi bilan bog'lanadi.
+#
+# Qulf SERVERDA tekshiriladi. Ilovadagi qulf faqat ko'rinish: fayl berish
+# oldidan egalik har safar qaytadan so'raladi.
 
 
 @router.get("/services", response_model=list[ServiceOut])
@@ -753,6 +760,11 @@ async def list_services(
             price_currency=service.price_currency,
             price_note=_localized_uz(service, "price_note", lang),
             requested=service.id in requested,
+            # `service.file` modelda selectin bilan yuklanadi, baytlarsiz —
+            # bu yerda faqat metama'lumot ishlatiladi.
+            has_file=service.file is not None,
+            file_name=service.file.filename if service.file else None,
+            file_size=service.file.size_bytes if service.file else None,
         )
         for service in services
     ]
@@ -781,8 +793,11 @@ async def request_service(
             )
         )
     ).scalar_one_or_none()
+    has_file = service.file is not None
     if existing is not None:
-        return ServiceRequestResult(requested=True, balance=float(user.balance or 0))
+        return ServiceRequestResult(
+            requested=True, balance=float(user.balance or 0), has_file=has_file
+        )
 
     try:
         new_balance = await payment_service.charge_service(session, user, service)
@@ -798,13 +813,69 @@ async def request_service(
             },
         ) from exc
 
-    session.add(ServiceRequest(user_id=user.id, service_id=service_id))
+    session.add(
+        ServiceRequest(
+            user_id=user.id,
+            service_id=service_id,
+            # PDF o'sha zahoti yetkaziladi, shuning uchun so'rov ochiq
+            # qolmaydi: admin ro'yxatida faqat qo'lda bajariladigan
+            # xizmatlar "Yangi" bo'lib turishi kerak.
+            status=ServiceRequestStatus.DONE if has_file else ServiceRequestStatus.NEW,
+        )
+    )
     await session.commit()
     return ServiceRequestResult(
         requested=True,
         balance=float(new_balance),
         charged=float(service.price_amount) if service.price_amount is not None else None,
+        has_file=has_file,
     )
+
+
+@router.post("/services/{service_id}/deliver", response_model=ServiceDeliveryResult)
+async def deliver_service_file(
+    service_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ServiceDeliveryResult:
+    """Sotib olingan PDF'ni bot suhbatiga yuboradi.
+
+    Nega fayl HTTP orqali berilmaydi: Mini App Telegram'ning ichki
+    brauzerida ochiladi, u yerda PDF yuklab olish iOS'da ishonchsiz. Bot
+    orqali yuborilgan fayl esa suhbatda qoladi — istalgan vaqtda qayta
+    ochiladi va ilova kerak bo'lmaydi.
+
+    Sotib olish bilan YUBORISH ataylab ajratilgan: Telegram yuborishda
+    xato bersa, xarid kuchda qoladi va foydalanuvchi tugmani qayta bosib
+    faylni oladi.
+    """
+    service = await session.get(AdmissionService, service_id)
+    if service is None or not service.is_active:
+        raise HTTPException(status_code=404, detail="Xizmat topilmadi")
+
+    if not await kit_service.owns(session, user, service_id):
+        raise HTTPException(status_code=403, detail="Bu qo'llanma hali sotib olinmagan")
+
+    if not settings.bot_token:
+        raise HTTPException(status_code=503, detail="Bot sozlanmagan")
+
+    bot = Bot(token=settings.bot_token)
+    try:
+        row = await kit_service.deliver_file(session, bot, user, service)
+    except Exception as exc:
+        logger.exception("PDF yuborilmadi: xizmat=%s, user=%s", service_id, user.id)
+        raise HTTPException(
+            status_code=502, detail="Faylni yuborib bo'lmadi, birozdan keyin urinib ko'ring"
+        ) from exc
+    finally:
+        await bot.session.close()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Bu xizmatda fayl yo'q")
+
+    # Keshlangan Telegram file_id shu yerda saqlanadi.
+    await session.commit()
+    return ServiceDeliveryResult(sent=True, file_name=row.filename)
 
 
 @router.post("/feedback", status_code=201)

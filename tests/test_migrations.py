@@ -103,7 +103,10 @@ def test_migration_chain_has_single_head():
     downs: list[str] = []
     for path in VERSIONS.glob("*.py"):
         text = path.read_text(encoding="utf-8")
-        rev = re.search(r"^revision: str = ['\"]([^'\"]+)", text, re.MULTILINE)
+        # Annotatsiya ixtiyoriy: ba'zi fayllarda `revision = "..."`, ba'zisida
+        # `revision: str = "..."`. Qattiq shablon ikkinchi turini ko'rmay,
+        # "head yo'q" degan yolg'on natija berardi.
+        rev = re.search(r"^revision(?:\s*:[^=]+)?=\s*['\"]([^'\"]+)", text, re.MULTILINE)
         down = re.search(r"^down_revision[^=]*=\s*['\"]([^'\"]+)", text, re.MULTILINE)
         if rev:
             revisions[rev.group(1)] = path.name

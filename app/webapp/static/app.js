@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 54;
+const ASSET_V = 55;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -254,7 +254,19 @@ const I18N = {
     "kit.requested_toast": "So'rovingiz qabul qilindi — tez orada bog'lanamiz",
     "kit.empty_title": "Xizmatlar hali qo'shilmagan",
     "kit.empty_text": "Tez orada bu yerda qo'llanmalar va yordam xizmatlari paydo bo'ladi.",
-    "kit.note": "To'lov ilovada emas: buyurtma bergach, siz bilan bog'lanamiz.",
+    "kit.note": "Narx balansdan yechiladi. Balansni botda /topup buyrug'i bilan to'ldirasiz.",
+    "kit.locked": "Qulflangan",
+    "kit.unlocked": "Ochilgan",
+    "kit.buy": "Sotib olish",
+    "kit.download": "PDF ni olish",
+    "kit.sending": "Yuborilmoqda...",
+    "kit.pdf_label": "PDF qo'llanma",
+    "kit.pdf_locked_hint": "Sotib olingach, PDF shu zahoti botga yuboriladi.",
+    "kit.pdf_open_hint": "Qo'llanma sizniki. Istagan vaqtda botga qayta yuborishingiz mumkin.",
+    "kit.sent_title": "PDF yuborildi",
+    "kit.sent_text": "Qo'llanma bot suhbatiga yuborildi — u yerda ochib, telefoningizga saqlashingiz mumkin.",
+    "kit.sent_toast": "PDF botga yuborildi",
+    "kit.open_bot": "Botni ochish",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
@@ -524,7 +536,19 @@ const I18N = {
     "kit.requested_toast": "Заявка принята — скоро свяжемся с вами",
     "kit.empty_title": "Услуги пока не добавлены",
     "kit.empty_text": "Скоро здесь появятся руководства и услуги поддержки.",
-    "kit.note": "Оплата не в приложении: после заявки мы свяжемся с вами.",
+    "kit.note": "Стоимость списывается с баланса. Пополнить — командой /topup в боте.",
+    "kit.locked": "Закрыто",
+    "kit.unlocked": "Открыто",
+    "kit.buy": "Купить",
+    "kit.download": "Получить PDF",
+    "kit.sending": "Отправляем...",
+    "kit.pdf_label": "PDF-руководство",
+    "kit.pdf_locked_hint": "После покупки PDF сразу придёт в бот.",
+    "kit.pdf_open_hint": "Руководство ваше. Можно отправить в бот ещё раз в любой момент.",
+    "kit.sent_title": "PDF отправлен",
+    "kit.sent_text": "Руководство отправлено в чат с ботом — там его можно открыть и сохранить на телефон.",
+    "kit.sent_toast": "PDF отправлен в бот",
+    "kit.open_bot": "Открыть бот",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
@@ -794,7 +818,19 @@ const I18N = {
     "kit.requested_toast": "Request received — we will contact you shortly",
     "kit.empty_title": "No services yet",
     "kit.empty_text": "Guides and support services will appear here soon.",
-    "kit.note": "Payment is not taken in the app: we contact you after the request.",
+    "kit.note": "The price comes from your balance. Top it up with /topup in the bot.",
+    "kit.locked": "Locked",
+    "kit.unlocked": "Unlocked",
+    "kit.buy": "Buy",
+    "kit.download": "Get the PDF",
+    "kit.sending": "Sending...",
+    "kit.pdf_label": "PDF guide",
+    "kit.pdf_locked_hint": "Once bought, the PDF is sent to the bot right away.",
+    "kit.pdf_open_hint": "The guide is yours. You can have it sent to the bot again any time.",
+    "kit.sent_title": "PDF sent",
+    "kit.sent_text": "The guide was sent to your chat with the bot — open it there and save it to your phone.",
+    "kit.sent_toast": "PDF sent to the bot",
+    "kit.open_bot": "Open the bot",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
@@ -2833,8 +2869,14 @@ async function resetProfile() {
 // matnlar serverdan foydalanuvchi tilida tayyor keladi — bu yerdagi lug'at
 // faqat interfeys elementlariga tegishli.
 //
-// To'lov ilovada undirilmaydi: "Buyurtma berish" so'rov yozadi, admin esa
-// "Xizmat so'rovlari" bo'limida ko'rib, foydalanuvchi bilan bog'lanadi.
+// Ikki xil xizmat bor, turini PDF biriktirilgani hal qiladi:
+//   PDF bor  -> qulflangan mahsulot. Sotib olinadi (narx balansdan
+//               yechiladi) va fayl BOTGA yuboriladi, ilovaga emas.
+//   PDF yo'q -> qo'lda bajariladigan xizmat: pul yechiladi, keyin admin
+//               "Xizmat so'rovlari" bo'limidan ko'rib bog'lanadi.
+//
+// Bu yerdagi qulf faqat KO'RINISH. Haqiqiy tekshiruv serverda: fayl
+// berishdan oldin egalik qaytadan so'raladi.
 
 function bindKitBack(root) {
   const back = root.querySelector("#kit-back");
@@ -2894,6 +2936,139 @@ function openNeedBalanceSheet(short) {
   document.getElementById("need-close").addEventListener("click", closeSheet);
 }
 
+// Narx aynan shu qoldiqdan yechiladi, shuning uchun u sahifada ko'rinib
+// turadi: "Sotib olish"ni bosgan odam avval hisobini bilishi kerak.
+function kitBalanceText() {
+  if (!profile) return "";
+  return `${Number(profile.balance || 0).toLocaleString()} ${escapeHtml(
+    profile.balance_currency || ""
+  )}`;
+}
+
+function refreshKitBalance() {
+  const el = document.getElementById("kit-balance");
+  if (el) el.textContent = kitBalanceText();
+}
+
+// PDF o'lchami odam o'qiydigan ko'rinishda: "2.3 MB" yoki "740 KB".
+function fileSizeLabel(bytes) {
+  if (!bytes) return "";
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(Math.round(bytes / 1024), 1)} KB`;
+}
+
+// Qulf belgisi faqat PDF'li xizmatlarda: qo'lda bajariladigan xizmatda
+// "qulf" degan tushuncha yo'q, u sotib olingach ham fayl bermaydi.
+function serviceTag(service) {
+  if (!service.has_file) return "";
+  return service.requested
+    ? `<span class="svc-tag is-open">${icon("check")}${t("kit.unlocked")}</span>`
+    : `<span class="svc-tag is-locked">${icon("lock")}${t("kit.locked")}</span>`;
+}
+
+function serviceFileRow(service) {
+  if (!service.has_file) return "";
+  const size = fileSizeLabel(service.file_size);
+  // Fayl nomi ataylab ko'rsatilmaydi: u adminka uchun ish nomi
+  // ("cv_guide_v3_final.pdf") va foydalanuvchiga hech narsa aytmaydi.
+  return `
+    <div class="svc-file">
+      ${icon("file")}
+      <span class="svc-file-text">
+        <span class="svc-file-name">${t("kit.pdf_label")}${size ? ` · ${size}` : ""}</span>
+        <span class="svc-file-hint">${
+          service.requested ? t("kit.pdf_open_hint") : t("kit.pdf_locked_hint")
+        }</span>
+      </span>
+    </div>`;
+}
+
+function serviceBtnInner(service) {
+  if (service.has_file) {
+    return service.requested
+      ? icon("download") + t("kit.download")
+      : icon("lock") + t("kit.buy");
+  }
+  return service.requested
+    ? icon("check") + t("kit.requested")
+    : t("kit.request") + icon("chevron");
+}
+
+function serviceBtnClass(service) {
+  if (service.has_file) return service.requested ? " is-get" : " is-buy";
+  return service.requested ? " is-done" : "";
+}
+
+// Sotib olingandan keyin kartani JOYIDA yangilaymiz. Butun sahifani qayta
+// chizsak, foydalanuvchi bosgan joyidan uzilib, ro'yxat yuqorisiga
+// qaytib qolardi.
+function unlockServiceCard(btn, hasFile) {
+  btn.dataset.owned = "1";
+  btn.disabled = !hasFile;
+  btn.classList.remove("is-buy");
+  btn.classList.add(hasFile ? "is-get" : "is-done");
+  btn.innerHTML = hasFile
+    ? icon("download") + t("kit.download")
+    : icon("check") + t("kit.requested");
+
+  const card = btn.closest(".svc-card");
+  if (!card) return;
+  card.classList.remove("is-locked");
+  const tag = card.querySelector(".svc-tag");
+  if (tag) {
+    tag.className = "svc-tag is-open";
+    tag.innerHTML = icon("check") + t("kit.unlocked");
+  }
+  const hint = card.querySelector(".svc-file-hint");
+  if (hint) hint.textContent = t("kit.pdf_open_hint");
+}
+
+// Fayl ILOVAGA emas, BOTGA yuboriladi: Mini App Telegram ichidagi
+// brauzerda ochiladi va u yerda PDF saqlash (ayniqsa iOS'da) ishonchsiz.
+// Bot suhbatiga tushgan fayl esa o'sha yerda qolib, istalgan vaqtda
+// ochiladi.
+async function deliverPdf(serviceId, btn) {
+  const label = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = t("kit.sending");
+  try {
+    await api(`/services/${serviceId}/deliver`, { method: "POST" });
+    haptic("success");
+    openPdfSentSheet();
+  } catch (err) {
+    haptic("error");
+    // Xarid kuchda qoladi — tugmani qayta bosish yetarli.
+    showToast(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = label;
+  }
+}
+
+function openPdfSentSheet() {
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("kit.sent_title")}</div>
+    <div class="sheet-text">${t("kit.sent_text")}</div>
+    <button type="button" class="btn btn-accent btn-block" id="pdf-open">
+      ${t("kit.open_bot")}
+    </button>
+    <button type="button" class="btn btn-quiet btn-block" id="pdf-close">
+      ${t("onboard.skip")}
+    </button>`,
+    sheet
+  );
+  document.getElementById("pdf-open").addEventListener("click", () => {
+    // Ilovani yopsak, foydalanuvchi aynan bot suhbatiga qaytadi — fayl
+    // o'sha yerda turadi.
+    if (tg && tg.close) tg.close();
+  });
+  document.getElementById("pdf-close").addEventListener("click", closeSheet);
+}
+
 async function renderKit() {
   const el = document.getElementById("view-kit");
   el.innerHTML = skeletons(3);
@@ -2924,30 +3099,36 @@ async function renderKit() {
         <div class="kit-head-title">${t("kit.title")}</div>
         <div class="kit-head-sub">${t("kit.subtitle")}</div>
       </div>
+      <div class="kit-balance">
+        <span class="kit-balance-label">${t("account.balance")}</span>
+        <span class="kit-balance-value" id="kit-balance">${kitBalanceText()}</span>
+      </div>
     </div>
     ${services
       .map(
         (service, index) => `
-      <article class="svc-card svc-card-${(index % 4) + 1}">
+      <article class="svc-card svc-card-${(index % 4) + 1}${
+        service.has_file && !service.requested ? " is-locked" : ""
+      }">
         <div class="svc-top">
           <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
           <h3 class="svc-title">${escapeHtml(service.title)}</h3>
+          ${serviceTag(service)}
         </div>
         ${
           service.description
             ? `<p class="svc-text">${escapeHtml(service.description)}</p>`
             : ""
         }
+        ${serviceFileRow(service)}
         <div class="svc-foot">
           <span class="svc-price">${servicePriceText(service)}</span>
-          <button type="button" class="svc-btn kit-btn${
-            service.requested ? " is-done" : ""
-          }" data-id="${service.id}" ${service.requested ? "disabled" : ""}>
-            ${
-              service.requested
-                ? icon("check") + t("kit.requested")
-                : t("kit.request") + icon("chevron")
-            }
+          <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
+            data-id="${service.id}"
+            data-file="${service.has_file ? "1" : "0"}"
+            data-owned="${service.requested ? "1" : "0"}"
+            ${!service.has_file && service.requested ? "disabled" : ""}>
+            ${serviceBtnInner(service)}
           </button>
         </div>
       </article>`
@@ -2960,16 +3141,30 @@ async function renderKit() {
   el.querySelectorAll(".kit-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       haptic("light");
+
+      // Allaqachon sotib olingan PDF — pul qayta yechilmaydi, faqat fayl
+      // botga qayta yuboriladi.
+      if (btn.dataset.owned === "1" && btn.dataset.file === "1") {
+        await deliverPdf(btn.dataset.id, btn);
+        return;
+      }
+
       btn.disabled = true;
       try {
         const result = await api(`/services/${btn.dataset.id}/request`, { method: "POST" });
         // Narxi bor xizmat balansdan yechiladi — profildagi qoldiq
         // eskirib qolmasligi uchun darhol yangilaymiz.
         if (profile && typeof result.balance === "number") profile.balance = result.balance;
-        btn.classList.add("is-done");
-        btn.innerHTML = icon("check") + t("kit.requested");
+        refreshKitBalance();
         haptic("success");
-        showToast(t("kit.requested_toast"));
+        unlockServiceCard(btn, Boolean(result.has_file));
+        if (result.has_file) {
+          // Sotib olgan odam yana bir tugma qidirmasligi kerak — fayl
+          // shu zahoti yuboriladi.
+          await deliverPdf(btn.dataset.id, btn);
+        } else {
+          showToast(t("kit.requested_toast"));
+        }
       } catch (err) {
         btn.disabled = false;
         haptic("error");

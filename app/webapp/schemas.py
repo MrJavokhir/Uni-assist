@@ -236,17 +236,32 @@ class ServiceOut(BaseModel):
     price_amount: float | None = None
     price_currency: str
     price_note: str | None = None
-    # Foydalanuvchi bu xizmatga allaqachon so'rov yuborganmi.
+    # Foydalanuvchi bu xizmatni allaqachon sotib olganmi (yoki so'rov
+    # yuborganmi). PDF xizmatlar uchun bu "qulf ochilgan" degani.
     requested: bool = False
+    # PDF biriktirilganmi. Biriktirilgan bo'lsa, xizmat yuklab olinadigan
+    # mahsulot: sotib olinmaguncha ilovada qulflangan turadi.
+    has_file: bool = False
+    file_name: str | None = None
+    file_size: int | None = None
 
 
 class ServiceRequestResult(BaseModel):
-    """Xizmat buyurtma qilingandan keyingi javob."""
+    """Xizmat sotib olingandan keyingi javob."""
 
     requested: bool
     # Balansdan yechilgan bo'lsa yangi qoldiq, aks holda o'zgarmagan qoldiq.
     balance: float
     charged: float | None = None
+    # PDF xizmat bo'lsa, ilova darhol yetkazishni so'raydi.
+    has_file: bool = False
+
+
+class ServiceDeliveryResult(BaseModel):
+    """PDF botga yuborilgandan keyingi javob."""
+
+    sent: bool
+    file_name: str | None = None
 
 
 class FeedbackIn(BaseModel):

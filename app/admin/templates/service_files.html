@@ -1,0 +1,94 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">PDF qo'llanmalar</h3>
+    </div>
+    <div class="card-body">
+      <ul class="ua-csv-rules">
+        <li><strong>PDF biriktirilgan xizmat ilovada QULFLANGAN turadi.</strong> Foydalanuvchi sotib olgandan keyin qulf ochiladi va fayl botda yuboriladi.</li>
+        <li>PDF biriktirilmagan xizmat avvalgidek ishlaydi: pul yechiladi, keyin siz «Xizmat so'rovlari» bo'limidan ko'rib, o'zingiz bog'lanasiz.</li>
+        <li>Fayl almashtirilsa, sotib olganlar keyingi yuklab olishda YANGI nusxani oladi.</li>
+        <li>Faqat PDF, {{ max_mb }} MB gacha. Narx va matnlar «Admission Kit xizmatlari» bo'limida.</li>
+      </ul>
+
+      {% if not rows %}
+      <div class="alert alert-warning mb-0">
+        Hali xizmat yo'q. Avval «Admission Kit xizmatlari» bo'limida xizmat yarating.
+      </div>
+      {% else %}
+      <div class="table-responsive">
+        <table class="table table-vcenter">
+          <thead>
+            <tr>
+              <th>Xizmat</th>
+              <th>Narxi</th>
+              <th>Joriy fayl</th>
+              <th class="w-1">PDF yuklash</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>
+                <div>{{ row.title }}</div>
+                <div class="text-muted small">
+                  <code>{{ row.code }}</code>
+                  {% if not row.is_active %}<span class="badge bg-secondary-lt ms-1">faol emas</span>{% endif %}
+                </div>
+              </td>
+              <td>
+                {% if row.price is not none %}{{ "{:,.0f}".format(row.price) }} {{ row.currency }}
+                {% elif row.file %}
+                {# Narxsiz PDF hech kimdan pul olmaydi — bu deyarli har doim
+                   unutilgan narx, shuning uchun ko'zga tashlanib turishi kerak. #}
+                <span class="badge bg-red-lt">narx yo'q</span>
+                <div class="text-muted small">PDF hammaga bepul beriladi</div>
+                {% else %}<span class="text-muted">kelishiladi</span>{% endif %}
+              </td>
+              <td>
+                {% if row.file %}
+                <span class="badge bg-green-lt">PDF</span>
+                {{ row.file.filename }}
+                <div class="text-muted small">
+                  {{ row.file.size }} · {{ row.file.uploaded.strftime("%d.%m.%Y %H:%M") }}
+                </div>
+                {% else %}
+                <span class="text-muted">PDF yo'q — qo'lda bajariladigan xizmat</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('admin:view-kit-files-upload') }}"
+                      enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                  <input type="hidden" name="service_id" value="{{ row.id }}">
+                  <input type="file" name="file" accept="application/pdf,.pdf" class="form-control form-control-sm" required>
+                  <button type="submit" class="btn btn-sm btn-primary text-nowrap">
+                    {% if row.file %}Almashtirish{% else %}Yuklash{% endif %}
+                  </button>
+                </form>
+                {% if row.file %}
+                <form method="post" action="{{ url_for('admin:view-kit-files-delete') }}" class="mt-2">
+                  <input type="hidden" name="service_id" value="{{ row.id }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Fayl o\'chiriladi. Xizmat qulfsiz, qo\'lda bajariladigan xizmatga aylanadi. Davom etamizmi?')">
+                    Faylni o'chirish
+                  </button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+</div>
+{% endblock %}

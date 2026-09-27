@@ -31,6 +31,7 @@ from app.db.models.scholarship import (
 )
 from app.db.models.service import (
     AdmissionService,
+    ServiceFile,
     ServiceRequest,
     ServiceRequestStatus,
 )
@@ -75,6 +76,7 @@ __all__ = [
     "SavedProgramStatus",
     "Scholarship",
     "ScholarshipDeadline",
+    "ServiceFile",
     "ServiceRequest",
     "ServiceRequestStatus",
     "TransactionKind",

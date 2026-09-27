@@ -688,12 +688,16 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     `code` — barqaror kalit, Mini App ikonkani shu bo'yicha tanlaydi.
     Uni o'zgartirmang: nom tahrirlanaveradi, kod esa o'zgarmasligi kerak.
 
-    Narx BO'SH qoldirilsa, Mini App "Narx kelishiladi" deb yozadi. 0 yozib
-    qo'yish "bepul" degan boshqa ma'no beradi.
+    Narx BO'SH qoldirilsa, Mini App "Narx kelishiladi" deb yozadi va pul
+    YECHILMAYDI. 0 yozib qo'yish "bepul" degan boshqa ma'no beradi.
 
-    DIQQAT: to'lov tizimi ulanmagan. Narx faqat ko'rsatish uchun, pul
-    ilovada undirilmaydi — foydalanuvchi "Buyurtma berish"ni bosadi va
-    "Xizmat so'rovlari" bo'limida paydo bo'ladi.
+    Narx ko'rsatilgan bo'lsa, foydalanuvchi sotib olganda summa uning
+    BALANSIDAN yechiladi (balans botda /topup bilan to'ldiriladi).
+
+    Xizmatning turi shu yerda tanlanmaydi — unga PDF biriktirilgani hal
+    qiladi ("Qo'llanma fayllari" bo'limi):
+      PDF bor  -> qulflangan mahsulot, sotib olingach botda yuboriladi;
+      PDF yo'q -> qo'lda bajariladigan xizmat, siz o'zingiz bog'lanasiz.
     """
 
     name = "Xizmat"
@@ -754,7 +758,10 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
             )
         },
         "price_amount": {
-            "description": "Bo'sh qoldirsangiz, ilovada «Narx kelishiladi» deb chiqadi."
+            "description": (
+                "Bo'sh qoldirsangiz, ilovada «Narx kelishiladi» deb chiqadi va pul "
+                "yechilmaydi. Summa yozsangiz, sotib olganda balansdan yechiladi."
+            )
         },
         "price_currency": {"description": "UZS, USD, EUR..."},
         "price_note_uz": {"description": "Narx yonidagi qisqa izoh: «bir marta», «1 soat»."},
@@ -766,11 +773,17 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
 
 
 class ServiceRequestAdmin(ModelView, model=ServiceRequest):
-    """Foydalanuvchilarning Admission Kit xizmatlariga so'rovlari.
+    """Admission Kit xizmatlariga kelgan so'rovlar — ya'ni SOTIB OLISHLAR.
 
-    Bu to'lov emas, qiziqish: foydalanuvchi ilovada "Buyurtma berish"ni
-    bosgan, siz u bilan bog'lanib holatni yangilab borasiz. Yangi yozuv
-    faqat shu yerdan yaratilmaydi — u ilovadan keladi.
+    Yozuv paydo bo'lganda narx allaqachon balansdan yechilgan (yechilgan
+    summa "Balans tarixi"da ko'rinadi). Shuning uchun bu ro'yxat "kim nima
+    uchun to'lagan" degan ma'noni beradi.
+
+    PDF qo'llanmalar darhol botda yetkaziladi va "Bajarildi" holatida
+    keladi — ular bilan ishlash kerak emas. E'tibor beriladigani "Yangi"
+    holatdagilar: mentor, yordam kabi qo'lda bajariladigan xizmatlar.
+
+    Yangi yozuv bu yerdan yaratilmaydi — u ilovadan keladi.
     """
 
     name = "Xizmat so'rovi"

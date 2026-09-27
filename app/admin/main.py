@@ -7,7 +7,7 @@ from starlette.responses import Response
 
 from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
-from app.admin.service_files import ServiceFileView
+from app.admin.kit_views import AdmissionKitView
 from app.admin.stats import StatsView
 from app.admin.views import (
     AdmissionServiceAdmin,
@@ -80,14 +80,18 @@ for view in (
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     UserAdmin,
-    AdmissionServiceAdmin,
 ):
     admin.add_view(view)
-# "Admission Kit" guruhi ichida tartib: xizmat -> unga PDF -> kelgan so'rovlar.
-# Guruh AdmissionServiceAdmin bilan yaratilgani uchun bu yerda faqat qo'shiladi
-# — menyudagi guruh o'z joyida qoladi.
-admin.add_base_view(ServiceFileView)
+
+# Admission Kit — BITTA bo'lim. Xizmatlar, ularning PDF fayllari va sotib
+# olishlar bitta sahifada: ular doim birga ishlatiladi, uchta alohida qator
+# esa menyuni cho'zib yuborardi.
+#
+# Ikkala ModelView menyuda ko'rinmaydi (`is_visible`), lekin qo'shiladi —
+# ularning formalari o'sha sahifadagi havolalardan ochiladi.
+admin.add_base_view(AdmissionKitView)
 for view in (
+    AdmissionServiceAdmin,
     ServiceRequestAdmin,
     PaymentSettingsAdmin,
     PaymentAdmin,

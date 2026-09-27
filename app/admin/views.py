@@ -701,9 +701,14 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
     """
 
     name = "Xizmat"
-    category = "Admission Kit"
     name_plural = "Admission Kit xizmatlari"
     icon = "fa-solid fa-briefcase"
+
+    def is_visible(self, request: Request) -> bool:
+        # Menyuda ko'rinmaydi: xizmatlar "Admission Kit" sahifasidan
+        # boshqariladi, bu forma esa o'sha yerdagi "Tahrirlash" va "Yangi
+        # xizmat" tugmalari orqali ochiladi. Marshrutlar joyida qoladi.
+        return False
 
     column_list = [
         AdmissionService.id,
@@ -787,10 +792,14 @@ class ServiceRequestAdmin(ModelView, model=ServiceRequest):
     """
 
     name = "Xizmat so'rovi"
-    category = "Admission Kit"
     name_plural = "Xizmat so'rovlari"
     icon = "fa-solid fa-handshake"
     can_create = False
+
+    def is_visible(self, request: Request) -> bool:
+        # Oxirgi sotib olishlar "Admission Kit" sahifasida ko'rinadi, bu
+        # ro'yxat esa o'sha yerdagi "Hammasi" havolasi orqali ochiladi.
+        return False
 
     column_list = [
         ServiceRequest.id,

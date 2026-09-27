@@ -1,18 +1,26 @@
-"""Admission Kit — pullik xizmatlar katalogi va ularga kelgan so'rovlar.
+"""Admission Kit — pullik xizmatlar katalogi, PDF qo'llanmalar va so'rovlar.
 
 Katalog KODDA emas, bazada: xizmat qo'shish, matnini tahrirlash, narxini
 o'zgartirish va vaqtincha o'chirish — hammasi admin panel orqali. Shuning
 uchun narx yoki ro'yxat o'zgarganda deploy kerak emas.
 
-To'lov tizimi ULANMAGAN. Foydalanuvchi "Buyurtma berish" bosganda
-`ServiceRequest` yoziladi va admin u bilan bog'lanadi. Shu sababli narx
-maydoni faqat ko'rsatish uchun — hech qayerda undirilmaydi.
+Xizmatning ikki turi bor va ular ALOHIDA maydon bilan belgilanmaydi —
+PDF biriktirilgan-biriktirilmagani hal qiladi:
+
+    PDF biriktirilgan  -> raqamli mahsulot. Balansdan pul yechiladi va fayl
+                          shu zahoti botda yuboriladi. Sotib olinmaguncha
+                          ilovada QULFLANGAN turadi.
+    PDF yo'q           -> qo'lda bajariladigan xizmat (mentor, yordam).
+                          Pul yechiladi, keyin admin bog'lanadi.
+
+Shu qaror ataylab: adminga "bu qanday xizmat" degan qo'shimcha tanlov
+bermaydi — fayl yuklandi, demak yuklab olinadigan mahsulot.
 """
 
 import enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, LargeBinary, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, str_enum
@@ -58,6 +66,17 @@ class AdmissionService(TimestampMixin, Base):
 
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # `lazy="selectin"` — ilova va adminkada xizmat o'qilganda faylning
+    # METAMA'LUMOTI (nomi, o'lchami) birga keladi, shuning uchun "PDF bormi"
+    # degan savolga qo'shimcha so'rovsiz javob beriladi. Faylning O'ZI
+    # (`ServiceFile.data`) deferred — u bu yerga TORTILMAYDI.
+    file: Mapped["ServiceFile | None"] = relationship(
+        back_populates="service",
+        uselist=False,
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     def __str__(self) -> str:
         return self.title_uz

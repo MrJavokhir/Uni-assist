@@ -11,10 +11,18 @@
   --hint: var(--tg-theme-hint-color, #8a8f98);
   --separator: rgba(128, 132, 142, 0.18);
 
-  /* Brand accent stays constant so the app has its own identity */
-  --accent: #635bff;
-  --accent-2: #9b5cf6;
-  --accent-soft: rgba(99, 91, 255, 0.11);
+  /* Brend rangi Telegram mavzusidan QAT'I NAZAR o'zgarmaydi — ilovaning
+     o'z identikasi. Signal Blue (#0057FF).
+
+     `--accent-ink` — aynan shu rang MATN/IKONKA sifatida ishlatilganda.
+     Yorug' mavzuda u `--accent`ning o'zi, qorong'ida esa yorug'roq:
+     #0057FF Telegram tungi foniga (#17212b) nisbatan atigi 2.95:1 beradi,
+     ya'ni o'qilmaydi. To'ldirilgan tugmada esa aksincha — to'q rang kerak
+     (oq matn ustida 5.52:1). Shuning uchun ikkita alohida o'zgaruvchi. */
+  --accent: #0057ff;
+  --accent-2: #2f8bff;
+  --accent-ink: var(--accent);
+  --accent-soft: rgba(0, 87, 255, 0.10);
   --on-accent: #ffffff;
 
   --green: #22a565;
@@ -31,7 +39,7 @@
 
   --shadow-sm: 0 1px 2px rgba(16, 20, 40, 0.05);
   --shadow-md: 0 2px 6px rgba(16, 20, 40, 0.06), 0 8px 24px rgba(16, 20, 40, 0.05);
-  --shadow-accent: 0 8px 24px rgba(99, 91, 255, 0.28);
+  --shadow-accent: 0 8px 24px rgba(0, 87, 255, 0.30);
 
   --pad: 16px;
 }
@@ -39,7 +47,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --separator: rgba(160, 165, 180, 0.16);
-    --accent-soft: rgba(124, 118, 255, 0.18);
+    /* Qorong'ida matn yorug'roq bo'ladi (5.73:1), fon esa o'zgarmaydi. */
+    --accent-ink: #4d9aff;
+    --accent-soft: rgba(77, 154, 255, 0.18);
     --green-soft: rgba(34, 165, 101, 0.2);
     --amber-soft: rgba(232, 145, 42, 0.2);
     --red-soft: rgba(229, 72, 77, 0.2);
@@ -117,7 +127,7 @@ body {
   -webkit-appearance: none;
   appearance: none;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   border: none;
   border-radius: 9px;
   padding: 6px 10px;
@@ -166,7 +176,7 @@ body {
 .section-action {
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ============ Hero ============ */
@@ -292,7 +302,7 @@ body {
 .pill.green { background: var(--green-soft); color: var(--green); }
 .pill.amber { background: var(--amber-soft); color: var(--amber); }
 .pill.red { background: var(--red-soft); color: var(--red); }
-.pill.accent { background: var(--accent-soft); color: var(--accent); }
+.pill.accent { background: var(--accent-soft); color: var(--accent-ink); }
 
 .card-actions {
   display: flex;
@@ -321,7 +331,7 @@ body {
 .btn .ico { width: 16px; height: 16px; }
 
 .btn-accent { background: var(--accent); color: var(--on-accent); }
-.btn-soft { background: var(--accent-soft); color: var(--accent); }
+.btn-soft { background: var(--accent-soft); color: var(--accent-ink); }
 .btn-quiet { background: var(--surface); color: var(--hint); }
 .btn-done { background: var(--green-soft); color: var(--green); }
 .btn:disabled { opacity: 1; cursor: default; transform: none; }
@@ -381,7 +391,7 @@ body {
 .chip.active {
   background: var(--accent);
   color: var(--on-accent);
-  box-shadow: 0 4px 12px rgba(99, 91, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 87, 255, 0.25);
 }
 
 /* Segmented control (saved status) */
@@ -476,7 +486,7 @@ body {
   margin: 0 auto 14px;
   border-radius: 20px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .empty-ico .ico { width: 28px; height: 28px; }
 
@@ -867,7 +877,7 @@ body {
   border-bottom: 1px solid var(--separator);
 }
 .country-all .country-flag .ico { width: 19px; height: 19px; color: var(--hint); }
-.country-all.active .country-flag .ico { color: var(--accent); }
+.country-all.active .country-flag .ico { color: var(--accent-ink); }
 
 /* Diplom qisqartmasi (MBA, LLM, B.Sc.) — dastur nomi yonida.
    DIQQAT: bu blok ilgari obuna ekrani uslublari bilan birga tasodifan
@@ -878,7 +888,7 @@ body {
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 11px;
   font-weight: 700;
   vertical-align: middle;
@@ -1096,7 +1106,7 @@ body {
   display: grid;
   place-items: center;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .hx-mini-ico .ico { width: 14px; height: 14px; }
 
@@ -1574,7 +1584,7 @@ button.sch-card:active { transform: scale(0.985); }
 /* Universitet reytingi (QS) — dastur kartasi va tafsilot oynasida */
 .pill.rank-pill {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
 }
 
@@ -1630,7 +1640,7 @@ button.sch-card:active { transform: scale(0.985); }
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ============ Baland varaq (GPA konvertor kabi to'liq sahifali oynalar) ============ */
@@ -1764,7 +1774,7 @@ button.sch-card:active { transform: scale(0.985); }
   to { opacity: 1; color: var(--text); }
 }
 @keyframes finding-dot-on {
-  to { border-color: var(--accent); }
+  to { border-color: var(--accent-ink); }
 }
 @keyframes finding-dot-fill {
   to { transform: scale(1); }
@@ -1859,7 +1869,7 @@ button.sch-card:active { transform: scale(0.985); }
   flex: none;
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .fx-bar-go .ico { width: 14px; height: 14px; }
 
@@ -1924,7 +1934,7 @@ button.sch-card:active { transform: scale(0.985); }
   border-radius: 50%;
   font-size: 12px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent-ink);
   background: var(--accent-soft);
 }
 
@@ -1990,10 +2000,18 @@ button.sch-card:active { transform: scale(0.985); }
 }
 
 /* Xizmatning "rangi" — faqat shu ikki o'zgaruvchida. */
-.svc-card-1 { --svc: #635bff; --svc-2: #9b5cf6; }
+.svc-card-1 { --svc: #0057ff; --svc-2: #2f8bff; }
 .svc-card-2 { --svc: #2f7de8; --svc-2: #35b8e8; }
 .svc-card-3 { --svc: #e8722f; --svc-2: #e8a72f; }
 .svc-card-4 { --svc: #d93f86; --svc-2: #9b5cf6; }
+
+/* Ko'k xizmatlar tungi fonda o'qilmay qoladi: #0057ff Telegram qorong'i
+   foniga nisbatan 2.95:1 beradi. Sariq va pushti kartalarga bu kerak emas —
+   ular o'zi yetarlicha ajralib turadi. */
+@media (prefers-color-scheme: dark) {
+  .svc-card-1 { --svc: #4d9aff; --svc-2: #2f8bff; }
+  .svc-card-2 { --svc: #4aa8f0; --svc-2: #35b8e8; }
+}
 
 .svc-top {
   display: flex;
@@ -2104,7 +2122,7 @@ button.sch-card:active { transform: scale(0.985); }
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-ink);
   cursor: pointer;
 }
 .kit-back .ico {
@@ -2210,7 +2228,7 @@ button.sch-card:active { transform: scale(0.985); }
   flex: none;
   border-radius: 11px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .acc-ico .ico { width: 17px; height: 17px; }
 
@@ -2238,8 +2256,8 @@ button.sch-card:active { transform: scale(0.985); }
 }
 
 /* Til tanlashda faol qator brend rangida. */
-.lang-pick.is-active .acc-title { color: var(--accent); }
-.lang-pick .acc-chevron { color: var(--accent); opacity: 1; }
+.lang-pick.is-active .acc-title { color: var(--accent-ink); }
+.lang-pick .acc-chevron { color: var(--accent-ink); opacity: 1; }
 
 /* ============ Yordam va fikr ============ */
 
@@ -2276,5 +2294,5 @@ button.sch-card:active { transform: scale(0.985); }
 }
 .fb-text:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--accent-ink);
 }

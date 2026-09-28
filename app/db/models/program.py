@@ -71,6 +71,10 @@ REQUIRED_DOCUMENTS: dict[str, str] = {
     "cv": "CV",
     "passport": "Pasport nusxasi",
     "research_proposal": "Tadqiqot rejasi",
+    # San'at, arxitektura, dizayn, kino va jurnalistika dasturlari portfolio
+    # so'raydi — bu alohida, majburiy hujjat, shuning uchun erkin matnda emas,
+    # ro'yxatda turadi (filtrlash va checklist uchun).
+    "portfolio": "Portfolio (ishlar to'plami)",
 }
 
 

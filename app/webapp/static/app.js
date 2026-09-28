@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 58;
+const ASSET_V = 59;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -431,6 +431,7 @@ const I18N = {
     "document.personal_statement": "Motivatsion xat",
     "document.cv": "CV",
     "document.research_proposal": "Tadqiqot rejasi",
+    "document.portfolio": "Portfolio (ishlar to'plami)",
     "program.missing_intro": "Rasmiy sahifada ko'rsatilmagani uchun bo'sh: {fields}.",
     "program.missing.tuition": "kontrakt narxi",
     "program.missing.language_score": "IELTS/TOEFL bali",
@@ -727,6 +728,7 @@ const I18N = {
     "document.personal_statement": "Мотивационное письмо",
     "document.cv": "Резюме (CV)",
     "document.research_proposal": "Исследовательское предложение",
+    "document.portfolio": "Портфолио работ",
     "program.missing_intro": "Не указано на официальной странице: {fields}.",
     "program.missing.tuition": "стоимость обучения",
     "program.missing.language_score": "балл IELTS/TOEFL",
@@ -1023,6 +1025,7 @@ const I18N = {
     "document.personal_statement": "Personal statement",
     "document.cv": "CV",
     "document.research_proposal": "Research proposal",
+    "document.portfolio": "Portfolio of work",
     "program.missing_intro": "Not stated on the official page: {fields}.",
     "program.missing.tuition": "tuition fee",
     "program.missing.language_score": "IELTS/TOEFL score",

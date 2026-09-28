@@ -26,15 +26,22 @@ def test_no_checked_boxes_clears_documents():
 
 
 def test_unknown_legacy_keys_survive_a_round_trip():
-    """Ro'yxatda yo'q eski kalit sehrgar orqali saqlaganda jimgina o'chmaydi."""
-    fields = _documents_out(["transcript", "portfolio"])
-    assert fields["docs_extra"] == "portfolio"
+    """Ro'yxatda yo'q eski kalit sehrgar orqali saqlaganda jimgina o'chmaydi.
+
+    Namuna kalit ataylab hech qachon haqiqiy bo'lmaydigan qilib olingan: ilgari
+    bu yerda "portfolio" turgan edi, keyin u REQUIRED_DOCUMENTS ga qo'shilib,
+    test o'z ma'nosini yo'qotgan.
+    """
+    legacy = "legacy_unknown_key"
+    assert legacy not in REQUIRED_DOCUMENTS
+    fields = _documents_out(["transcript", legacy])
+    assert fields["docs_extra"] == legacy
 
     form = FormData([
         (f"p3_{key}", "on") for key, checked in fields.items() if key.startswith("doc_") and checked
     ] + [("p3_docs_extra", fields["docs_extra"])])
 
-    assert _documents_in(form, 3) == ["transcript", "portfolio"]
+    assert _documents_in(form, 3) == ["transcript", legacy]
 
 
 def test_every_document_key_is_translated_in_mini_app():

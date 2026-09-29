@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 59;
+const ASSET_V = 60;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1157,7 +1157,7 @@ let profile = null;
 let countries = [];
 let majors = [];
 // Katalogda haqiqatan uchraydigan o'qish tillari (kanonik inglizcha
-// nomlar). Nomlarni `languageName()` foydalanuvchi tiliga o'giradi.
+// nomlar). Nomlarni `instructionLanguage()` foydalanuvchi tiliga o'giradi.
 let studyLanguages = [];
 
 async function loadProfile() {
@@ -1540,7 +1540,7 @@ function miniFilterBar() {
     <div class="mf-bar">
       ${miniChip("degree", t("profile.degree_level"), degreeLabel())}
       ${miniChip("major", t("profile.major"), majorLabel())}
-      ${miniChip("language", t("profile.study_language"), languageName(profile.study_language))}
+      ${miniChip("language", t("profile.study_language"), instructionLanguage(profile.study_language))}
       ${miniChip("rank", t("profile.rank"), profile.university_rank_range || "")}
       ${miniChip("countries", t("profile.countries"), countriesLabel())}
       <button type="button" class="mf-chip mf-all" data-mf="all">
@@ -1594,7 +1594,7 @@ function quickFilterOptions(key) {
       ].concat(
         studyLanguages.map((value) => ({
           value: value,
-          label: languageName(value),
+          label: instructionLanguage(value),
           active: mark(value, profile.study_language),
         }))
       ),
@@ -2746,7 +2746,7 @@ function studyLanguageOptions(selected) {
         (value) =>
           `<option value="${escapeHtml(value)}" ${
             String(selected) === String(value) ? "selected" : ""
-          }>${escapeHtml(languageName(value))}</option>`
+          }>${escapeHtml(instructionLanguage(value))}</option>`
       )
       .join("")
   );
@@ -3544,7 +3544,6 @@ async function bookService(serviceId, slotId, btn, list) {
       body: JSON.stringify({ slot_id: Number(slotId) }),
     });
     if (profile && typeof result.balance === "number") profile.balance = result.balance;
-    refreshKitBalance();
     closeSheet();
     unlockServiceCard(btn, false);
     haptic("success");

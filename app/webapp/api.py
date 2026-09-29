@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.db.models import (
+    INSTRUCTION_LANGUAGES,
     AdmissionService,
     Country,
     DegreeLevel,
@@ -229,6 +230,7 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
             user.university_rank_range.value if user.university_rank_range else None
         ),
         application_fee_ok=user.application_fee_ok,
+        study_language=user.study_language,
         target_country_ids=[c.id for c in user.target_countries],
         language_certificates=[
             LanguageCertOut(type=c.type.value, score=float(c.score)) for c in user.language_certificates
@@ -285,6 +287,14 @@ async def update_me(
 
     if payload.application_fee_ok is not None:
         user.application_fee_ok = payload.application_fee_ok
+
+    # Bo'sh satr = "farqi yo'q"; yuborilmasa o'zgarmaydi.
+    if payload.study_language is not None:
+        if payload.study_language and payload.study_language not in INSTRUCTION_LANGUAGES:
+            # Ro'yxatdan tashqari qiymat hech bir dasturga to'g'ri kelmaydi
+            # va filtr jimgina bo'sh ro'yxat qaytarardi.
+            raise HTTPException(status_code=422, detail="Noto'g'ri o'qish tili")
+        user.study_language = payload.study_language or None
 
     await session.commit()
 
@@ -358,6 +368,26 @@ async def list_countries(session: AsyncSession = Depends(get_session)) -> list[C
         CountryOut(id=c.id, name_uz=c.name_uz, name_ru=c.name_ru, name_en=c.name_en, iso_code=c.iso_code)
         for c in countries
     ]
+
+
+@router.get("/languages", response_model=list[str])
+async def list_languages(session: AsyncSession = Depends(get_session)) -> list[str]:
+    """Katalogda HAQIQATAN uchraydigan o'qish tillari.
+
+    To'liq ro'yxat (`INSTRUCTION_LANGUAGES`) emas: unda hozircha birorta
+    dastur yo'q tillar ham bor va ularni tanlagan odam bo'sh ro'yxat
+    ko'rardi. Nomlarni Mini App o'zi tarjima qiladi (app.js: LANGUAGE_NAMES),
+    shuning uchun bu yerda kanonik qiymatlar qaytariladi.
+    """
+    stmt = (
+        select(Program.language_of_instruction)
+        .distinct()
+        .order_by(Program.language_of_instruction)
+    )
+    values = (await session.execute(stmt)).scalars().all()
+    # Ro'yxatda yo'q qiymat (eski ma'lumot) filtrda tanlansa, PATCH /me uni
+    # rad etardi — shuning uchun bu yerda ham chiqarib tashlanadi.
+    return [value for value in values if value in INSTRUCTION_LANGUAGES]
 
 
 @router.get("/majors", response_model=list[FieldOut])

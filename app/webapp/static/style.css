@@ -2415,3 +2415,95 @@ button.sch-card:active { transform: scale(0.985); }
   line-height: 1.3;
   color: var(--hint);
 }
+
+/* ---- Ixcham filtr (Dasturlar ro'yxati tepasida) ----
+   Filtr qo'yilgach uni o'zgartirish uchun alohida sahifaga o'tish kerak
+   edi. Ko'p hollarda bitta narsa almashtiriladi, shuning uchun joriy
+   tanlovlar ro'yxat tepasida turadi.
+
+   Qator YONMA-YON suriladi: chiplar pastga tushib, ro'yxatni ekrandan
+   itarib yuborsa, sahifaning maqsadi — dasturlar — ko'rinmay qolardi. */
+.mf-bar {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 12px;
+  padding: 0 16px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.mf-bar::-webkit-scrollbar { display: none; }
+
+.mf-chip {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  max-width: 190px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--separator);
+  border-radius: 12px;
+  font-family: inherit;
+  text-align: left;
+  background: var(--card);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.mf-chip:active { transform: scale(0.97); background: var(--surface); }
+
+/* Tanlov qo'yilgan chip ajralib tursin — qaysi biri ishlayotgani darrov
+   ko'rinadi. */
+.mf-chip.is-set { border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+.mf-chip-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--hint);
+  white-space: nowrap;
+}
+.mf-chip-value {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.mf-chip.is-set .mf-chip-value { color: var(--accent-ink, var(--text)); }
+
+/* To'liq filtrga o'tish — matn bilan ikonka bir qatorda. */
+.mf-chip.mf-all {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hint);
+}
+.mf-chip.mf-all .ico { width: 15px; height: 15px; }
+
+/* Variantlar varag'i */
+.mf-options { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.mf-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 15px;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+}
+.mf-option:active { background: var(--surface); }
+.mf-option.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.mf-option .ico { flex: none; width: 17px; height: 17px; }

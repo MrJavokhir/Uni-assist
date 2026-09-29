@@ -1,6 +1,6 @@
-"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + TIL BALI
-bo'yicha dasturlarni tanlaydi va 🟢 Mos / 🟡 Yaqin / 🔴 Mos emas toifalariga
-ajratadi.
+"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + O'QISH TILI
++ TIL BALI bo'yicha dasturlarni tanlaydi va 🟢 Mos / 🟡 Yaqin / 🔴 Mos emas
+toifalariga ajratadi.
 
 Til bali profilda ko'rsatilgan bo'lsa, u yetmaydigan dasturlar ro'yxatga
 umuman tushmaydi (faqat yorliq bilan belgilanmaydi). Ko'rsatilmagan bo'lsa
@@ -88,6 +88,13 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
         if bottom is not None:
             in_range = in_range & (University.ranking <= bottom)
         stmt = stmt.where(or_(University.ranking.is_(None), in_range))
+
+    # O'qish tili — aniq tenglik. Bu yerda "ma'lumot yo'q" degan holat
+    # yo'q: `language_of_instruction` majburiy ustun, ya'ni har bir
+    # dasturda to'ldirilgan. Shuning uchun reyting singari "NULL ni
+    # qoldirish" istisnosi kerak emas.
+    if user.study_language:
+        stmt = stmt.where(Program.language_of_instruction == user.study_language)
 
     # Ariza to'loviga rozi bo'lmagan foydalanuvchiga to'lovli dasturlar
     # ko'rsatilmaydi. Tekshirilmagan (None) dasturlar qoladi.

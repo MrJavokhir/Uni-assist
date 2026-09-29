@@ -104,6 +104,11 @@ class User(TimestampMixin, Base):
     # True = to'lovga rozi, False = faqat bepul ariza, None = tanlanmagan.
     application_fee_ok: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
+    # O'qish tili. `Program.language_of_instruction` bilan bir xil KANONIK
+    # inglizcha nom saqlanadi ("English", "German"), chunki filtr shu ustun
+    # bilan solishtiriladi. NULL = farqi yo'q.
+    study_language: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # Balans: faqat tasdiqlangan to'lov orqali oshadi va Admission Kit
     # xizmatlariga sarflanadi. Har bir o'zgarish `balance_transactions` da
     # yoziladi, shuning uchun qoldiqni tarix bilan solishtirib tekshirish

@@ -342,6 +342,9 @@ const I18N = {
     "profile.gpa_us4": "US GPA",
     "profile.gpa_ects": "ECTS",
     "profile.gpa_bavarian": "Germaniya",
+    "profile.study_language": "O'qish tili",
+    "profile.study_language_any": "Farqi yo'q",
+    "profile.study_language_hint": "Dastur qaysi tilda o'qitiladi. Sertifikat balidan alohida.",
     "profile.lang_cert_type": "Sertifikat turi",
     "profile.lang_cert_none": "Yo'q",
     "profile.lang_cert_score": "Ball",
@@ -365,6 +368,7 @@ const I18N = {
     "finding.step2": "Dasturlar talablaringiz bo'yicha solishtirilmoqda",
     "finding.step3": "Eng mos natijalar saralanmoqda",
 
+    "match.filter_all": "Filtr",
     "match.empty_title": "Mos dastur topilmadi",
     "match.empty_text": "Profilingizni to'ldiring — shunda sizga mos dasturlarni topa olaman.",
     "match.no_filter_title": "Filtr hali qo'yilmagan",
@@ -639,6 +643,9 @@ const I18N = {
     "profile.gpa_us4": "US GPA",
     "profile.gpa_ects": "ECTS",
     "profile.gpa_bavarian": "Германия",
+    "profile.study_language": "Язык обучения",
+    "profile.study_language_any": "Не важно",
+    "profile.study_language_hint": "На каком языке ведётся программа. Это не балл сертификата.",
     "profile.lang_cert_type": "Тип сертификата",
     "profile.lang_cert_none": "Нет",
     "profile.lang_cert_score": "Балл",
@@ -662,6 +669,7 @@ const I18N = {
     "finding.step2": "Сравниваем программы с вашими параметрами",
     "finding.step3": "Отбираем самые подходящие результаты",
 
+    "match.filter_all": "Фильтр",
     "match.empty_title": "Программы не найдены",
     "match.empty_text": "Заполните профиль — и я подберу подходящие программы.",
     "match.no_filter_title": "Фильтр ещё не настроен",
@@ -936,6 +944,9 @@ const I18N = {
     "profile.gpa_us4": "US GPA",
     "profile.gpa_ects": "ECTS",
     "profile.gpa_bavarian": "Germany",
+    "profile.study_language": "Language of study",
+    "profile.study_language_any": "Any",
+    "profile.study_language_hint": "The language the programme is taught in. Separate from your test score.",
     "profile.lang_cert_type": "Certificate type",
     "profile.lang_cert_none": "None",
     "profile.lang_cert_score": "Score",
@@ -959,6 +970,7 @@ const I18N = {
     "finding.step2": "Comparing programs against your requirements",
     "finding.step3": "Ranking the closest matches",
 
+    "match.filter_all": "Filter",
     "match.empty_title": "No programs found",
     "match.empty_text": "Fill in your profile and I'll find programs that fit you.",
     "match.no_filter_title": "No filter set yet",
@@ -1144,6 +1156,9 @@ function skeletons(count, short) {
 let profile = null;
 let countries = [];
 let majors = [];
+// Katalogda haqiqatan uchraydigan o'qish tillari (kanonik inglizcha
+// nomlar). Nomlarni `languageName()` foydalanuvchi tiliga o'giradi.
+let studyLanguages = [];
 
 async function loadProfile() {
   profile = await api("/me");
@@ -1152,6 +1167,16 @@ async function loadProfile() {
 
 async function loadCountries() {
   countries = await api("/countries");
+}
+
+async function loadStudyLanguages() {
+  // Ro'yxat bo'sh qolsa filtrda faqat "Farqi yo'q" ko'rinadi — bu
+  // bo'sh tanlovlar ko'rsatishdan yaxshiroq.
+  try {
+    studyLanguages = await api("/languages");
+  } catch (e) {
+    studyLanguages = [];
+  }
 }
 
 async function loadMajors(degreeLevel) {
@@ -1165,7 +1190,10 @@ async function loadMajors(degreeLevel) {
 function hasFilter() {
   return Boolean(
     profile &&
-      (profile.degree_level || profile.field_id || (profile.target_country_ids || []).length)
+      (profile.degree_level ||
+        profile.field_id ||
+        profile.study_language ||
+        (profile.target_country_ids || []).length)
   );
 }
 
@@ -1468,6 +1496,197 @@ function noFilterNote(total) {
     </div>`;
 }
 
+// ---- Ixcham filtr (Dasturlar sahifasi tepasida) ----
+//
+// Filtr qo'yilgandan keyin uni o'zgartirish uchun alohida sahifaga o'tib,
+// qaytadan "Topish" bosish kerak edi. Ko'p hollarda esa bitta narsa
+// almashtiriladi: daraja, yo'nalish, til yoki reyting. Shuning uchun
+// ro'yxat tepasida joriy tanlovlar ko'rinib turadi va har biri bir
+// bosishda almashadi.
+//
+// Davlatlar bu yerda YO'Q: ular ko'p tanlovli va ixcham qatorga
+// sig'maydi — o'sha chip to'liq filtr sahifasini ochadi.
+
+function degreeLabel() {
+  return profile.degree_level ? t("profile.degree_level." + profile.degree_level) : "";
+}
+
+function majorLabel() {
+  const found = majors.find((m) => String(m.id) === String(profile.field_id));
+  return found ? fieldName(found) : "";
+}
+
+function countriesLabel() {
+  const ids = profile.target_country_ids || [];
+  if (!ids.length) return "";
+  if (ids.length === 1) {
+    const found = countries.find((c) => String(c.id) === String(ids[0]));
+    if (found) return countryName(found);
+  }
+  return t("profile.countries_count", { n: ids.length });
+}
+
+function miniChip(key, label, value) {
+  return `
+    <button type="button" class="mf-chip${value ? " is-set" : ""}" data-mf="${key}">
+      <span class="mf-chip-label">${escapeHtml(label)}</span>
+      <span class="mf-chip-value">${escapeHtml(value || t("profile.study_language_any"))}</span>
+    </button>`;
+}
+
+function miniFilterBar() {
+  if (!hasFilter()) return "";
+  return `
+    <div class="mf-bar">
+      ${miniChip("degree", t("profile.degree_level"), degreeLabel())}
+      ${miniChip("major", t("profile.major"), majorLabel())}
+      ${miniChip("language", t("profile.study_language"), languageName(profile.study_language))}
+      ${miniChip("rank", t("profile.rank"), profile.university_rank_range || "")}
+      ${miniChip("countries", t("profile.countries"), countriesLabel())}
+      <button type="button" class="mf-chip mf-all" data-mf="all">
+        ${icon("search")}<span>${t("match.filter_all")}</span>
+      </button>
+    </div>`;
+}
+
+// Har bir tugma uchun: sarlavha, variantlar va tanlanganda yuboriladigan
+// payload. `null` qaytsa — bu yerda hal qilib bo'lmaydi, to'liq filtr
+// sahifasi ochiladi.
+function quickFilterOptions(key) {
+  const mark = (value, current) => String(value) === String(current || "");
+  if (key === "degree") {
+    return {
+      title: t("profile.degree_level"),
+      // "Farqi yo'q" yo'q: server darajani tozalashni qo'llab-quvvatlamaydi,
+      // shuning uchun bu yerda ham va'da qilinmaydi.
+      items: ["bachelor", "master", "phd"].map((d) => ({
+        value: d,
+        label: t("profile.degree_level." + d),
+        active: mark(d, profile.degree_level),
+      })),
+      payload: (value) => ({ degree_level: value }),
+    };
+  }
+  if (key === "major") {
+    return {
+      title: t("profile.major"),
+      items: [
+        { value: "", label: t("profile.major_placeholder"), active: !profile.field_id },
+      ].concat(
+        majors.map((m) => ({
+          value: String(m.id),
+          label: fieldName(m),
+          active: mark(m.id, profile.field_id),
+        }))
+      ),
+      payload: (value) => ({ field_id: value ? Number(value) : null }),
+    };
+  }
+  if (key === "language") {
+    return {
+      title: t("profile.study_language"),
+      items: [
+        {
+          value: "",
+          label: t("profile.study_language_any"),
+          active: !profile.study_language,
+        },
+      ].concat(
+        studyLanguages.map((value) => ({
+          value: value,
+          label: languageName(value),
+          active: mark(value, profile.study_language),
+        }))
+      ),
+      payload: (value) => ({ study_language: value }),
+    };
+  }
+  if (key === "rank") {
+    return {
+      title: t("profile.rank"),
+      items: [
+        {
+          value: "",
+          label: t("profile.rank_any"),
+          active: !profile.university_rank_range,
+        },
+      ].concat(
+        RANK_RANGES.map((r) => ({
+          value: r,
+          label: r,
+          active: mark(r, profile.university_rank_range),
+        }))
+      ),
+      payload: (value) => ({ university_rank_range: value }),
+    };
+  }
+  return null;
+}
+
+async function applyQuickFilter(payload) {
+  try {
+    profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
+    closeSheet();
+    haptic("success");
+    // Daraja almashsa yo'nalishlar ro'yxati ham boshqacha bo'ladi.
+    if ("degree_level" in payload) await loadMajors();
+    await renderMatch();
+  } catch (err) {
+    haptic("error");
+    showToast(err.message);
+  }
+}
+
+function openQuickFilterSheet(key) {
+  const options = quickFilterOptions(key);
+  if (!options) {
+    switchTab("filter");
+    return;
+  }
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${options.title}</div>
+    <div class="mf-options">
+      ${options.items
+        .map(
+          (o) => `
+        <button type="button" class="mf-option${o.active ? " active" : ""}"
+                data-value="${escapeHtml(o.value)}">
+          <span>${escapeHtml(o.label)}</span>
+          ${o.active ? icon("check") : ""}
+        </button>`
+        )
+        .join("")}
+    </div>`,
+    sheet,
+    { tall: options.items.length > 7 }
+  );
+  sheet.querySelectorAll(".mf-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      applyQuickFilter(options.payload(btn.dataset.value));
+    });
+  });
+}
+
+function bindMiniFilter(root) {
+  root.querySelectorAll(".mf-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      haptic("light");
+      const key = chip.dataset.mf;
+      // Davlatlar va "Hammasi" — to'liq filtr sahifasida.
+      if (key === "all" || key === "countries") {
+        switchTab("filter");
+        return;
+      }
+      openQuickFilterSheet(key);
+    });
+  });
+}
+
 function bindFilterCta(root) {
   const bar = root.querySelector("#match-filter-cta");
   if (!bar) return;
@@ -1490,16 +1709,22 @@ async function renderMatch() {
 
   const matches = await api("/match");
   if (!matches.length) {
-    el.innerHTML = `
+    // Ixcham filtr bu yerda AYNIQSA kerak: ro'yxat bo'sh bo'lsa, demak
+    // tanlov juda tor va uni o'zgartirish kerak. Ilgari buning uchun
+    // alohida sahifaga o'tishga to'g'ri kelardi.
+    el.innerHTML =
+      miniFilterBar() +
+      `
       <div class="empty">
         <div class="empty-ico">${icon("search")}</div>
         <div class="empty-title">${t("match.empty_title")}</div>
         <div class="empty-text">${t("match.empty_text")}</div>
       </div>`;
+    bindMiniFilter(el);
     return;
   }
 
-  el.innerHTML = noFilterNote(matches.length) + matches
+  el.innerHTML = noFilterNote(matches.length) + miniFilterBar() + matches
     .map((m) => {
       const isGreen = m.level === "green";
       // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
@@ -1573,6 +1798,7 @@ async function renderMatch() {
   });
 
   bindFilterCta(el);
+  bindMiniFilter(el);
   bindProgramOpeners(el);
 }
 
@@ -2507,6 +2733,25 @@ const RANK_RANGES = ["1-100", "101-300", "301-500", "500+"];
 // Filtr endi ALOHIDA sahifa: pastki panelda yo'q, unga faqat bosh
 // sahifadan va Dasturlar ro'yxatidagi ogohlantirishdan kiriladi. Profil
 // tabi esa akkaunt menyusi bo'lib qoldi (renderProfile).
+// O'qish tili variantlari. Ro'yxat katalogdan keladi, nomlar esa
+// foydalanuvchi tiliga o'giriladi (LANGUAGE_NAMES).
+function studyLanguageOptions(selected) {
+  const any = `<option value="" ${selected ? "" : "selected"}>${escapeHtml(
+    t("profile.study_language_any")
+  )}</option>`;
+  return (
+    any +
+    studyLanguages
+      .map(
+        (value) =>
+          `<option value="${escapeHtml(value)}" ${
+            String(selected) === String(value) ? "selected" : ""
+          }>${escapeHtml(languageName(value))}</option>`
+      )
+      .join("")
+  );
+}
+
 function renderFilter() {
   const el = document.getElementById("view-filter");
   const cert = profile.language_certificates[0] || {};
@@ -2578,6 +2823,13 @@ function renderFilter() {
 
     ${profileSection("lang", t("profile.section_language"))}
     <div class="group">
+      <div class="field">
+        <label>${t("profile.study_language")}</label>
+        <select id="study-language-input" class="select-input">
+          ${studyLanguageOptions(profile.study_language)}
+        </select>
+        <small class="field-hint">${escapeHtml(t("profile.study_language_hint"))}</small>
+      </div>
       <div class="field">
         <label>${t("profile.lang_cert_type")}</label>
         ${chips(
@@ -2854,6 +3106,8 @@ async function saveProfile() {
   // Har doim yuboriladi: "Farqi yo'q" tanlansa bo'sh satr saqlangan
   // tanlovni tozalaydi.
   payload.university_rank_range = activeChip("rank-chips") || "";
+  const studyLanguageEl = document.getElementById("study-language-input");
+  if (studyLanguageEl) payload.study_language = studyLanguageEl.value || "";
   if (fee) payload.application_fee_ok = fee === "yes";
 
   profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
@@ -3711,6 +3965,7 @@ async function init() {
   await loadProfile();
   await loadCountries();
   await loadMajors();
+  await loadStudyLanguages();
 
   updateNavLabels();
   bindTabs();

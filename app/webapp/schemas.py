@@ -16,6 +16,8 @@ class ProfileOut(BaseModel):
     university_rank_range: str | None
     # Ariza to'lovi bor dasturlar mos keladimi (None = tanlanmagan)
     application_fee_ok: bool | None
+    # O'qish tili — kanonik inglizcha nom ("English"). None = farqi yo'q.
+    study_language: str | None = None
     target_country_ids: list[int]
     language_certificates: list[LanguageCertOut]
     # Hisob: balans faqat BOTDA to'ldiriladi (/topup), Mini App uni
@@ -43,6 +45,8 @@ class ProfileIn(BaseModel):
     gpa_scale: str | None = None
     university_rank_range: str | None = None
     application_fee_ok: bool | None = None
+    # Bo'sh satr = "farqi yo'q" (tanlov tozalanadi); yuborilmasa o'zgarmaydi.
+    study_language: str | None = None
     target_country_ids: list[int] | None = None
     language_cert_type: str | None = None
     language_cert_score: float | None = None

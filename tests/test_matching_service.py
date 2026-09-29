@@ -47,6 +47,7 @@ async def _make_program(
     deadline_close: datetime | None = None,
     ranking: int | None = None,
     has_application_fee: bool | None = None,
+    language: str = "English",
 ) -> Program:
     # `iso_code` unikal — bir testda bir nechta dastur yaratilganda davlat
     # qayta ishlatiladi, aks holda unikal cheklov buziladi.
@@ -80,7 +81,7 @@ async def _make_program(
         name=field_code or "Program",
         degree_level=DegreeLevel.BACHELOR,
         field_id=field.id if field else None,
-        language_of_instruction="English",
+        language_of_instruction=language,
         duration_years=4,
         intake_term="2026 Fall",
         source_url="https://example.com",
@@ -370,3 +371,37 @@ async def test_no_field_means_no_field_filter(session: AsyncSession):
     await session.commit()
 
     assert len(await find_matches(session, user)) == 2
+
+
+@pytest.mark.asyncio
+async def test_study_language_filters_programs(session) -> None:
+    """O'qish tili tanlansa, boshqa tildagi dasturlar ro'yxatga tushmaydi.
+
+    Til bali (IELTS) bilan aralashtirmaslik kerak: bu dastur QAYSI TILDA
+    o'qitilishi, sertifikat bali esa alohida shart.
+    """
+    await _make_program(session, country_name="Germaniya", language="German")
+    await _make_program(session, country_name="Avstriya", language="English")
+    user = await _make_user(session)
+
+    user.study_language = "German"
+    await session.flush()
+    results = await find_matches(session, user)
+    assert [r.program.language_of_instruction for r in results] == ["German"]
+
+    user.study_language = "English"
+    await session.flush()
+    results = await find_matches(session, user)
+    assert [r.program.language_of_instruction for r in results] == ["English"]
+
+
+@pytest.mark.asyncio
+async def test_no_study_language_keeps_every_program(session) -> None:
+    """Tanlanmagan bo'lsa hech narsa yashirilmaydi."""
+    await _make_program(session, country_name="Germaniya", language="German")
+    await _make_program(session, country_name="Avstriya", language="English")
+    user = await _make_user(session)
+
+    results = await find_matches(session, user)
+
+    assert len(results) == 2

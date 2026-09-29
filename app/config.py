@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     admin_secret_key: str = "change-me-to-a-random-string"
     admin_host: str = "0.0.0.0"
     admin_port: int = 8000
+    # Adminka sessiyasi shuncha daqiqa harakatsizlikdan keyin tugaydi.
+    # Sozlama qilib qo'yildi, chunki "qancha bo'lsin" degan savolga javob
+    # loyihaga qarab o'zgaradi — kod tegmasdan .env dan boshqariladi.
+    admin_session_timeout_minutes: int = 20
 
     @property
     def database_url(self) -> str:

@@ -105,11 +105,29 @@
     });
   }
 
+  // 6. Sessiya harakatsizlikdan tugaganda login sahifasida sababi
+  //    ko'rsatiladi. Aks holda odam birdan login sahifasida topiladi va
+  //    "parolim ishlamay qoldi" deb o'ylaydi.
+  function showSessionExpiredNotice() {
+    if (location.pathname.indexOf("/admin/login") !== 0) return;
+    if (new URLSearchParams(location.search).get("expired") !== "1") return;
+
+    var form = document.querySelector("form");
+    if (!form) return;
+    var note = document.createElement("div");
+    note.className = "alert alert-warning";
+    note.textContent =
+      "Harakatsizlik tufayli sessiya tugadi. Iltimos, qaytadan kiring.";
+    var body = form.querySelector(".card-body") || form;
+    body.insertBefore(note, body.firstChild);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     enableRowClick();
     enableSearchShortcut();
     moveFiltersToHeader();
     pointCreateToWizard();
     pointCancelToKit();
+    showSessionExpiredNotice();
   });
 })();

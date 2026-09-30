@@ -39,6 +39,7 @@ from app.db.models import (
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
+    SubscriptionExemption,
     TransactionKind,
     UiLanguage,
     University,
@@ -47,6 +48,7 @@ from app.db.models import (
 from app.services.redis_client import redis_client
 from app.services.subscription_service import (
     clear_all_cache,
+    clear_cache,
     derive_chat_id,
     normalize_chat_id,
     verify_channel_access,
@@ -1049,7 +1051,8 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
     """
 
     name = "Majburiy kanal"
-    name_plural = "Majburiy kanallar"
+    category = "Majburiy obuna"
+    name_plural = "Kanallar"
     icon = "fa-solid fa-bullhorn"
 
     column_list = [
@@ -1133,3 +1136,64 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
 
     async def after_model_delete(self, model: RequiredChannel, request: Request) -> None:
         await clear_all_cache(redis_client)
+
+
+class SubscriptionExemptionAdmin(ModelView, model=SubscriptionExemption):
+    """Majburiy obunadan ozod qilingan foydalanuvchilar.
+
+    Ro'yxatdagi odamdan kanalga a'zolik SO'RALMAYDI — u uchun tekshiruv
+    umuman bajarilmaydi. Hamkorlar, jamoa a'zolari yoki sinovchilar uchun.
+
+    Telegram ID bo'yicha ishlaydi, shuning uchun odam hali botga kirmagan
+    bo'lsa ham uni oldindan qo'shib qo'yish mumkin. ID ni bilish uchun:
+    @userinfobot ga yozing.
+
+    Vaqtincha to'xtatish kerak bo'lsa o'chirib tashlash shart emas —
+    "Faol" belgisini olib qo'ying, izoh esa saqlanib qoladi.
+    """
+
+    name = "Obunadan ozod"
+    category = "Majburiy obuna"
+    name_plural = "Obunadan ozod"
+    icon = "fa-solid fa-user-shield"
+
+    column_list = [
+        SubscriptionExemption.id,
+        SubscriptionExemption.telegram_id,
+        SubscriptionExemption.note,
+        SubscriptionExemption.is_active,
+        SubscriptionExemption.created_at,
+    ]
+    column_searchable_list = [SubscriptionExemption.telegram_id, SubscriptionExemption.note]
+    column_default_sort = [(SubscriptionExemption.id, True)]
+    column_filters = [BooleanFilter(SubscriptionExemption.is_active, title="Faol")]
+    form_columns = [
+        SubscriptionExemption.telegram_id,
+        SubscriptionExemption.note,
+        SubscriptionExemption.is_active,
+    ]
+    column_labels = _labels(
+        telegram_id="Telegram ID",
+        note="Izoh",
+        is_active="Faol",
+    )
+    form_args = {
+        "telegram_id": {
+            "description": "Faqat raqam (masalan 123456789). ID ni @userinfobot aytadi."
+        },
+        "note": {"description": "Kim va nega ozod qilingani — keyin eslab qolish uchun."},
+        "is_active": {"description": "O'chirilsa, bu odamdan yana obuna so'raladi."},
+    }
+    column_formatters = {SubscriptionExemption.is_active: format_bool}
+    column_formatters_detail = {SubscriptionExemption.is_active: format_bool}
+
+    async def after_model_change(
+        self, data: dict, model: SubscriptionExemption, is_created: bool, request: Request
+    ) -> None:
+        # Ozodlik keshdan oldin tekshiriladi, ya'ni keshni tozalash shart
+        # emas. Lekin ozodlik OLIB TASHLANGANDA eski "obuna bo'lgan" natijasi
+        # kuchda qolib, odam yana 5 daqiqa bemalol o'tib ketardi.
+        await clear_cache(redis_client, model.telegram_id)
+
+    async def after_model_delete(self, model: SubscriptionExemption, request: Request) -> None:
+        await clear_cache(redis_client, model.telegram_id)

@@ -1,5 +1,5 @@
 from app.db.base import Base
-from app.db.models.channel import RequiredChannel
+from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.country import Country
 from app.db.models.field import Field
 from app.db.models.payment import (
@@ -83,6 +83,7 @@ __all__ = [
     "ServiceRequest",
     "ServiceRequestStatus",
     "ServiceSlot",
+    "SubscriptionExemption",
     "TransactionKind",
     "UiLanguage",
     "University",

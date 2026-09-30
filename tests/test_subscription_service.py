@@ -1,9 +1,10 @@
 import pytest
 from aiogram.exceptions import TelegramAPIError
 
-from app.db.models import RequiredChannel
+from app.db.models import RequiredChannel, SubscriptionExemption
 from app.services.subscription_service import (
     derive_chat_id,
+    is_exempt,
     missing_channels,
     normalize_chat_id,
 )
@@ -157,3 +158,69 @@ async def test_private_channel_without_chat_id_is_skipped(session) -> None:
     await _add_channel(session, invite_url="https://t.me/+Secret")
     bot = _FakeBot({})
     assert await missing_channels(bot, session, None, 42) == []
+
+
+async def _exempt(session, telegram_id: int, **kwargs) -> SubscriptionExemption:
+    row = SubscriptionExemption(telegram_id=telegram_id, **kwargs)
+    session.add(row)
+    await session.commit()
+    return row
+
+
+@pytest.mark.asyncio
+async def test_exempt_user_is_not_asked_to_subscribe(session) -> None:
+    """Ro'yxatdagi odamdan obuna so'ralmaydi va Telegram'ga so'rov ketmaydi."""
+    await _add_channel(session)
+    await _exempt(session, 42, note="Hamkor")
+    bot = _FakeBot({"@uniassist_uz": "left"})
+
+    assert await missing_channels(bot, session, None, 42) == []
+    # Tekshiruv umuman bajarilmagani muhim: ozod odam uchun Telegram'ni
+    # bezovta qilishning ma'nosi yo'q.
+    assert bot.calls == []
+
+
+@pytest.mark.asyncio
+async def test_exemption_applies_only_to_that_user(session) -> None:
+    await _add_channel(session, title="Uni Assist")
+    await _exempt(session, 42)
+    bot = _FakeBot({"@uniassist_uz": "left"})
+
+    missing = await missing_channels(bot, session, None, 99)
+
+    assert [c.title for c in missing] == ["Uni Assist"]
+
+
+@pytest.mark.asyncio
+async def test_inactive_exemption_is_ignored(session) -> None:
+    """"Faol" belgisi olib tashlansa, odamdan yana obuna so'raladi."""
+    await _add_channel(session, title="Uni Assist")
+    await _exempt(session, 42, is_active=False)
+    bot = _FakeBot({"@uniassist_uz": "left"})
+
+    missing = await missing_channels(bot, session, None, 42)
+
+    assert [c.title for c in missing] == ["Uni Assist"]
+
+
+@pytest.mark.asyncio
+async def test_exemption_beats_a_stale_cache(session) -> None:
+    """Ozodlik keshdan OLDIN tekshiriladi.
+
+    Admin ro'yxatga qo'shgan zahoti ishlashi kerak — 5 daqiqalik keshni
+    kutib turish "qo'shdim, lekin ishlamayapti" degan taassurot berardi.
+    """
+    await _add_channel(session)
+    await _exempt(session, 42)
+    bot = _FakeBot({"@uniassist_uz": "left"})
+
+    assert await missing_channels(bot, session, None, 42, use_cache=False) == []
+    assert bot.calls == []
+
+
+@pytest.mark.asyncio
+async def test_is_exempt_flag(session) -> None:
+    await _exempt(session, 7, note="Sinovchi")
+
+    assert await is_exempt(session, 7) is True
+    assert await is_exempt(session, 8) is False

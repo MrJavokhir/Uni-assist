@@ -12,6 +12,10 @@ MUHIM: tekshiruv ishlashi uchun bot kanalda administrator bo'lishi shart. Agar
 bot kanalga kira olmasa (admin emas, kanal o'chirilgan, chat_id noto'g'ri), biz
 foydalanuvchini BLOKLAMAYMIZ — noto'g'ri sozlama hammani ichkariga kirita
 olmay qo'yishidan ko'ra, o'tkazib yuborgan yaxshiroq (fail-open).
+
+Ayrim foydalanuvchilar obunadan ozod qilinishi mumkin (adminkada Telegram ID
+bo'yicha). Ozodlik keshdan ham OLDIN tekshiriladi: admin kimnidir ro'yxatga
+qo'shgan zahoti u ishlashi kerak, 5 daqiqalik keshni kutmasdan.
 """
 
 import logging
@@ -24,7 +28,7 @@ from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import RequiredChannel
+from app.db.models import RequiredChannel, SubscriptionExemption
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +142,15 @@ async def clear_all_cache(redis: Redis | None) -> None:
         logger.exception("Obuna keshini to'liq tozalashda xatolik")
 
 
+async def is_exempt(session: AsyncSession, telegram_id: int) -> bool:
+    """Foydalanuvchi majburiy obunadan ozod qilinganmi (adminkadagi ro'yxat)."""
+    stmt = select(SubscriptionExemption.id).where(
+        SubscriptionExemption.telegram_id == telegram_id,
+        SubscriptionExemption.is_active.is_(True),
+    )
+    return (await session.execute(stmt)).scalar_one_or_none() is not None
+
+
 async def missing_channels(
     bot: Bot,
     session: AsyncSession,
@@ -149,6 +162,11 @@ async def missing_channels(
     """Foydalanuvchi obuna bo'lmagan kanallar ro'yxati (bo'sh bo'lsa — hammasi joyida)."""
     channels = await active_channels(session)
     if not channels:
+        return []
+
+    # Ozodlik KESHDAN OLDIN tekshiriladi: admin ro'yxatga qo'shgan zahoti
+    # ishlashi kerak. Telegram'ga so'rov ham yubormaymiz.
+    if await is_exempt(session, telegram_id):
         return []
 
     if use_cache and redis is not None:

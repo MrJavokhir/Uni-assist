@@ -22,6 +22,7 @@ from app.admin.views import (
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     ServiceRequestAdmin,
+    SubscriptionExemptionAdmin,
     UniversityAdmin,
     UserAdmin,
 )
@@ -124,6 +125,7 @@ for view in (
     BalanceTransactionAdmin,
     BotAdminAdmin,
     RequiredChannelAdmin,
+    SubscriptionExemptionAdmin,
 ):
     admin.add_view(view)
 

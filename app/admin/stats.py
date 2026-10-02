@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from sqladmin import BaseView, expose
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
@@ -10,19 +10,21 @@ from app.admin.formatters import VERIFIED_STALE_DAYS
 from app.admin.views import _DEGREE_LABELS
 from app.db.models import (
     Country,
+    Field,
     Program,
-    ProgramCost,
-    ProgramRequirement,
     SavedProgram,
     Scholarship,
     University,
     User,
+    user_target_country,
 )
 from app.db.session import async_session_factory
 
 USER_CHART_DAYS = 14
 STALE_LIST_LIMIT = 8
-INCOMPLETE_LIST_LIMIT = 8
+# Talabni ko'rsatadigan ro'yxatlar uzunligi: 8 tadan keyin quyruq juda
+# yupqalashadi va grafik o'qilmay qoladi.
+TOP_DEMAND_LIMIT = 8
 
 
 @dataclass
@@ -133,29 +135,44 @@ class StatsView(BaseView):
 
             stale_records = await _stale_records(session, stale_cutoff, now)
 
-            # Talab yoki xarajat ma'lumoti yo'q dasturlar — seed orqali kiritilgan
-            # yozuvlar aynan shu holatda bo'ladi va qo'lda to'ldirilishi kerak.
-            incomplete_stmt = (
-                select(
-                    Program.id,
-                    Program.name,
-                    Program.degree_level,
-                    University.name.label("university"),
-                )
-                .join(University, University.id == Program.university_id)
-                .outerjoin(ProgramRequirement, ProgramRequirement.program_id == Program.id)
-                .outerjoin(ProgramCost, ProgramCost.program_id == Program.id)
-                .where(or_(ProgramRequirement.id.is_(None), ProgramCost.id.is_(None)))
-                .order_by(Program.id)
-            )
-            incomplete_total = (
+            # Foydalanuvchilar NIMA qidirayotgani. Bu qidiruv jurnali emas —
+            # bunday jurnal yuritilmaydi. Manba: profildagi filtr tanlovlari,
+            # ya'ni odam o'zi uchun belgilab qo'ygan davlat va yo'nalish.
+            # Katalogni qayerga kengaytirish kerakligini aynan shu ko'rsatadi.
+            demand_country_rows = (
                 await session.execute(
-                    select(func.count()).select_from(incomplete_stmt.subquery())
+                    select(Country.name_uz, func.count(user_target_country.c.user_id))
+                    .select_from(user_target_country)
+                    .join(Country, Country.id == user_target_country.c.country_id)
+                    .group_by(Country.name_uz)
+                    .order_by(func.count(user_target_country.c.user_id).desc())
+                    .limit(TOP_DEMAND_LIMIT)
+                )
+            ).all()
+            demand_field_rows = (
+                await session.execute(
+                    select(Field.name_uz, func.count(User.id))
+                    .select_from(User)
+                    .join(Field, Field.id == User.field_id)
+                    .group_by(Field.name_uz)
+                    .order_by(func.count(User.id).desc())
+                    .limit(TOP_DEMAND_LIMIT)
+                )
+            ).all()
+
+            # Namuna hajmi: foiz emas, "nechta odam tanlagan" degan son.
+            # Usiz birinchi o'rindagi davlat 3 ta odamdan kelganini bilib
+            # bo'lmasdi va raqamga ortiqcha ishonilardi.
+            country_choosers = (
+                await session.execute(
+                    select(func.count(func.distinct(user_target_country.c.user_id)))
                 )
             ).scalar_one()
-            incomplete_programs = (
-                await session.execute(incomplete_stmt.limit(INCOMPLETE_LIST_LIMIT))
-            ).all()
+            field_choosers = (
+                await session.execute(
+                    select(func.count(User.id)).where(User.field_id.is_not(None))
+                )
+            ).scalar_one()
 
         signups = {row.day: row[1] for row in signup_rows}
         chart_labels = []
@@ -183,8 +200,12 @@ class StatsView(BaseView):
                 "country_labels": [row[0] for row in country_rows],
                 "country_values": [row[1] for row in country_rows],
                 "stale_records": stale_records,
-                "incomplete_total": incomplete_total,
-                "incomplete_programs": incomplete_programs,
+                "demand_country_labels": [row[0] for row in demand_country_rows],
+                "demand_country_values": [row[1] for row in demand_country_rows],
+                "demand_field_labels": [row[0] for row in demand_field_rows],
+                "demand_field_values": [row[1] for row in demand_field_rows],
+                "country_choosers": country_choosers,
+                "field_choosers": field_choosers,
                 "degree_labels": _DEGREE_LABELS,
             },
         )

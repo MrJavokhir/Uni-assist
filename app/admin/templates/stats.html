@@ -73,39 +73,47 @@
     </div>
   </div>
 
-  {# ---------- To'ldirilishi kerak bo'lgan dasturlar ---------- #}
-  {% if incomplete_total %}
-  <div class="card mb-3">
-    <div class="card-header">
-      <h3 class="card-title">Talab yoki xarajat ma'lumoti yo'q dasturlar</h3>
-      <div class="card-actions"><span class="badge bg-warning-lt">{{ incomplete_total }} ta</span></div>
+  {# ---------- Foydalanuvchilar talabi ----------
+       Qidiruv jurnali EMAS: bunday jurnal yuritilmaydi. Manba — profildagi
+       filtr tanlovlari. Shuning uchun kartada "nechta odam tanlagan" soni
+       ham ko'rsatiladi: usiz birinchi o'rindagi davlat atigi uch kishidan
+       kelganini bilib bo'lmasdi. #}
+  <div class="row row-cards mb-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Eng ko'p qidirilgan davlatlar</h3>
+          <div class="card-actions">
+            <span class="badge bg-blue-lt">{{ country_choosers }} ta foydalanuvchi</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if demand_country_labels %}
+          <div class="ua-chart-wrap"><canvas id="chart-demand-countries"></canvas></div>
+          {% else %}
+          <div class="ua-empty">Hali hech kim davlat tanlamagan.</div>
+          {% endif %}
+        </div>
+      </div>
     </div>
-    <div class="card-body text-muted pb-0 small">
-      Bu dasturlarda minimal GPA/IELTS yoki kontrakt narxi kiritilmagan — filtr
-      (🟢/🟡) ular uchun to'liq ishlamaydi. Rasmiy saytdan tekshirib to'ldiring.
-    </div>
-    <div class="table-responsive">
-      <table class="table table-vcenter card-table">
-        <thead>
-          <tr><th>Dastur</th><th>Daraja</th><th>Universitet</th><th></th></tr>
-        </thead>
-        <tbody>
-          {% for program in incomplete_programs %}
-          <tr>
-            <td>{{ program.name }}</td>
-            <td><span class="badge bg-secondary-lt">{{ degree_labels.get(program.degree_level, program.degree_level.value) }}</span></td>
-            <td class="text-muted">{{ program.university }}</td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-primary" href="/admin/program-requirement/create">Talab qo'shish</a>
-              <a class="btn btn-sm btn-secondary" href="/admin/program-cost/create">Xarajat qo'shish</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Eng ko'p qidirilgan yo'nalishlar</h3>
+          <div class="card-actions">
+            <span class="badge bg-blue-lt">{{ field_choosers }} ta foydalanuvchi</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if demand_field_labels %}
+          <div class="ua-chart-wrap"><canvas id="chart-demand-fields"></canvas></div>
+          {% else %}
+          <div class="ua-empty">Hali hech kim yo'nalish tanlamagan.</div>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
-  {% endif %}
 
   {# ---------- Jadvallar ---------- #}
   <div class="row row-cards">
@@ -194,6 +202,64 @@
         }
       });
     }
+
+    // Talab grafiklari — YOTIQ ustunlar. Doira (donut) bu yerda noto'g'ri
+    // bo'lardi: bu yerda ulush emas, TARTIB muhim, doirada esa yonma-yon
+    // turgan ikki bo'lakni ko'z bilan solishtirib bo'lmaydi.
+    //
+    // Bitta qator — bitta rang: identifikatsiyani yorliqlar olib yuradi,
+    // shuning uchun na afsona (legend) kerak, na rang palitrasi.
+    function demandChart(id, labels, values) {
+      var canvas = document.getElementById(id);
+      if (!canvas) return;
+      new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: "#635bff",
+            // Ustun uchi yumaloq, asosi esa chiziqqa yopishib turadi.
+            borderRadius: { topLeft: 0, bottomLeft: 0, topRight: 4, bottomRight: 4 },
+            borderSkipped: false,
+            barThickness: 16,
+            maxBarThickness: 18
+          }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (item) { return item.parsed.x + " ta foydalanuvchi"; }
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: "rgba(120,124,148,0.12)" }
+            },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    demandChart(
+      "chart-demand-countries",
+      {{ demand_country_labels | tojson }},
+      {{ demand_country_values | tojson }}
+    );
+    demandChart(
+      "chart-demand-fields",
+      {{ demand_field_labels | tojson }},
+      {{ demand_field_values | tojson }}
+    );
 
     var countryCanvas = document.getElementById("chart-countries");
     if (countryCanvas) {

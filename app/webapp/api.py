@@ -315,6 +315,24 @@ async def update_me(
     return await _profile_out(session, user)
 
 
+# Qidiruvni chegaralaydigan maydonlar. "Filtrni tozalash" AYNAN shu
+# ro'yxat bo'yicha ishlaydi.
+#
+# Ilgari har biri qo'lda yozilgan edi va o'qish tili qo'shilganda u
+# tozalashga tushmay qolgandi: foydalanuvchi "Filtrni tozalash" bossa ham
+# profil bo'shamas, ilova esa filtr qo'yilgan holatda qolaverardi — ya'ni
+# "profilni to'ldiring" taklifi boshqa chiqmasdi.
+RESETTABLE_FILTER_FIELDS = (
+    "degree_level",
+    "field_id",
+    "gpa_raw",
+    "gpa_scale",
+    "university_rank_range",
+    "application_fee_ok",
+    "study_language",
+)
+
+
 @router.post("/me/reset", response_model=ProfileOut)
 async def reset_me(
     user: User = Depends(get_current_user),
@@ -325,12 +343,8 @@ async def reset_me(
     Interfeys tili ham saqlanib qoladi: uni tozalash foydalanuvchini birdan
     boshqa tilga o'tkazib yuborardi.
     """
-    user.degree_level = None
-    user.field_id = None
-    user.gpa_raw = None
-    user.gpa_scale = None
-    user.university_rank_range = None
-    user.application_fee_ok = None
+    for field_name in RESETTABLE_FILTER_FIELDS:
+        setattr(user, field_name, None)
 
     for certificate in list(user.language_certificates):
         await session.delete(certificate)

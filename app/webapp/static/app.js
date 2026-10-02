@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 60;
+const ASSET_V = 61;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1184,26 +1184,34 @@ async function loadMajors(degreeLevel) {
   majors = await api("/majors" + (level ? `?degree_level=${encodeURIComponent(level)}` : ""));
 }
 
-// Qidiruvni chegaralaydigan maydonlardan birortasi tanlanganmi.
+// Qidiruvni chegaralaydigan maydonlar. `hasFilter()` ham, to'ldirilganlik
+// foizi ham AYNAN shu ro'yxatdan hisoblanadi.
+//
+// Ilgari ikkisi alohida yozilgan edi va o'qish tili faqat `hasFilter()` ga
+// qo'shilgandi. Natijada faqat tilni tanlagan odam "0% to'ldirilgan" degan
+// yozuvni ko'rardi, ilova esa filtr qo'yilgan holatda ishlardi: na foiz
+// to'g'ri edi, na "filtrni sozlang" taklifi chiqardi.
+function filterFields() {
+  if (!profile) return [];
+  return [
+    !!profile.degree_level,
+    !!profile.field_id,
+    !!profile.study_language,
+    (profile.target_country_ids || []).length > 0,
+  ];
+}
+
 // Hech biri tanlanmagan bo'lsa `find_matches` hamma dasturni qaytaradi —
 // ularni "sizga mos" deb ko'rsatish yangi foydalanuvchini chalg'itadi.
 function hasFilter() {
-  return Boolean(
-    profile &&
-      (profile.degree_level ||
-        profile.field_id ||
-        profile.study_language ||
-        (profile.target_country_ids || []).length)
-  );
+  return filterFields().some(Boolean);
 }
 
 function profileCompleteness() {
   const checks = [
-    !!profile.degree_level,
-    !!profile.field_id,
+    ...filterFields(),
     profile.gpa_raw !== null && profile.gpa_scale !== null,
     profile.language_certificates.length > 0,
-    profile.target_country_ids.length > 0,
     // "Farqi yo'q" ham javob: ariza to'lovi bo'yicha tanlov qilingani yetarli.
     // Reyting oralig'i ixtiyoriy afzallik — foizga qo'shilmaydi.
     profile.application_fee_ok !== null,

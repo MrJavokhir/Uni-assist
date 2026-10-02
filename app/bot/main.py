@@ -8,6 +8,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from app.bot.handlers import language, payment, reminders, start, subscription
 from app.bot.middlewares import DbSessionMiddleware, SubscriptionMiddleware
+from app.bot.profile_setup import apply_bot_profile
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services.redis_client import redis_client
@@ -66,6 +67,9 @@ async def main() -> None:
     dispatcher = create_dispatcher()
 
     await bot.delete_webhook(drop_pending_updates=True)
+    # Bo'sh suhbatda ko'rinadigan tavsif. Pollingdan OLDIN: bu bir martalik
+    # qisqa amal va u tugamasdan xabar qabul qilishning ma'nosi yo'q.
+    await apply_bot_profile(bot)
     await asyncio.gather(
         dispatcher.start_polling(bot),
         reminder_loop(bot),

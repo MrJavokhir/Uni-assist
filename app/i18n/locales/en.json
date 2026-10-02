@@ -17,5 +17,7 @@
   "reminder.dismiss_confirm": "Program removed from your saved list.",
   "language.saved": "Language saved",
   "referral.earned": "🎉 Your friend joined the bot!\n\n{amount} was added to your balance.\nCurrent balance: {balance}",
-  "referral.welcome": "A friend invited you — welcome!"
+  "referral.welcome": "A friend invited you — welcome!",
+  "bot.description": "Uni Assist helps you find a university and a scholarship to study abroad.\n\n• Find programmes by degree, field, country and language of study\n• Track scholarships and deadlines, get a reminder before each one\n• Motivation letter and CV guides, 1-on-1 mentor sessions\n\nTap Start below to begin.",
+  "bot.short_description": "Find universities, scholarships and programmes to study abroad."
 }

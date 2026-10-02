@@ -17,5 +17,7 @@
   "reminder.dismiss_confirm": "Dastur saqlanganlar ro'yxatidan olib tashlandi.",
   "language.saved": "Til saqlandi",
   "referral.earned": "🎉 Do'stingiz botga qo'shildi!\n\nHisobingizga {amount} qo'shildi.\nJoriy balans: {balance}",
-  "referral.welcome": "Sizni do'stingiz taklif qildi — xush kelibsiz!"
+  "referral.welcome": "Sizni do'stingiz taklif qildi — xush kelibsiz!",
+  "bot.description": "Uni Assist — chet elda o'qish uchun universitet va grant topishda yordam beradi.\n\n• Daraja, yo'nalish, davlat va o'qish tili bo'yicha mos dasturlarni topasiz\n• Grantlar va ariza muddatlarini kuzatasiz, deadline yaqinlashganda eslatma olasiz\n• Motivatsion xat va CV qo'llanmalari, mentor bilan 1:1 maslahat\n\nBoshlash uchun pastdagi «Start» tugmasini bosing.",
+  "bot.short_description": "Chet elda o'qish uchun universitet, grant va dastur topishda yordam beradi."
 }

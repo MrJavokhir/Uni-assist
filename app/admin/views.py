@@ -744,6 +744,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         AdmissionService.code,
         AdmissionService.kind,
         AdmissionService.requires_booking,
+        AdmissionService.unlock_invites,
         AdmissionService.price_amount,
         AdmissionService.price_currency,
         AdmissionService.sort_order,
@@ -768,6 +769,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         AdmissionService.price_note_uz,
         AdmissionService.price_note_ru,
         AdmissionService.price_note_en,
+        AdmissionService.unlock_invites,
         AdmissionService.sort_order,
         AdmissionService.is_active,
     ]
@@ -786,6 +788,7 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         price_note_uz="Narx izohi (uz)",
         price_note_ru="Narx izohi (ru)",
         price_note_en="Narx izohi (en)",
+        unlock_invites="Do'st bilan ochish",
         sort_order="Tartib",
         is_active="Faol",
     )
@@ -816,6 +819,13 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
             )
         },
         "price_currency": {"description": "UZS, USD, EUR..."},
+        "unlock_invites": {
+            "description": (
+                "Shuncha do'st taklif qilgan odam bu xizmatni PULSIZ oladi. "
+                "0 qo'ysangiz — faqat pulga. Taklif kanalga a'zo bo'lgandan keyin "
+                "sanaladi, shunchaki havolani bosib ketgan odam hisobga olinmaydi."
+            )
+        },
         "price_note_uz": {"description": "Narx yonidagi qisqa izoh: «bir marta», «1 soat»."},
         "sort_order": {"description": "Ro'yxatdagi o'rni: kichigi yuqorida."},
         "is_active": {"description": "O'chirilsa, xizmat ilovada ko'rinmaydi."},
@@ -858,6 +868,7 @@ class ServiceRequestAdmin(ModelView, model=ServiceRequest):
         ServiceRequest.service,
         ServiceRequest.user,
         ServiceRequest.status,
+        ServiceRequest.unlocked_by_invites,
         ServiceRequest.created_at,
     ]
     column_default_sort = [(ServiceRequest.created_at, True)]
@@ -871,10 +882,15 @@ class ServiceRequestAdmin(ModelView, model=ServiceRequest):
         service="Xizmat",
         user="Kim so'ragan",
         status="Holat",
+        unlocked_by_invites="Do'st bilan ochilgan",
         admin_note="Ishchi izoh",
     )
-    column_formatters = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
-    column_formatters_detail = {ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS)}
+    _request_formatters = {
+        ServiceRequest.status: enum_label(_SERVICE_REQUEST_LABELS),
+        ServiceRequest.unlocked_by_invites: format_bool,
+    }
+    column_formatters = _request_formatters
+    column_formatters_detail = _request_formatters
 
 
 class PaymentSettingsAdmin(ModelView, model=PaymentSettings):

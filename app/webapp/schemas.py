@@ -263,6 +263,10 @@ class ServiceOut(BaseModel):
     # Nechta bo'sh vaqt qolgan. 0 bo'lsa ilova buyurtmaga yo'l qo'ymaydi —
     # vaqtsiz pul olib bo'lmaydi.
     free_slots: int = 0
+    # Nechta do'st taklif qilinsa xizmat pulsiz ochiladi. 0 — bunday
+    # imkoniyat yo'q. Foydalanuvchining takliflari soni profilda
+    # (`referral_count`), shuning uchun bu yerda takrorlanmaydi.
+    unlock_invites: int = 0
 
 
 class SlotOut(BaseModel):
@@ -297,6 +301,8 @@ class ServiceRequestResult(BaseModel):
     has_file: bool = False
     # Band qilingan vaqt — tasdiq oynasida ko'rsatiladi.
     slot_label: str | None = None
+    # Pulga emas, do'st taklif qilib ochildimi.
+    unlocked_by_invites: bool = False
 
 
 class ServiceDeliveryResult(BaseModel):

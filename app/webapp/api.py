@@ -1,5 +1,6 @@
 import logging
 from datetime import UTC, datetime
+from decimal import Decimal
 from html import escape
 
 from aiogram import Bot
@@ -836,6 +837,7 @@ async def list_services(
             file_size=service.file.size_bytes if service.file else None,
             requires_booking=service.requires_booking,
             free_slots=slot_counts.get(service.id, 0),
+            unlock_invites=service.unlock_invites,
         )
         for service in services
     ]
@@ -924,19 +926,32 @@ async def request_service(
         # savol bilan qolardi.
         raise HTTPException(status_code=400, detail="Uchrashuv vaqtini tanlang")
 
-    try:
-        new_balance = await payment_service.charge_service(session, user, service)
-    except payment_service.InsufficientBalance as exc:
-        # 402 Payment Required — Mini App shu kod bo'yicha "balansni
-        # to'ldiring" oynasini ko'rsatadi.
-        raise HTTPException(
-            status_code=402,
-            detail={
-                "error": "insufficient_balance",
-                "needed": float(exc.needed),
-                "available": float(exc.available),
-            },
-        ) from exc
+    # Do'st taklif qilib ochish. Tekshiruv SERVERDA: ilovadagi hisoblagich
+    # faqat ko'rsatish uchun va unga ishonib bo'lmaydi.
+    unlocked_by_invites = False
+    if service.unlock_invites > 0:
+        invites = await referral_service.count_invited(session, user)
+        unlocked_by_invites = invites >= service.unlock_invites
+
+    if unlocked_by_invites:
+        # Pul yechilmaydi va balans tarixiga yozuv tushmaydi — yechim
+        # bo'lmagan joyda nol summali qator faqat chalkashtirardi.
+        # "Nega bepul oldi" degan savolga `unlocked_by_invites` javob beradi.
+        new_balance = Decimal(str(user.balance or 0))
+    else:
+        try:
+            new_balance = await payment_service.charge_service(session, user, service)
+        except payment_service.InsufficientBalance as exc:
+            # 402 Payment Required — Mini App shu kod bo'yicha "balansni
+            # to'ldiring" oynasini ko'rsatadi.
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "error": "insufficient_balance",
+                    "needed": float(exc.needed),
+                    "available": float(exc.available),
+                },
+            ) from exc
 
     service_request = ServiceRequest(
         user_id=user.id,
@@ -945,6 +960,7 @@ async def request_service(
         # yo'q — yozuv darhol yopiq holatda. Adminka ro'yxatida faqat
         # qo'lda bajariladigan xizmatlar ko'rinadi.
         status=(ServiceRequestStatus.DONE if is_file_service else ServiceRequestStatus.NEW),
+        unlocked_by_invites=unlocked_by_invites,
     )
     session.add(service_request)
     await session.flush()
@@ -964,9 +980,14 @@ async def request_service(
     return ServiceRequestResult(
         requested=True,
         balance=float(new_balance),
-        charged=float(service.price_amount) if service.price_amount is not None else None,
+        charged=(
+            None
+            if unlocked_by_invites or service.price_amount is None
+            else float(service.price_amount)
+        ),
         has_file=has_file,
         slot_label=slot_label,
+        unlocked_by_invites=unlocked_by_invites,
     )
 
 

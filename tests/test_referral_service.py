@@ -119,8 +119,13 @@ async def test_second_referrer_cannot_overwrite_the_first(session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_zero_bonus_stops_the_programme(session) -> None:
-    """Admin summani 0 qilsa, hech kimga pul berilmaydi."""
+async def test_zero_bonus_pays_nothing_but_still_confirms(session) -> None:
+    """Mukofot 0 bo'lsa pul berilmaydi, lekin taklif TASDIQLANADI.
+
+    Tasdiq xizmat ochish uchun ham kerak. Ilgari bayroq faqat pul
+    berilganda yoqilardi va mukofot 0 ga qo'yilsa taklif hech qayerda
+    hisobga olinmay qolardi.
+    """
     await _bonus(session, Decimal(0))
     inviter = await _user(session, 106)
     invited = await _user(session, 206)
@@ -128,8 +133,9 @@ async def test_zero_bonus_stops_the_programme(session) -> None:
 
     assert await referral_service.reward(session, invited) is None
     assert Decimal(str(inviter.balance or 0)) == Decimal(0)
-    # Bayroq ham yoqilmaydi: summa qaytarilsa mukofot keyin berilishi mumkin.
-    assert invited.referral_rewarded is False
+    assert invited.referral_confirmed is True
+    # Va u xizmat ochish uchun sanaladi.
+    assert await referral_service.count_invited(session, inviter) == 1
 
 
 @pytest.mark.asyncio
@@ -141,10 +147,23 @@ async def test_reward_without_referrer_does_nothing(session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_count_invited(session) -> None:
+async def test_only_confirmed_invites_are_counted(session) -> None:
+    """Havolani bosib, keyin ketib qolgan odam sanalmaydi.
+
+    Aks holda soxta akkauntlar bilan xizmat ochib olish arzon bo'lardi:
+    /start bosish yetarli bo'lib qolardi.
+    """
+    await _bonus(session, Decimal(1000))
     inviter = await _user(session, 108)
+
     for telegram_id in (301, 302, 303):
         invited = await _user(session, telegram_id)
         await referral_service.attach(session, invited, inviter.telegram_id)
+    # Uchtadan faqat ikkitasi kanalga a'zo bo'ladi.
+    for telegram_id in (301, 302):
+        invited = (
+            await session.execute(select(User).where(User.telegram_id == telegram_id))
+        ).scalar_one()
+        await referral_service.reward(session, invited)
 
-    assert await referral_service.count_invited(session, inviter) == 3
+    assert await referral_service.count_invited(session, inviter) == 2

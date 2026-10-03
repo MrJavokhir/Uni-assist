@@ -127,11 +127,18 @@ class User(TimestampMixin, Base):
     referred_by_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    # Taklif qilgan odamga pul berilganmi. Mukofot obunadan KEYIN beriladi,
-    # shuning uchun "kim taklif qilgan" va "pul berilgan" alohida turadi.
-    # Shartli UPDATE bilan yoqiladi: tugma bir necha marta bosilsa ham pul
-    # bir marta beriladi.
-    referral_rewarded: Mapped[bool] = mapped_column(
+    # Taklif TASDIQLANGANMI — ya'ni bu odam majburiy kanalga a'zo bo'lib,
+    # haqiqiy foydalanuvchiga aylanganmi. Shu paytda taklif qilganga
+    # mukofot ham beriladi (summa 0 bo'lsa berilmaydi, lekin taklif baribir
+    # tasdiqlanadi: u xizmatlarni ochish uchun ham sanaladi).
+    #
+    # Nomi ataylab "rewarded" emas: ilgari shunday edi va mukofot 0 ga
+    # qo'yilsa bayroq umuman yoqilmasdi — natijada taklif hech qayerda
+    # hisobga olinmay qolardi.
+    #
+    # Shartli UPDATE bilan yoqiladi: tugma bir necha marta bosilsa ham
+    # bir marta ishlaydi.
+    referral_confirmed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
 

@@ -11,16 +11,19 @@ Nega mukofot darhol emas, obunadan keyin: aks holda soxta akkauntlar
 bilan pul yig'ish arzon bo'lardi. Obuna talabi ham to'siq bo'ladi, ham
 taklifni haqiqiy foydali qiladi — kanalga odam qo'shiladi.
 
-Mukofot BIR MARTA beriladi. Buni `users.referral_rewarded` bayrog'i
+Taklif BIR MARTA tasdiqlanadi. Buni `users.referral_confirmed` bayrog'i
 ta'minlaydi va u shartli UPDATE bilan yoqiladi: "Tekshirish" tugmasi bir
 necha marta bosilsa ham pul takror berilmaydi.
+
+Tasdiqlangan taklif ikki narsaga ishlaydi: mukofot (agar summa 0 dan
+katta bo'lsa) va Admission Kit xizmatlarini pulsiz ochish.
 """
 
 import logging
 import re
 from decimal import Decimal
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import User
@@ -77,25 +80,28 @@ async def attach(session: AsyncSession, user: User, referrer_telegram_id: int) -
 
 
 async def reward(session: AsyncSession, user: User) -> tuple[User, Decimal] | None:
-    """Taklif qilgan odamga mukofot beradi. Bergan bo'lsa (kim, qancha).
+    """Taklifni tasdiqlaydi va mukofot beradi. Pul berilgan bo'lsa (kim, qancha).
 
-    Hech narsa qilmaydigan holatlar: foydalanuvchi taklif bilan kelmagan,
-    mukofot allaqachon berilgan yoki summa 0 (dastur to'xtatilgan).
+    TASDIQLASH va PUL BERISH ikki boshqa narsa:
+      * tasdiqlash — har doim bo'ladi (odam kanalga a'zo bo'ldi). Taklif
+        shundan keyin xizmat ochish uchun sanaladi;
+      * pul — faqat mukofot summasi 0 dan katta bo'lsa.
+
+    Ilgari ikkalasi bitta shart ostida edi: mukofot 0 ga qo'yilsa bayroq
+    yoqilmay, taklif hech qayerda hisobga olinmay qolardi.
+
+    Hech narsa qilmaydigan holatlar: foydalanuvchi taklif bilan kelmagan
+    yoki taklif allaqachon tasdiqlangan.
     """
-    if user.referred_by_id is None or user.referral_rewarded:
-        return None
-
-    settings_row = await payment_service.get_settings(session)
-    amount = Decimal(str(settings_row.referral_bonus or 0))
-    if amount <= 0:
+    if user.referred_by_id is None or user.referral_confirmed:
         return None
 
     # Shartli UPDATE: tugma bir necha marta bosilsa ham faqat bittasi
-    # qator o'zgartira oladi, demak pul bir marta beriladi.
+    # qator o'zgartira oladi, demak tasdiq ham, pul ham bir marta.
     result = await session.execute(
         update(User)
-        .where(User.id == user.id, User.referral_rewarded.is_(False))
-        .values(referral_rewarded=True)
+        .where(User.id == user.id, User.referral_confirmed.is_(False))
+        .values(referral_confirmed=True)
     )
     if result.rowcount != 1:
         return None
@@ -105,6 +111,14 @@ async def reward(session: AsyncSession, user: User) -> tuple[User, Decimal] | No
 
     referrer = await session.get(User, user.referred_by_id)
     if referrer is None:
+        return None
+
+    settings_row = await payment_service.get_settings(session)
+    amount = Decimal(str(settings_row.referral_bonus or 0))
+    if amount <= 0:
+        # Dastur pulsiz ishlayapti: taklif tasdiqlandi (xizmat ochish
+        # uchun sanaladi), lekin balansga hech narsa qo'shilmaydi.
+        logger.info("Taklif tasdiqlandi, mukofot 0: %s", user.telegram_id)
         return None
 
     await payment_service.reward_referral(
@@ -118,9 +132,16 @@ async def reward(session: AsyncSession, user: User) -> tuple[User, Decimal] | No
 
 
 async def count_invited(session: AsyncSession, user: User) -> int:
-    """Nechta odam shu foydalanuvchining havolasi bilan kelgan."""
-    stmt = select(User.id).where(User.referred_by_id == user.id)
-    return len((await session.execute(stmt)).scalars().all())
+    """Nechta TASDIQLANGAN taklif bor.
+
+    Faqat kanalga a'zo bo'lganlar sanaladi. Shunchaki havolani bosib,
+    keyin ketib qolgan odam na mukofot beradi, na xizmat ochadi — aks
+    holda soxta akkauntlar bilan xizmat ochib olish arzon bo'lardi.
+    """
+    stmt = select(func.count(User.id)).where(
+        User.referred_by_id == user.id, User.referral_confirmed.is_(True)
+    )
+    return (await session.execute(stmt)).scalar_one()
 
 
 async def reward_and_notify(session: AsyncSession, bot, user: User) -> None:

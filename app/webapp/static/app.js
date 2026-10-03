@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 62;
+const ASSET_V = 63;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -257,6 +257,10 @@ const I18N = {
     "kit.empty_title": "Xizmatlar hali qo'shilmagan",
     "kit.empty_text": "Tez orada bu yerda qo'llanmalar va yordam xizmatlari paydo bo'ladi.",
     "kit.note": "Narx balansdan yechiladi. Balansni botda /topup buyrug'i bilan to'ldirasiz.",
+    "kit.unlock_invites": "yoki {n} ta do'st taklif qiling",
+    "kit.unlock_progress": "{have} / {need} ta do'st",
+    "kit.unlock_free": "Bepul ochish",
+    "kit.unlocked_free_toast": "Do'stlaringiz uchun bepul ochildi",
     "kit.locked": "Qulflangan",
     "kit.unlocked": "Ochilgan",
     "kit.buy": "Sotib olish",
@@ -558,6 +562,10 @@ const I18N = {
     "kit.empty_title": "Услуги пока не добавлены",
     "kit.empty_text": "Скоро здесь появятся руководства и услуги поддержки.",
     "kit.note": "Стоимость списывается с баланса. Пополнить — командой /topup в боте.",
+    "kit.unlock_invites": "или пригласите {n} друзей",
+    "kit.unlock_progress": "{have} / {need} друзей",
+    "kit.unlock_free": "Открыть бесплатно",
+    "kit.unlocked_free_toast": "Открыто бесплатно — за приглашённых друзей",
     "kit.locked": "Закрыто",
     "kit.unlocked": "Открыто",
     "kit.buy": "Купить",
@@ -859,6 +867,10 @@ const I18N = {
     "kit.empty_title": "No services yet",
     "kit.empty_text": "Guides and support services will appear here soon.",
     "kit.note": "The price comes from your balance. Top it up with /topup in the bot.",
+    "kit.unlock_invites": "or invite {n} friends",
+    "kit.unlock_progress": "{have} / {need} friends",
+    "kit.unlock_free": "Unlock for free",
+    "kit.unlocked_free_toast": "Unlocked for free — thanks to your invites",
     "kit.locked": "Locked",
     "kit.unlocked": "Unlocked",
     "kit.buy": "Buy",
@@ -3243,13 +3255,17 @@ function bindKitBack(root) {
 // Narx bitta satr matn: gradientli kartada u sarlavha ustidagi "ko'z qoshi"
 // (eyebrow) bo'lib turadi, shuning uchun alohida teglar kerak emas.
 function servicePriceText(service) {
+  const unlock = inviteUnlock(service);
   if (service.price_amount === null || service.price_amount === undefined) {
     return escapeHtml(t("kit.price_ask"));
   }
   const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
     service.price_currency
   )}`;
-  return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
+  const base = service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
+  // Pulsiz yo'l ham borligi narx yonida turadi — aks holda odam uni
+  // umuman ko'rmay, faqat narxni ko'rib chiqib ketardi.
+  return unlock ? `${base} · ${t("kit.unlock_invites", { n: unlock.need })}` : base;
 }
 
 // `api()` xatoni "API 402: {...}" ko'rinishida beradi — tafsilotni
@@ -3336,6 +3352,18 @@ function serviceFileRow(service) {
     </div>`;
 }
 
+// Do'st taklif qilib ochiladigan xizmat. Hisoblagich profildan keladi
+// (`referral_count`) — u faqat TASDIQLANGAN takliflarni sanaydi.
+//
+// Bu yerdagi hisob faqat KO'RSATISH uchun: haqiqiy tekshiruv serverda,
+// xizmat berishdan oldin qaytadan bajariladi.
+function inviteUnlock(service) {
+  const need = Number(service.unlock_invites || 0);
+  if (!need || service.requested) return null;
+  const have = Number((profile && profile.referral_count) || 0);
+  return { need: need, have: have, ready: have >= need };
+}
+
 // Vaqt tanlanadigan xizmat (1:1 mentor). Bo'sh vaqt qolmagan bo'lsa
 // buyurtma qabul qilinmaydi: vaqtsiz pul olib bo'lmaydi.
 function needsBooking(service) {
@@ -3349,13 +3377,16 @@ function isFullyBooked(service) {
 function serviceBtnInner(service) {
   if (isGuide(service)) {
     if (isSoon(service)) return icon("clock") + t("kit.soon");
-    return service.requested
-      ? icon("download") + t("kit.download")
-      : icon("lock") + t("kit.buy");
+    if (service.requested) return icon("download") + t("kit.download");
+    const guideUnlock = inviteUnlock(service);
+    if (guideUnlock && guideUnlock.ready) return icon("spark") + t("kit.unlock_free");
+    return icon("lock") + t("kit.buy");
   }
   if (service.requested) return icon("check") + t("kit.requested");
   if (isFullyBooked(service)) return icon("clock") + t("kit.no_slots");
   if (needsBooking(service)) return icon("clock") + t("kit.pick_time");
+  const unlock = inviteUnlock(service);
+  if (unlock && unlock.ready) return icon("spark") + t("kit.unlock_free");
   return t("kit.request") + icon("chevron");
 }
 
@@ -3378,6 +3409,25 @@ function serviceBtnDisabled(service) {
 
 // Vaqt tanlanadigan xizmatda qancha joy qolganini kartada ko'rsatamiz —
 // "hoziroq tanlash kerak" degan signal.
+// Taklif bilan ochish holati: nechta do'st kerak va nechtasi bor.
+function serviceInviteRow(service) {
+  const unlock = inviteUnlock(service);
+  if (!unlock) return "";
+  return `
+    <div class="svc-file${unlock.ready ? " is-ready" : ""}">
+      ${icon(unlock.ready ? "check" : "user")}
+      <span class="svc-file-text">
+        <span class="svc-file-name">${t("kit.unlock_progress", {
+          have: unlock.have,
+          need: unlock.need,
+        })}</span>
+        <span class="svc-file-hint">${
+          unlock.ready ? t("kit.unlock_free") : t("kit.unlock_invites", { n: unlock.need })
+        }</span>
+      </span>
+    </div>`;
+}
+
 function serviceSlotRow(service) {
   if (!needsBooking(service) || service.requested) return "";
   return `
@@ -3636,6 +3686,7 @@ async function renderKit() {
         }
         ${serviceFileRow(service)}
         ${serviceSlotRow(service)}
+        ${serviceInviteRow(service)}
         <div class="svc-foot">
           <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
@@ -3685,9 +3736,14 @@ async function renderKit() {
         if (result.has_file) {
           // Sotib olgan odam yana bir tugma qidirmasligi kerak — fayl
           // shu zahoti yuboriladi.
+          if (result.unlocked_by_invites) showToast(t("kit.unlocked_free_toast"));
           await deliverPdf(btn.dataset.id, btn);
         } else {
-          showToast(t("kit.requested_toast"));
+          showToast(
+            result.unlocked_by_invites
+              ? t("kit.unlocked_free_toast")
+              : t("kit.requested_toast")
+          );
         }
       } catch (err) {
         btn.disabled = false;

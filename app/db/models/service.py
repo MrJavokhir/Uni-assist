@@ -97,6 +97,13 @@ class AdmissionService(TimestampMixin, Base):
     # pul to'lab, keyin "qachon?" degan savol bilan qolardi.
     requires_booking: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # Do'st taklif qilib ochish. 0 — bunday imkoniyat yo'q, faqat pulga.
+    # Qiymat qo'yilsa, shuncha TASDIQLANGAN taklifi bor odam xizmatni
+    # pulsiz oladi.
+    unlock_invites: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -223,6 +230,13 @@ class ServiceRequest(TimestampMixin, Base):
         nullable=False,
         default=ServiceRequestStatus.NEW,
     )
+    # Pulga emas, do'st taklif qilib ochilganmi. Pulga tegishli qaror
+    # bo'lgani uchun yozib qo'yiladi: aks holda "nega bu odam bepul oldi"
+    # degan savolga javob qolmasdi (balans tarixida ham yechim ko'rinmaydi).
+    unlocked_by_invites: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     # Admin uchun ishchi izoh (kim bilan gaplashildi, nima kelishildi).
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 

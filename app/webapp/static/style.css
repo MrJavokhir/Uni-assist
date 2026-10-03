@@ -2521,10 +2521,13 @@ button.sch-card:active { transform: scale(0.985); }
 .mf-option.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
 .mf-option .ico { flex: none; width: 17px; height: 17px; }
 
-/* Taklif bilan ochish yetarli bo'lganda qator yashil bo'ladi — odam
-   tugmani bosishdan oldin ham holatni ko'rib tursin. */
-.svc-file.is-ready {
-  background: var(--green-soft);
+/* Do'st taklif qilib ochish — narx ostidagi mayda qator. Narx bilan bir
+   qatorda turganda jumla uzun bo'lib, tugmaga tiqilib qolardi. */
+.svc-price-alt {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--hint);
 }
-.svc-file.is-ready .ico { color: var(--green); }
-.svc-file.is-ready .svc-file-name { color: var(--green); }

@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 63;
+const ASSET_V = 64;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -3263,9 +3263,14 @@ function servicePriceText(service) {
     service.price_currency
   )}`;
   const base = service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
-  // Pulsiz yo'l ham borligi narx yonida turadi — aks holda odam uni
-  // umuman ko'rmay, faqat narxni ko'rib chiqib ketardi.
-  return unlock ? `${base} · ${t("kit.unlock_invites", { n: unlock.need })}` : base;
+  if (!unlock) return base;
+  // Pulsiz yo'l narx bilan BIR QATORDA turganda jumla uzun bo'lib,
+  // tugmaga tiqilib qolardi. Endi u narx ostida, mayda qatorda —
+  // va faqat shu yerda: ilgari karta ichida ham takrorlanardi.
+  return `${base}<span class="svc-price-alt">${t("kit.unlock_progress", {
+    have: unlock.have,
+    need: unlock.need,
+  })} · ${t("kit.unlock_invites", { n: unlock.need })}</span>`;
 }
 
 // `api()` xatoni "API 402: {...}" ko'rinishida beradi — tafsilotni
@@ -3409,25 +3414,6 @@ function serviceBtnDisabled(service) {
 
 // Vaqt tanlanadigan xizmatda qancha joy qolganini kartada ko'rsatamiz —
 // "hoziroq tanlash kerak" degan signal.
-// Taklif bilan ochish holati: nechta do'st kerak va nechtasi bor.
-function serviceInviteRow(service) {
-  const unlock = inviteUnlock(service);
-  if (!unlock) return "";
-  return `
-    <div class="svc-file${unlock.ready ? " is-ready" : ""}">
-      ${icon(unlock.ready ? "check" : "user")}
-      <span class="svc-file-text">
-        <span class="svc-file-name">${t("kit.unlock_progress", {
-          have: unlock.have,
-          need: unlock.need,
-        })}</span>
-        <span class="svc-file-hint">${
-          unlock.ready ? t("kit.unlock_free") : t("kit.unlock_invites", { n: unlock.need })
-        }</span>
-      </span>
-    </div>`;
-}
-
 function serviceSlotRow(service) {
   if (!needsBooking(service) || service.requested) return "";
   return `
@@ -3686,7 +3672,6 @@ async function renderKit() {
         }
         ${serviceFileRow(service)}
         ${serviceSlotRow(service)}
-        ${serviceInviteRow(service)}
         <div class="svc-foot">
           <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"

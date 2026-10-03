@@ -774,6 +774,7 @@ def _scholarship_prefill_from_form(
         "requirements_text_ru": form.get("requirements_text_ru") or "",
         "requirements_text_en": form.get("requirements_text_en") or "",
         "verified_by": _text(form, "verified_by") or "admin",
+        "sort_order": _text(form, "sort_order") or "100",
         "deadlines": [
             {
                 "type": _text(form, f"d{index}_type") or DeadlineType.APPLICATION_CLOSE.value,
@@ -930,6 +931,7 @@ class ScholarshipWizard(BaseView):
             "requirements_text_ru": scholarship.requirements_text_ru or "",
             "requirements_text_en": scholarship.requirements_text_en or "",
             "verified_by": scholarship.verified_by or "admin",
+            "sort_order": _as_str(scholarship.sort_order),
             "deadlines": [
                 {
                     "type": deadline.type.value,
@@ -1008,6 +1010,10 @@ class ScholarshipWizard(BaseView):
         scholarship.source_url = source_url
         scholarship.verified_at = now
         scholarship.verified_by = _text(form, "verified_by") or "admin"
+        # Bo'sh qoldirilsa odatiy o'rin — grant ro'yxat oxirida emas,
+        # o'rtasida, alifbo tartibida turadi.
+        order = _integer(form, "sort_order")
+        scholarship.sort_order = 100 if order is None else order
 
         # Davlatlar flush'dan OLDIN biriktiriladi: flush'dan keyin obyekt
         # "persistent" bo'lib qoladi va yuklanmagan to'plamga qiymat berish

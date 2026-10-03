@@ -8,6 +8,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Table,
@@ -58,6 +59,13 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Ro'yxatdagi o'rni: KICHIGI YUQORIDA (Field.sort_order bilan bir xil
+    # qoida). Mashhur grantlar — Chevening, Fulbright, DAAD, Erasmus Mundus —
+    # tepada tursin uchun. Alifbo tartibi yolg'iz o'zi yomon edi: ro'yxat
+    # "ADB-Japan" bilan boshlanib, 27 ta Erasmus Mundus dasturi o'rtasini
+    # egallab turardi. Teng qiymatlarda alifbo tartibi saqlanadi.
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
 
     # Tavsif uch tilda — `description` o'zbekcha (asosiy), qolganlari bo'sh
     # bo'lsa Mini App o'zbekchasiga qaytadi.

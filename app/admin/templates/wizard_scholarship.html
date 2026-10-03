@@ -343,7 +343,13 @@
             <input type="text" name="verified_by" class="form-control"
                    value="{{ (prefill.verified_by if prefill else 'admin') }}">
           </div>
-          <div class="col-md-8 text-end">
+          <div class="col-md-3">
+            <label class="form-label">Tartib</label>
+            <input type="number" name="sort_order" class="form-control" step="1"
+                   value="{{ (prefill.sort_order if prefill else '100') }}">
+            <div class="form-text">Ro'yxatdagi o'rni: kichigi yuqorida. Odatiy 100.</div>
+          </div>
+          <div class="col-md-5 text-end">
             <button type="submit" class="btn btn-primary">Grantni saqlash</button>
           </div>
         </div>

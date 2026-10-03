@@ -535,7 +535,10 @@ async def list_scholarships(
             selectinload(Scholarship.countries),
             selectinload(Scholarship.deadlines),
         )
-        .order_by(Scholarship.name)
+        # Mashhur grantlar tepada: alifbo tartibi yolg'iz o'zi yomon edi —
+        # ro'yxat "ADB-Japan" bilan boshlanib, o'rtasini 27 ta Erasmus Mundus
+        # dasturi egallardi. Teng `sort_order` da alifbo tartibi saqlanadi.
+        .order_by(Scholarship.sort_order, Scholarship.name)
     )
     if country_id is not None:
         stmt = stmt.where(Scholarship.countries.any(Country.id == country_id))

@@ -382,16 +382,29 @@ body {
 }
 
 /* Segmented control (saved status) */
+/* Holat tanlagichi. `margin-top` SHART: u kartaning yuqori qismiga
+   yopishib turardi, "O'chirish" tugmasining ustida esa 12px joy bor edi —
+   natijada ikki blok bir-birining ustiga chiqqandek ko'rinardi. */
 .seg {
   display: flex;
   gap: 3px;
+  margin-top: 12px;
   background: var(--surface);
   border-radius: 11px;
   padding: 3px;
+  /* Yorliq uzun bo'lsa ham hech narsa chiziqdan tashqariga chiqmaydi. */
+  overflow: hidden;
 }
 
 .seg-item {
   flex: 1;
+  /* `min-width: 0` bo'lmasa, flex element o'z min-content kengligidan
+     pastga siqilmaydi: boshqa tilda uzunroq yorliq ("Rejalashtirilmoqda")
+     qo'yilsa, to'rttasi chiziqqa sig'may tashqariga chiqib ketardi. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-align: center;
   font-size: 12px;
   font-weight: 600;

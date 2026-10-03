@@ -33,6 +33,7 @@ from app.db.models import (
     PaymentStatus,
     Program,
     RequiredChannel,
+    SavedProgram,
     SavedProgramStatus,
     Scholarship,
     ScholarshipDeadline,
@@ -448,12 +449,16 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
 
     column_list = [
         Scholarship.id,
+        Scholarship.sort_order,
         Scholarship.name,
         Scholarship.countries,
         Scholarship.coverage_type,
         Scholarship.citizenship_eligible,
         Scholarship.verified_at,
     ]
+    # Ro'yxat Mini App'dagi tartibda ko'rinsin — admin nimani ko'rsa,
+    # foydalanuvchi ham shuni ko'radi.
+    column_default_sort = [(Scholarship.sort_order, False), (Scholarship.name, False)]
     column_details_list = [
         Scholarship.id,
         Scholarship.name,
@@ -489,7 +494,11 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
         Scholarship.verified_by,
     ]
     column_searchable_list = [Scholarship.name]
-    column_sortable_list = [Scholarship.name, Scholarship.verified_at]
+    column_sortable_list = [
+        Scholarship.sort_order,
+        Scholarship.name,
+        Scholarship.verified_at,
+    ]
     column_filters = [
         RelationshipFilter(
             Scholarship.countries, Country, Country.name_uz, title="Davlat", parameter_name="country"
@@ -522,6 +531,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     ]
     column_labels = _labels(
         name="Grant nomi",
+        sort_order="Tartib",
         countries="Davlat",
         description="Tavsif",
         coverage_type="Qamrov turi",
@@ -1197,3 +1207,56 @@ class SubscriptionExemptionAdmin(ModelView, model=SubscriptionExemption):
 
     async def after_model_delete(self, model: SubscriptionExemption, request: Request) -> None:
         await clear_cache(redis_client, model.telegram_id)
+
+
+class SavedProgramAdmin(ModelView, model=SavedProgram):
+    """Foydalanuvchilar saqlab qo'ygan dasturlar.
+
+    Faqat O'QISH uchun: yozuvlar Mini App'dan keladi va holatni
+    foydalanuvchining o'zi belgilaydi ("Rejalashtirilmoqda", "Ariza
+    berilgan"...). Admin uni o'zgartirsa, odamning shaxsiy ro'yxatiga
+    aralashgan bo'lardi — shuning uchun qo'shish ham, tahrirlash ham,
+    o'chirish ham o'chirilgan.
+
+    Yon menyuda ko'rinmaydi: unga boshqaruv panelidagi "Saqlangan"
+    kartasi orqali kelinadi. Ilgari o'sha karta mavjud bo'lmagan
+    sahifaga havola qilib, 404 berardi.
+    """
+
+    name = "Saqlangan dastur"
+    name_plural = "Saqlangan dasturlar"
+    icon = "fa-solid fa-bookmark"
+    can_create = False
+    can_edit = False
+    can_delete = False
+
+    def is_visible(self, request: Request) -> bool:
+        return False
+
+    column_list = [
+        SavedProgram.id,
+        SavedProgram.user,
+        SavedProgram.program,
+        SavedProgram.status,
+        SavedProgram.reminders_active,
+        SavedProgram.created_at,
+    ]
+    column_details_list = column_list
+    column_default_sort = [(SavedProgram.id, True)]
+    column_filters = [
+        StaticValuesFilter(
+            SavedProgram.status, values=_choices(_SAVED_STATUS_LABELS), title="Holat"
+        )
+    ]
+    column_labels = _labels(
+        user="Foydalanuvchi",
+        program="Dastur",
+        status="Holat",
+        reminders_active="Eslatmalar yoqilgan",
+    )
+    _saved_formatters = {
+        SavedProgram.status: enum_label(_SAVED_STATUS_LABELS),
+        SavedProgram.reminders_active: format_bool,
+    }
+    column_formatters = _saved_formatters
+    column_formatters_detail = _saved_formatters

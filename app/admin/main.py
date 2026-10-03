@@ -19,6 +19,7 @@ from app.admin.views import (
     PaymentSettingsAdmin,
     ProgramAdmin,
     RequiredChannelAdmin,
+    SavedProgramAdmin,
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
     ServiceRequestAdmin,
@@ -126,6 +127,9 @@ for view in (
     BotAdminAdmin,
     RequiredChannelAdmin,
     SubscriptionExemptionAdmin,
+    # Menyuda ko'rinmaydi — boshqaruv panelidagi "Saqlangan" kartasi
+    # orqali ochiladi (app/admin/views.py).
+    SavedProgramAdmin,
 ):
     admin.add_view(view)
 

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import datetime
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -12,12 +13,20 @@ from app.bot.profile_setup import apply_bot_profile
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services.redis_client import redis_client
-from app.services.reminder_service import run_reminder_scan
+from app.services.reminder_service import is_send_time, run_reminder_scan
+from app.services.timezone_utils import TASHKENT_TZ
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-REMINDER_SCAN_INTERVAL_SECONDS = 3600
+# Har yarim soatda uyg'onamiz, lekin xabar faqat Toshkent vaqti bilan
+# 10:00 da ketadi. Tez-tez uyg'onish kerak: konteyner istalgan paytda
+# qayta ishga tushadi va aniq 10:00 ga tushishi shart emas.
+REMINDER_TICK_SECONDS = 1800
+# Kunlik qulf: deploy paytidagi eski va yangi konteyner bir kunda ikki
+# marta yubormasligi uchun. Redis'da, chunki jarayon xotirasi buni
+# kafolatlay olmaydi.
+_DAILY_LOCK_TTL_SECONDS = 23 * 3600
 
 
 def create_dispatcher() -> Dispatcher:
@@ -42,19 +51,40 @@ def create_dispatcher() -> Dispatcher:
     return dispatcher
 
 
+async def _claim_today(today_iso: str) -> bool:
+    """Bugungi yuborishni shu nusxa bajaradimi.
+
+    `SET key value NX` atomar ishlaydi: bir vaqtda ishlayotgan nusxalardan
+    faqat bittasi True oladi.
+    """
+    return bool(
+        await redis_client.set(
+            f"reminder_daily:{today_iso}", "1", nx=True, ex=_DAILY_LOCK_TTL_SECONDS
+        )
+    )
+
+
 async def reminder_loop(bot: Bot) -> None:
-    """Deadline eslatmalarini davriy tekshiradi. Holat DB + Redis'da saqlanadi,
-    shuning uchun bot qayta ishga tushirilganda hech narsa yo'qolmaydi yoki takrorlanmaydi."""
+    """Kuniga bir marta, Toshkent vaqti bilan 10:00 da eslatmalarni yuboradi.
+
+    Holat butunlay bazada (`notification_logs`), shuning uchun bot qayta ishga
+    tushirilganda xabarlar na yo'qoladi, na takrorlanadi.
+    """
     while True:
         try:
-            async with async_session_factory() as session:
-                sent = await run_reminder_scan(bot, session, redis_client)
-                if sent:
-                    logger.info("Eslatmalar yuborildi: %s ta", sent)
+            now = datetime.now(TASHKENT_TZ)
+            if is_send_time(now) and await _claim_today(now.date().isoformat()):
+                async with async_session_factory() as session:
+                    result = await run_reminder_scan(bot, session)
+                logger.info(
+                    "Eslatmalar: %s foydalanuvchiga, %s dastur bo'yicha (bloklangan: %s)",
+                    result.sent_users,
+                    result.sent_messages,
+                    result.blocked_users,
+                )
         except Exception:
             logger.exception("Eslatmalarni tekshirishda xatolik")
-        await asyncio.sleep(REMINDER_SCAN_INTERVAL_SECONDS)
-
+        await asyncio.sleep(REMINDER_TICK_SECONDS)
 
 async def main() -> None:
     if not settings.bot_token:

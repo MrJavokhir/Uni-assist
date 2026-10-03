@@ -2,7 +2,17 @@ import enum
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Numeric, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, VerificationMixin, str_enum
@@ -136,6 +146,16 @@ class Program(TimestampMixin, VerificationMixin, Base):
     # bo'yicha bakalavr diplomi", "2 ta tavsiyanoma"). Mini App ro'yxat qilib
     # ko'rsatadi.
     requirements_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Deadline ANIQ sanasi ma'lum bo'lmasa, lekin odatda qaysi oyda
+    # yopilishi ma'lum bo'lsa — shu yerga oy raqami (1-12) yoziladi.
+    #
+    # NEGA AYNAN SHU MAYDON: aniq sanalar allaqachon `deadlines` jadvalida
+    # (bitta dasturda bir nechta: ariza ochilishi, yopilishi, hujjat, viza).
+    # `programs` ga sana qo'shish ikkinchi manba yaratardi va ular bir-biriga
+    # zid bo'lganda qaysi biri to'g'ri ekani noaniq qolardi. Shuning uchun
+    # faqat YETISHMAYOTGAN ma'lumot qo'shiladi — oy darajasidagi taxmin.
+    deadline_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     university: Mapped["University"] = relationship(back_populates="programs")
     field: Mapped["Field | None"] = relationship()

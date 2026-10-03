@@ -349,7 +349,7 @@ class UniversityWizard(BaseView):
             "name", "abbr", "degree", "field", "language", "duration", "intake", "source_url",
             "ielts", "toefl", "requirements", "tuition", "currency", "fee", "fee_amount",
             "fee_currency", "scholarship", "scholarship_url", "notes", "notes_ru", "notes_en",
-            "deadline_close", "legacy_field", "legacy_language",
+            "deadline_close", "deadline_month", "legacy_field", "legacy_language",
         )
         programs = []
         for index in range(MAX_PROGRAMS):
@@ -458,6 +458,7 @@ class UniversityWizard(BaseView):
                     "notes_ru": program.notes_ru or "",
                     "notes_en": program.notes_en or "",
                     "deadline_close": close.date_utc.strftime("%Y-%m-%d") if close else "",
+                    "deadline_month": _as_str(program.deadline_month),
                     # "_" bilan boshlangan kalitlar forma maydoni emas —
                     # JS ularni to'ldirishda o'tkazib yuboradi.
                     "_pid": program.id,
@@ -617,6 +618,10 @@ class UniversityWizard(BaseView):
                     )
                 )
                 counters["costs"] += 1
+
+            # Oy darajasidagi taxmin. Aniq sana bo'lsa ham saqlanadi, lekin
+            # eslatma mantig'ida aniq sana ustun turadi (resolve_deadline).
+            program.deadline_month = _integer(form, f"p{index}_deadline_month")
 
             close_date = _datetime_utc(form, f"p{index}_deadline_close")
             if close_date is not None:

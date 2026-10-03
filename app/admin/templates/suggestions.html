@@ -1,0 +1,67 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h3 class="card-title">{{ title }}</h3>
+        <div class="text-muted small">{{ subtitle }}</div>
+      </div>
+    </div>
+
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Dastur</th>
+            <th>Universitet</th>
+            <th>Taklif qilingan sana</th>
+            <th>Kim yubordi</th>
+            <th>Qachon</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.program.name }}</td>
+            <td class="text-muted">{{ row.program.university.name }}</td>
+            <td><strong>{{ row.suggested_date }}</strong></td>
+            <td class="text-muted">
+              {% if row.user.username %}@{{ row.user.username }}{% else %}{{ row.user.telegram_id }}{% endif %}
+            </td>
+            <td class="text-muted small">{{ row.created_at.strftime('%Y-%m-%d') }}</td>
+            <td class="text-end">
+              <form method="post" class="d-inline">
+                <input type="hidden" name="id" value="{{ row.id }}">
+                <button type="submit" name="action" value="approve" class="btn btn-sm btn-primary">
+                  Tasdiqlash
+                </button>
+              </form>
+              <form method="post" class="d-inline">
+                <input type="hidden" name="id" value="{{ row.id }}">
+                <button type="submit" name="action" value="reject" class="btn btn-sm btn-secondary">
+                  Rad etish
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-muted small">
+      Tasdiqlansa sana katalogga (<code>deadlines</code>) yoziladi va shu dastur
+      bo'yicha boshqa kutilayotgan takliflar yopiladi.
+    </div>
+    {% else %}
+    <div class="ua-empty">
+      <i class="fa-solid fa-circle-check fs-2 d-block mb-2 ua-fresh"></i>
+      Kutilayotgan taklif yo'q.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

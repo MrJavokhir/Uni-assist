@@ -1,5 +1,5 @@
 import enum
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     Date,
+    DateTime,
     ForeignKey,
     Numeric,
     String,
@@ -120,6 +121,20 @@ class User(TimestampMixin, Base):
     # qabul qilinmaydi.
     is_blocked: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+
+    # Deadline eslatmalarining UMUMIY sozlamasi (Mini App profilidan). Bu
+    # o'chirilsa foydalanuvchiga birorta ham eslatma ketmaydi; dastur
+    # kartasidagi "eslatmani o'chirish" esa faqat o'sha bitta dasturga
+    # ta'sir qiladi (SavedProgram.reminders_active).
+    notifications_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    # Eslatmalar oxirgi marta YOQILGAN payt. O'chiq turgan davrda o'tib
+    # ketgan xabarlar orqaga qarab yuborilmasligi uchun kerak: faqat shu
+    # sanadan keyin "vaqti kelgan" xabarlar jo'natiladi.
+    notifications_enabled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     # Taklif qilgan odam. Faqat BIRINCHI /start da, taklif havolasi bilan

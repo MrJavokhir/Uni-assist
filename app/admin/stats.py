@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 from sqladmin import BaseView, expose
 from sqlalchemy import func, select
@@ -10,15 +10,20 @@ from app.admin.formatters import VERIFIED_STALE_DAYS
 from app.admin.views import _DEGREE_LABELS
 from app.db.models import (
     Country,
+    DeadlineSuggestion,
     Field,
+    NotificationLog,
     Program,
     SavedProgram,
+    SavedProgramStatus,
     Scholarship,
+    SuggestionStatus,
     University,
     User,
     user_target_country,
 )
 from app.db.session import async_session_factory
+from app.services.timezone_utils import TASHKENT_TZ
 
 USER_CHART_DAYS = 14
 STALE_LIST_LIMIT = 8
@@ -101,6 +106,53 @@ class StatsView(BaseView):
             total_programs = await count(Program)
             total_scholarships = await count(Scholarship)
             total_saved = await count(SavedProgram)
+
+            # --- Deadline eslatmalari ---
+            # "Bugun" Toshkent kuni bo'yicha: eslatmalar ham o'sha vaqtda
+            # yuboriladi, shuning uchun UTC kuni chalg'itardi.
+            today_start = datetime.combine(
+                datetime.now(TASHKENT_TZ).date(), time.min, tzinfo=TASHKENT_TZ
+            )
+            week_start = today_start - timedelta(days=6)
+
+            async def notif_stats(since: datetime) -> tuple[int, int]:
+                row = (
+                    await session.execute(
+                        select(
+                            func.count(NotificationLog.id),
+                            func.count(NotificationLog.id).filter(NotificationLog.clicked),
+                        ).where(NotificationLog.sent_at >= since)
+                    )
+                ).one()
+                return int(row[0] or 0), int(row[1] or 0)
+
+            notif_today, notif_today_clicked = await notif_stats(today_start)
+            notif_week, notif_week_clicked = await notif_stats(week_start)
+
+            blocked_users = (
+                await session.execute(
+                    select(func.count(User.id)).where(User.is_blocked.is_(True))
+                )
+            ).scalar_one()
+            notif_off_users = (
+                await session.execute(
+                    select(func.count(User.id)).where(User.notifications_enabled.is_(False))
+                )
+            ).scalar_one()
+            applied_count = (
+                await session.execute(
+                    select(func.count(SavedProgram.id)).where(
+                        SavedProgram.status == SavedProgramStatus.APPLIED
+                    )
+                )
+            ).scalar_one()
+            pending_suggestions = (
+                await session.execute(
+                    select(func.count(DeadlineSuggestion.id)).where(
+                        DeadlineSuggestion.status == SuggestionStatus.PENDING
+                    )
+                )
+            ).scalar_one()
 
             stale_programs = (
                 await session.execute(
@@ -203,6 +255,17 @@ class StatsView(BaseView):
                 "total_programs": total_programs,
                 "total_scholarships": total_scholarships,
                 "total_saved": total_saved,
+                "notif_today": notif_today,
+                "notif_today_clicked": notif_today_clicked,
+                "notif_week": notif_week,
+                "notif_week_clicked": notif_week_clicked,
+                "notif_click_rate": (
+                    round(notif_week_clicked * 100 / notif_week) if notif_week else 0
+                ),
+                "blocked_users": blocked_users,
+                "notif_off_users": notif_off_users,
+                "applied_count": applied_count,
+                "pending_suggestions": pending_suggestions,
                 "stale_total": stale_programs + stale_scholarships,
                 "stale_days": VERIFIED_STALE_DAYS,
                 "chart_labels": chart_labels,

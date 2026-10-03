@@ -1,9 +1,11 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from html import escape
 
 from aiogram import Bot
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +16,7 @@ from app.db.models import (
     INSTRUCTION_LANGUAGES,
     AdmissionService,
     Country,
+    DeadlineSuggestion,
     DegreeLevel,
     Field,
     GpaScale,
@@ -26,6 +29,7 @@ from app.db.models import (
     ServiceRequest,
     ServiceRequestStatus,
     ServiceSlot,
+    SuggestionStatus,
     UiLanguage,
     University,
     UniversityRankRange,
@@ -35,7 +39,13 @@ from app.db.session import get_session
 from app.services import booking_service, kit_service, payment_service, referral_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
-from app.services.timezone_utils import format_tashkent
+from app.services.reminder_service import (
+    IMMEDIATE_SOON_DAYS,
+    DeadlinePrecision,
+    resolve_deadline,
+    send_immediate_if_due,
+)
+from app.services.timezone_utils import TASHKENT_TZ, format_tashkent
 from app.services.user_service import (
     get_or_create_user,
     set_target_countries,
@@ -44,6 +54,7 @@ from app.services.user_service import (
 from app.webapp.auth import InitDataError, validate_init_data
 from app.webapp.schemas import (
     CountryOut,
+    DeadlineSuggestionIn,
     FeedbackIn,
     FieldOut,
     GpaConvertOut,
@@ -209,6 +220,49 @@ async def _get_bot_username() -> str | None:
     return _bot_username
 
 
+def _set_notifications(user: User, enabled: bool) -> None:
+    """Eslatmalar toggle'i.
+
+    YOQILGAN paytni yozib qo'yamiz: o'chiq turgan davrda "vaqti kelgan"
+    xabarlar orqaga qarab yuborilmasligi kerak (reminder_service
+    `allowed_after_enabling`). O'chirilganda sana tegilmaydi.
+    """
+    if enabled and not user.notifications_enabled:
+        user.notifications_enabled_at = datetime.now(UTC)
+    user.notifications_enabled = enabled
+
+
+async def _notify_if_deadline_near(session: AsyncSession, saved: SavedProgram) -> None:
+    """Saqlangan dastur deadline'i yaqin bo'lsa darhol xabar yuboradi.
+
+    Bot alohida jarayonda ishlaydi, shuning uchun bu yerda qisqa muddatli
+    `Bot` nusxasi ochiladi. Xatolik bo'lsa saqlash AMALI BUZILMAYDI —
+    foydalanuvchi uchun asosiysi dastur saqlanishi.
+    """
+    if not settings.bot_token:
+        return
+    await session.refresh(saved, attribute_names=["program", "user"])
+    await session.refresh(saved.program, attribute_names=["deadlines", "university"])
+
+    # Bot nusxasini FAQAT kerak bo'lganda yaratamiz. Saqlash tez-tez
+    # bo'ladigan amal, deadline esa kamdan-kam yaqin bo'ladi — har safar
+    # HTTP sessiya ochib yopish bekorchilik edi.
+    info = resolve_deadline(saved.program)
+    if info.precision is not DeadlinePrecision.EXACT or info.exact_date is None:
+        return
+    days_left = (info.exact_date - datetime.now(TASHKENT_TZ).date()).days
+    if days_left < 0 or days_left > IMMEDIATE_SOON_DAYS:
+        return
+
+    bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    try:
+        await send_immediate_if_due(bot, session, saved)
+    except Exception:
+        logger.exception("Darhol eslatma yuborishda xatolik: saved_id=%s", saved.id)
+    finally:
+        await bot.session.close()
+
+
 async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
     """Profil javobi. Valyuta to'lov sozlamalaridan olinadi — balans va
     narxlar hamma joyda bir xil valyutada ko'rsatilishi uchun."""
@@ -218,6 +272,7 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
         balance=float(user.balance or 0),
         balance_currency=settings_row.currency,
         is_blocked=bool(user.is_blocked),
+        notifications_enabled=bool(user.notifications_enabled),
         bot_username=bot_username,
         referral_link=referral_service.build_link(bot_username, user.telegram_id),
         referral_bonus=float(settings_row.referral_bonus or 0),
@@ -252,6 +307,8 @@ async def update_me(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ProfileOut:
+    if payload.notifications_enabled is not None:
+        _set_notifications(user, payload.notifications_enabled)
     if payload.ui_language is not None:
         try:
             user.ui_language = UiLanguage(payload.ui_language)
@@ -505,6 +562,7 @@ async def get_program(
             if cost
             else None
         ),
+        deadline_month=program.deadline_month,
         deadlines=[
             ProgramDeadlineOut(
                 type=d.type.value,
@@ -679,16 +737,70 @@ async def save_program(
         program_exists = await session.get(Program, program_id)
         if program_exists is None:
             raise HTTPException(status_code=404, detail="Dastur topilmadi")
-        session.add(
-            SavedProgram(
-                user_id=user.id,
-                program_id=program_id,
-                status=SavedProgramStatus.PLANNING,
-                reminders_active=True,
+        saved = SavedProgram(
+            user_id=user.id,
+            program_id=program_id,
+            status=SavedProgramStatus.PLANNING,
+            reminders_active=True,
+        )
+        session.add(saved)
+        await session.commit()
+
+        # Deadline yaqin bo'lsa, rejalashtirilgan 14 kunlik eslatma allaqachon
+        # kechikkan bo'ladi — shuning uchun saqlagan zahoti tekshiramiz.
+        # Bot nusxasi alohida jarayonda ishlaydi, shuning uchun bu yerda
+        # qisqa muddatli nusxa ochiladi.
+        await _notify_if_deadline_near(session, saved)
+    return {"saved": True}
+
+
+@router.post("/deadline-suggestions", status_code=201)
+async def suggest_deadline(
+    payload: DeadlineSuggestionIn,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Foydalanuvchi taklif qilgan deadline sanasi.
+
+    Taklif katalogga TO'G'RIDAN-TO'G'RI tushmaydi — admin tasdiqlagandan
+    keyingina. Katalogdagi har bir sana rasmiy manbaga asoslanishi kerak,
+    foydalanuvchi esa adashishi yoki boshqa oqimning sanasini yozishi mumkin.
+    """
+    try:
+        suggested = date.fromisoformat(payload.suggested_date)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Sana formati noto'g'ri") from None
+
+    today = datetime.now(TASHKENT_TZ).date()
+    if suggested < today:
+        raise HTTPException(status_code=422, detail="Sana o'tmishda")
+
+    if await session.get(Program, payload.program_id) is None:
+        raise HTTPException(status_code=404, detail="Dastur topilmadi")
+
+    existing = (
+        await session.execute(
+            select(DeadlineSuggestion).where(
+                DeadlineSuggestion.user_id == user.id,
+                DeadlineSuggestion.program_id == payload.program_id,
+                DeadlineSuggestion.status == SuggestionStatus.PENDING,
             )
         )
+    ).scalar_one_or_none()
+    if existing is not None:
+        # Takrorlash xato emas: odam formani qayta ochib, sanani
+        # to'g'irlagan bo'lishi mumkin.
+        existing.suggested_date = suggested
         await session.commit()
-    return {"saved": True}
+        return {"status": "updated"}
+
+    session.add(
+        DeadlineSuggestion(
+            user_id=user.id, program_id=payload.program_id, suggested_date=suggested
+        )
+    )
+    await session.commit()
+    return {"status": "created"}
 
 
 @router.get("/saved", response_model=list[SavedOut])
@@ -708,9 +820,32 @@ async def list_saved(
     )
     saved_programs = (await session.execute(stmt)).scalars().all()
 
+    # Qaysi dasturlar uchun bu odam allaqachon sana taklif qilgan —
+    # bitta so'rovda (har bir karta uchun alohida so'rov N+1 bo'lardi).
+    pending_ids = set(
+        (
+            await session.execute(
+                select(DeadlineSuggestion.program_id).where(
+                    DeadlineSuggestion.user_id == user.id,
+                    DeadlineSuggestion.status == SuggestionStatus.PENDING,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    today_tashkent = datetime.now(TASHKENT_TZ).date()
+
     output = []
     for saved in saved_programs:
         program = saved.program
+        info = resolve_deadline(program)
+        closed = (
+            info.precision is DeadlinePrecision.EXACT
+            and info.exact_date is not None
+            and info.exact_date < today_tashkent
+        )
         now = datetime.now(UTC)
         upcoming = [d for d in program.deadlines if d.date_utc >= now]
         candidates = upcoming or list(program.deadlines)
@@ -729,6 +864,11 @@ async def list_saved(
                 reminders_active=saved.reminders_active,
                 nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
                 nearest_deadline_days_left=days_left,
+                deadline_precision=info.precision.value,
+                deadline_month=info.month,
+                closed=closed,
+                official_url=program.source_url,
+                has_pending_suggestion=program.id in pending_ids,
             )
         )
     return output
@@ -746,16 +886,21 @@ async def update_saved_status(
     if saved is None:
         raise HTTPException(status_code=404, detail="Topilmadi")
 
-    try:
-        saved.status = SavedProgramStatus(payload.status)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail="Noto'g'ri holat") from exc
+    if payload.status is not None:
+        try:
+            saved.status = SavedProgramStatus(payload.status)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="Noto'g'ri holat") from exc
+        if saved.status == SavedProgramStatus.APPLIED:
+            saved.reminders_active = False
 
-    if saved.status == SavedProgramStatus.APPLIED:
-        saved.reminders_active = False
+    # Kartadagi "eslatmani o'chirish" FAQAT shu dasturga ta'sir qiladi —
+    # umumiy sozlama (users.notifications_enabled) o'zgarmaydi.
+    if payload.reminders_active is not None:
+        saved.reminders_active = payload.reminders_active
 
     await session.commit()
-    return {"status": saved.status.value}
+    return {"status": saved.status.value, "reminders_active": saved.reminders_active}
 
 
 @router.delete("/saved/{saved_id}")

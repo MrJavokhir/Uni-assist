@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 64;
+const ASSET_V = 65;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -503,6 +503,41 @@ const I18N = {
     "saved.no_deadline": "ko'rsatilmagan",
     "saved.days_left": "{days} kun qoldi",
     "saved.remove": "Olib tashlash",
+    "saved.month_hint": "Odatda {month}da yopiladi",
+    "saved.unknown_hint": "Deadline noma'lum — rasmiy saytni tekshiring",
+    "saved.urgent": "{n} ta shoshilinch",
+    "saved.closed_section": "Yopilgan",
+    "saved.tag_applied": "Ariza berilgan",
+    "saved.tag_muted": "Eslatma o'chiq",
+    "saved.btn_site": "Rasmiy sayt",
+    "saved.btn_mute": "Eslatmani o'chirish",
+    "saved.btn_suggest": "Sanani bilaman",
+    "saved.btn_suggested": "Taklif yuborilgan",
+    "saved.muted_toast": "Bu dastur bo'yicha eslatmalar o'chirildi",
+    "saved.notif_off_title": "Eslatmalar o'chirilgan",
+    "saved.notif_off_text": "Deadline yaqinlashganda bot sizga xabar yubormaydi.",
+    "saved.notif_on_btn": "Yoqish",
+    "profile.notifications": "Eslatmalar",
+    "profile.notif_hint": "Saqlangan dasturlar deadline'i yaqinlashganda bot sizga xabar yuboradi.",
+    "profile.notif_on_toast": "Eslatmalar yoqildi",
+    "profile.notif_off_toast": "Eslatmalar o'chirildi",
+    "suggest.title": "Deadline sanasini bilasizmi?",
+    "suggest.text": "Sanani yuboring — tekshirgandan keyin uni katalogga qo'shamiz va boshqa talabalar ham ko'radi.",
+    "suggest.date_label": "Ariza yopilish sanasi",
+    "suggest.send": "Yuborish",
+    "suggest.thanks": "Rahmat! Taklifingiz tekshiruvga yuborildi.",
+    "month.1": "yanvar",
+    "month.2": "fevral",
+    "month.3": "mart",
+    "month.4": "aprel",
+    "month.5": "may",
+    "month.6": "iyun",
+    "month.7": "iyul",
+    "month.8": "avgust",
+    "month.9": "sentyabr",
+    "month.10": "oktyabr",
+    "month.11": "noyabr",
+    "month.12": "dekabr",
     "saved.removed_toast": "O'chirildi",
     "saved.status.planning": "Rejada",
     "saved.status.applied": "Topshirdim",
@@ -808,6 +843,41 @@ const I18N = {
     "saved.no_deadline": "не указан",
     "saved.days_left": "осталось {days} дн.",
     "saved.remove": "Убрать",
+    "saved.month_hint": "Обычно закрывается в {month}",
+    "saved.unknown_hint": "Дедлайн неизвестен — проверьте сайт",
+    "saved.urgent": "Срочных: {n}",
+    "saved.closed_section": "Закрытые",
+    "saved.tag_applied": "Заявка подана",
+    "saved.tag_muted": "Напоминания выкл.",
+    "saved.btn_site": "Официальный сайт",
+    "saved.btn_mute": "Отключить напоминание",
+    "saved.btn_suggest": "Я знаю дату",
+    "saved.btn_suggested": "Предложение отправлено",
+    "saved.muted_toast": "Напоминания по этой программе отключены",
+    "saved.notif_off_title": "Напоминания отключены",
+    "saved.notif_off_text": "Бот не напомнит о близком дедлайне.",
+    "saved.notif_on_btn": "Включить",
+    "profile.notifications": "Напоминания",
+    "profile.notif_hint": "Бот напомнит, когда приблизится дедлайн сохранённых программ.",
+    "profile.notif_on_toast": "Напоминания включены",
+    "profile.notif_off_toast": "Напоминания отключены",
+    "suggest.title": "Знаете дату дедлайна?",
+    "suggest.text": "Отправьте дату — после проверки мы добавим её в каталог.",
+    "suggest.date_label": "Дата закрытия приёма",
+    "suggest.send": "Отправить",
+    "suggest.thanks": "Спасибо! Предложение отправлено на проверку.",
+    "month.1": "январе",
+    "month.2": "феврале",
+    "month.3": "марте",
+    "month.4": "апреле",
+    "month.5": "мае",
+    "month.6": "июне",
+    "month.7": "июле",
+    "month.8": "августе",
+    "month.9": "сентябре",
+    "month.10": "октябре",
+    "month.11": "ноябре",
+    "month.12": "декабре",
     "saved.removed_toast": "Удалено",
     "saved.status.planning": "В планах",
     "saved.status.applied": "Подал",
@@ -1113,6 +1183,41 @@ const I18N = {
     "saved.no_deadline": "not set",
     "saved.days_left": "{days} day(s) left",
     "saved.remove": "Remove",
+    "saved.month_hint": "Usually closes in {month}",
+    "saved.unknown_hint": "Deadline unknown — check the official site",
+    "saved.urgent": "{n} urgent",
+    "saved.closed_section": "Closed",
+    "saved.tag_applied": "Applied",
+    "saved.tag_muted": "Reminders off",
+    "saved.btn_site": "Official site",
+    "saved.btn_mute": "Mute reminders",
+    "saved.btn_suggest": "I know the date",
+    "saved.btn_suggested": "Suggestion sent",
+    "saved.muted_toast": "Reminders for this programme are off",
+    "saved.notif_off_title": "Reminders are off",
+    "saved.notif_off_text": "The bot will not message you when a deadline approaches.",
+    "saved.notif_on_btn": "Turn on",
+    "profile.notifications": "Reminders",
+    "profile.notif_hint": "The bot messages you when a saved programme's deadline approaches.",
+    "profile.notif_on_toast": "Reminders on",
+    "profile.notif_off_toast": "Reminders off",
+    "suggest.title": "Do you know the deadline?",
+    "suggest.text": "Send the date — we add it to the catalogue after checking.",
+    "suggest.date_label": "Application closing date",
+    "suggest.send": "Send",
+    "suggest.thanks": "Thank you! Your suggestion is queued for review.",
+    "month.1": "January",
+    "month.2": "February",
+    "month.3": "March",
+    "month.4": "April",
+    "month.5": "May",
+    "month.6": "June",
+    "month.7": "July",
+    "month.8": "August",
+    "month.9": "September",
+    "month.10": "October",
+    "month.11": "November",
+    "month.12": "December",
     "saved.removed_toast": "Removed",
     "saved.status.planning": "Planning",
     "saved.status.applied": "Applied",
@@ -2321,7 +2426,13 @@ async function openProgramSheet(programId) {
           );
         })
         .join("")
-    : `<div class="sheet-empty">${t("program.no_deadlines")}</div>`;
+    : p.deadline_month
+      // Aniq sana yo'q, lekin odatdagi oy ma'lum — bu ham foydali
+      // ma'lumot: "hech narsa yo'q" degandan ko'ra aniqroq.
+      ? `<div class="sheet-note">${t("saved.month_hint", {
+          month: t("month." + p.deadline_month),
+        })}</div>`
+      : `<div class="sheet-empty">${t("saved.unknown_hint")}</div>`;
 
   showSheet(
     `
@@ -2659,6 +2770,139 @@ function openScholarshipSheet(s) {
 
 const SAVED_STATUSES = ["planning", "applied", "rejected", "accepted"];
 
+// Deadline badge rangi: 14 kundan kam — qizil, 60 kundan kam — sariq,
+// qolgani — kulrang. `month` turi uchun oyning 1-sanasi asos qilinadi.
+function deadlineTone(days) {
+  if (days === null || days === undefined) return "";
+  if (days < 14) return "red";
+  if (days < 60) return "amber";
+  return "";
+}
+
+// `month` turidagi dastur uchun keyingi kelish sanasi (o'sha oyning 1-kuni).
+// Serverdagi `next_month_occurrence` bilan bir xil qoida: oy bu yil tugagan
+// bo'lsa, keyingi yil olinadi.
+function nextMonthStart(month) {
+  const today = new Date();
+  const year = today.getFullYear();
+  const thisYear = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0);
+  return monthEnd < today ? new Date(year + 1, month - 1, 1) : thisYear;
+}
+
+function daysUntil(when) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((when - today) / 86400000);
+}
+
+/** Kartani saralash va badge uchun kerakli raqam.
+ *  exact -> deadline'gacha kun; month -> oy boshigacha kun; unknown -> null. */
+function savedDaysLeft(s) {
+  if (s.deadline_precision === "exact") return s.nearest_deadline_days_left;
+  if (s.deadline_precision === "month" && s.deadline_month) {
+    return daysUntil(nextMonthStart(s.deadline_month));
+  }
+  return null;
+}
+
+// Tartib: avval exact (eng yaqini tepada), keyin month, oxirida unknown.
+const PRECISION_ORDER = { exact: 0, month: 1, unknown: 2 };
+
+function compareSaved(a, b) {
+  const byPrecision =
+    (PRECISION_ORDER[a.deadline_precision] ?? 9) - (PRECISION_ORDER[b.deadline_precision] ?? 9);
+  if (byPrecision !== 0) return byPrecision;
+  const left = savedDaysLeft(a);
+  const right = savedDaysLeft(b);
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return left - right;
+}
+
+function deadlineLabel(s) {
+  if (s.deadline_precision === "exact") {
+    const days = s.nearest_deadline_days_left;
+    const date = (s.nearest_deadline || "").split(" ")[0];
+    return days !== null && days >= 0
+      ? `${date} · ${t("saved.days_left", { days })}`
+      : date || t("saved.no_deadline");
+  }
+  if (s.deadline_precision === "month" && s.deadline_month) {
+    return t("saved.month_hint", { month: t("month." + s.deadline_month) });
+  }
+  return t("saved.unknown_hint");
+}
+
+function savedCard(s) {
+  const days = savedDaysLeft(s);
+  const tone = s.closed ? "" : deadlineTone(days);
+  const stateTags = [];
+  if (s.status === "applied") {
+    stateTags.push(`<span class="pill green">${icon("check")}${t("saved.tag_applied")}</span>`);
+  }
+  if (!s.reminders_active) {
+    stateTags.push(`<span class="pill">${t("saved.tag_muted")}</span>`);
+  }
+
+  // Tugmalar faqat shu BITTA dasturga ta'sir qiladi.
+  const actions = [];
+  if (s.official_url) {
+    actions.push(
+      `<button type="button" class="btn btn-quiet site-btn" data-url="${escapeHtml(
+        s.official_url
+      )}">${t("saved.btn_site")}</button>`
+    );
+  }
+  if (s.reminders_active) {
+    actions.push(
+      `<button type="button" class="btn btn-quiet mute-btn" data-id="${s.id}">${t(
+        "saved.btn_mute"
+      )}</button>`
+    );
+  }
+  if (s.deadline_precision === "unknown") {
+    actions.push(
+      `<button type="button" class="btn btn-quiet suggest-btn" data-program="${s.program_id}">${t(
+        s.has_pending_suggestion ? "saved.btn_suggested" : "saved.btn_suggest"
+      )}</button>`
+    );
+  }
+  actions.push(
+    `<button type="button" class="btn btn-quiet remove-btn" data-id="${s.id}">${icon("trash")}${t(
+      "saved.remove"
+    )}</button>`
+  );
+
+  return `
+    <div class="card" data-saved-id="${s.id}" data-program-id="${s.program_id}">
+      <div class="card-top program-open" data-id="${s.program_id}" role="button" tabindex="0">
+        ${avatar(s.university, s.university_logo)}
+        <div class="card-body">
+          <div class="card-title">${escapeHtml(s.program_name)}</div>
+          <div class="card-sub">${escapeHtml(s.university)}, ${flag(
+            s.country.iso_code
+          )} ${escapeHtml(countryName(s.country))}</div>
+          <div class="meta-row">
+            <span class="pill ${tone}">${icon("clock")}${escapeHtml(deadlineLabel(s))}</span>
+            ${stateTags.join("")}
+          </div>
+        </div>
+        <span class="card-chevron">${icon("chevron")}</span>
+      </div>
+      <div class="seg" data-id="${s.id}">
+        ${SAVED_STATUSES.map(
+          (st) =>
+            `<div class="seg-item ${st === s.status ? "active" : ""}" data-status="${st}">${t(
+              "saved.status." + st
+            )}</div>`
+        ).join("")}
+      </div>
+      <div class="card-actions saved-actions">${actions.join("")}</div>
+    </div>`;
+}
+
 async function renderSaved() {
   const el = document.getElementById("view-saved");
   el.innerHTML = skeletons(3);
@@ -2674,58 +2918,105 @@ async function renderSaved() {
     return;
   }
 
-  el.innerHTML = items
-    .map((s) => {
-      const days = s.nearest_deadline_days_left;
-      const hasDays = days !== null && days >= 0;
-      const deadlinePill = s.nearest_deadline
-        ? `<span class="pill ${hasDays && days <= 7 ? "red" : ""}">${icon("clock")}${
-            hasDays ? t("saved.days_left", { days }) : escapeHtml(s.nearest_deadline)
-          }</span>`
-        : `<span class="pill">${icon("clock")}${t("saved.deadline")}: ${t("saved.no_deadline")}</span>`;
+  const open = items.filter((s) => !s.closed).sort(compareSaved);
+  const closed = items.filter((s) => s.closed).sort(compareSaved);
+  const urgent = open.filter((s) => {
+    const days = savedDaysLeft(s);
+    return days !== null && days >= 0 && days < 14;
+  }).length;
 
-      return `
-        <div class="card" data-saved-id="${s.id}">
-          <div class="card-top program-open" data-id="${s.program_id}" role="button" tabindex="0">
-            ${avatar(s.university, s.university_logo)}
-            <div class="card-body">
-              <div class="card-title">${escapeHtml(s.program_name)}</div>
-              <div class="card-sub">${escapeHtml(s.university)}, ${flag(
-                s.country.iso_code
-              )} ${escapeHtml(countryName(s.country))}</div>
-              <div class="meta-row">${deadlinePill}</div>
-            </div>
-            <span class="card-chevron">${icon("chevron")}</span>
-          </div>
-          <div class="seg" data-id="${s.id}">
-            ${SAVED_STATUSES.map(
-              (st) => `<div class="seg-item ${st === s.status ? "active" : ""}" data-status="${st}">${t(
-                "saved.status." + st
-              )}</div>`
-            ).join("")}
-          </div>
-          <div class="card-actions">
-            <button type="button" class="btn btn-quiet remove-btn" data-id="${s.id}">${icon("trash")}${t("saved.remove")}</button>
-          </div>
-        </div>`;
-    })
-    .join("");
+  // Eslatmalar butunlay o'chirilgan bo'lsa, buni shu yerda aytamiz: odam
+  // deadline'ni kuzatish uchun aynan shu sahifaga keladi.
+  const banner =
+    profile && profile.notifications_enabled === false
+      ? `<div class="alert">
+           <div class="alert-ico">${icon("clock")}</div>
+           <div class="card-body">
+             <div class="alert-title">${t("saved.notif_off_title")}</div>
+             <div class="alert-body">${t("saved.notif_off_text")}</div>
+           </div>
+           <button type="button" class="btn btn-accent" id="notif-on-btn">${t(
+             "saved.notif_on_btn"
+           )}</button>
+         </div>`
+      : "";
+
+  el.innerHTML = `
+    ${banner}
+    ${
+      urgent
+        ? `<div class="section-head"><span class="section-title">${t("saved.urgent", {
+            n: urgent,
+          })}</span></div>`
+        : ""
+    }
+    ${open.map(savedCard).join("")}
+    ${
+      closed.length
+        ? `<div class="section-head"><span class="section-title">${t(
+            "saved.closed_section"
+          )}</span></div>${closed.map(savedCard).join("")}`
+        : ""
+    }`;
 
   bindProgramOpeners(el);
+  bindSavedActions(el);
+}
 
+function bindSavedActions(el) {
+  const onBtn = el.querySelector("#notif-on-btn");
+  if (onBtn) {
+    onBtn.addEventListener("click", async () => {
+      haptic("light");
+      await api("/me", {
+        method: "PATCH",
+        body: JSON.stringify({ notifications_enabled: true }),
+      });
+      if (profile) profile.notifications_enabled = true;
+      showToast(t("profile.notif_on_toast"));
+      await renderSaved();
+    });
+  }
+
+  el.querySelectorAll(".site-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      const url = btn.dataset.url;
+      if (tg && typeof tg.openLink === "function") tg.openLink(url);
+      else window.open(url, "_blank", "noopener");
+    });
+  });
+
+  // Ariza natijasi — segment tugma orqali. "Ariza berilgan" tanlansa shu
+  // dastur bo'yicha eslatmalar ham to'xtaydi (serverda).
   el.querySelectorAll(".seg").forEach((seg) => {
     seg.querySelectorAll(".seg-item").forEach((item) => {
       item.addEventListener("click", async () => {
         if (item.classList.contains("active")) return;
         haptic("light");
-        seg.querySelectorAll(".seg-item").forEach((i) => i.classList.remove("active"));
-        item.classList.add("active");
         await api(`/saved/${seg.dataset.id}`, {
           method: "PATCH",
           body: JSON.stringify({ status: item.dataset.status }),
         });
+        await renderSaved();
       });
     });
+  });
+
+  el.querySelectorAll(".mute-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      haptic("light");
+      await api(`/saved/${btn.dataset.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ reminders_active: false }),
+      });
+      showToast(t("saved.muted_toast"));
+      await renderSaved();
+    });
+  });
+
+  el.querySelectorAll(".suggest-btn").forEach((btn) => {
+    btn.addEventListener("click", () => openSuggestSheet(Number(btn.dataset.program)));
   });
 
   el.querySelectorAll(".remove-btn").forEach((btn) => {
@@ -2736,6 +3027,46 @@ async function renderSaved() {
       showToast(t("saved.removed_toast"));
       if (!el.querySelector(".card")) await renderSaved();
     });
+  });
+}
+
+/** "Sanani bilaman" — deadline'i noma'lum dasturlar uchun.
+ *  Taklif to'g'ridan-to'g'ri katalogga tushmaydi: admin tasdiqlaydi. */
+function openSuggestSheet(programId) {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  const today = new Date().toISOString().slice(0, 10);
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("suggest.title")}</div>
+    <p class="sheet-text">${t("suggest.text")}</p>
+    <div class="field">
+      <label>${t("suggest.date_label")}</label>
+      <input type="date" id="suggest-date" min="${today}" value="">
+    </div>
+    <button type="button" class="btn btn-accent btn-block" id="suggest-send">${t(
+      "suggest.send"
+    )}</button>`,
+    sheet
+  );
+
+  sheet.querySelector("#suggest-send").addEventListener("click", async () => {
+    const value = sheet.querySelector("#suggest-date").value;
+    if (!value) return;
+    haptic("light");
+    try {
+      await api("/deadline-suggestions", {
+        method: "POST",
+        body: JSON.stringify({ program_id: programId, suggested_date: value }),
+      });
+      closeSheet();
+      showToast(t("suggest.thanks"));
+      await renderSaved();
+    } catch (err) {
+      showToast(err.message);
+    }
   });
 }
 
@@ -3763,6 +4094,23 @@ function profileRow(id, iconName, title, value, extraClass) {
     </button>`;
 }
 
+/** Eslatmalar toggle'i. Boshqa qatorlardan farqi: sahifa ochmaydi, qiymatni
+ *  joyida o'zgartiradi va darhol saqlaydi. */
+function notificationsRow() {
+  const on = profile.notifications_enabled !== false;
+  return `
+    <div class="acc-row acc-row-static" id="acc-notif">
+      <span class="acc-ico">${icon("clock")}</span>
+      <span class="acc-text">
+        <span class="acc-title">${t("profile.notifications")}</span>
+        <span class="acc-value">${t("profile.notif_hint")}</span>
+      </span>
+      <span class="switch ${on ? "is-on" : ""}" role="switch" aria-checked="${on}">
+        <span class="switch-knob"></span>
+      </span>
+    </div>`;
+}
+
 function renderProfile() {
   const el = document.getElementById("view-profile");
   const name = (TG_USER && TG_USER.first_name) || "";
@@ -3789,6 +4137,7 @@ function renderProfile() {
     <div class="acc-group">
       ${profileRow("acc-filter", "search", t("account.filter"), t("account.filter_sub"))}
       ${profileRow("acc-lang", "lang", t("account.language"), LANG_LABELS[lang] || lang)}
+      ${notificationsRow()}
       ${profileRow("acc-invite", "spark", t("account.invite"), inviteSubtitle())}
       ${profileRow("acc-help", "shield", t("account.help"), "")}
       ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
@@ -3799,6 +4148,19 @@ function renderProfile() {
     switchTab("filter");
   });
   document.getElementById("acc-lang").addEventListener("click", openLanguageSheet);
+  document.getElementById("acc-notif").addEventListener("click", async () => {
+    haptic("light");
+    const enabled = profile.notifications_enabled === false;
+    // Darhol saqlanadi: "saqlash" tugmasi yo'q, odam toggle'ni bosdi-yu
+    // ketib qolsa ham tanlovi yo'qolmasligi kerak.
+    await api("/me", {
+      method: "PATCH",
+      body: JSON.stringify({ notifications_enabled: enabled }),
+    });
+    profile.notifications_enabled = enabled;
+    showToast(t(enabled ? "profile.notif_on_toast" : "profile.notif_off_toast"));
+    renderProfile();
+  });
   document.getElementById("acc-invite").addEventListener("click", shareBot);
   document.getElementById("acc-help").addEventListener("click", openHelpSheet);
   document.getElementById("acc-feedback").addEventListener("click", openFeedbackSheet);
@@ -3993,6 +4355,48 @@ function bindTabs() {
   });
 }
 
+/** Bot xabaridagi tugmalardan kelgan yo'nalish.
+ *
+ * `WebAppInfo` tugmasi `startapp` ni qo'llamaydi (u faqat t.me havolasida
+ * ishlaydi), shuning uchun parametr URL hash'ida keladi: `#program_12`.
+ * Telegram `start_param` bersa, u ham tekshiriladi.
+ */
+function deepLinkTarget() {
+  const fromHash = (location.hash || "").replace(/^#/, "");
+  const fromStart =
+    (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  return fromHash || fromStart || "";
+}
+
+async function applyDeepLink() {
+  const target = deepLinkTarget();
+  if (!target) return false;
+  // Bir marta ishlasin: sahifa ichida yurganda qayta ochilib qolmasin.
+  try {
+    history.replaceState(null, "", location.pathname + location.search);
+  } catch (e) {
+    /* eski WebView */
+  }
+
+  if (target === "profile") {
+    await switchTab("profile");
+    return true;
+  }
+  const program = target.match(/^program_(\d+)$/);
+  if (program) {
+    await switchTab("saved");
+    openProgramSheet(Number(program[1]));
+    return true;
+  }
+  const suggest = target.match(/^suggest_(\d+)$/);
+  if (suggest) {
+    await switchTab("saved");
+    openSuggestSheet(Number(suggest[1]));
+    return true;
+  }
+  return false;
+}
+
 async function init() {
   if (!INIT_DATA) {
     document.getElementById("app").innerHTML = `
@@ -4026,9 +4430,13 @@ async function init() {
   // ya'ni "Filtrni sozlash" bosilsa Profil sahifasi darhol chiziladi.
   // Filtr qo'yilgach oyna boshqa chiqmaydi, shuning uchun alohida
   // "ko'rsatilgan" belgisini saqlash shart emas.
-  if (!hasFilter() && !onboardingShown) openOnboardingSheet();
-
-  await renderHome();
+  // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga. Onboarding oynasi
+  // chiqmaydi: odam aniq bir maqsad bilan kelgan.
+  const routed = await applyDeepLink();
+  if (!routed) {
+    if (!hasFilter() && !onboardingShown) openOnboardingSheet();
+    await renderHome();
+  }
 
   tabbar.removeAttribute("aria-busy");
 }

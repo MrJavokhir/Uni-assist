@@ -132,6 +132,42 @@
     </div>
   </div>
 
+  {# ---------- Deadline eslatmalari ---------- #}
+  <div class="row row-cards mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Deadline eslatmalari</h3>
+          {% if pending_suggestions %}
+          <div class="card-actions">
+            <a href="/admin/deadline-suggestions" class="btn btn-sm btn-primary">
+              {{ pending_suggestions }} ta taklif kutmoqda
+            </a>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% set notif_kpis = [
+              ("Bugun yuborilgan", notif_today, notif_today_clicked ~ " ta bosilgan"),
+              ("7 kunda yuborilgan", notif_week, notif_click_rate ~ "% bosilgan"),
+              ("\"Topshirdim\" bosilgan", applied_count, "saqlangan dasturlar bo'yicha"),
+              ("Eslatmani o'chirganlar", notif_off_users, "profil sozlamasidan"),
+              ("Botni bloklaganlar", blocked_users, "ularga xabar ketmaydi")
+            ] %}
+            {% for label, value, hint in notif_kpis %}
+            <div class="col-6 col-lg">
+              <div class="ua-kpi-value">{{ value }}</div>
+              <div class="ua-kpi-label">{{ label }}</div>
+              <div class="text-muted small">{{ hint }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {# ---------- Jadvallar ---------- #}
   <div class="row row-cards">
     <div class="col-12">

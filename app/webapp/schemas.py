@@ -25,6 +25,8 @@ class ProfileOut(BaseModel):
     balance: float
     balance_currency: str
     is_blocked: bool
+    # Deadline eslatmalarining umumiy sozlamasi (profil sahifasidagi toggle).
+    notifications_enabled: bool = True
     # Do'stlarni taklif qilish havolasi uchun. Telegram buni
     # `initDataUnsafe` da bermaydi, shuning uchun server aniqlaydi.
     bot_username: str | None = None
@@ -50,6 +52,8 @@ class ProfileIn(BaseModel):
     target_country_ids: list[int] | None = None
     language_cert_type: str | None = None
     language_cert_score: float | None = None
+    # Eslatmalar toggle'i. Yuborilmasa o'zgarmaydi.
+    notifications_enabled: bool | None = None
 
 
 class GpaConvertOut(BaseModel):
@@ -127,6 +131,8 @@ class ProgramDetailOut(BaseModel):
     """Dastur kartasi bosilganda ochiladigan to'liq ma'lumot."""
 
     id: int
+    # Aniq sana bo'lmaganda, odatda qaysi oyda yopilishi (1-12).
+    deadline_month: int | None = None
     name: str
     abbreviation: str | None
     university: str
@@ -176,10 +182,31 @@ class SavedOut(BaseModel):
     reminders_active: bool
     nearest_deadline: str | None
     nearest_deadline_days_left: int | None
+    # Deadline haqida nimani bilamiz: "exact" | "month" | "unknown".
+    # Saqlanmaydi — dasturdagi ma'lumotdan hisoblanadi.
+    deadline_precision: str
+    # `month` uchun oy raqami (1-12), aks holda null.
+    deadline_month: int | None = None
+    # Muddati o'tganmi. Mini App bunday dasturlarni alohida
+    # "Yopilgan" bo'limida ko'rsatadi.
+    closed: bool = False
+    # Dastur sahifasi (rasmiy manba) — kartadagi "Rasmiy sayt" tugmasi uchun.
+    official_url: str | None = None
+    # Foydalanuvchi shu dastur uchun sana taklif qilib, javob kutyaptimi.
+    has_pending_suggestion: bool = False
+
+
+class DeadlineSuggestionIn(BaseModel):
+    program_id: int
+    # ISO sana: "2027-01-15"
+    suggested_date: str
 
 
 class SavedStatusIn(BaseModel):
-    status: str
+    # Ikkalasi ham ixtiyoriy: segment tugmasi holatni, kartadagi
+    # "eslatmani o'chirish" esa faqat eslatmani o'zgartiradi.
+    status: str | None = None
+    reminders_active: bool | None = None
 
 
 class ScholarshipDeadlineOut(BaseModel):

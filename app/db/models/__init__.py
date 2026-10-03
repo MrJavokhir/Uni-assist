@@ -2,6 +2,12 @@ from app.db.base import Base
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.country import Country
 from app.db.models.field import Field
+from app.db.models.notification import (
+    DeadlineSuggestion,
+    NotificationLog,
+    NotificationType,
+    SuggestionStatus,
+)
 from app.db.models.payment import (
     BalanceTransaction,
     BotAdmin,
@@ -61,11 +67,14 @@ __all__ = [
     "Country",
     "CoverageType",
     "Deadline",
+    "DeadlineSuggestion",
     "DeadlineType",
     "DegreeLevel",
     "Field",
     "GpaScale",
     "LanguageCertType",
+    "NotificationLog",
+    "NotificationType",
     "OtherTestType",
     "Payment",
     "PaymentSettings",
@@ -84,6 +93,7 @@ __all__ = [
     "ServiceRequestStatus",
     "ServiceSlot",
     "SubscriptionExemption",
+    "SuggestionStatus",
     "TransactionKind",
     "UiLanguage",
     "University",

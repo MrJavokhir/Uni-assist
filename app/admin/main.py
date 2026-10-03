@@ -9,6 +9,7 @@ from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
 from app.admin.kit_views import AdmissionKitView
 from app.admin.stats import StatsView
+from app.admin.suggestions import SuggestionView
 from app.admin.views import (
     AdmissionServiceAdmin,
     BalanceTransactionAdmin,
@@ -103,6 +104,9 @@ admin.add_base_view(CatalogImportView)
 
 # Grant sehrgari va muddatlar yon menyuda ko'rinmaydi — ikkalasi ham
 # "Grantlar" ro'yxati orqali ochiladi (uchta alohida bo'lim chalkash edi).
+# Foydalanuvchilar taklif qilgan deadline sanalari — katalogga faqat
+# admin tasdiqlagandan keyin tushadi.
+admin.add_base_view(SuggestionView)
 admin.add_base_view(ScholarshipWizard)
 for view in (
     ScholarshipAdmin,

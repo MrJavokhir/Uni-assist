@@ -81,3 +81,52 @@ Eski konteyner to'xtagach o'zi tinadi. Agar u davom etsa, bot boshqa joyda
 Admin panel → Majburiy kanallar → havola kiriting. **Bot o'sha kanalda
 administrator bo'lishi shart** — busiz Telegram a'zolikni tekshirishga ruxsat
 bermaydi va tekshiruv o'tkazib yuboriladi (foydalanuvchi bloklanmaydi).
+
+## Deadline eslatmalari
+
+Bot saqlangan dasturlarning muddati yaqinlashganda xabar yuboradi. Jadval
+bot jarayonining ichida (`app/bot/main.py` → `reminder_loop`), alohida
+servis yoki cron KERAK EMAS.
+
+**Qachon:** har kuni Toshkent vaqti bilan **10:00**. Sikl har 30 daqiqada
+uyg'onadi, lekin kuniga bir marta ishlaydi — Redis'dagi kunlik qulf
+(`reminder_daily:<sana>`) ikkita konteyner bir kunda ikki marta
+yubormasligini kafolatlaydi.
+
+**Nechta xabar:** bitta saqlangan dastur uchun ko'pi bilan ikkita
+(+ istisno holatda bitta "darhol" xabar). Dublikat nazorati
+`notification_logs` jadvalida, unique (user, program, tur) bilan — ya'ni
+kafolat bazada, kodda emas.
+
+| Dasturdagi ma'lumot | Xabarlar |
+|---|---|
+| `deadlines` da ariza yopilish sanasi bor | 14 va 3 kun qolganda |
+| faqat `programs.deadline_month` | oldingi oy boshi va o'sha oy boshi |
+| hech narsa yo'q | saqlangandan 3 kun keyin bir marta |
+
+**Sozlamalar:** alohida env o'zgaruvchi yo'q. Mavjud `BOT_TOKEN`,
+`DATABASE_URL`, `REDIS_URL` va `WEBAPP_URL` yetarli (oxirgisi xabardagi
+"Ilovada ochish" tugmasi uchun).
+
+**Qo'lda ishga tushirish va tekshirish:**
+
+```bash
+# Hech narsa yubormaydi — faqat kimga nima ketishini ko'rsatadi
+uv run python scripts/send_reminders.py --dry-run
+
+# Boshqa kun nomidan (oy chegarasi, yil o'tishi kabi holatlarni sinash)
+uv run python scripts/send_reminders.py --dry-run --date 2027-01-01
+
+# Haqiqatan yuboradi (scheduler kunni o'tkazib yuborgan bo'lsa)
+uv run python scripts/send_reminders.py
+```
+
+Prodakshenda: `railway ssh --service Uni-assist` orqali konteyner ichida.
+
+**Foydalanuvchi tomoni:** Mini App → Profil → "Eslatmalar" tugmachasi
+hammasini o'chiradi; saqlangan dastur kartasidagi "Eslatmani o'chirish"
+esa faqat o'sha bitta dasturga ta'sir qiladi.
+
+**Admin tomoni:** "Taklif qilingan sanalar" — foydalanuvchilar yuborgan
+deadline sanalari. Tasdiqlansa sana `deadlines` jadvaliga yoziladi.
+Boshqaruv panelida yuborilgan/bosilgan xabarlar statistikasi bor.

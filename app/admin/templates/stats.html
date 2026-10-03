@@ -79,7 +79,7 @@
        ham ko'rsatiladi: usiz birinchi o'rindagi davlat atigi uch kishidan
        kelganini bilib bo'lmasdi. #}
   <div class="row row-cards mb-3">
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-5">
       <div class="card h-100">
         <div class="card-header">
           <h3 class="card-title">Eng ko'p qidirilgan davlatlar</h3>
@@ -96,7 +96,7 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-lg-6">
+    <div class="col-12 col-lg-4">
       <div class="card h-100">
         <div class="card-header">
           <h3 class="card-title">Eng ko'p qidirilgan yo'nalishlar</h3>
@@ -109,6 +109,23 @@
           <div class="ua-chart-wrap"><canvas id="chart-demand-fields"></canvas></div>
           {% else %}
           <div class="ua-empty">Hali hech kim yo'nalish tanlamagan.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-3">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Daraja bo'yicha</h3>
+          <div class="card-actions">
+            <span class="badge bg-blue-lt">{{ degree_choosers }} ta</span>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if demand_degree_labels %}
+          <div class="ua-chart-wrap"><canvas id="chart-demand-degrees"></canvas></div>
+          {% else %}
+          <div class="ua-empty">Hali hech kim daraja tanlamagan.</div>
           {% endif %}
         </div>
       </div>
@@ -259,6 +276,11 @@
       "chart-demand-fields",
       {{ demand_field_labels | tojson }},
       {{ demand_field_values | tojson }}
+    );
+    demandChart(
+      "chart-demand-degrees",
+      {{ demand_degree_labels | tojson }},
+      {{ demand_degree_values | tojson }}
     );
 
     var countryCanvas = document.getElementById("chart-countries");

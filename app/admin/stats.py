@@ -160,6 +160,15 @@ class StatsView(BaseView):
                 )
             ).all()
 
+            demand_degree_rows = (
+                await session.execute(
+                    select(User.degree_level, func.count(User.id))
+                    .where(User.degree_level.is_not(None))
+                    .group_by(User.degree_level)
+                    .order_by(func.count(User.id).desc())
+                )
+            ).all()
+
             # Namuna hajmi: foiz emas, "nechta odam tanlagan" degan son.
             # Usiz birinchi o'rindagi davlat 3 ta odamdan kelganini bilib
             # bo'lmasdi va raqamga ortiqcha ishonilardi.
@@ -173,6 +182,7 @@ class StatsView(BaseView):
                     select(func.count(User.id)).where(User.field_id.is_not(None))
                 )
             ).scalar_one()
+            degree_choosers = sum(row[1] for row in demand_degree_rows)
 
         signups = {row.day: row[1] for row in signup_rows}
         chart_labels = []
@@ -204,8 +214,15 @@ class StatsView(BaseView):
                 "demand_country_values": [row[1] for row in demand_country_rows],
                 "demand_field_labels": [row[0] for row in demand_field_rows],
                 "demand_field_values": [row[1] for row in demand_field_rows],
+                # Daraja enum bo'lgani uchun yorliq shu yerda o'giriladi —
+                # shablonga tayyor matn boradi.
+                "demand_degree_labels": [
+                    _DEGREE_LABELS.get(row[0], row[0].value) for row in demand_degree_rows
+                ],
+                "demand_degree_values": [row[1] for row in demand_degree_rows],
                 "country_choosers": country_choosers,
                 "field_choosers": field_choosers,
+                "degree_choosers": degree_choosers,
                 "degree_labels": _DEGREE_LABELS,
             },
         )

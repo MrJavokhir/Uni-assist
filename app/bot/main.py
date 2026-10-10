@@ -8,7 +8,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
 from app.bot.handlers import language, payment, reminders, start, subscription
-from app.bot.middlewares import DbSessionMiddleware, SubscriptionMiddleware
+from app.bot.middlewares import DbSessionMiddleware
 from app.bot.profile_setup import apply_bot_profile
 from app.config import settings
 from app.db.session import async_session_factory
@@ -37,10 +37,9 @@ def create_dispatcher() -> Dispatcher:
     # esa har deployda qayta ishga tushadi. Xotiradagi holat yo'qolib,
     # foydalanuvchi summani kiritgandan keyin "osilib" qolardi.
     dispatcher = Dispatcher(storage=RedisStorage(redis_client))
-    # Tartib muhim: avval DB sessiyasi ochiladi, keyin obuna tekshiruvi undan
-    # foydalanadi. Majburiy kanal sozlanmagan bo'lsa middleware shaffof ishlaydi.
+    # Majburiy kanal obunasi botda TEKSHIRILMAYDI — u Mini App'da, filtr
+    # orqali qidirishdan oldin so'raladi (app/webapp/api.py, `/subscription`).
     dispatcher.update.middleware(DbSessionMiddleware())
-    dispatcher.update.middleware(SubscriptionMiddleware())
 
     dispatcher.include_router(language.router)
     dispatcher.include_router(payment.router)

@@ -4,8 +4,9 @@ Oqim:
     1. Foydalanuvchi o'z havolasini ulashadi: t.me/<bot>?start=ref<telegram_id>
     2. Yangi odam /start bosadi -> `attach()` "kim taklif qilgan"ni yozadi.
        Pul HALI berilmaydi.
-    3. Yangi odam majburiy kanalga obuna bo'lgach -> `reward()` taklif
-       qilgan odamning balansiga mukofot qo'shadi.
+    3. Yangi odam majburiy kanalga obuna bo'lgach (Mini App'da birinchi
+       qidiruvdan oldin tekshiriladi) -> `reward()` taklif qilgan odamning
+       balansiga mukofot qo'shadi.
 
 Nega mukofot darhol emas, obunadan keyin: aks holda soxta akkauntlar
 bilan pul yig'ish arzon bo'lardi. Obuna talabi ham to'siq bo'ladi, ham
@@ -147,9 +148,10 @@ async def count_invited(session: AsyncSession, user: User) -> int:
 async def reward_and_notify(session: AsyncSession, bot, user: User) -> None:
     """Mukofot beradi va taklif qilgan odamga xabar yuboradi.
 
-    Obuna tasdiqlangan ikki joydan chaqiriladi (til tanlangandan keyin va
-    "Tekshirish" tugmasidan keyin), shuning uchun mantiq shu yerda — ikki
-    joyda takrorlanib, biri o'zgarib ikkinchisi qolib ketmasligi uchun.
+    Obuna tasdiqlangan ikki joydan chaqiriladi (Mini App'dagi qidiruvdan
+    oldingi tekshiruv va bot xabaridagi eski "Tekshirish" tugmasi),
+    shuning uchun mantiq shu yerda — ikki joyda takrorlanib, biri
+    o'zgarib ikkinchisi qolib ketmasligi uchun.
     """
     result = await reward(session, user)
     if result is None:

@@ -1997,6 +1997,54 @@ button.sch-card:active { transform: scale(0.985); }
 
 .onb .btn-block { margin-top: 8px; }
 
+/* Majburiy obuna varag'idagi kanallar. Butun qator bosiladi — kichik
+   "Ochish" tugmasini nishonga olish shart emas. */
+.sub-channels {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0 10px;
+  text-align: left;
+}
+
+.sub-channel {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 14px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.sub-channel-ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+
+.sub-channel-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sub-channel-go { flex: none; color: var(--hint); }
+
 /* ============ Admission Kit ============ */
 
 /* Xizmat kartasi — "hujjat/talon" ko'rinishida.

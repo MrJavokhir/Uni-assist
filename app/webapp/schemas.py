@@ -341,3 +341,15 @@ class ServiceDeliveryResult(BaseModel):
 
 class FeedbackIn(BaseModel):
     text: str
+
+
+class SubscriptionChannelOut(BaseModel):
+    title: str
+    invite_url: str
+
+
+class SubscriptionStatusOut(BaseModel):
+    """Majburiy kanal obunasi holati (Mini App'dagi qidiruvdan oldin)."""
+
+    subscribed: bool
+    channels: list[SubscriptionChannelOut] = []

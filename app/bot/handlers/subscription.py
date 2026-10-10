@@ -15,7 +15,12 @@ router = Router(name="subscription")
 
 @router.callback_query(F.data == SUBSCRIPTION_CHECK_CALLBACK)
 async def check_subscription(callback: CallbackQuery, session: AsyncSession) -> None:
-    """Foydalanuvchi "Tekshirish" tugmasini bosganda obunani qayta tekshiradi."""
+    """Foydalanuvchi "Tekshirish" tugmasini bosganda obunani qayta tekshiradi.
+
+    Bot endi obuna so'rovini YUBORMAYDI (u Mini App'ga ko'chdi), lekin
+    eski xabarlardagi tugmalar suhbat tarixida qolgan — ular ishlashda
+    davom etishi kerak.
+    """
     user = await get_or_create_user(session, callback.from_user.id, callback.from_user.username)
     lang = user.ui_language.value
 

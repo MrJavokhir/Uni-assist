@@ -2,6 +2,18 @@ from app.db.base import Base
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.country import Country
 from app.db.models.field import Field
+from app.db.models.mentor import (
+    ComplaintReason,
+    ComplaintStatus,
+    CountryTopic,
+    MentorComplaint,
+    MentorLevel,
+    MentorMessage,
+    MentorQuestion,
+    MentorQuestionStatus,
+    MentorSender,
+    MentorTopic,
+)
 from app.db.models.notification import (
     DeadlineSuggestion,
     NotificationLog,
@@ -64,7 +76,10 @@ __all__ = [
     "BalanceTransaction",
     "Base",
     "BotAdmin",
+    "ComplaintReason",
+    "ComplaintStatus",
     "Country",
+    "CountryTopic",
     "CoverageType",
     "Deadline",
     "DeadlineSuggestion",
@@ -73,6 +88,13 @@ __all__ = [
     "Field",
     "GpaScale",
     "LanguageCertType",
+    "MentorComplaint",
+    "MentorLevel",
+    "MentorMessage",
+    "MentorQuestion",
+    "MentorQuestionStatus",
+    "MentorSender",
+    "MentorTopic",
     "NotificationLog",
     "NotificationType",
     "OtherTestType",

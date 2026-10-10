@@ -1,0 +1,68 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        Shikoyatlar
+        {% if new_count %}<span class="badge bg-red-lt ms-2">{{ new_count }} ta yangi</span>{% endif %}
+      </h3>
+      <div class="card-actions">
+        {% if show_all %}
+        <a href="{{ url_for('admin:view-mentor-complaints') }}" class="btn btn-sm btn-outline-secondary">Faqat yangilari</a>
+        {% else %}
+        <a href="{{ url_for('admin:view-mentor-complaints') }}?all=1" class="btn btn-sm btn-outline-secondary">Hammasini ko'rsatish</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Savol</th>
+            <th>Sabab</th>
+            <th>Izoh</th>
+            <th>Sana</th>
+            <th>Holat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              <a href="{{ url_for('admin:view-mentor-question') }}?id={{ row.question_id }}">#{{ row.number }}</a>
+              {% if row.on_message %}<div class="small text-muted">javob xabariga</div>{% endif %}
+            </td>
+            <td>{{ row.reason }}</td>
+            <td style="white-space: pre-wrap; max-width: 420px">{{ row.comment or "—" }}</td>
+            <td class="text-nowrap">{{ row.time }}</td>
+            <td>
+              {% if row.is_new %}<span class="badge bg-red-lt">Yangi</span>
+              {% else %}<span class="badge bg-secondary-lt">Ko'rib chiqildi</span>{% endif %}
+            </td>
+            <td class="text-end">
+              {% if row.is_new %}
+              <form method="post" action="{{ url_for('admin:view-mentor-complaints-review') }}" class="d-inline">
+                <input type="hidden" name="complaint_id" value="{{ row.id }}">
+                <input type="hidden" name="all" value="{{ '1' if show_all else '' }}">
+                <button type="submit" class="btn btn-sm btn-outline-success">Ko'rib chiqildi</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="card-body text-muted">
+      {% if show_all %}Shikoyatlar yo'q.{% else %}Yangi shikoyat yo'q.{% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

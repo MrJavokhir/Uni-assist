@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 66;
+const ASSET_V = 67;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -547,6 +547,82 @@ const I18N = {
     "saved.status.applied": "Topshirdim",
     "saved.status.rejected": "Rad etildi",
     "saved.status.accepted": "Qabul",
+    "mentor.ask_cta": "Shu davlatda o'qiyotganlardan so'rash",
+    "mentor.ask_cta_sub": "Xorijda o'qiyotgan o'zbek talabalar javob beradi",
+    "mentor.my_questions": "Mening savollarim",
+    "mentor.new_question": "Yangi savol",
+    "mentor.empty_title": "Hali savol bermagansiz",
+    "mentor.empty_text": "Tanlagan davlatingizda o'qiyotgan talabalardan kirish, viza, yashash va boshqa mavzularda so'rang.",
+    "mentor.choose_country": "Davlatni tanlang",
+    "mentor.choose_country_sub": "Savolingiz shu davlatda o'qiyotgan mentorlarga boradi.",
+    "mentor.quota": "Bu oy yana {left} ta savol bera olasiz ({n} tadan).",
+    "mentor.limit_title": "Bu oy uchun savollar limiti tugadi",
+    "mentor.limit_text": "Har oy {n} ta savol berish mumkin. Keyingi oy yana so'rashingiz mumkin.",
+    "mentor.level": "Daraja",
+    "mentor.level.bachelor": "Bakalavr",
+    "mentor.level.master": "Magistratura",
+    "mentor.topic": "Mavzu",
+    "mentor.topic.admission": "Kirish",
+    "mentor.topic.documents": "Hujjatlar",
+    "mentor.topic.visa": "Viza",
+    "mentor.topic.living": "Yashash va xarajatlar",
+    "mentor.topic.work": "Ish",
+    "mentor.topic.studies": "O'qish jarayoni",
+    "mentor.topic.other": "Boshqa",
+    "mentor.text": "Savolingiz",
+    "mentor.text_placeholder": "Savolingizni batafsil yozing: nimani bilmoqchisiz, qaysi bosqichdasiz...",
+    "mentor.count_min": "{len} / kamida {min} belgi",
+    "mentor.count": "{len} / {max}",
+    "mentor.privacy_warning": "Shaxsiy ma'lumot (telefon, username, hujjat) yozmang.",
+    "mentor.send": "Savolni yuborish",
+    "mentor.sent_notice": "Savolingiz {country}dagi mentorlarga yuborildi. Odatda 24 soat ichida javob beriladi.",
+    "mentor.waiting": "Mentor javobi kutilmoqda. Javob kelganda bot xabar beradi.",
+    "mentor.mentor_label": "{country}dagi mentor",
+    "mentor.status.open": "Kutilmoqda",
+    "mentor.status.claimed": "Javob yozilmoqda",
+    "mentor.status.answered": "Javob berildi",
+    "mentor.status.closed": "Yopildi",
+    "mentor.followup_label": "Qo'shimcha savol (yana {left} ta)",
+    "mentor.followup_placeholder": "Aniqlashtirmoqchi bo'lgan narsangizni yozing",
+    "mentor.followup_send": "Yuborish",
+    "mentor.followup_sent": "Qo'shimcha savol yuborildi",
+    "mentor.followup_limit": "Bu savol bo'yicha qo'shimcha savollar limiti tugadi.",
+    "mentor.close_btn": "✅ Javob oldim",
+    "mentor.complain_btn": "⚠️ Shikoyat",
+    "mentor.report_short": "Shikoyat",
+    "mentor.rate_title": "Mentor javobini baholang",
+    "mentor.rate_thanks": "Rahmat! Bahoyingiz qabul qilindi",
+    "mentor.rated": "Bahoyingiz: {stars}",
+    "mentor.complain_title": "Shikoyat",
+    "mentor.complain_sub": "Sababni tanlang. Shikoyat faqat adminga ko'rinadi.",
+    "mentor.complain_comment": "Izoh (ixtiyoriy)",
+    "mentor.complain_send": "Yuborish",
+    "mentor.complain_sent": "Shikoyatingiz adminga yuborildi",
+    "mentor.reason.wrong_info": "Noto'g'ri ma'lumot",
+    "mentor.reason.disrespect": "Hurmatsiz muomala",
+    "mentor.reason.paid_or_ad": "Pullik xizmat yoki reklama",
+    "mentor.reason.other": "Boshqa",
+    "mentor.become_row": "Mentor bo'lish",
+    "mentor.become_row_sub": "Xorijda o'qiyotgan bo'lsangiz",
+    "mentor.become_title": "Mentor bo'ling",
+    "mentor.become_text": "Xorijda o'qiyotgan o'zbek talabalar mentor bo'la oladi: o'z tajribangiz bilan kelajakdagi talabalarga yordam berasiz.",
+    "mentor.become_rule1": "Hozir xorijdagi universitetda o'qiyotgan bo'lishingiz kerak",
+    "mentor.become_rule2": "Savollarga 24 soat ichida, aniq va hurmat bilan javob berasiz",
+    "mentor.become_rule3": "Kontakt, havola va pullik xizmat taklif qilinmaydi",
+    "mentor.become_rule4": "Javoblar anonim: savol beruvchi ismingizni ko'rmaydi",
+    "mentor.become_apply": "Murojaat qilish",
+    "mentor.err.generic": "Xatolik yuz berdi, qayta urinib ko'ring",
+    "mentor.err.disabled": "Bu imkoniyat hozircha mavjud emas",
+    "mentor.err.monthly_limit": "Bu oy uchun savollar limiti tugadi",
+    "mentor.err.text_too_short": "Savol juda qisqa — biroz batafsilroq yozing",
+    "mentor.err.text_too_long": "Savol juda uzun",
+    "mentor.err.country_inactive": "Bu davlat bo'yicha hozircha savol qabul qilinmaydi",
+    "mentor.err.followup_limit": "Qo'shimcha savollar limiti tugadi",
+    "mentor.err.followup_not_allowed": "Hozir qo'shimcha savol yuborib bo'lmaydi",
+    "mentor.err.send_failed": "Savol yuborilmadi, birozdan keyin qayta urinib ko'ring",
+    "mentor.err.choose_all": "Daraja va mavzuni tanlang",
+    "mentor.err.choose_reason": "Sababni tanlang",
+    "mentor.err.not_found": "Savol topilmadi",
   },
   ru: {
     "nav.home": "Главная",
@@ -891,6 +967,82 @@ const I18N = {
     "saved.status.applied": "Подал",
     "saved.status.rejected": "Отказ",
     "saved.status.accepted": "Принят",
+    "mentor.ask_cta": "Спросить у тех, кто там учится",
+    "mentor.ask_cta_sub": "Отвечают узбекские студенты, которые учатся за рубежом",
+    "mentor.my_questions": "Мои вопросы",
+    "mentor.new_question": "Новый вопрос",
+    "mentor.empty_title": "Вы ещё не задавали вопросов",
+    "mentor.empty_text": "Спросите студентов из выбранной страны о поступлении, визе, жизни и не только.",
+    "mentor.choose_country": "Выберите страну",
+    "mentor.choose_country_sub": "Вопрос получат менторы, которые учатся в этой стране.",
+    "mentor.quota": "В этом месяце осталось вопросов: {left} из {n}.",
+    "mentor.limit_title": "Лимит вопросов на этот месяц исчерпан",
+    "mentor.limit_text": "В месяц можно задать {n} вопроса. В следующем месяце лимит обновится.",
+    "mentor.level": "Уровень",
+    "mentor.level.bachelor": "Бакалавриат",
+    "mentor.level.master": "Магистратура",
+    "mentor.topic": "Тема",
+    "mentor.topic.admission": "Поступление",
+    "mentor.topic.documents": "Документы",
+    "mentor.topic.visa": "Виза",
+    "mentor.topic.living": "Жизнь и расходы",
+    "mentor.topic.work": "Работа",
+    "mentor.topic.studies": "Учёба",
+    "mentor.topic.other": "Другое",
+    "mentor.text": "Ваш вопрос",
+    "mentor.text_placeholder": "Опишите подробно: что хотите узнать, на каком вы этапе...",
+    "mentor.count_min": "{len} / минимум {min} символов",
+    "mentor.count": "{len} / {max}",
+    "mentor.privacy_warning": "Не пишите личные данные (телефон, username, документы).",
+    "mentor.send": "Отправить вопрос",
+    "mentor.sent_notice": "Вопрос отправлен менторам ({country}). Обычно отвечают в течение 24 часов.",
+    "mentor.waiting": "Ждём ответа ментора. Бот сообщит, когда он придёт.",
+    "mentor.mentor_label": "Ментор · {country}",
+    "mentor.status.open": "Ожидает",
+    "mentor.status.claimed": "Пишут ответ",
+    "mentor.status.answered": "Есть ответ",
+    "mentor.status.closed": "Закрыт",
+    "mentor.followup_label": "Уточняющий вопрос (осталось {left})",
+    "mentor.followup_placeholder": "Что хотите уточнить?",
+    "mentor.followup_send": "Отправить",
+    "mentor.followup_sent": "Уточнение отправлено",
+    "mentor.followup_limit": "Лимит уточняющих вопросов по этому вопросу исчерпан.",
+    "mentor.close_btn": "✅ Ответ получен",
+    "mentor.complain_btn": "⚠️ Пожаловаться",
+    "mentor.report_short": "Пожаловаться",
+    "mentor.rate_title": "Оцените ответ ментора",
+    "mentor.rate_thanks": "Спасибо за оценку!",
+    "mentor.rated": "Ваша оценка: {stars}",
+    "mentor.complain_title": "Жалоба",
+    "mentor.complain_sub": "Выберите причину. Жалобу увидит только администратор.",
+    "mentor.complain_comment": "Комментарий (необязательно)",
+    "mentor.complain_send": "Отправить",
+    "mentor.complain_sent": "Жалоба отправлена администратору",
+    "mentor.reason.wrong_info": "Неверная информация",
+    "mentor.reason.disrespect": "Неуважительное общение",
+    "mentor.reason.paid_or_ad": "Платные услуги или реклама",
+    "mentor.reason.other": "Другое",
+    "mentor.become_row": "Стать ментором",
+    "mentor.become_row_sub": "Если вы учитесь за рубежом",
+    "mentor.become_title": "Станьте ментором",
+    "mentor.become_text": "Ментором может стать узбекский студент, который учится за рубежом: помогайте будущим студентам своим опытом.",
+    "mentor.become_rule1": "Вы сейчас учитесь в зарубежном университете",
+    "mentor.become_rule2": "Отвечаете в течение 24 часов, по делу и уважительно",
+    "mentor.become_rule3": "Без контактов, ссылок и платных услуг",
+    "mentor.become_rule4": "Ответы анонимны: спрашивающий не видит вашего имени",
+    "mentor.become_apply": "Подать заявку",
+    "mentor.err.generic": "Произошла ошибка, попробуйте ещё раз",
+    "mentor.err.disabled": "Эта функция пока недоступна",
+    "mentor.err.monthly_limit": "Лимит вопросов на этот месяц исчерпан",
+    "mentor.err.text_too_short": "Вопрос слишком короткий — опишите подробнее",
+    "mentor.err.text_too_long": "Вопрос слишком длинный",
+    "mentor.err.country_inactive": "По этой стране вопросы пока не принимаются",
+    "mentor.err.followup_limit": "Лимит уточняющих вопросов исчерпан",
+    "mentor.err.followup_not_allowed": "Сейчас нельзя отправить уточнение",
+    "mentor.err.send_failed": "Не удалось отправить, попробуйте чуть позже",
+    "mentor.err.choose_all": "Выберите уровень и тему",
+    "mentor.err.choose_reason": "Выберите причину",
+    "mentor.err.not_found": "Вопрос не найден",
   },
   en: {
     "nav.home": "Home",
@@ -1235,6 +1387,82 @@ const I18N = {
     "saved.status.applied": "Applied",
     "saved.status.rejected": "Rejected",
     "saved.status.accepted": "Accepted",
+    "mentor.ask_cta": "Ask students who study there",
+    "mentor.ask_cta_sub": "Answered by Uzbek students studying abroad",
+    "mentor.my_questions": "My questions",
+    "mentor.new_question": "New question",
+    "mentor.empty_title": "No questions yet",
+    "mentor.empty_text": "Ask students in your chosen country about admission, visas, living costs and more.",
+    "mentor.choose_country": "Choose a country",
+    "mentor.choose_country_sub": "Your question goes to mentors studying in that country.",
+    "mentor.quota": "You can ask {left} more question(s) this month (out of {n}).",
+    "mentor.limit_title": "You've used this month's questions",
+    "mentor.limit_text": "You can ask {n} questions per month. The limit resets next month.",
+    "mentor.level": "Level",
+    "mentor.level.bachelor": "Bachelor's",
+    "mentor.level.master": "Master's",
+    "mentor.topic": "Topic",
+    "mentor.topic.admission": "Admission",
+    "mentor.topic.documents": "Documents",
+    "mentor.topic.visa": "Visa",
+    "mentor.topic.living": "Living & costs",
+    "mentor.topic.work": "Work",
+    "mentor.topic.studies": "Studies",
+    "mentor.topic.other": "Other",
+    "mentor.text": "Your question",
+    "mentor.text_placeholder": "Describe it in detail: what you want to know, where you are in the process...",
+    "mentor.count_min": "{len} / at least {min} characters",
+    "mentor.count": "{len} / {max}",
+    "mentor.privacy_warning": "Don't include personal details (phone, username, documents).",
+    "mentor.send": "Send question",
+    "mentor.sent_notice": "Your question was sent to mentors in {country}. Answers usually arrive within 24 hours.",
+    "mentor.waiting": "Waiting for a mentor. The bot will notify you when the answer arrives.",
+    "mentor.mentor_label": "Mentor in {country}",
+    "mentor.status.open": "Waiting",
+    "mentor.status.claimed": "Being answered",
+    "mentor.status.answered": "Answered",
+    "mentor.status.closed": "Closed",
+    "mentor.followup_label": "Follow-up question ({left} left)",
+    "mentor.followup_placeholder": "What would you like to clarify?",
+    "mentor.followup_send": "Send",
+    "mentor.followup_sent": "Follow-up sent",
+    "mentor.followup_limit": "You've used all follow-up questions for this question.",
+    "mentor.close_btn": "✅ Got my answer",
+    "mentor.complain_btn": "⚠️ Report",
+    "mentor.report_short": "Report",
+    "mentor.rate_title": "Rate the mentor's answer",
+    "mentor.rate_thanks": "Thanks for your rating!",
+    "mentor.rated": "Your rating: {stars}",
+    "mentor.complain_title": "Report",
+    "mentor.complain_sub": "Choose a reason. Only the admin will see your report.",
+    "mentor.complain_comment": "Comment (optional)",
+    "mentor.complain_send": "Send",
+    "mentor.complain_sent": "Your report was sent to the admin",
+    "mentor.reason.wrong_info": "Wrong information",
+    "mentor.reason.disrespect": "Disrespectful",
+    "mentor.reason.paid_or_ad": "Paid services or advertising",
+    "mentor.reason.other": "Other",
+    "mentor.become_row": "Become a mentor",
+    "mentor.become_row_sub": "If you study abroad",
+    "mentor.become_title": "Become a mentor",
+    "mentor.become_text": "Uzbek students studying abroad can become mentors and help future students with their experience.",
+    "mentor.become_rule1": "You're currently studying at a university abroad",
+    "mentor.become_rule2": "You answer within 24 hours, clearly and respectfully",
+    "mentor.become_rule3": "No contacts, links or paid services",
+    "mentor.become_rule4": "Answers are anonymous: the asker never sees your name",
+    "mentor.become_apply": "Apply",
+    "mentor.err.generic": "Something went wrong, please try again",
+    "mentor.err.disabled": "This feature isn't available yet",
+    "mentor.err.monthly_limit": "You've used this month's questions",
+    "mentor.err.text_too_short": "Your question is too short — please add more detail",
+    "mentor.err.text_too_long": "Your question is too long",
+    "mentor.err.country_inactive": "Questions for this country aren't accepted yet",
+    "mentor.err.followup_limit": "No follow-up questions left",
+    "mentor.err.followup_not_allowed": "You can't send a follow-up right now",
+    "mentor.err.send_failed": "Couldn't send, please try again shortly",
+    "mentor.err.choose_all": "Choose a level and topic",
+    "mentor.err.choose_reason": "Choose a reason",
+    "mentor.err.not_found": "Question not found",
   },
 };
 
@@ -2935,11 +3163,13 @@ async function renderSaved() {
   const items = await api("/saved");
   if (!items.length) {
     el.innerHTML = `
+      ${mentorEntryCard()}
       <div class="empty">
         <div class="empty-ico">${icon("bookmark")}</div>
         <div class="empty-title">${t("saved.empty_title")}</div>
         <div class="empty-text">${t("saved.empty_text")}</div>
       </div>`;
+    bindMentorEntry(el);
     return;
   }
 
@@ -2968,6 +3198,7 @@ async function renderSaved() {
 
   el.innerHTML = `
     ${banner}
+    ${mentorEntryCard()}
     ${
       urgent
         ? `<div class="section-head"><span class="section-title">${t("saved.urgent", {
@@ -2986,6 +3217,7 @@ async function renderSaved() {
 
   bindProgramOpeners(el);
   bindSavedActions(el);
+  bindMentorEntry(el);
 }
 
 function bindSavedActions(el) {
@@ -4271,6 +4503,11 @@ function renderProfile() {
       ${profileRow("acc-invite", "spark", t("account.invite"), inviteSubtitle())}
       ${profileRow("acc-help", "shield", t("account.help"), "")}
       ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
+      ${
+        mentorConfig && mentorConfig.admin_username
+          ? profileRow("acc-mentor", "cap", t("mentor.become_row"), t("mentor.become_row_sub"))
+          : ""
+      }
     </div>`;
 
   document.getElementById("acc-filter").addEventListener("click", () => {
@@ -4294,6 +4531,7 @@ function renderProfile() {
   document.getElementById("acc-invite").addEventListener("click", shareBot);
   document.getElementById("acc-help").addEventListener("click", openHelpSheet);
   document.getElementById("acc-feedback").addEventListener("click", openFeedbackSheet);
+  document.getElementById("acc-mentor")?.addEventListener("click", openBecomeMentorSheet);
 }
 
 const LANG_LABELS = { uz: "O'zbekcha", ru: "Русский", en: "English" };
@@ -4434,6 +4672,586 @@ function openFeedbackSheet() {
   });
 }
 
+// ============ Mentordan so'rash ============
+//
+// Foydalanuvchi tanlagan davlatda o'qiyotgan o'zbek talabadan (mentordan)
+// savol so'raydi. Savol mentorlar guruhiga tushadi, javob bot orqali
+// ANONIM keladi. Bu yerda mentorning ismi HECH QAYERDA ko'rsatilmaydi —
+// server uni umuman bermaydi, ko'rinadigani faqat "{davlat}dagi mentor".
+//
+// Bitta sahifa (`view-mentor`), ichida to'rt holat:
+//   list      — "Mening savollarim"
+//   countries — davlat tanlash
+//   form      — savol formasi
+//   chat      — bitta savolning yozishmasi
+
+let mentorConfig = null;
+let mentorState = { screen: "list" };
+
+const MENTOR_TOPICS = ["admission", "documents", "visa", "living", "work", "studies", "other"];
+const MENTOR_COMPLAINT_REASONS = ["wrong_info", "disrespect", "paid_or_ad", "other"];
+
+async function loadMentorConfig(force) {
+  if (mentorConfig && !force) return mentorConfig;
+  try {
+    mentorConfig = await api("/mentor/config");
+  } catch (e) {
+    // Funksiya ishlamasa ilovaning qolgan qismi buzilmasin — tugmalar
+    // shunchaki ko'rinmaydi.
+    console.error(e);
+    mentorConfig = { enabled: false, countries: [], admin_username: null };
+  }
+  return mentorConfig;
+}
+
+/** Server rad etganda kelgan kod ("monthly_limit") -> tushunarli matn. */
+function mentorErrorText(err) {
+  const match = /"code"\s*:\s*"([a-z_]+)"/.exec(String(err && err.message));
+  const key = match ? `mentor.err.${match[1]}` : "";
+  const text = key ? t(key) : "";
+  return text && text !== key ? text : t("mentor.err.generic");
+}
+
+function mentorLimitLeft() {
+  if (!mentorConfig) return 0;
+  return Math.max(mentorConfig.monthly_limit - mentorConfig.monthly_used, 0);
+}
+
+function openMentor(screen, extra) {
+  mentorState = { screen, ...(extra || {}) };
+  return switchTab("mentor");
+}
+
+function mentorDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString(lang === "en" ? "en-GB" : lang === "ru" ? "ru-RU" : "uz-UZ", {
+      day: "numeric",
+      month: "short",
+    });
+  } catch (e) {
+    return "";
+  }
+}
+
+function mentorTime(iso) {
+  try {
+    const d = new Date(iso);
+    return `${mentorDate(iso)}, ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  } catch (e) {
+    return "";
+  }
+}
+
+function mentorStatusPill(status) {
+  const tone = { open: "amber", claimed: "accent", answered: "green", closed: "" }[status] || "";
+  return `<span class="pill ${tone}">${t("mentor.status." + status)}</span>`;
+}
+
+function mentorChips(id, options, active) {
+  return `
+    <div class="chip-group" id="${id}">
+      ${options
+        .map(
+          (o) =>
+            `<div class="chip ${o.value === active ? "active" : ""}" data-value="${escapeHtml(o.value)}">${escapeHtml(
+              o.label
+            )}</div>`
+        )
+        .join("")}
+    </div>`;
+}
+
+function mentorBack(label) {
+  return `
+    <button type="button" class="kit-back" id="mentor-back">
+      ${icon("chevron")}<span>${escapeHtml(label)}</span>
+    </button>`;
+}
+
+function bindMentorBack(target) {
+  const btn = document.getElementById("mentor-back");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    haptic("light");
+    if (target === "saved") switchTab("saved");
+    else openMentor(target.screen, target);
+  });
+}
+
+async function renderMentor() {
+  const el = document.getElementById("view-mentor");
+  el.innerHTML = skeletons(3);
+  await loadMentorConfig(true);
+  const screen = mentorState.screen;
+  if (screen === "countries") return renderMentorCountries(el);
+  if (screen === "form") return renderMentorForm(el);
+  if (screen === "chat") return renderMentorChat(el);
+  return renderMentorList(el);
+}
+
+// ---- "Mening savollarim" ----
+
+async function renderMentorList(el) {
+  const items = await api("/mentor/questions");
+  const canAsk = mentorConfig.enabled;
+  el.innerHTML = `
+    ${mentorBack(t("nav.saved"))}
+    <div class="mnt-head">
+      <div class="mnt-title">${t("mentor.my_questions")}</div>
+      ${
+        canAsk
+          ? `<button type="button" class="btn btn-accent mnt-new" id="mentor-new">${icon("plus")}${t(
+              "mentor.new_question"
+            )}</button>`
+          : ""
+      }
+    </div>
+    ${
+      items.length
+        ? items
+            .map(
+              (q) => `
+      <button type="button" class="mnt-item" data-id="${q.id}">
+        <span class="mnt-flag">${q.flag}</span>
+        <span class="mnt-item-body">
+          <span class="mnt-item-title">${escapeHtml(q.country_name)} · #${q.number}</span>
+          <span class="mnt-item-sub">${mentorDate(q.created_at)}</span>
+        </span>
+        ${mentorStatusPill(q.status)}
+      </button>`
+            )
+            .join("")
+        : `<div class="empty">
+             <div class="empty-ico">${icon("cap")}</div>
+             <div class="empty-title">${t("mentor.empty_title")}</div>
+             <div class="empty-text">${t("mentor.empty_text")}</div>
+           </div>`
+    }`;
+
+  bindMentorBack("saved");
+  document.getElementById("mentor-new")?.addEventListener("click", () => {
+    haptic("light");
+    openMentor("countries", { from: "list" });
+  });
+  el.querySelectorAll(".mnt-item").forEach((row) => {
+    row.addEventListener("click", () => {
+      haptic("light");
+      openMentor("chat", { id: Number(row.dataset.id) });
+    });
+  });
+}
+
+// ---- Davlat tanlash ----
+
+function mentorLimitBlock() {
+  return `
+    <div class="empty">
+      <div class="empty-ico">${icon("clock")}</div>
+      <div class="empty-title">${t("mentor.limit_title")}</div>
+      <div class="empty-text">${t("mentor.limit_text", { n: mentorConfig.monthly_limit })}</div>
+    </div>`;
+}
+
+async function renderMentorCountries(el) {
+  const back = mentorState.from === "list" ? { screen: "list" } : "saved";
+  const backLabel = mentorState.from === "list" ? t("mentor.my_questions") : t("nav.saved");
+  if (!mentorConfig.enabled) {
+    el.innerHTML = `${mentorBack(backLabel)}<div class="empty"><div class="empty-title">${t(
+      "mentor.err.disabled"
+    )}</div></div>`;
+    bindMentorBack(back);
+    return;
+  }
+  el.innerHTML = `
+    ${mentorBack(backLabel)}
+    <div class="mnt-title">${t("mentor.choose_country")}</div>
+    <div class="mnt-sub">${t("mentor.choose_country_sub")}</div>
+    ${
+      mentorLimitLeft() <= 0
+        ? mentorLimitBlock()
+        : `<div class="mnt-countries">
+            ${mentorConfig.countries
+              .map(
+                (c) => `
+            <button type="button" class="mnt-country" data-code="${c.code}">
+              <span class="mnt-flag">${c.flag}</span>
+              <span class="mnt-country-name">${escapeHtml(c.name)}</span>
+              ${icon("chevron", "ico mnt-go")}
+            </button>`
+              )
+              .join("")}
+          </div>
+          <div class="mnt-quota">${t("mentor.quota", {
+            left: mentorLimitLeft(),
+            n: mentorConfig.monthly_limit,
+          })}</div>`
+    }`;
+
+  bindMentorBack(back);
+  el.querySelectorAll(".mnt-country").forEach((row) => {
+    row.addEventListener("click", () => {
+      haptic("light");
+      openMentor("form", { country: row.dataset.code, from: mentorState.from });
+    });
+  });
+}
+
+// ---- Savol formasi ----
+
+async function renderMentorForm(el) {
+  const country = mentorConfig.countries.find((c) => c.code === mentorState.country);
+  const back = { screen: "countries", from: mentorState.from };
+  if (!country) return openMentor("countries", { from: mentorState.from });
+
+  const min = mentorConfig.question_min_chars;
+  const max = mentorConfig.question_max_chars;
+  el.innerHTML = `
+    ${mentorBack(t("mentor.choose_country"))}
+    <div class="mnt-title">${country.flag} ${escapeHtml(country.name)}</div>
+    ${
+      mentorLimitLeft() <= 0
+        ? mentorLimitBlock()
+        : `
+    <div class="group">
+      <div class="field">
+        <label>${t("mentor.level")}</label>
+        ${mentorChips(
+          "mentor-level",
+          ["bachelor", "master"].map((v) => ({ value: v, label: t("mentor.level." + v) })),
+          mentorState.level || ""
+        )}
+      </div>
+      <div class="field">
+        <label>${t("mentor.topic")}</label>
+        ${mentorChips(
+          "mentor-topic",
+          MENTOR_TOPICS.map((v) => ({ value: v, label: t("mentor.topic." + v) })),
+          mentorState.topic || ""
+        )}
+      </div>
+      <div class="field">
+        <label>${t("mentor.text")}</label>
+        <textarea id="mentor-text" class="fb-text mnt-textarea" rows="6" maxlength="${max}"
+                  placeholder="${escapeHtml(t("mentor.text_placeholder"))}">${escapeHtml(
+            mentorState.text || ""
+          )}</textarea>
+        <small class="field-hint" id="mentor-count"></small>
+      </div>
+    </div>
+    <div class="mnt-warn">${icon("shield")}<span>${t("mentor.privacy_warning")}</span></div>
+    <button type="button" class="btn btn-accent btn-block" id="mentor-send">${t("mentor.send")}</button>`
+    }`;
+
+  bindMentorBack(back);
+  if (mentorLimitLeft() <= 0) return;
+
+  bindChips("mentor-level");
+  bindChips("mentor-topic");
+  const textEl = document.getElementById("mentor-text");
+  const countEl = document.getElementById("mentor-count");
+  const updateCount = () => {
+    const len = textEl.value.trim().length;
+    countEl.textContent =
+      len < min ? t("mentor.count_min", { len, min }) : t("mentor.count", { len, max });
+    countEl.classList.toggle("mnt-count-bad", len > 0 && len < min);
+  };
+  textEl.addEventListener("input", updateCount);
+  updateCount();
+
+  const sendBtn = document.getElementById("mentor-send");
+  sendBtn.addEventListener("click", async () => {
+    const level = activeChip("mentor-level");
+    const topic = activeChip("mentor-topic");
+    const text = textEl.value.trim();
+    // Kiritilgan narsa qayta chizishda yo'qolmasin (masalan xatodan keyin).
+    Object.assign(mentorState, { level, topic, text });
+    if (!level || !topic) {
+      haptic("error");
+      showToast(t("mentor.err.choose_all"));
+      return;
+    }
+    if (text.length < min) {
+      haptic("error");
+      showToast(t("mentor.err.text_too_short"));
+      return;
+    }
+    sendBtn.disabled = true;
+    try {
+      const question = await api("/mentor/questions", {
+        method: "POST",
+        body: JSON.stringify({ country_code: country.code, level, topic, text }),
+      });
+      haptic("success");
+      await openMentor("chat", { id: question.id, justSent: true });
+    } catch (err) {
+      sendBtn.disabled = false;
+      haptic("error");
+      showToast(mentorErrorText(err));
+    }
+  });
+}
+
+// ---- Chat ----
+
+async function renderMentorChat(el) {
+  const q = await api(`/mentor/questions/${mentorState.id}`);
+  const mentorLabel = t("mentor.mentor_label", { country: q.country_name });
+
+  const bubbles = q.messages
+    .map((m) => {
+      if (m.sender === "user") {
+        return `<div class="mnt-msg mine"><div class="mnt-bubble">${escapeHtml(m.text)}</div>
+          <div class="mnt-meta">${mentorTime(m.created_at)}</div></div>`;
+      }
+      return `<div class="mnt-msg theirs">
+          <div class="mnt-from">🎓 ${escapeHtml(mentorLabel)}</div>
+          <div class="mnt-bubble">${escapeHtml(m.text)}</div>
+          <div class="mnt-meta">${mentorTime(m.created_at)}
+            <button type="button" class="mnt-report" data-msg="${m.id}">${t("mentor.report_short")}</button>
+          </div></div>`;
+    })
+    .join("");
+
+  const waiting =
+    q.status === "open" || q.status === "claimed"
+      ? `<div class="mnt-note">${icon("clock")}<span>${
+          mentorState.justSent
+            ? t("mentor.sent_notice", { country: q.country_name })
+            : t("mentor.waiting")
+        }</span></div>`
+      : "";
+
+  const followup = q.can_followup
+    ? `<div class="group mnt-followup">
+        <div class="field">
+          <label>${t("mentor.followup_label", { left: q.followups_left })}</label>
+          <textarea id="mentor-followup" class="fb-text mnt-textarea" rows="3" maxlength="${
+            mentorConfig.question_max_chars
+          }" placeholder="${escapeHtml(t("mentor.followup_placeholder"))}"></textarea>
+          <button type="button" class="btn btn-accent btn-block" id="mentor-followup-send">${t(
+            "mentor.followup_send"
+          )}</button>
+        </div>
+      </div>`
+    : q.status === "answered"
+    ? `<div class="mnt-note">${t("mentor.followup_limit")}</div>`
+    : "";
+
+  const rating = q.can_rate
+    ? `<div class="group mnt-rate">
+        <div class="mnt-rate-title">${t("mentor.rate_title")}</div>
+        <div class="mnt-stars">${[1, 2, 3, 4, 5]
+          .map((n) => `<button type="button" class="mnt-star" data-n="${n}" aria-label="${n}">★</button>`)
+          .join("")}</div>
+      </div>`
+    : q.rating
+    ? `<div class="mnt-note">${t("mentor.rated", { stars: "⭐".repeat(q.rating) })}</div>`
+    : "";
+
+  el.innerHTML = `
+    ${mentorBack(t("mentor.my_questions"))}
+    <div class="mnt-chat-head">
+      <span class="mnt-flag">${q.flag}</span>
+      <div class="mnt-chat-head-text">
+        <div class="mnt-item-title">${escapeHtml(q.country_name)} · #${q.number}</div>
+        <div class="mnt-item-sub">${t("mentor.level." + q.level)} · ${t("mentor.topic." + q.topic)}</div>
+      </div>
+      ${mentorStatusPill(q.status)}
+    </div>
+    <div class="mnt-chat">${bubbles}</div>
+    ${waiting}
+    ${followup}
+    ${rating}
+    <div class="mnt-actions">
+      ${
+        q.can_close
+          ? `<button type="button" class="btn btn-accent btn-block" id="mentor-close">${t(
+              "mentor.close_btn"
+            )}</button>`
+          : ""
+      }
+      ${
+        q.can_complain
+          ? `<button type="button" class="btn btn-quiet btn-block" id="mentor-complain">${t(
+              "mentor.complain_btn"
+            )}</button>`
+          : ""
+      }
+    </div>`;
+
+  bindMentorBack({ screen: "list" });
+  // "Yuborildi" xabari faqat birinchi ochilishda.
+  mentorState.justSent = false;
+
+  el.querySelectorAll(".mnt-report").forEach((btn) => {
+    btn.addEventListener("click", () => openComplaintSheet(q, Number(btn.dataset.msg)));
+  });
+  document.getElementById("mentor-complain")?.addEventListener("click", () => openComplaintSheet(q, null));
+
+  document.getElementById("mentor-close")?.addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      await api(`/mentor/questions/${q.id}/close`, { method: "POST" });
+      haptic("success");
+      await renderMentorChat(el);
+    } catch (err) {
+      btn.disabled = false;
+      haptic("error");
+      showToast(mentorErrorText(err));
+    }
+  });
+
+  el.querySelectorAll(".mnt-star").forEach((star) => {
+    star.addEventListener("click", async () => {
+      const n = Number(star.dataset.n);
+      el.querySelectorAll(".mnt-star").forEach((s) => s.classList.toggle("on", Number(s.dataset.n) <= n));
+      try {
+        await api(`/mentor/questions/${q.id}/rate`, { method: "POST", body: JSON.stringify({ rating: n }) });
+        haptic("success");
+        showToast(t("mentor.rate_thanks"));
+        await renderMentorChat(el);
+      } catch (err) {
+        haptic("error");
+        showToast(mentorErrorText(err));
+      }
+    });
+  });
+
+  const sendFollowup = document.getElementById("mentor-followup-send");
+  sendFollowup?.addEventListener("click", async () => {
+    const text = document.getElementById("mentor-followup").value.trim();
+    if (!text) return;
+    sendFollowup.disabled = true;
+    try {
+      await api(`/mentor/questions/${q.id}/followup`, { method: "POST", body: JSON.stringify({ text }) });
+      haptic("success");
+      showToast(t("mentor.followup_sent"));
+      await renderMentorChat(el);
+    } catch (err) {
+      sendFollowup.disabled = false;
+      haptic("error");
+      showToast(mentorErrorText(err));
+    }
+  });
+}
+
+function openComplaintSheet(question, messageId) {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("mentor.complain_title")}</div>
+    <div class="sheet-sub">${t("mentor.complain_sub")}</div>
+    <div class="sheet-section">
+      ${mentorChips(
+        "complaint-reason",
+        MENTOR_COMPLAINT_REASONS.map((v) => ({ value: v, label: t("mentor.reason." + v) })),
+        ""
+      )}
+    </div>
+    <textarea id="complaint-comment" class="fb-text" rows="3" maxlength="1000"
+              placeholder="${escapeHtml(t("mentor.complain_comment"))}"></textarea>
+    <button type="button" class="btn btn-accent btn-block" id="complaint-send">${t("mentor.complain_send")}</button>`,
+    sheet
+  );
+  bindChips("complaint-reason");
+
+  document.getElementById("complaint-send").addEventListener("click", async (event) => {
+    const reason = activeChip("complaint-reason");
+    if (!reason) {
+      haptic("error");
+      showToast(t("mentor.err.choose_reason"));
+      return;
+    }
+    const btn = event.currentTarget;
+    btn.disabled = true;
+    try {
+      await api(`/mentor/questions/${question.id}/complaints`, {
+        method: "POST",
+        body: JSON.stringify({
+          reason,
+          comment: document.getElementById("complaint-comment").value.trim() || null,
+          message_id: messageId,
+        }),
+      });
+      closeSheet();
+      haptic("success");
+      showToast(t("mentor.complain_sent"));
+    } catch (err) {
+      btn.disabled = false;
+      haptic("error");
+      showToast(mentorErrorText(err));
+    }
+  });
+}
+
+// ---- "Saqlanganlar" sahifasidagi kirish nuqtasi ----
+
+function mentorEntryCard() {
+  if (!mentorConfig || !mentorConfig.enabled) return "";
+  return `
+    <div class="mnt-entry">
+      <button type="button" class="mnt-entry-main" id="mentor-ask">
+        <span class="mnt-entry-ico">💬</span>
+        <span class="mnt-entry-text">
+          <span class="mnt-entry-title">${t("mentor.ask_cta")}</span>
+          <span class="mnt-entry-sub">${t("mentor.ask_cta_sub")}</span>
+        </span>
+        ${icon("chevron", "ico mnt-go")}
+      </button>
+      <button type="button" class="mnt-entry-link" id="mentor-mine">${t("mentor.my_questions")}</button>
+    </div>`;
+}
+
+function bindMentorEntry(el) {
+  el.querySelector("#mentor-ask")?.addEventListener("click", () => {
+    haptic("light");
+    openMentor("countries", { from: "saved" });
+  });
+  el.querySelector("#mentor-mine")?.addEventListener("click", () => {
+    haptic("light");
+    openMentor("list");
+  });
+}
+
+// ---- Profil: "Mentor bo'lish" ----
+
+function openBecomeMentorSheet() {
+  haptic("light");
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  const rules = [1, 2, 3, 4]
+    .map((n) => `<li class="onb-step"><span class="onb-num">${n}</span><span>${t("mentor.become_rule" + n)}</span></li>`)
+    .join("");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="onb">
+      <div class="mnt-become-ico">🎓</div>
+      <div class="onb-title">${t("mentor.become_title")}</div>
+      <div class="onb-text">${t("mentor.become_text")}</div>
+      <ol class="onb-steps">${rules}</ol>
+      <button type="button" class="btn btn-accent btn-block" id="mentor-apply">${t("mentor.become_apply")}</button>
+    </div>`,
+    sheet
+  );
+  document.getElementById("mentor-apply").addEventListener("click", () => {
+    const username = mentorConfig && mentorConfig.admin_username;
+    if (!username) return;
+    const url = `https://t.me/${encodeURIComponent(username)}?text=${encodeURIComponent(
+      "Salom! Uni Assist'da mentor bo'lmoqchiman."
+    )}`;
+    try {
+      tg.openTelegramLink(url);
+    } catch (e) {
+      window.open(url, "_blank");
+    }
+  });
+}
+
 // ============ Navigation ============
 
 const RENDERERS = {
@@ -4444,6 +5262,7 @@ const RENDERERS = {
   scholarships: renderScholarships,
   saved: renderSaved,
   profile: renderProfile,
+  mentor: renderMentor,
 };
 
 function updateNavLabels() {
@@ -4518,6 +5337,11 @@ async function applyDeepLink() {
     openProgramSheet(Number(program[1]));
     return true;
   }
+  const question = target.match(/^question_(\d+)$/);
+  if (question) {
+    await openMentor("chat", { id: Number(question[1]) });
+    return true;
+  }
   const suggest = target.match(/^suggest_(\d+)$/);
   if (suggest) {
     await switchTab("saved");
@@ -4548,6 +5372,7 @@ async function init() {
   await loadCountries();
   await loadMajors();
   await loadStudyLanguages();
+  await loadMentorConfig();
 
   updateNavLabels();
   bindTabs();

@@ -4,6 +4,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.db.base import Base
+from tests.mentor_fakes import mentor_settings  # noqa: F401 — mentor testlari uchun fixture
 
 TEST_DATABASE_URL = os.environ.get(
     "TEST_DATABASE_URL",

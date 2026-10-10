@@ -47,5 +47,15 @@
   "month.9": "sentyabr",
   "month.10": "oktyabr",
   "month.11": "noyabr",
-  "month.12": "dekabr"
+  "month.12": "dekabr",
+  "mentor.answer_received": "🎓 <b>{country}dagi mentor</b> savolingizga (#{number}) javob berdi:\n\n{answer}",
+  "mentor.btn_followup": "💬 Qo'shimcha savol",
+  "mentor.btn_close": "✅ Javob oldim",
+  "mentor.btn_complain": "⚠️ Shikoyat",
+  "mentor.rate_prompt": "Savol #{number} yopildi. Mentor javobini baholang:",
+  "mentor.rate_thanks": "Rahmat! Bahoyingiz: {stars}",
+  "mentor.already_rated": "Bu savol allaqachon baholangan",
+  "mentor.closed_toast": "Savol yopildi",
+  "mentor.already_closed": "Savol allaqachon yopilgan",
+  "mentor.busy_48h": "Mentorlar hozir band, savolingiz (#{number}) ochiq turibdi. Javob kelishi bilan xabar beramiz.\n\nBu savol oylik limitingizga sanalmaydi."
 }

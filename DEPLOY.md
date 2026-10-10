@@ -130,3 +130,58 @@ esa faqat o'sha bitta dasturga ta'sir qiladi.
 **Admin tomoni:** "Taklif qilingan sanalar" — foydalanuvchilar yuborgan
 deadline sanalari. Tasdiqlansa sana `deadlines` jadvaliga yoziladi.
 Boshqaruv panelida yuborilgan/bosilgan xabarlar statistikasi bor.
+
+## Mentordan so'rash
+
+Foydalanuvchi Mini App'dan (Saqlangan → «Shu davlatda o'qiyotganlardan
+so'rash») savol beradi. Savol mentorlar forum-guruhidagi davlat topic'iga
+tushadi, javob esa userga bot orqali **anonim** keladi. Mentorlar jadvali
+yo'q: **guruh a'zoligining o'zi mentorlik huquqi**. Mentorni qo'shish va
+chiqarishni Telegram'da qo'lda qilasiz.
+
+**Guruhni sozlash (bir marta):**
+
+1. Telegram'da yopiq guruh yarating → Guruh sozlamalari → **Topics (Mavzular)** ni yoqing.
+2. Botni guruhga qo'shing va **administrator** qiling. Kerakli huquqlar:
+   - **Mavzularni boshqarish** (`can_manage_topics`) — davlat topic'larini bot o'zi ochadi;
+   - **Xabarlarni o'chirish** — eskirgan «javobni shu yerga yozing» xabarlarini tozalash uchun.
+   Admin bo'lgan bot guruhdagi barcha xabarlarni ko'radi (privacy mode unga ta'sir qilmaydi).
+3. Guruh ID'sini oling: guruhga istalgan xabar yozib, uni @userinfobot ga forward qiling
+   yoki `https://api.telegram.org/bot<TOKEN>/getUpdates` dan `chat.id` ni oling (`-100...`).
+4. Railway → Variables (bo'sh qolsa funksiya o'chiq, ilovada tugma chiqmaydi):
+
+   | O'zgaruvchi | Misol | Nima |
+   |---|---|---|
+   | `MENTOR_GROUP_ID` | `-1001234567890` | mentorlar guruhi |
+   | `ADMIN_TELEGRAM_USERNAME` | `uniassist_admin` | «Mentor bo'lish» murojaati shu yerga |
+   | `ADMIN_TELEGRAM_ID` | `123456789` | javobsiz savol (24 soat) va shikoyat haqida xabar |
+   | `ACTIVE_COUNTRIES` | `DE,HU,KR,PL` | ISO kodlar, katalogdagi «Davlatlar» bilan mos bo'lishi kerak |
+   | `QUESTION_MONTHLY_LIMIT` | `3` | bitta userning oylik savollari |
+   | `FOLLOWUP_LIMIT` | `3` | bitta savolga qo'shimcha savollar |
+   | `ALLOWED_LINK_DOMAINS` | `.de,.edu,.ac.uk,daad.de` | javobda ruxsat etilgan havolalar; `.de` — butun zona |
+
+   `ADMIN_TELEGRAM_ID` egasi botga kamida bir marta `/start` bosgan bo'lishi kerak —
+   aks holda Telegram unga xabar yuborishga ruxsat bermaydi.
+
+**Qanday ishlaydi:**
+
+- Davlat topic'i birinchi savol kelganda yaratiladi («🇩🇪 Germaniya»). Topic o'chirib
+  yuborilsa, bot keyingi savolda uni qayta yaratadi.
+- Mentor «✋ Javob berish» ni bosadi → bot unga ForceReply yuboradi → mentor
+  **aynan shu xabarga reply qilib** javob yozadi. Boshqa xabarlar e'tiborsiz —
+  mentorlar o'zaro gaplashishi mumkin.
+- Javob qabul qilinmaydi: matn bo'lmasa, 50 belgidan qisqa bo'lsa, telefon,
+  @username, `t.me` havolasi yoki ruxsatsiz domen bo'lsa (bot mentorga sababini aytadi).
+- Har 30 daqiqada tekshiruv: 12 soat javobsiz biriktirish bekor bo'ladi; 24 soat
+  javobsiz savol topic'da va adminga eslatiladi; 48 soatda userga «mentorlar band»
+  deyiladi (bu savol oylik limitga sanalmaydi); javobdan 72 soat o'tib savol
+  avtomatik yopiladi.
+- Mentor guruhdan chiqsa yoki chiqarilsa, unga biriktirilgan savollar boshqa
+  mentorlarga qayta ochiladi.
+
+**Adminka → Mentordan so'rash:** «Savollar» (statistika, filtrlar, to'liq yozishma,
+mentor ismi va ID'si faqat shu yerda, «Savolni yopish») va «Shikoyatlar».
+
+**Tekshirish:** test guruh oching, o'zingizni (boshqa akkaunt bilan) a'zo qiling,
+Mini App'dan savol bering → topic paydo bo'ladi → «Javob berish» → ForceReply'ga
+50+ belgili javob yozing → savol bergan akkauntga bot xabari keladi.

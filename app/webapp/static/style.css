@@ -2628,3 +2628,214 @@ button.sch-card:active { transform: scale(0.985); }
   line-height: 1.3;
   color: var(--hint);
 }
+
+/* ============ Mentordan so'rash ============ */
+
+/* "Saqlanganlar" tepasidagi kirish nuqtasi. Kartaning o'zi asosiy amal
+   (savol berish), pastidagi havola esa avvalgi savollarga olib boradi. */
+.mnt-entry {
+  margin-bottom: 14px;
+  background: var(--card);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.mnt-entry-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mnt-entry-ico {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  font-size: 20px;
+  background: var(--accent-soft);
+}
+.mnt-entry-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.mnt-entry-title { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+.mnt-entry-sub { font-size: 12.5px; color: var(--hint); line-height: 1.35; }
+.mnt-entry-link {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  border: 0;
+  border-top: 1px solid var(--separator);
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.mnt-go { flex: none; width: 18px; height: 18px; color: var(--hint); }
+
+.mnt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.mnt-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+.mnt-head .mnt-title { margin-bottom: 0; }
+.mnt-sub { font-size: 13px; color: var(--hint); margin-bottom: 14px; line-height: 1.4; }
+.mnt-new { flex: none; padding: 9px 14px; font-size: 13px; }
+
+.mnt-flag { font-size: 24px; line-height: 1; flex: none; }
+
+.mnt-item,
+.mnt-country {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mnt-item-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.mnt-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mnt-item-sub { font-size: 12px; color: var(--hint); }
+.mnt-item .pill { flex: none; }
+.mnt-country-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; }
+.mnt-quota { margin-top: 6px; font-size: 12.5px; color: var(--hint); text-align: center; }
+
+.mnt-textarea { margin: 0; resize: vertical; min-height: 96px; }
+.mnt-count-bad { color: var(--amber); }
+
+.mnt-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 11px 13px;
+  border-radius: var(--r-md);
+  background: var(--amber-soft);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.mnt-warn .ico { flex: none; width: 16px; height: 16px; color: var(--amber); }
+
+/* Chat: foydalanuvchi o'ngda, mentor chapda. Mentorning ismi yo'q —
+   faqat "{davlat}dagi mentor". */
+.mnt-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.mnt-chat-head-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.mnt-chat-head .pill { flex: none; }
+
+.mnt-chat { display: grid; gap: 10px; margin-bottom: 12px; }
+.mnt-msg { display: grid; gap: 3px; max-width: 86%; min-width: 0; }
+.mnt-msg.mine { justify-self: end; justify-items: end; }
+.mnt-msg.theirs { justify-self: start; }
+.mnt-bubble {
+  padding: 10px 13px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mnt-msg.mine .mnt-bubble {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-bottom-right-radius: 5px;
+}
+.mnt-msg.theirs .mnt-bubble {
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  border-bottom-left-radius: 5px;
+}
+.mnt-from { font-size: 12px; font-weight: 700; color: var(--accent-ink); padding-left: 4px; }
+.mnt-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--hint);
+}
+.mnt-report {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  color: var(--hint);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mnt-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 11px 13px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--hint);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.mnt-note .ico { flex: none; width: 16px; height: 16px; }
+
+.mnt-followup .btn { margin-top: 10px; }
+
+.mnt-rate { padding: 14px; text-align: center; }
+.mnt-rate-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.mnt-stars { display: flex; justify-content: center; gap: 6px; }
+.mnt-star {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--hint);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mnt-star.on { background: var(--amber-soft); color: var(--amber); }
+
+.mnt-actions { display: grid; gap: 8px; }
+.mnt-actions:empty { display: none; }
+
+.mnt-become-ico { font-size: 52px; line-height: 1; margin: 4px 0 12px; }

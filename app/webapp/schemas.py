@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -353,3 +355,76 @@ class SubscriptionStatusOut(BaseModel):
 
     subscribed: bool
     channels: list[SubscriptionChannelOut] = []
+
+
+# ---- Mentordan so'rash ----
+
+
+class MentorCountryOut(BaseModel):
+    code: str
+    flag: str
+    name: str
+
+
+class MentorConfigOut(BaseModel):
+    enabled: bool
+    countries: list[MentorCountryOut] = []
+    monthly_limit: int
+    monthly_used: int
+    followup_limit: int
+    question_min_chars: int
+    question_max_chars: int
+    # "Mentor bo'lish" murojaati shu username'ga ketadi.
+    admin_username: str | None = None
+
+
+class MentorQuestionIn(BaseModel):
+    country_code: str
+    level: str
+    topic: str
+    text: str
+
+
+class MentorTextIn(BaseModel):
+    text: str
+
+
+class MentorRatingIn(BaseModel):
+    rating: int
+
+
+class MentorComplaintIn(BaseModel):
+    reason: str
+    comment: str | None = None
+    message_id: int | None = None
+
+
+class MentorMessageOut(BaseModel):
+    """Yozishmadagi xabar. Mentorning ismi yoki ID'si YO'Q — ataylab."""
+
+    id: int
+    sender: str
+    text: str
+    created_at: datetime
+
+
+class MentorQuestionSummaryOut(BaseModel):
+    id: int
+    number: int
+    country_code: str
+    flag: str
+    country_name: str
+    status: str
+    created_at: datetime
+
+
+class MentorQuestionOut(MentorQuestionSummaryOut):
+    level: str
+    topic: str
+    rating: int | None = None
+    messages: list[MentorMessageOut] = []
+    followups_left: int
+    can_followup: bool
+    can_close: bool
+    can_rate: bool
+    can_complain: bool

@@ -8,6 +8,7 @@ from starlette.responses import Response
 from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
 from app.admin.kit_views import AdmissionKitView
+from app.admin.mentor_views import MentorComplaintsView, MentorQuestionsView
 from app.admin.stats import StatsView
 from app.admin.suggestions import SuggestionView
 from app.admin.views import (
@@ -32,6 +33,7 @@ from app.admin.wizards import ScholarshipWizard, UniversityWizard
 from app.config import settings
 from app.db.session import engine
 from app.webapp.api import router as webapp_api_router
+from app.webapp.mentor_api import router as mentor_api_router
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 ADMIN_STATIC_DIR = Path(__file__).parent / "static"
@@ -52,6 +54,7 @@ class NoCacheStaticFiles(StaticFiles):
 app = FastAPI(title="Uni Assist")
 
 app.include_router(webapp_api_router, prefix="/api/webapp", tags=["webapp"])
+app.include_router(mentor_api_router, prefix="/api/webapp", tags=["webapp"])
 app.mount("/webapp", NoCacheStaticFiles(directory=str(WEBAPP_STATIC_DIR), html=True), name="webapp")
 app.mount("/admin-assets", NoCacheStaticFiles(directory=str(ADMIN_STATIC_DIR)), name="admin-assets")
 
@@ -136,6 +139,11 @@ for view in (
     SavedProgramAdmin,
 ):
     admin.add_view(view)
+
+# Mentordan so'rash — faqat savollar va shikoyatlar. Mentorlarni boshqarish
+# bo'limi ATAYLAB yo'q: mentorlik = guruh a'zoligi (Telegram'da qo'lda).
+admin.add_base_view(MentorQuestionsView)
+admin.add_base_view(MentorComplaintsView)
 
 
 @app.get("/health")

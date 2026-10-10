@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,6 +32,45 @@ class Settings(BaseSettings):
     # Sozlama qilib qo'yildi, chunki "qancha bo'lsin" degan savolga javob
     # loyihaga qarab o'zgaradi — kod tegmasdan .env dan boshqariladi.
     admin_session_timeout_minutes: int = 20
+
+    # ---- "Mentordan so'rash" ----
+    # Mentorlar forum-guruhi (Topics yoqilgan). Bot u yerda admin va
+    # "Mavzularni boshqarish" huquqiga ega bo'lishi shart. Bo'sh bo'lsa
+    # funksiya o'chiq: ilovada savol berish tugmasi chiqmaydi.
+    mentor_group_id: int | None = None
+    # Mentor bo'lish murojaatlari keladigan username (@ siz ham bo'ladi).
+    admin_telegram_username: str = ""
+    # Javobsiz savollar va shikoyatlar haqida ogohlantirish oladigan admin.
+    admin_telegram_id: int | None = None
+    # Savol berish mumkin bo'lgan davlatlar (ISO kodlar): "DE,HU,KR,PL".
+    active_countries: str = ""
+    question_monthly_limit: int = 3
+    followup_limit: int = 3
+    # Mentor javobida ruxsat etilgan havolalar. "." bilan boshlangani butun
+    # domen zonasini bildiradi (".de" — har qanday nemis sayti).
+    allowed_link_domains: str = ""
+
+    @field_validator("mentor_group_id", "admin_telegram_id", mode="before")
+    @classmethod
+    def _empty_id_is_none(cls, value: object) -> object:
+        # .env da "MENTOR_GROUP_ID=" kabi bo'sh qoldirilsa ham ishga tushsin.
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @property
+    def active_country_codes(self) -> list[str]:
+        codes = [c.strip().upper() for c in self.active_countries.split(",")]
+        return list(dict.fromkeys(c for c in codes if len(c) == 2))
+
+    @property
+    def allowed_link_domain_list(self) -> list[str]:
+        items = [d.strip().lower() for d in self.allowed_link_domains.split(",")]
+        return [d for d in items if d]
+
+    @property
+    def admin_contact_username(self) -> str:
+        return self.admin_telegram_username.strip().lstrip("@")
 
     @property
     def database_url(self) -> str:

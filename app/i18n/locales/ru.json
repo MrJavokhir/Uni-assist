@@ -47,5 +47,15 @@
   "month.9": "сентябре",
   "month.10": "октябре",
   "month.11": "ноябре",
-  "month.12": "декабре"
+  "month.12": "декабре",
+  "mentor.answer_received": "🎓 <b>Ментор · {country}</b> ответил на ваш вопрос (#{number}):\n\n{answer}",
+  "mentor.btn_followup": "💬 Уточнить",
+  "mentor.btn_close": "✅ Ответ получен",
+  "mentor.btn_complain": "⚠️ Пожаловаться",
+  "mentor.rate_prompt": "Вопрос #{number} закрыт. Оцените ответ ментора:",
+  "mentor.rate_thanks": "Спасибо! Ваша оценка: {stars}",
+  "mentor.already_rated": "Этот вопрос уже оценён",
+  "mentor.closed_toast": "Вопрос закрыт",
+  "mentor.already_closed": "Вопрос уже закрыт",
+  "mentor.busy_48h": "Менторы сейчас заняты, ваш вопрос (#{number}) остаётся открытым. Сообщим, как только придёт ответ.\n\nЭтот вопрос не учитывается в месячном лимите."
 }

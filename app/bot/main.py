@@ -7,11 +7,13 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
-from app.bot.handlers import language, payment, reminders, start, subscription
+from app.bot.handlers import language, mentor, payment, reminders, start, subscription
 from app.bot.middlewares import DbSessionMiddleware
 from app.bot.profile_setup import apply_bot_profile
 from app.config import settings
 from app.db.session import async_session_factory
+from app.services import mentor_service
+from app.services.mentor_scheduler import SCAN_INTERVAL_SECONDS, run_mentor_scan
 from app.services.redis_client import redis_client
 from app.services.reminder_service import is_send_time, run_reminder_scan
 from app.services.timezone_utils import TASHKENT_TZ
@@ -41,6 +43,10 @@ def create_dispatcher() -> Dispatcher:
     # orqali qidirishdan oldin so'raladi (app/webapp/api.py, `/subscription`).
     dispatcher.update.middleware(DbSessionMiddleware())
 
+    # Mentor router BIRINCHI: mentorlar guruhidagi har qanday xabar shu
+    # yerda tugaydi va shaxsiy chat uchun yozilgan handler'larga (to'lov,
+    # /start) tushib qolmaydi.
+    dispatcher.include_router(mentor.router)
     dispatcher.include_router(language.router)
     dispatcher.include_router(payment.router)
     dispatcher.include_router(subscription.router)
@@ -85,6 +91,26 @@ async def reminder_loop(bot: Bot) -> None:
             logger.exception("Eslatmalarni tekshirishda xatolik")
         await asyncio.sleep(REMINDER_TICK_SECONDS)
 
+async def mentor_loop(bot: Bot) -> None:
+    """Mentor savollarini har 30 daqiqada tekshiradi (12/24/48/72 soat).
+
+    Redis qulfi: deploy paytida eski va yangi konteyner bir vaqtda
+    ishlasa, tekshiruvni faqat bittasi bajaradi.
+    """
+    while True:
+        try:
+            if mentor_service.is_enabled() and await redis_client.set(
+                "mentor_scan_lock", "1", nx=True, ex=SCAN_INTERVAL_SECONDS - 60
+            ):
+                async with async_session_factory() as session:
+                    result = await run_mentor_scan(bot, session)
+                if any(vars(result).values()):
+                    logger.info("Mentor tekshiruvi: %s", result)
+        except Exception:
+            logger.exception("Mentor savollarini tekshirishda xatolik")
+        await asyncio.sleep(SCAN_INTERVAL_SECONDS)
+
+
 async def main() -> None:
     if not settings.bot_token:
         raise RuntimeError("BOT_TOKEN .env faylida o'rnatilmagan.")
@@ -100,8 +126,13 @@ async def main() -> None:
     # qisqa amal va u tugamasdan xabar qabul qilishning ma'nosi yo'q.
     await apply_bot_profile(bot)
     await asyncio.gather(
-        dispatcher.start_polling(bot),
+        # `chat_member` Telegram'da standart holatda YUBORILMAYDI — ro'yxat
+        # aniq beriladi (mentor guruhdan chiqqanini bilish uchun kerak).
+        dispatcher.start_polling(
+            bot, allowed_updates=dispatcher.resolve_used_update_types()
+        ),
         reminder_loop(bot),
+        mentor_loop(bot),
     )
 
 

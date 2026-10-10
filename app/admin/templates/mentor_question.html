@@ -1,0 +1,101 @@
+{% extends "sqladmin/layout.html" %}
+
+{# Mentorning ismi va Telegram ID'si FAQAT shu yerda ko'rinadi —
+   foydalanuvchiga hech qachon berilmaydi. #}
+
+{% block content %}
+<div class="col-12">
+  <div class="mb-3">
+    <a href="{{ url_for('admin:view-mentor-questions') }}" class="btn btn-sm btn-outline-secondary">← Savollar</a>
+  </div>
+
+  <div class="row row-cards">
+    <div class="col-lg-8">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h3 class="card-title">Savol #{{ q.public_number }}</h3>
+          <div class="card-actions">
+            <span class="badge {{ status[1] }}">{{ status[0] }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="text-muted mb-2">{{ country }} · {{ level }} · {{ topic }}</div>
+          <div style="white-space: pre-wrap">{{ q.text }}</div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">Yozishma</h3></div>
+        <div class="list-group list-group-flush">
+          {% for m in messages %}
+          <div class="list-group-item {% if m.sender == 'mentor' %}bg-green-lt{% endif %}">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>
+                {% if m.sender == 'mentor' %}
+                  🎓 {{ m.mentor_name or "Mentor" }} <span class="text-muted">(ID {{ m.mentor_tg_id }})</span>
+                {% elif loop.first %}
+                  👤 Foydalanuvchi — asl savol
+                {% else %}
+                  👤 Foydalanuvchi — qo'shimcha savol
+                {% endif %}
+              </span>
+              <span>{{ m.time }}</span>
+            </div>
+            <div style="white-space: pre-wrap">{{ m.text }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-6">Yaratilgan</dt><dd class="col-6">{{ created }}</dd>
+            <dt class="col-6">Birinchi javob</dt><dd class="col-6">{{ answered }}</dd>
+            <dt class="col-6">Javob vaqti</dt><dd class="col-6">{{ answer_time }}</dd>
+            <dt class="col-6">Yopilgan</dt><dd class="col-6">{{ closed }}</dd>
+            <dt class="col-6">Baho</dt>
+            <dd class="col-6">{% if q.rating %}⭐ {{ q.rating }}{% else %}—{% endif %}</dd>
+            {% if q.claimed_by_name %}
+            <dt class="col-6">Biriktirilgan</dt>
+            <dd class="col-6">{{ q.claimed_by_name }} <span class="text-muted small">(ID {{ q.claimed_by_tg_id }})</span></dd>
+            {% endif %}
+          </dl>
+        </div>
+        {% if can_close %}
+        <div class="card-footer">
+          <form method="post" action="{{ url_for('admin:view-mentor-question-close') }}"
+                onsubmit="return confirm('Savol yopilsinmi?');">
+            <input type="hidden" name="question_id" value="{{ q.id }}">
+            <button type="submit" class="btn btn-outline-danger w-100">Savolni yopish</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">Shikoyatlar</h3></div>
+        {% if complaints %}
+        <div class="list-group list-group-flush">
+          {% for c in complaints %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <strong>{{ c.reason }}</strong>
+              {% if c.status == 'new' %}<span class="badge bg-red-lt">Yangi</span>
+              {% else %}<span class="badge bg-secondary-lt">Ko'rildi</span>{% endif %}
+            </div>
+            {% if c.comment %}<div class="small mt-1" style="white-space: pre-wrap">{{ c.comment }}</div>{% endif %}
+            <div class="small text-muted mt-1">{{ c.time }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="card-body text-muted">Shikoyat yo'q.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

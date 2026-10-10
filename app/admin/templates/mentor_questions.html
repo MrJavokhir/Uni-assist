@@ -1,0 +1,102 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+
+  <div class="row row-cards mb-3">
+    {% for label, value in [
+      ("Jami savollar", stats.total),
+      ("Javob berilgan", stats.answered_pct ~ "%"),
+      ("O'rtacha javob vaqti", stats.avg_answer),
+      ("Javobsiz (ochiq)", stats.unanswered),
+    ] %}
+    <div class="col-sm-6 col-lg-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="text-muted small">{{ label }}</div>
+          <div class="h2 mb-0">{{ value }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Savollar</h3>
+    </div>
+    <div class="card-body border-bottom py-3">
+      <form method="get" action="{{ url_for('admin:view-mentor-questions') }}" class="row g-2 align-items-end">
+        <div class="col-sm-6 col-md-2">
+          <label class="form-label">Davlat</label>
+          <select name="country" class="form-select">
+            <option value="">Hammasi</option>
+            {% for code in countries %}
+            <option value="{{ code }}" {% if filters.country == code %}selected{% endif %}>{{ code }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-md-3">
+          <label class="form-label">Holat</label>
+          <select name="status" class="form-select">
+            <option value="">Hammasi</option>
+            {% for key, item in statuses.items() %}
+            <option value="{{ key }}" {% if filters.status == key %}selected{% endif %}>{{ item[0] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-md-2">
+          <label class="form-label">Sanadan</label>
+          <input type="date" name="from" value="{{ filters['from'] }}" class="form-control">
+        </div>
+        <div class="col-sm-6 col-md-2">
+          <label class="form-label">Sanagacha</label>
+          <input type="date" name="to" value="{{ filters['to'] }}" class="form-control">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Filtrlash</button>
+          <a href="{{ url_for('admin:view-mentor-questions') }}" class="btn btn-outline-secondary">Tozalash</a>
+        </div>
+      </form>
+    </div>
+
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Raqam</th>
+            <th>Davlat</th>
+            <th>Daraja</th>
+            <th>Mavzu</th>
+            <th>Holat</th>
+            <th>Yaratilgan</th>
+            <th>Javob vaqti</th>
+            <th>Baho</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td><a href="{{ url_for('admin:view-mentor-question') }}?id={{ row.id }}">#{{ row.number }}</a></td>
+            <td>{{ row.country }}</td>
+            <td>{{ row.level }}</td>
+            <td>{{ row.topic }}</td>
+            <td><span class="badge {{ row.status[1] }}">{{ row.status[0] }}</span></td>
+            <td class="text-nowrap">{{ row.created }}</td>
+            <td class="text-nowrap">{{ row.answer_time }}</td>
+            <td>{% if row.rating %}⭐ {{ row.rating }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if rows|length >= limit %}
+    <div class="card-footer text-muted small">Oxirgi {{ limit }} ta savol ko'rsatildi — aniqroq filtr qo'ying.</div>
+    {% endif %}
+    {% else %}
+    <div class="card-body text-muted">Savollar yo'q.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

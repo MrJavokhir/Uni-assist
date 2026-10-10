@@ -70,7 +70,12 @@ class Settings(BaseSettings):
 
     @property
     def admin_contact_username(self) -> str:
-        return self.admin_telegram_username.strip().lstrip("@")
+        """Username — qanday kiritilgan bo'lsa ham ("@turaev_j",
+        "turaev_j" yoki "https://t.me/turaev_j")."""
+        value = self.admin_telegram_username.strip()
+        for prefix in ("https://", "http://", "www.", "t.me/", "telegram.me/"):
+            value = value.removeprefix(prefix)
+        return value.lstrip("@").split("/", 1)[0].split("?", 1)[0]
 
     @property
     def database_url(self) -> str:

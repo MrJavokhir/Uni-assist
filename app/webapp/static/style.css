@@ -821,6 +821,9 @@ body {
 
 /* Ilova tayyor bo'lmaguncha tab bosilmaydi (app.js `init` qo'yadi/oladi). */
 .tabbar[aria-busy="true"] { pointer-events: none; opacity: 0.55; }
+/* Matn yoziladigan ekranlarda (Uni Buddy formasi va chati) menyu yo'q:
+   iPhone'da klaviatura ochilganda u yozish maydonini yopardi. */
+body.no-tabbar .tabbar { display: none; }
 
 /* ============ Universitet logotipi ============ */
 
@@ -2809,4 +2812,3 @@ button.sch-card:active { transform: scale(0.985); }
 .mnt-actions { display: grid; gap: 8px; }
 .mnt-actions:empty { display: none; }
 
-.mnt-become-ico { font-size: 52px; line-height: 1; margin: 4px 0 12px; }

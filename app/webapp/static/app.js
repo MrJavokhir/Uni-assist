@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 70;
+const ASSET_V = 71;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -604,13 +604,6 @@ const I18N = {
     "mentor.reason.other": "Boshqa",
     "mentor.become_row": "Mentor bo'lish",
     "mentor.become_row_sub": "Xorijda o'qiyotgan bo'lsangiz",
-    "mentor.become_title": "Mentor bo'ling",
-    "mentor.become_text": "Xorijda o'qiyotgan o'zbek talabalar mentor bo'la oladi: o'z tajribangiz bilan kelajakdagi talabalarga yordam berasiz.",
-    "mentor.become_rule1": "Hozir xorijdagi universitetda o'qiyotgan bo'lishingiz kerak",
-    "mentor.become_rule2": "Savollarga 24 soat ichida, aniq va hurmat bilan javob berasiz",
-    "mentor.become_rule3": "Kontakt, havola va pullik xizmat taklif qilinmaydi",
-    "mentor.become_rule4": "Javoblar anonim: savol beruvchi ismingizni ko'rmaydi",
-    "mentor.become_apply": "Murojaat qilish",
     "mentor.err.generic": "Xatolik yuz berdi, qayta urinib ko'ring",
     "mentor.err.disabled": "Bu imkoniyat hozircha mavjud emas",
     "mentor.err.monthly_limit": "Bu oy uchun savollar limiti tugadi",
@@ -1024,13 +1017,6 @@ const I18N = {
     "mentor.reason.other": "Другое",
     "mentor.become_row": "Стать ментором",
     "mentor.become_row_sub": "Если вы учитесь за рубежом",
-    "mentor.become_title": "Станьте ментором",
-    "mentor.become_text": "Ментором может стать узбекский студент, который учится за рубежом: помогайте будущим студентам своим опытом.",
-    "mentor.become_rule1": "Вы сейчас учитесь в зарубежном университете",
-    "mentor.become_rule2": "Отвечаете в течение 24 часов, по делу и уважительно",
-    "mentor.become_rule3": "Без контактов, ссылок и платных услуг",
-    "mentor.become_rule4": "Ответы анонимны: спрашивающий не видит вашего имени",
-    "mentor.become_apply": "Подать заявку",
     "mentor.err.generic": "Произошла ошибка, попробуйте ещё раз",
     "mentor.err.disabled": "Эта функция пока недоступна",
     "mentor.err.monthly_limit": "Лимит вопросов на этот месяц исчерпан",
@@ -1444,13 +1430,6 @@ const I18N = {
     "mentor.reason.other": "Other",
     "mentor.become_row": "Become a mentor",
     "mentor.become_row_sub": "If you study abroad",
-    "mentor.become_title": "Become a mentor",
-    "mentor.become_text": "Uzbek students studying abroad can become mentors and help future students with their experience.",
-    "mentor.become_rule1": "You're currently studying at a university abroad",
-    "mentor.become_rule2": "You answer within 24 hours, clearly and respectfully",
-    "mentor.become_rule3": "No contacts, links or paid services",
-    "mentor.become_rule4": "Answers are anonymous: the asker never sees your name",
-    "mentor.become_apply": "Apply",
     "mentor.err.generic": "Something went wrong, please try again",
     "mentor.err.disabled": "This feature isn't available yet",
     "mentor.err.monthly_limit": "You've used this month's questions",
@@ -4487,17 +4466,17 @@ function renderProfile() {
     </div>
 
     <div class="acc-group">
+      ${
+        mentorConfig && mentorConfig.admin_username
+          ? profileRow("acc-mentor", "cap", t("mentor.become_row"), t("mentor.become_row_sub"))
+          : ""
+      }
       ${profileRow("acc-filter", "search", t("account.filter"), t("account.filter_sub"))}
       ${profileRow("acc-lang", "lang", t("account.language"), LANG_LABELS[lang] || lang)}
       ${notificationsRow()}
       ${profileRow("acc-invite", "spark", t("account.invite"), inviteSubtitle())}
       ${profileRow("acc-help", "shield", t("account.help"), "")}
       ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
-      ${
-        mentorConfig && mentorConfig.admin_username
-          ? profileRow("acc-mentor", "cap", t("mentor.become_row"), t("mentor.become_row_sub"))
-          : ""
-      }
     </div>`;
 
   document.getElementById("acc-filter").addEventListener("click", () => {
@@ -4521,7 +4500,7 @@ function renderProfile() {
   document.getElementById("acc-invite").addEventListener("click", shareBot);
   document.getElementById("acc-help").addEventListener("click", openHelpSheet);
   document.getElementById("acc-feedback").addEventListener("click", openFeedbackSheet);
-  document.getElementById("acc-mentor")?.addEventListener("click", openBecomeMentorSheet);
+  document.getElementById("acc-mentor")?.addEventListener("click", applyAsMentor);
 }
 
 const LANG_LABELS = { uz: "O'zbekcha", ru: "Русский", en: "English" };
@@ -4773,6 +4752,10 @@ async function renderMentor() {
   el.innerHTML = skeletons(3);
   await loadMentorConfig(true);
   const screen = mentorState.screen;
+  // Savol yoziladigan ekranlarda pastki menyu umuman ko'rinmaydi: iPhone'da
+  // klaviatura ochilganda u yuqoriga ko'tarilib, yozish maydonini yopardi.
+  // Bu ekranlardan qaytish o'zining "orqaga" tugmasi orqali.
+  document.body.classList.toggle("no-tabbar", screen === "form" || screen === "chat");
   if (screen === "countries") return renderMentorCountries(el);
   if (screen === "form") return renderMentorForm(el);
   if (screen === "chat") return renderMentorChat(el);
@@ -4785,7 +4768,6 @@ async function renderMentorList(el) {
   const items = await api("/mentor/questions");
   const canAsk = mentorConfig.enabled;
   el.innerHTML = `
-    ${mentorBack(t("nav.home"))}
     <div class="mnt-head">
       <div class="mnt-title">Uni Buddy</div>
       ${
@@ -4819,7 +4801,6 @@ async function renderMentorList(el) {
            </div>`
     }`;
 
-  bindMentorBack("home");
   document.getElementById("mentor-new")?.addEventListener("click", () => {
     haptic("light");
     openMentor("countries", { from: "list" });
@@ -4844,17 +4825,19 @@ function mentorLimitBlock() {
 }
 
 async function renderMentorCountries(el) {
-  const back = mentorState.from === "list" ? { screen: "list" } : "home";
-  const backLabel = mentorState.from === "list" ? "Uni Buddy" : t("nav.home");
+  // Ro'yxatdan kelinganda unga qaytish tugmasi bor. Bosh sahifadan
+  // kelinganda yo'q — pastdagi menyu shu vazifani bajaradi.
+  const fromList = mentorState.from === "list";
+  const backBtn = fromList ? mentorBack("Uni Buddy") : "";
   if (!mentorConfig.enabled) {
-    el.innerHTML = `${mentorBack(backLabel)}<div class="empty"><div class="empty-title">${t(
+    el.innerHTML = `${backBtn}<div class="empty"><div class="empty-title">${t(
       "mentor.err.disabled"
     )}</div></div>`;
-    bindMentorBack(back);
+    if (fromList) bindMentorBack({ screen: "list" });
     return;
   }
   el.innerHTML = `
-    ${mentorBack(backLabel)}
+    ${backBtn}
     <div class="mnt-title">${t("mentor.choose_country")}</div>
     <div class="mnt-sub">${t("mentor.choose_country_sub")}</div>
     ${
@@ -4878,7 +4861,7 @@ async function renderMentorCountries(el) {
           })}</div>`
     }`;
 
-  bindMentorBack(back);
+  if (fromList) bindMentorBack({ screen: "list" });
   el.querySelectorAll(".mnt-country").forEach((row) => {
     row.addEventListener("click", () => {
       haptic("light");
@@ -5225,38 +5208,21 @@ async function openBuddy() {
 }
 
 // ---- Profil: "Mentor bo'lish" ----
+// Oraliq oyna yo'q: bosilganda darhol admin bilan Telegram suhbati tayyor
+// matn bilan ochiladi.
 
-function openBecomeMentorSheet() {
+const MENTOR_APPLY_TEXT = "Uni Assistda Mentor bo'lmoqchiman";
+
+function applyAsMentor() {
   haptic("light");
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
-  const rules = [1, 2, 3, 4]
-    .map((n) => `<li class="onb-step"><span class="onb-num">${n}</span><span>${t("mentor.become_rule" + n)}</span></li>`)
-    .join("");
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
-    <div class="onb">
-      <div class="mnt-become-ico">🎓</div>
-      <div class="onb-title">${t("mentor.become_title")}</div>
-      <div class="onb-text">${t("mentor.become_text")}</div>
-      <ol class="onb-steps">${rules}</ol>
-      <button type="button" class="btn btn-accent btn-block" id="mentor-apply">${t("mentor.become_apply")}</button>
-    </div>`,
-    sheet
-  );
-  document.getElementById("mentor-apply").addEventListener("click", () => {
-    const username = mentorConfig && mentorConfig.admin_username;
-    if (!username) return;
-    const url = `https://t.me/${encodeURIComponent(username)}?text=${encodeURIComponent(
-      "Salom! Uni Assist'da mentor bo'lmoqchiman."
-    )}`;
-    try {
-      tg.openTelegramLink(url);
-    } catch (e) {
-      window.open(url, "_blank");
-    }
-  });
+  const username = mentorConfig && mentorConfig.admin_username;
+  if (!username) return;
+  const url = `https://t.me/${encodeURIComponent(username)}?text=${encodeURIComponent(MENTOR_APPLY_TEXT)}`;
+  try {
+    tg.openTelegramLink(url);
+  } catch (e) {
+    window.open(url, "_blank");
+  }
 }
 
 // ============ Navigation ============
@@ -5282,6 +5248,9 @@ function updateNavLabels() {
 
 async function switchTab(tabName) {
   haptic("light");
+  // Pastki menyu har bir o'tishda qaytadi; uni yashiradigan ekran
+  // (Uni Buddy formasi va chati) o'zi qayta yashiradi.
+  document.body.classList.remove("no-tabbar");
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
   document.querySelectorAll(".view").forEach((v) => {
     v.hidden = v.id !== `view-${tabName}`;

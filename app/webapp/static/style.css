@@ -2631,55 +2631,17 @@ button.sch-card:active { transform: scale(0.985); }
 
 /* ============ Mentordan so'rash ============ */
 
-/* "Saqlanganlar" tepasidagi kirish nuqtasi. Kartaning o'zi asosiy amal
-   (savol berish), pastidagi havola esa avvalgi savollarga olib boradi. */
-.mnt-entry {
-  margin-bottom: 14px;
-  background: var(--card);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+/* Bosh sahifadagi Uni Buddy kartasi — qo'shni "To'liq mos" kartasi bilan bir
+   o'lchamda. Katta raqam o'rnida qisqa chaqiriq turadi. */
+.hx-buddy-text {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
-.mnt-entry-main {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 14px;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.mnt-entry-ico {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  flex: none;
-  border-radius: 12px;
-  font-size: 20px;
-  background: var(--accent-soft);
-}
-.mnt-entry-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.mnt-entry-title { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
-.mnt-entry-sub { font-size: 12.5px; color: var(--hint); line-height: 1.35; }
-.mnt-entry-link {
-  display: block;
-  width: 100%;
-  padding: 11px 14px;
-  border: 0;
-  border-top: 1px solid var(--separator);
-  background: none;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--accent-ink);
-  text-align: left;
-  cursor: pointer;
-}
+
 .mnt-go { flex: none; width: 18px; height: 18px; color: var(--hint); }
 
 .mnt-head {

@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 67;
+const ASSET_V = 68;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -547,9 +547,10 @@ const I18N = {
     "saved.status.applied": "Topshirdim",
     "saved.status.rejected": "Rad etildi",
     "saved.status.accepted": "Qabul",
-    "mentor.ask_cta": "Shu davlatda o'qiyotganlardan so'rash",
-    "mentor.ask_cta_sub": "Xorijda o'qiyotgan o'zbek talabalar javob beradi",
     "mentor.my_questions": "Mening savollarim",
+    "buddy.home_text": "Shu davlatda o'qiyotganlardan so'rang",
+    "buddy.home_quota": "Bu oy: {left} / {n}",
+    "buddy.tagline": "Xorijda o'qiyotgan o'zbek talabalar savolingizga javob beradi.",
     "mentor.new_question": "Yangi savol",
     "mentor.empty_title": "Hali savol bermagansiz",
     "mentor.empty_text": "Tanlagan davlatingizda o'qiyotgan talabalardan kirish, viza, yashash va boshqa mavzularda so'rang.",
@@ -967,9 +968,10 @@ const I18N = {
     "saved.status.applied": "Подал",
     "saved.status.rejected": "Отказ",
     "saved.status.accepted": "Принят",
-    "mentor.ask_cta": "Спросить у тех, кто там учится",
-    "mentor.ask_cta_sub": "Отвечают узбекские студенты, которые учатся за рубежом",
     "mentor.my_questions": "Мои вопросы",
+    "buddy.home_text": "Спросите тех, кто там учится",
+    "buddy.home_quota": "В этом месяце: {left} / {n}",
+    "buddy.tagline": "На ваши вопросы отвечают узбекские студенты, которые учатся за рубежом.",
     "mentor.new_question": "Новый вопрос",
     "mentor.empty_title": "Вы ещё не задавали вопросов",
     "mentor.empty_text": "Спросите студентов из выбранной страны о поступлении, визе, жизни и не только.",
@@ -1387,9 +1389,10 @@ const I18N = {
     "saved.status.applied": "Applied",
     "saved.status.rejected": "Rejected",
     "saved.status.accepted": "Accepted",
-    "mentor.ask_cta": "Ask students who study there",
-    "mentor.ask_cta_sub": "Answered by Uzbek students studying abroad",
     "mentor.my_questions": "My questions",
+    "buddy.home_text": "Ask students who study there",
+    "buddy.home_quota": "This month: {left} / {n}",
+    "buddy.tagline": "Uzbek students studying abroad answer your questions.",
     "mentor.new_question": "New question",
     "mentor.empty_title": "No questions yet",
     "mentor.empty_text": "Ask students in your chosen country about admission, visas, living costs and more.",
@@ -1666,17 +1669,7 @@ async function renderHome() {
             <span class="split-amber" style="width:0"></span>
           </div>
         </div>
-        <div class="hx-mini" data-goto="saved" role="button" tabindex="0">
-          <div class="hx-mini-head">
-            <span class="hx-mini-label">${t("home.stat_saved")}</span>
-            <span class="hx-mini-ico">${icon("bookmark")}</span>
-          </div>
-          <div class="hx-mini-value" id="mini-saved-value">—</div>
-          <div class="hx-mini-foot" id="mini-saved-foot"></div>
-          <div class="split" id="mini-saved-bar">
-            <span class="split-accent" style="width:0"></span>
-          </div>
-        </div>
+        ${buddyHomeCard()}
       </div>
     </div>
 
@@ -1700,6 +1693,7 @@ async function renderHome() {
   `;
 
   document.getElementById("home-cta").addEventListener("click", () => switchTab("filter"));
+  document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
 
   // Tezkor amallar o'z ishlov beruvchisiga ega — ular bu yerga tushmaydi.
   el.querySelectorAll("[data-goto]:not(.quick)").forEach((node) => {
@@ -1746,15 +1740,18 @@ async function renderHome() {
   greenBar.children[0].style.width = ready ? `${greenShare}%` : "0";
   greenBar.children[1].style.width = ready ? `${100 - greenShare}%` : "0";
 
-  document.getElementById("mini-saved-value").textContent = saved.length;
-  document.getElementById("mini-saved-foot").innerHTML = `<span class="hx-tag">${
-    upcoming.length
-      ? t("home.deadline_short", { n: upcoming[0].nearest_deadline_days_left })
-      : t("home.deadline_none")
-  }</span>`;
-  document.getElementById("mini-saved-bar").children[0].style.width = saved.length
-    ? `${(upcoming.length / saved.length) * 100}%`
-    : "0";
+  const savedValue = document.getElementById("mini-saved-value");
+  if (savedValue) {
+    savedValue.textContent = saved.length;
+    document.getElementById("mini-saved-foot").innerHTML = `<span class="hx-tag">${
+      upcoming.length
+        ? t("home.deadline_short", { n: upcoming[0].nearest_deadline_days_left })
+        : t("home.deadline_none")
+    }</span>`;
+    document.getElementById("mini-saved-bar").children[0].style.width = saved.length
+      ? `${(upcoming.length / saved.length) * 100}%`
+      : "0";
+  }
 
   // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin, faqat
   // raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz.
@@ -3163,13 +3160,11 @@ async function renderSaved() {
   const items = await api("/saved");
   if (!items.length) {
     el.innerHTML = `
-      ${mentorEntryCard()}
       <div class="empty">
         <div class="empty-ico">${icon("bookmark")}</div>
         <div class="empty-title">${t("saved.empty_title")}</div>
         <div class="empty-text">${t("saved.empty_text")}</div>
       </div>`;
-    bindMentorEntry(el);
     return;
   }
 
@@ -3198,7 +3193,6 @@ async function renderSaved() {
 
   el.innerHTML = `
     ${banner}
-    ${mentorEntryCard()}
     ${
       urgent
         ? `<div class="section-head"><span class="section-title">${t("saved.urgent", {
@@ -3217,7 +3211,6 @@ async function renderSaved() {
 
   bindProgramOpeners(el);
   bindSavedActions(el);
-  bindMentorEntry(el);
 }
 
 function bindSavedActions(el) {
@@ -4773,7 +4766,7 @@ function bindMentorBack(target) {
   if (!btn) return;
   btn.addEventListener("click", () => {
     haptic("light");
-    if (target === "saved") switchTab("saved");
+    if (typeof target === "string") switchTab(target);
     else openMentor(target.screen, target);
   });
 }
@@ -4795,9 +4788,9 @@ async function renderMentorList(el) {
   const items = await api("/mentor/questions");
   const canAsk = mentorConfig.enabled;
   el.innerHTML = `
-    ${mentorBack(t("nav.saved"))}
+    ${mentorBack(t("nav.home"))}
     <div class="mnt-head">
-      <div class="mnt-title">${t("mentor.my_questions")}</div>
+      <div class="mnt-title">Uni Buddy</div>
       ${
         canAsk
           ? `<button type="button" class="btn btn-accent mnt-new" id="mentor-new">${icon("plus")}${t(
@@ -4806,9 +4799,10 @@ async function renderMentorList(el) {
           : ""
       }
     </div>
+    <div class="mnt-sub">${t("buddy.tagline")}</div>
     ${
       items.length
-        ? items
+        ? `<div class="section-head"><span class="section-title">${t("mentor.my_questions")}</span></div>` + items
             .map(
               (q) => `
       <button type="button" class="mnt-item" data-id="${q.id}">
@@ -4828,7 +4822,7 @@ async function renderMentorList(el) {
            </div>`
     }`;
 
-  bindMentorBack("saved");
+  bindMentorBack("home");
   document.getElementById("mentor-new")?.addEventListener("click", () => {
     haptic("light");
     openMentor("countries", { from: "list" });
@@ -4853,8 +4847,8 @@ function mentorLimitBlock() {
 }
 
 async function renderMentorCountries(el) {
-  const back = mentorState.from === "list" ? { screen: "list" } : "saved";
-  const backLabel = mentorState.from === "list" ? t("mentor.my_questions") : t("nav.saved");
+  const back = mentorState.from === "list" ? { screen: "list" } : "home";
+  const backLabel = mentorState.from === "list" ? "Uni Buddy" : t("nav.home");
   if (!mentorConfig.enabled) {
     el.innerHTML = `${mentorBack(backLabel)}<div class="empty"><div class="empty-title">${t(
       "mentor.err.disabled"
@@ -5049,7 +5043,7 @@ async function renderMentorChat(el) {
     : "";
 
   el.innerHTML = `
-    ${mentorBack(t("mentor.my_questions"))}
+    ${mentorBack("Uni Buddy")}
     <div class="mnt-chat-head">
       <span class="mnt-flag">${q.flag}</span>
       <div class="mnt-chat-head-text">
@@ -5188,33 +5182,51 @@ function openComplaintSheet(question, messageId) {
   });
 }
 
-// ---- "Saqlanganlar" sahifasidagi kirish nuqtasi ----
+// ---- Bosh sahifadagi kirish nuqtasi: Uni Buddy ----
+// "Saqlangan" kartasi turgan joyda. Funksiya o'chiq bo'lsa (env sozlanmagan)
+// o'rniga eski "Saqlangan" kartasi qaytadi — bosh sahifada bo'sh joy qolmasin.
 
-function mentorEntryCard() {
-  if (!mentorConfig || !mentorConfig.enabled) return "";
+function buddyHomeCard() {
+  if (!mentorConfig || !mentorConfig.enabled) {
+    return `
+        <div class="hx-mini" data-goto="saved" role="button" tabindex="0">
+          <div class="hx-mini-head">
+            <span class="hx-mini-label">${t("home.stat_saved")}</span>
+            <span class="hx-mini-ico">${icon("bookmark")}</span>
+          </div>
+          <div class="hx-mini-value" id="mini-saved-value">—</div>
+          <div class="hx-mini-foot" id="mini-saved-foot"></div>
+          <div class="split" id="mini-saved-bar">
+            <span class="split-accent" style="width:0"></span>
+          </div>
+        </div>`;
+  }
+  const limit = mentorConfig.monthly_limit;
+  const left = mentorLimitLeft();
   return `
-    <div class="mnt-entry">
-      <button type="button" class="mnt-entry-main" id="mentor-ask">
-        <span class="mnt-entry-ico">💬</span>
-        <span class="mnt-entry-text">
-          <span class="mnt-entry-title">${t("mentor.ask_cta")}</span>
-          <span class="mnt-entry-sub">${t("mentor.ask_cta_sub")}</span>
-        </span>
-        ${icon("chevron", "ico mnt-go")}
-      </button>
-      <button type="button" class="mnt-entry-link" id="mentor-mine">${t("mentor.my_questions")}</button>
-    </div>`;
+        <div class="hx-mini hx-buddy" id="home-buddy" role="button" tabindex="0">
+          <div class="hx-mini-head">
+            <span class="hx-mini-label">Uni Buddy</span>
+            <span class="hx-mini-ico">${icon("cap")}</span>
+          </div>
+          <div class="hx-buddy-text">${t("buddy.home_text")}</div>
+          <div class="hx-mini-foot"><span class="hx-tag">${t("buddy.home_quota", { left, n: limit })}</span></div>
+          <div class="split">
+            <span class="split-accent" style="width:${limit ? (left / limit) * 100 : 0}%"></span>
+          </div>
+        </div>`;
 }
 
-function bindMentorEntry(el) {
-  el.querySelector("#mentor-ask")?.addEventListener("click", () => {
-    haptic("light");
-    openMentor("countries", { from: "saved" });
-  });
-  el.querySelector("#mentor-mine")?.addEventListener("click", () => {
-    haptic("light");
-    openMentor("list");
-  });
+/** Savollari bor odam — ro'yxatga, birinchi marta kelgan — darhol davlat tanlashga. */
+async function openBuddy() {
+  haptic("light");
+  let items = [];
+  try {
+    items = await api("/mentor/questions");
+  } catch (e) {
+    console.error(e);
+  }
+  await openMentor(items.length ? "list" : "countries", { from: "home" });
 }
 
 // ---- Profil: "Mentor bo'lish" ----

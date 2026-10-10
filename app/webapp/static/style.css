@@ -2633,24 +2633,22 @@ button.sch-card:active { transform: scale(0.985); }
 
 /* Bosh sahifadagi Uni Buddy kartasi — qo'shni "To'liq mos" kartasi bilan bir
    o'lchamda. Katta raqam o'rnida qisqa chaqiriq turadi. */
-/* 3D ikonka boshqa kartalardagidek fonsiz, soya bilan. Manfiy margin —
-   ikonka kattaroq bo'lsa ham karta qo'shnisidan balandlashib ketmasin. */
-.hx-buddy-ico {
-  flex: none;
-  width: 42px;
-  height: 42px;
-  margin: -8px -6px -12px 0;
-  object-fit: contain;
-  filter: drop-shadow(0 6px 8px rgba(16, 20, 40, 0.22));
+/* Uni Buddy kartasi: matn o'rnida o'rtada katta 3D ikonka. Kartalar
+   ustunda bir xil balandlikda (`.hx-side` 1fr 1fr), shuning uchun ikonka
+   bo'sh joyni egallaydi va qo'shni "To'liq mos" kartasini cho'zmaydi. */
+.hx-buddy-art {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
 }
-
-.hx-buddy-text {
-  margin-top: auto;
-  padding-top: 10px;
-  font-size: 14.5px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+.hx-buddy-art img {
+  width: 64px;
+  height: 64px;
+  margin: -6px 0;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 12px rgba(16, 20, 40, 0.26))
+          drop-shadow(0 2px 4px rgba(16, 20, 40, 0.16));
 }
 
 .mnt-go { flex: none; width: 18px; height: 18px; color: var(--hint); }

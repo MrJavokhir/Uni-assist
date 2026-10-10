@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 69;
+const ASSET_V = 70;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -548,7 +548,6 @@ const I18N = {
     "saved.status.rejected": "Rad etildi",
     "saved.status.accepted": "Qabul",
     "mentor.my_questions": "Mening savollarim",
-    "buddy.home_text": "Shu davlatda o'qiyotganlardan so'rang",
     "buddy.home_quota": "Bu oy: {left} / {n}",
     "buddy.tagline": "Xorijda o'qiyotgan o'zbek talabalar savolingizga javob beradi.",
     "mentor.new_question": "Yangi savol",
@@ -969,7 +968,6 @@ const I18N = {
     "saved.status.rejected": "Отказ",
     "saved.status.accepted": "Принят",
     "mentor.my_questions": "Мои вопросы",
-    "buddy.home_text": "Спросите тех, кто там учится",
     "buddy.home_quota": "В этом месяце: {left} / {n}",
     "buddy.tagline": "На ваши вопросы отвечают узбекские студенты, которые учатся за рубежом.",
     "mentor.new_question": "Новый вопрос",
@@ -1390,7 +1388,6 @@ const I18N = {
     "saved.status.rejected": "Rejected",
     "saved.status.accepted": "Accepted",
     "mentor.my_questions": "My questions",
-    "buddy.home_text": "Ask students who study there",
     "buddy.home_quota": "This month: {left} / {n}",
     "buddy.tagline": "Uzbek students studying abroad answer your questions.",
     "mentor.new_question": "New question",
@@ -5207,13 +5204,11 @@ function buddyHomeCard() {
         <div class="hx-mini hx-buddy" id="home-buddy" role="button" tabindex="0">
           <div class="hx-mini-head">
             <span class="hx-mini-label">Uni Buddy</span>
-            <img class="hx-buddy-ico" src="icon-buddy.png?v=${ASSET_V}" alt="" aria-hidden="true">
           </div>
-          <div class="hx-buddy-text">${t("buddy.home_text")}</div>
+          <div class="hx-buddy-art">
+            <img src="icon-buddy.png?v=${ASSET_V}" alt="" aria-hidden="true">
+          </div>
           <div class="hx-mini-foot"><span class="hx-tag">${t("buddy.home_quota", { left, n: limit })}</span></div>
-          <div class="split">
-            <span class="split-accent" style="width:${limit ? (left / limit) * 100 : 0}%"></span>
-          </div>
         </div>`;
 }
 

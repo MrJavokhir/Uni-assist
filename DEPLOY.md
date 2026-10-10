@@ -146,8 +146,10 @@ chiqarishni Telegram'da qo'lda qilasiz.
    - **Mavzularni boshqarish** (`can_manage_topics`) — davlat topic'larini bot o'zi ochadi;
    - **Xabarlarni o'chirish** — eskirgan «javobni shu yerga yozing» xabarlarini tozalash uchun.
    Admin bo'lgan bot guruhdagi barcha xabarlarni ko'radi (privacy mode unga ta'sir qilmaydi).
-3. Guruh ID'sini oling: guruhga istalgan xabar yozib, uni @userinfobot ga forward qiling
-   yoki `https://api.telegram.org/bot<TOKEN>/getUpdates` dan `chat.id` ni oling (`-100...`).
+3. Guruh ID'sini oling: kompyuterda <https://web.telegram.org/k/> ni oching va guruhga
+   kiring — manzil satri `...#-1001234567890` bilan tugaydi, `#` dan keyingisi ID.
+   (Forward qilish usuli ishlamaydi: u guruhni emas, xabar egasini ko'rsatadi.
+   `getUpdates` ham ishlamaydi — bot ishlab turganda yangilanishlarni o'zi oladi.)
 4. Railway → Variables (bo'sh qolsa funksiya o'chiq, ilovada tugma chiqmaydi):
 
    | O'zgaruvchi | Misol | Nima |

@@ -2633,6 +2633,17 @@ button.sch-card:active { transform: scale(0.985); }
 
 /* Bosh sahifadagi Uni Buddy kartasi — qo'shni "To'liq mos" kartasi bilan bir
    o'lchamda. Katta raqam o'rnida qisqa chaqiriq turadi. */
+/* 3D ikonka boshqa kartalardagidek fonsiz, soya bilan. Manfiy margin —
+   ikonka kattaroq bo'lsa ham karta qo'shnisidan balandlashib ketmasin. */
+.hx-buddy-ico {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  margin: -8px -6px -12px 0;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 8px rgba(16, 20, 40, 0.22));
+}
+
 .hx-buddy-text {
   margin-top: auto;
   padding-top: 10px;

@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 68;
+const ASSET_V = 69;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -5207,7 +5207,7 @@ function buddyHomeCard() {
         <div class="hx-mini hx-buddy" id="home-buddy" role="button" tabindex="0">
           <div class="hx-mini-head">
             <span class="hx-mini-label">Uni Buddy</span>
-            <span class="hx-mini-ico">${icon("cap")}</span>
+            <img class="hx-buddy-ico" src="icon-buddy.png?v=${ASSET_V}" alt="" aria-hidden="true">
           </div>
           <div class="hx-buddy-text">${t("buddy.home_text")}</div>
           <div class="hx-mini-foot"><span class="hx-tag">${t("buddy.home_quota", { left, n: limit })}</span></div>

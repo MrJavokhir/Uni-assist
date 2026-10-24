@@ -15,12 +15,13 @@ alembic upgrade head
 # konteynerga oddiy HTTP bilan uzatadi. Busiz url_for() "http://" havolalar
 # yasaydi va brauzer ularni "mixed content" deb bloklaydi (admin panel CSS'siz
 # qoladi). Konteyner faqat Railway proxy orqali ochiq, shuning uchun "*" xavfsiz.
-uvicorn app.admin.main:app --host 0.0.0.0 --port "${PORT:-8000}" \
-  --proxy-headers --forwarded-allow-ips="*" &
-ADMIN_PID=$!
-
-python -m app.bot.main &
-BOT_PID=$!
-
-wait -n "$ADMIN_PID" "$BOT_PID"
-exit $?
+#
+# Bot ALOHIDA jarayon emas — admin panel bilan bitta jarayonda, FastAPI
+# lifespan'i ichida ishlaydi (app/admin/main.py). Ilgari ikkita Python
+# jarayoni bor edi va har biri butun ilovani qaytadan yuklardi: o'lchovda
+# ikkalasi 424 MB, bitta jarayon esa 224 MB. Railway RAM uchun pul oladi,
+# shuning uchun bu eng katta tejam. Bot yiqilsa jarayon yopiladi va
+# Railway uni qayta ishga tushiradi — avvalgi `wait -n` xatti-harakati.
+export RUN_BOT_IN_PROCESS=1
+exec uvicorn app.admin.main:app --host 0.0.0.0 --port "${PORT:-8000}" \
+  --proxy-headers --forwarded-allow-ips="*"

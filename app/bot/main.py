@@ -111,7 +111,15 @@ async def mentor_loop(bot: Bot) -> None:
         await asyncio.sleep(SCAN_INTERVAL_SECONDS)
 
 
-async def main() -> None:
+async def run_bot(*, handle_signals: bool = True) -> None:
+    """Botni (polling + fon sikllari) ishga tushiradi.
+
+    Ikki xil ishlatiladi:
+      - alohida jarayon sifatida (`python -m app.bot.main`, docker-compose) —
+        signallarni bot o'zi boshqaradi;
+      - admin panel bilan BITTA jarayonda (Railway) — `handle_signals=False`,
+        chunki signallarni uvicorn boshqaradi (app/admin/main.py, lifespan).
+    """
     if not settings.bot_token:
         raise RuntimeError("BOT_TOKEN .env faylida o'rnatilmagan.")
 
@@ -129,11 +137,17 @@ async def main() -> None:
         # `chat_member` Telegram'da standart holatda YUBORILMAYDI — ro'yxat
         # aniq beriladi (mentor guruhdan chiqqanini bilish uchun kerak).
         dispatcher.start_polling(
-            bot, allowed_updates=dispatcher.resolve_used_update_types()
+            bot,
+            allowed_updates=dispatcher.resolve_used_update_types(),
+            handle_signals=handle_signals,
         ),
         reminder_loop(bot),
         mentor_loop(bot),
     )
+
+
+async def main() -> None:
+    await run_bot()
 
 
 if __name__ == "__main__":

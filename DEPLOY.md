@@ -1,7 +1,28 @@
 # Deploy (Railway)
 
-Loyiha Railway'da **bitta servis** ichida ishlaydi: admin panel (+ Mini App) va
-Telegram bot birga. Sabab `docker-entrypoint-combined.sh` boshida yozilgan.
+Loyiha Railway'da **bitta servis**, **bitta Python jarayoni** ichida ishlaydi:
+admin panel (+ Mini App) va Telegram bot birga. Bot FastAPI lifespan'ida fon
+vazifasi sifatida ishga tushadi (`app/admin/main.py`, `RUN_BOT_IN_PROCESS=1`).
+
+Nega bitta jarayon: Railway RAM uchun pul oladi. Ilgari bot alohida jarayon
+edi va har biri butun ilovani qaytadan yuklardi — ikkalasi 424 MB, bitta
+jarayon 224 MB. Bot yiqilsa jarayon **1 kodi bilan** chiqadi va Railway uni
+qayta ishga tushiradi (`ON_FAILURE`). 0 kodi bilan chiqsa qayta ishga
+tushmasdi — shuning uchun SIGTERM emas, `os._exit(1)`.
+
+`docker-compose.yml` (VPS) da bot va admin hamon alohida servislar —
+u yerda `RUN_BOT_IN_PROCESS` qo'yilmaydi.
+
+### Xarajat haqida
+
+- **Serverless (App Sleeping) YOQMANG.** Bot long-polling qiladi (chiquvchi
+  so'rov), shuning uchun Railway servisni "bo'sh" deb uxlatadi: bot xabarlarga
+  javob bermay qoladi, 10:00 eslatmalari va mentor tekshiruvi ishlamaydi.
+  Serverless'ga o'tish uchun avval botni webhook'ga, fon sikllarini esa
+  Railway Cron'ga ko'chirish kerak.
+- **Redis kerak**: to'lov oqimi holati (FSM), obuna keshi, CSV import va fon
+  sikllarining qulflari shunda. U umumiy RAM'ning ~3% ini oladi.
+- Postgres va Redis'ga `*.railway.internal` orqali ulaniladi — tarmoq to'lovi yo'q.
 
 | | |
 |---|---|

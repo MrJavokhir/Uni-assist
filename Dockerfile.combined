@@ -16,6 +16,14 @@ RUN chmod +x docker-entrypoint-combined.sh
 
 ENV PATH="/app/.venv/bin:$PATH"
 
+# glibc har bir oqim uchun alohida xotira "arenasi" ochadi; asyncio va
+# asyncpg/aiohttp oqimlari bilan RSS sezilarli shishadi. 2 ta arena —
+# Python konteynerlarida keng qo'llanadigan cheklov: tezlik deyarli
+# o'zgarmaydi, xotira esa kamayadi. Railway RAM uchun pul oladi.
+ENV MALLOC_ARENA_MAX=2
+# .pyc yozilmaydi (konteyner o'zgarmas), log buferlanmaydi.
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
 EXPOSE 8000
 
 # Admin panel (+ Mini App) va bot bitta konteynerda birga ishlaydi —

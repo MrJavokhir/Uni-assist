@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     redis_url_override: str | None = Field(default=None, alias="REDIS_URL")
 
     bot_token: str = ""
+    # True bo'lsa bot admin panel bilan BITTA jarayonda ishlaydi (Railway).
+    # Alohida jarayon ~200 MB ortiqcha xotira yeyardi: har biri butun
+    # ilovani (SQLAlchemy, aiogram, FastAPI...) qaytadan yuklaydi.
+    # docker-compose'da False — u yerda bot alohida servis.
+    run_bot_in_process: bool = False
     webapp_url: str = "https://example.com/webapp/"
 
     admin_username: str = "admin"

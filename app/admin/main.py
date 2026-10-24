@@ -1,3 +1,8 @@
+import asyncio
+import contextlib
+import logging
+import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -35,6 +40,8 @@ from app.db.session import engine
 from app.webapp.api import router as webapp_api_router
 from app.webapp.mentor_api import router as mentor_api_router
 
+logger = logging.getLogger(__name__)
+
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 ADMIN_STATIC_DIR = Path(__file__).parent / "static"
 WEBAPP_STATIC_DIR = Path(__file__).parent.parent / "webapp" / "static"
@@ -51,7 +58,49 @@ class NoCacheStaticFiles(StaticFiles):
         return response
 
 
-app = FastAPI(title="Uni Assist")
+async def _supervise_bot() -> None:
+    """Botni ishga tushiradi va u kutilmaganda to'xtasa, butun jarayonni yopadi.
+
+    Ilgari bot alohida jarayon edi va entrypoint'dagi `wait -n` u yiqilganda
+    konteynerni to'xtatardi — Railway uni qayta ishga tushirardi. Bitta
+    jarayonda yiqilgan vazifa jimgina o'lib, veb-server esa ishlashda davom
+    etardi (bot javob bermaydi, lekin servis "sog'lom" ko'rinadi). Shu
+    xatti-harakatni saqlash uchun bu yerda ham jarayon yopiladi.
+    """
+    from app.bot.main import run_bot
+
+    try:
+        await run_bot(handle_signals=False)
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        logger.exception("Bot to'xtadi — konteyner qayta ishga tushiriladi")
+    else:
+        logger.error("Bot kutilmaganda tugadi — konteyner qayta ishga tushiriladi")
+    # ATAYLAB `os._exit(1)`, SIGTERM emas. Linux'da uvicorn SIGTERM'ni
+    # ushlab, chiroyli yopiladi va 0 kodi bilan chiqadi — Railway'ning
+    # `ON_FAILURE` siyosati esa 0 kodda konteynerni QAYTA ISHGA TUSHIRMAYDI.
+    # Natijada servis o'chib, bot javob bermay qolardi. Noldan farqli kod
+    # bilan darhol chiqish Railway'ni uni qayta ko'tarishga majbur qiladi.
+    logging.shutdown()
+    os._exit(1)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = None
+    if settings.run_bot_in_process:
+        task = asyncio.create_task(_supervise_bot(), name="telegram-bot")
+    try:
+        yield
+    finally:
+        if task is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+
+app = FastAPI(title="Uni Assist", lifespan=lifespan)
 
 app.include_router(webapp_api_router, prefix="/api/webapp", tags=["webapp"])
 app.include_router(mentor_api_router, prefix="/api/webapp", tags=["webapp"])

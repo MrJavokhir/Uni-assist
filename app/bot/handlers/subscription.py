@@ -15,11 +15,10 @@ router = Router(name="subscription")
 
 @router.callback_query(F.data == SUBSCRIPTION_CHECK_CALLBACK)
 async def check_subscription(callback: CallbackQuery, session: AsyncSession) -> None:
-    """Foydalanuvchi "Tekshirish" tugmasini bosganda obunani qayta tekshiradi.
+    """"A'zo bo'ldim" tugmasi — obunani qayta tekshiradi.
 
-    Bot endi obuna so'rovini YUBORMAYDI (u Mini App'ga ko'chdi), lekin
-    eski xabarlardagi tugmalar suhbat tarixida qolgan — ular ishlashda
-    davom etishi kerak.
+    Obuna so'rovi til tanlangandan keyin chiqadi (app/bot/handlers/language.py).
+    A'zolik tasdiqlansa xush kelibsiz xabari va Mini App tugmasi beriladi.
     """
     user = await get_or_create_user(session, callback.from_user.id, callback.from_user.username)
     lang = user.ui_language.value

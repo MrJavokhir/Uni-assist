@@ -50,9 +50,9 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
 async def cmd_start(message: Message, session: AsyncSession, command: CommandObject) -> None:
     """/start — birinchi qadam har doim til tanlash.
 
-    Xush kelibsiz xabari tildan keyin keladi. Majburiy obuna /start'da
-    so'ralmaydi — Mini App ichida, qidiruvdan oldin (app/webapp/api.py).
-    /start qayta berilsa tilni almashtirish imkonini ham beradi.
+    Keyin majburiy kanal obunasi, so'ng xush kelibsiz xabari keladi
+    (app/bot/handlers/language.py). /start qayta berilsa tilni almashtirish
+    imkonini ham beradi.
 
     Taklif havolasi (`/start ref123`) FAQAT birinchi kirishda hisobga
     olinadi, shuning uchun foydalanuvchi bor-yo'qligi yaratishdan OLDIN

@@ -1,9 +1,13 @@
 """Til tanlash — /start dan keyingi birinchi qadam.
 
-Til tanlangach darhol Mini App tugmasi beriladi. Majburiy kanal obunasi
-bu yerda SO'RALMAYDI: u ilova ichida, filtr orqali qidirishdan oldin
-tekshiriladi (app/webapp/api.py, `/subscription`). Taklif mukofoti ham
-o'sha yerda — obuna tasdiqlangan paytda — beriladi.
+Tartib: /start -> til -> majburiy kanal obunasi -> xush kelibsiz (Mini App
+tugmasi). Obuna til tanlangandan KEYIN so'raladi: aks holda odam kanal
+so'rovini tushunmaydigan tilda ko'rardi.
+
+Obuna kerak bo'lmasa (kanal qo'shilmagan, foydalanuvchi ozod qilingan yoki
+allaqachon a'zo) darhol xush kelibsiz xabari chiqadi. Taklif mukofoti obuna
+tasdiqlangan paytda beriladi — shu yerda yoki "A'zo bo'ldim" tugmasida
+(app/bot/handlers/subscription.py). U bir martalik, takror chaqirish xavfsiz.
 """
 
 from aiogram import F, Router
@@ -11,9 +15,12 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.handlers.start import start_keyboard
-from app.bot.keyboards import LANGUAGE_CALLBACK_PREFIX
+from app.bot.keyboards import LANGUAGE_CALLBACK_PREFIX, subscription_keyboard
 from app.db.models import UiLanguage
 from app.i18n import t
+from app.services import referral_service
+from app.services.redis_client import redis_client
+from app.services.subscription_service import missing_channels
 from app.services.user_service import get_or_create_user
 
 router = Router(name="language")
@@ -34,6 +41,17 @@ async def choose_language(callback: CallbackQuery, session: AsyncSession) -> Non
 
     lang = ui_language.value
     await callback.answer(t("language.saved", lang))
+
+    missing = await missing_channels(callback.bot, session, redis_client, callback.from_user.id)
+    if missing:
+        await callback.message.edit_text(
+            t("subscription.required", lang),
+            reply_markup=subscription_keyboard(missing, lang),
+        )
+        return
+
+    await referral_service.reward_and_notify(session, callback.bot, user)
+    await session.commit()
 
     await callback.message.edit_text(
         t("start.welcome", lang, name=callback.from_user.full_name),

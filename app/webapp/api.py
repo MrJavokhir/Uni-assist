@@ -39,14 +39,12 @@ from app.db.session import get_session
 from app.services import booking_service, kit_service, payment_service, referral_service
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.matching_service import MatchLevel, find_matches
-from app.services.redis_client import redis_client
 from app.services.reminder_service import (
     IMMEDIATE_SOON_DAYS,
     DeadlinePrecision,
     resolve_deadline,
     send_immediate_if_due,
 )
-from app.services.subscription_service import missing_channels
 from app.services.timezone_utils import TASHKENT_TZ, format_tashkent
 from app.services.user_service import (
     get_or_create_user,
@@ -77,8 +75,6 @@ from app.webapp.schemas import (
     ServiceRequestIn,
     ServiceRequestResult,
     SlotOut,
-    SubscriptionChannelOut,
-    SubscriptionStatusOut,
 )
 
 logger = logging.getLogger(__name__)
@@ -185,8 +181,8 @@ async def get_current_user(
     except InitDataError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
-    # Majburiy kanal obunasi bu yerda TEKSHIRILMAYDI: ilova erkin ochiladi,
-    # obuna faqat filtr orqali qidiruvdan oldin so'raladi (`/subscription`).
+    # Majburiy kanal obunasi bu yerda TEKSHIRILMAYDI: u botda, til tanlangandan
+    # keyin so'raladi (app/bot/handlers/language.py).
     tg_user = result["user"]
     return await get_or_create_user(
         session,
@@ -391,46 +387,6 @@ RESETTABLE_FILTER_FIELDS = (
     "application_fee_ok",
     "study_language",
 )
-
-
-@router.get("/subscription", response_model=SubscriptionStatusOut)
-async def get_subscription(
-    fresh: bool = False,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-) -> SubscriptionStatusOut:
-    """Majburiy kanal obunasi — "Mos dasturlarni topish"dan oldin.
-
-    Botning /start'i endi to'smaydi: odam avval ilovani ko'rib chiqadi,
-    obuna esa u haqiqatan qidirmoqchi bo'lgan paytda so'raladi.
-
-    `fresh=1` — "A'zo bo'ldim" tugmasi: odam hozirgina obuna bo'lgan
-    bo'lishi mumkin, shuning uchun kesh chetlab o'tiladi.
-
-    Obuna tasdiqlangan joy shu bo'lgani uchun taklif mukofoti ham shu
-    yerda beriladi (qarang: app/services/referral_service.py). U bir
-    martalik, ya'ni har qidiruvda chaqirilishi xavfsiz.
-    """
-    if not settings.bot_token:
-        return SubscriptionStatusOut(subscribed=True)
-
-    bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    try:
-        missing = await missing_channels(
-            bot, session, redis_client, user.telegram_id, use_cache=not fresh
-        )
-        if not missing:
-            await referral_service.reward_and_notify(session, bot, user)
-            await session.commit()
-    finally:
-        await bot.session.close()
-
-    return SubscriptionStatusOut(
-        subscribed=not missing,
-        channels=[
-            SubscriptionChannelOut(title=c.title, invite_url=c.invite_url) for c in missing
-        ],
-    )
 
 
 @router.post("/me/reset", response_model=ProfileOut)

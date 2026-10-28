@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 71;
+const ASSET_V = 72;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -385,10 +385,6 @@ const I18N = {
     "onboard.step3": "Qaysi davlatlarda o'qimoqchi ekaningizni belgilaysiz",
     "onboard.cta": "Filtrni sozlash",
     "onboard.skip": "Keyinroq",
-    "sub.title": "Natijalarni ko'rish uchun kanalga a'zo bo'ling",
-    "sub.text": "Filtringiz saqlandi. Quyidagi kanal(lar)ga a'zo bo'lib, «A'zo bo'ldim» tugmasini bosing — mos dasturlar darhol chiqadi.",
-    "sub.check": "A'zo bo'ldim",
-    "sub.still_missing": "Hali hamma kanalga a'zo bo'lmadingiz",
     "match.save": "Saqlash",
     "match.saved": "Saqlangan",
     "match.missing": "Yetishmayapti: {list}",
@@ -798,10 +794,6 @@ const I18N = {
     "onboard.step3": "Отметите страны, где хотите учиться",
     "onboard.cta": "Настроить фильтр",
     "onboard.skip": "Позже",
-    "sub.title": "Подпишитесь на канал, чтобы увидеть результаты",
-    "sub.text": "Фильтр сохранён. Подпишитесь на канал(ы) ниже и нажмите «Я подписался» — подходящие программы появятся сразу.",
-    "sub.check": "Я подписался",
-    "sub.still_missing": "Вы подписались ещё не на все каналы",
     "match.save": "Сохранить",
     "match.saved": "Сохранено",
     "match.missing": "Не хватает: {list}",
@@ -1211,10 +1203,6 @@ const I18N = {
     "onboard.step3": "Choose the countries you want to study in",
     "onboard.cta": "Set up filter",
     "onboard.skip": "Later",
-    "sub.title": "Join the channel to see your results",
-    "sub.text": "Your filter is saved. Join the channel(s) below and tap “I've joined” — matching programmes will show up right away.",
-    "sub.check": "I've joined",
-    "sub.still_missing": "You haven't joined all the channels yet",
     "match.save": "Save",
     "match.saved": "Saved",
     "match.missing": "Missing: {list}",
@@ -3748,10 +3736,9 @@ async function findPrograms() {
   if (btn) btn.disabled = true;
   haptic("light");
   try {
-    // Filtr obuna tekshiruvidan OLDIN saqlanadi: kanalga o'tganda Telegram
-    // ilovani yopib yuborishi mumkin va tanlov yo'qolmasligi kerak.
+    // Majburiy kanal obunasi bu yerda so'ralmaydi — u botda, til
+    // tanlangandan keyin tekshiriladi (app/bot/handlers/language.py).
     await saveProfile();
-    if (!(await ensureSubscribed())) return;
 
     showFindingOverlay();
     const startedAt = Date.now();
@@ -3768,107 +3755,6 @@ async function findPrograms() {
     hideFindingOverlay();
     if (btn) btn.disabled = false;
   }
-}
-
-// ---- Majburiy kanal obunasi ----
-// Bot /start'da to'smaydi: odam avval ilovani ko'rib chiqadi, obuna esa u
-// haqiqatan qidirmoqchi bo'lganda — "Mos dasturlarni topish"da so'raladi.
-// Haqiqiy tekshiruv serverda (`/subscription`); u adminkadagi ozod
-// qilinganlar ro'yxatini ham hisobga oladi.
-
-async function checkSubscription(fresh) {
-  try {
-    return await api(`/subscription${fresh ? "?fresh=1" : ""}`);
-  } catch (e) {
-    // Tekshiruvning o'zi ishlamasa qidiruvni TO'SMAYMIZ — server tomoni
-    // ham shunday (fail-open): noto'g'ri sozlama hammani to'xtatmasin.
-    console.error(e);
-    return { subscribed: true, channels: [] };
-  }
-}
-
-async function ensureSubscribed() {
-  const status = await checkSubscription(false);
-  if (status.subscribed) return true;
-  return openSubscriptionSheet(status.channels);
-}
-
-function openChannelLink(url) {
-  try {
-    tg.openTelegramLink(url);
-  } catch (e) {
-    window.open(url, "_blank");
-  }
-}
-
-/** Kanallar varag'i. A'zo bo'lingach `true`, yopib ketilsa `false`. */
-function openSubscriptionSheet(channels) {
-  return new Promise((resolve) => {
-    ensureSheet();
-    const sheet = document.querySelector(".sheet");
-
-    const rows = (list) =>
-      list
-        .map(
-          (c) => `
-        <button type="button" class="sub-channel" data-url="${escapeHtml(c.invite_url)}">
-          <span class="sub-channel-ico">${icon("plane")}</span>
-          <span class="sub-channel-name">${escapeHtml(c.title)}</span>
-          ${icon("chevron", "ico sub-channel-go")}
-        </button>`
-        )
-        .join("");
-
-    const bindRows = () => {
-      sheet.querySelectorAll(".sub-channel").forEach((row) => {
-        row.addEventListener("click", () => {
-          haptic("light");
-          openChannelLink(row.dataset.url);
-        });
-      });
-    };
-
-    showSheet(
-      `
-      <div class="sheet-handle"></div>
-      <div class="onb">
-        <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
-        <div class="onb-title">${t("sub.title")}</div>
-        <div class="onb-text">${t("sub.text")}</div>
-        <div class="sub-channels" id="sub-channels">${rows(channels)}</div>
-        <button type="button" class="btn btn-accent btn-block" id="sub-check">
-          ${icon("check")}${t("sub.check")}
-        </button>
-      </div>
-    `,
-      sheet
-    );
-    bindRows();
-    // showSheet() oldingi kutuvchini chaqirib bo'lgandan KEYIN o'rnatiladi.
-    onSheetClose = () => resolve(false);
-
-    const checkBtn = document.getElementById("sub-check");
-    checkBtn.addEventListener("click", async () => {
-      haptic("light");
-      checkBtn.disabled = true;
-      try {
-        const status = await checkSubscription(true);
-        if (status.subscribed) {
-          onSheetClose = null;
-          closeSheet();
-          resolve(true);
-          return;
-        }
-        haptic("warning");
-        showToast(t("sub.still_missing"));
-        // A'zo bo'lingan kanallar ro'yxatdan tushadi.
-        document.getElementById("sub-channels").innerHTML = rows(status.channels);
-        bindRows();
-      } finally {
-        checkBtn.disabled = false;
-      }
-    });
-  });
 }
 
 async function resetProfile() {

@@ -148,8 +148,8 @@ async def count_invited(session: AsyncSession, user: User) -> int:
 async def reward_and_notify(session: AsyncSession, bot, user: User) -> None:
     """Mukofot beradi va taklif qilgan odamga xabar yuboradi.
 
-    Obuna tasdiqlangan ikki joydan chaqiriladi (Mini App'dagi qidiruvdan
-    oldingi tekshiruv va bot xabaridagi eski "Tekshirish" tugmasi),
+    Obuna tasdiqlangan ikki joydan chaqiriladi (botda til tanlangandan
+    keyingi tekshiruv va "A'zo bo'ldim" tugmasi),
     shuning uchun mantiq shu yerda — ikki joyda takrorlanib, biri
     o'zgarib ikkinchisi qolib ketmasligi uchun.
     """

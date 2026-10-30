@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 
 from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
@@ -198,3 +198,14 @@ admin.add_base_view(MentorComplaintsView)
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    """Domen bosh sahifasi Mini App'ga yo'naltiriladi.
+
+    BotFather'da Mini App manzili sifatida "https://uniassist.uz/" (oxirida
+    /webapp/ siz) qo'yilsa, Telegram 404 JSON'ni ko'rsatardi. Telegram
+    `#tgWebAppData=...` ni hash'da beradi — brauzer uni yo'naltirishda saqlaydi.
+    """
+    return RedirectResponse("/webapp/", status_code=307)

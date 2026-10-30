@@ -1,4 +1,4 @@
-"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + o'qish tili
+"""Filtr: davlat + daraja + yo'nalish + reyting + o'qish tili
 bo'yicha dasturlarni tanlaydi, keyin til bali bo'yicha uch toifaga ajratadi:
 
   🟢 Mos   — til talabi bajarilgan (yoki dasturda til talabi yo'q)
@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 
-from sqlalchemy import false, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -115,12 +115,9 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
     if user.study_language:
         stmt = stmt.where(Program.language_of_instruction == user.study_language)
 
-    # Ariza to'loviga rozi bo'lmagan foydalanuvchiga to'lovli dasturlar
-    # ko'rsatilmaydi. Tekshirilmagan (None) dasturlar qoladi.
-    if user.application_fee_ok is False:
-        stmt = stmt.where(
-            or_(Program.has_application_fee.is_(None), Program.has_application_fee == false())
-        )
+    # Ariza to'lovi bo'yicha filtr YO'Q: onboarding'da bu savol olib tashlangan.
+    # Profilda avvaldan saqlangan "faqat bepul" ham e'tiborga olinmaydi —
+    # uni o'zgartirib bo'lmaydigan joydan dasturlarni yashirishi noto'g'ri.
 
     result = await session.execute(stmt)
     programs = result.unique().scalars().all()

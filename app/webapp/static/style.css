@@ -2761,3 +2761,173 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
 }
 .wz-tagline { margin: 0; max-width: 300px; color: var(--hint); font-size: 16px; font-weight: 500; }
 .wz .btn-block { font-weight: 700; }
+
+/* ============ Majburiy obuna varag'i ============ */
+.sub-gate { text-align: center; padding: 6px 2px 4px; }
+.sub-gate-ico {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 6px auto 14px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.sub-gate-ico .ico { width: 30px; height: 30px; }
+.sub-gate-title { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.25; }
+.sub-gate-text { margin-top: 8px; color: var(--hint); font-size: 14px; line-height: 1.45; }
+.sub-channels { display: grid; gap: 8px; margin: 18px 0 12px; text-align: left; }
+.sub-channel {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: var(--r-md);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--surface);
+  cursor: pointer;
+}
+.sub-channel-ico {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+}
+.sub-channel-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sub-channel-go { flex: none; color: var(--hint); }
+
+/* ============ Dastur sahifasi (Scout uslubi) ============ */
+.sheet.sheet-page {
+  background: var(--surface);
+  padding-bottom: 0;
+}
+.pg { padding-bottom: 8px; }
+.pg-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0 16px;
+}
+.pg-hero .avatar { width: 60px; height: 60px; border-radius: 18px; font-size: 18px; }
+.pg-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pg-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+.pg-title .abbr { font-size: 15px; vertical-align: 4px; }
+.pg-sub { margin-top: 6px; color: var(--hint); font-size: 15px; }
+.pg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
+.pg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.pg-chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pg-chip.is-soon { background: var(--accent-soft); color: var(--accent-ink); }
+.pg-chip.is-urgent { background: var(--red-soft); color: var(--red); }
+.pg-chip.is-closed { background: var(--separator); color: var(--hint); }
+
+.pg-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 14px 0;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.pg-fact { min-width: 0; padding: 0 14px; }
+.pg-fact + .pg-fact { border-left: 1px solid var(--separator); }
+.pg-fact span { display: block; color: var(--hint); font-size: 13px; }
+.pg-fact b {
+  display: block;
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pg-source { margin: 10px 4px 16px; color: var(--hint); font-size: 12.5px; line-height: 1.4; }
+
+.pg-card {
+  margin-bottom: 12px;
+  padding: 16px 16px 12px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.pg-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+.pg-card .sheet-row:last-child { border-bottom: 0; }
+.pg-card .doc-list li .ico {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.pg-card .sch-card { margin: 4px 0 4px; }
+
+.pg-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  margin: 0 -18px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  background: var(--card);
+  border-top: 1px solid var(--separator);
+}
+.pg-save {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.pg-save .ico { width: 22px; height: 22px; }
+.pg-save.is-saved { background: var(--accent); color: var(--on-accent); }
+.pg-save.is-saved .ico { fill: currentColor; }
+.pg-open { flex: 1; padding: 15px; font-size: 16px; border-radius: var(--r-md); }

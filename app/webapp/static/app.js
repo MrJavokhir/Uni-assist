@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 85;
+const ASSET_V = 86;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -173,6 +173,18 @@ function instructionLanguage(value) {
   const key = LANGUAGE_ALIASES[raw.toLowerCase()] || raw;
   const entry = LANGUAGE_NAMES[key];
   return entry ? entry[lang] || entry.uz : raw;
+}
+
+const DATE_LOCALES = { uz: "uz-Latn-UZ", ru: "ru-RU", en: "en-US" };
+
+function shortDate(iso) {
+  const d = new Date(`${iso}T00:00:00`);
+  if (isNaN(d)) return escapeHtml(iso);
+  try {
+    return d.toLocaleDateString(DATE_LOCALES[lang] || "en-US", { day: "numeric", month: "short" });
+  } catch (e) {
+    return escapeHtml(iso);
+  }
 }
 
 function missingNote(fields) {
@@ -351,6 +363,14 @@ const I18N = {
     "match.no_filter_cta": "Sozlash",
     "onboard.title": "Keling, sizga mos dasturlarni topamiz",
     "onboard.skip": "Keyinroq",
+    "sub.title": "Natijalarni ko'rish uchun kanalga a'zo bo'ling",
+    "sub.text": "Javoblaringiz saqlandi. Quyidagi kanal(lar)ga a'zo bo'lib, «A'zo bo'ldim» tugmasini bosing — mos dasturlar darhol chiqadi.",
+    "sub.check": "A'zo bo'ldim",
+    "sub.still_missing": "Hali hamma kanalga a'zo bo'lmadingiz",
+    "program.opens": "Ochiladi",
+    "program.closes": "Yopiladi",
+    "program.left": "Qoldi",
+    "program.days_n": "{n} kun",
     "wizard.tagline": "Grantlar, qabul va muddatlar — bir joyda.",
     "wizard.start": "Boshlash",
     "wizard.skip": "O'tkazish",
@@ -364,9 +384,7 @@ const I18N = {
     "wizard.cert_none": "Sertifikat yo'q",
     "wizard.score_ielts": "IELTS balingiz",
     "wizard.score_toefl": "TOEFL iBT balingiz (0–120)",
-    "wizard.q.prefs": "Yana ikki savol",
-    "wizard.fee_yes": "Pullik ariza ham bo'laveradi",
-    "wizard.fee_no": "Faqat bepul ariza",
+    "wizard.q.prefs": "Universitet reytingi muhimmi?",
     "match.save": "Saqlash",
     "match.search_placeholder": "Dastur, universitet yoki davlat",
     "match.search_empty": "Bu so'z bo'yicha dastur topilmadi",
@@ -767,6 +785,14 @@ const I18N = {
     "match.no_filter_cta": "Настроить",
     "onboard.title": "Давайте подберём подходящие программы",
     "onboard.skip": "Позже",
+    "sub.title": "Подпишитесь на канал, чтобы увидеть результаты",
+    "sub.text": "Ответы сохранены. Подпишитесь на канал(ы) ниже и нажмите «Я подписался» — подходящие программы появятся сразу.",
+    "sub.check": "Я подписался",
+    "sub.still_missing": "Вы подписались ещё не на все каналы",
+    "program.opens": "Открытие",
+    "program.closes": "Закрытие",
+    "program.left": "Осталось",
+    "program.days_n": "{n} дн.",
     "wizard.tagline": "Гранты, поступление и дедлайны — в одном месте.",
     "wizard.start": "Начать",
     "wizard.skip": "Пропустить",
@@ -780,9 +806,7 @@ const I18N = {
     "wizard.cert_none": "Нет сертификата",
     "wizard.score_ielts": "Ваш балл IELTS",
     "wizard.score_toefl": "Ваш балл TOEFL iBT (0–120)",
-    "wizard.q.prefs": "Ещё два вопроса",
-    "wizard.fee_yes": "Платная подача — тоже подходит",
-    "wizard.fee_no": "Только бесплатная подача",
+    "wizard.q.prefs": "Важен ли рейтинг университета?",
     "match.save": "Сохранить",
     "match.search_placeholder": "Программа, университет или страна",
     "match.search_empty": "По этому запросу программ нет",
@@ -1183,6 +1207,14 @@ const I18N = {
     "match.no_filter_cta": "Set up",
     "onboard.title": "Let's find programmes that fit you",
     "onboard.skip": "Later",
+    "sub.title": "Join the channel to see your results",
+    "sub.text": "Your answers are saved. Join the channel(s) below and tap “I've joined” — matching programmes will show up right away.",
+    "sub.check": "I've joined",
+    "sub.still_missing": "You haven't joined all the channels yet",
+    "program.opens": "Opens",
+    "program.closes": "Closes",
+    "program.left": "Left",
+    "program.days_n": "{n} days",
     "wizard.tagline": "Scholarships, admissions and deadlines — in one place.",
     "wizard.start": "Get started",
     "wizard.skip": "Skip",
@@ -1196,9 +1228,7 @@ const I18N = {
     "wizard.cert_none": "No certificate",
     "wizard.score_ielts": "Your IELTS score",
     "wizard.score_toefl": "Your TOEFL iBT score (0–120)",
-    "wizard.q.prefs": "Two more questions",
-    "wizard.fee_yes": "Paid applications are fine",
-    "wizard.fee_no": "Free applications only",
+    "wizard.q.prefs": "Does university ranking matter?",
     "match.save": "Save",
     "match.search_placeholder": "Programme, university or country",
     "match.search_empty": "No programmes match this search",
@@ -1587,9 +1617,6 @@ function profileCompleteness() {
   const checks = [
     ...filterFields(),
     profile.language_certificates.length > 0,
-    // "Farqi yo'q" ham javob: ariza to'lovi bo'yicha tanlov qilingani yetarli.
-    // Reyting oralig'i ixtiyoriy afzallik — foizga qo'shilmaydi.
-    profile.application_fee_ok !== null,
   ];
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
@@ -2429,7 +2456,7 @@ function closeSheet() {
   sheet?.classList.remove("open");
   // Balandlik faqat o'sha varaqqa tegishli — yopilganda olib tashlanadi,
   // aks holda keyingi kichik varaq ham balandligicha ochilardi.
-  sheet?.classList.remove("sheet-tall");
+  sheet?.classList.remove("sheet-tall", "sheet-page");
   document.body.style.overflow = "";
   try {
     tg?.BackButton?.hide();
@@ -2445,6 +2472,7 @@ function showSheet(html, sheet, options) {
   sheet.innerHTML = html;
   document.querySelector(".sheet-backdrop").classList.add("open");
   sheet.classList.toggle("sheet-tall", !!(options && options.tall));
+  sheet.classList.toggle("sheet-page", !!(options && options.page));
   sheet.classList.add("open");
   document.body.style.overflow = "hidden";
   try {
@@ -2715,116 +2743,117 @@ async function openProgramSheet(programId) {
         })}</div>`
       : `<div class="sheet-empty">${t("saved.unknown_hint")}</div>`;
 
+  // Scout uslubidagi sahifa: tepada kalit faktlar, bo'limlar oq kartalarda,
+  // pastda doimiy panel (saqlash + rasmiy sahifa).
+  const openDl = p.deadlines.find((d) => d.type === "application_open");
+  const closes = p.deadlines.filter((d) => d.type === "application_close");
+  const closeDl = closes.find((d) => d.days_left >= 0) || closes[closes.length - 1];
+  const daysLeft = closeDl && closeDl.days_left >= 0 ? closeDl.days_left : null;
+  const dlChip = closeDl
+    ? daysLeft !== null
+      ? `<span class="pg-chip ${daysLeft <= 7 ? "is-urgent" : "is-soon"}"><i></i>${t(
+          "scholarships.days_left",
+          { days: daysLeft }
+        )}</span>`
+      : `<span class="pg-chip is-closed">${t("scholarships.deadline_passed")}</span>`
+    : "";
+  const fact = (label, value) =>
+    `<div class="pg-fact"><span>${label}</span><b>${value || "—"}</b></div>`;
+  const section = (title, body) =>
+    `<section class="pg-card"><h3>${title}</h3>${body}</section>`;
+
+  const scholarship =
+    p.has_scholarship === null || p.has_scholarship === undefined
+      ? ""
+      : section(
+          t("program.own_scholarship"),
+          p.has_scholarship
+            ? p.scholarship_url
+              ? `<button type="button" class="sch-card sheet-scholarship" data-url="${escapeHtml(
+                  p.scholarship_url
+                )}">
+                   <span class="sch-ico">${icon("award")}</span>
+                   <span class="sch-text">
+                     <span class="sch-title">${t("program.scholarship_title_yes")}</span>
+                     <span class="sch-sub">${t("program.scholarship_sub_link")}</span>
+                   </span>
+                   <span class="sch-go">${icon("chevron")}</span>
+                 </button>`
+              : `<div class="sch-card">
+                   <span class="sch-ico">${icon("award")}</span>
+                   <span class="sch-text">
+                     <span class="sch-title">${t("program.scholarship_title_yes")}</span>
+                     <span class="sch-sub">${t("program.scholarship_sub_nolink")}</span>
+                   </span>
+                 </div>`
+            : `<button type="button" class="sch-card sch-none" id="sheet-to-grants">
+                 <span class="sch-ico">${icon("award")}</span>
+                 <span class="sch-text">
+                   <span class="sch-title">${t("program.scholarship_title_no")}</span>
+                   <span class="sch-sub">${t("program.scholarship_sub_no")}</span>
+                 </span>
+                 <span class="sch-go">${icon("chevron")}</span>
+               </button>`
+        );
+
   showSheet(
     `
     <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      ${avatar(p.university, p.university_logo)}
-      <div>
-        <div class="sheet-title">${escapeHtml(p.name)}${
-          p.abbreviation ? `<span class="abbr">${escapeHtml(p.abbreviation)}</span>` : ""
-        }</div>
-        <div class="sheet-sub">${escapeHtml(p.university)} · ${escapeHtml(p.city)}</div>
+    <div class="pg">
+      <div class="pg-hero">
+        ${avatar(p.university, p.university_logo)}
+        <span class="pg-country"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
+          countryName(p.country)
+        )}</span>
       </div>
-    </div>
-    <div class="meta-row">
-      <span class="pill"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
-        countryName(p.country)
-      )}</span>
-      <span class="pill">${icon("cap")}${t("profile.degree_level." + p.degree_level)}</span>
-      <span class="pill">${icon("clock")}${p.duration_years} ${t("program.years")}</span>
-      ${
-        p.university_ranking
-          ? `<span class="pill rank-pill" title="${escapeHtml(t("program.ranking_label"))}">${icon(
-              "award"
-            )}${t("program.ranking", { n: p.university_ranking })}</span>`
-          : ""
-      }
-    </div>
+      <h2 class="pg-title">${escapeHtml(p.name)}${
+        p.abbreviation ? `<span class="abbr">${escapeHtml(p.abbreviation)}</span>` : ""
+      }</h2>
+      <div class="pg-sub">${escapeHtml(p.university)}${p.city ? " · " + escapeHtml(p.city) : ""}</div>
+      <div class="pg-chips">
+        ${dlChip}
+        <span class="pg-chip">${t("profile.degree_level." + p.degree_level)}</span>
+        <span class="pg-chip">${p.duration_years} ${t("program.years")}</span>
+        ${
+          p.university_ranking
+            ? `<span class="pg-chip">${t("program.ranking", { n: p.university_ranking })}</span>`
+            : ""
+        }
+      </div>
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("program.about")}</div>
-      ${row(t("program.field"), p.field ? escapeHtml(fieldName(p.field)) : dash)}
-      ${row(t("program.language"), escapeHtml(instructionLanguage(p.language_of_instruction)))}
-      ${row(t("program.intake"), escapeHtml(p.intake_term))}
-      ${p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : ""}
-      ${missingNote(p.missing_fields)}
-    </div>
+      <div class="pg-facts">
+        ${fact(t("program.opens"), openDl ? shortDate(openDl.date) : "")}
+        ${fact(t("program.closes"), closeDl ? shortDate(closeDl.date) : "")}
+        ${fact(t("program.left"), daysLeft !== null ? t("program.days_n", { n: daysLeft }) : "")}
+      </div>
+      <div class="pg-source">${t("program.verified_at", { date: escapeHtml(p.verified_at) })}</div>
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("program.language_certs")}</div>
-      ${languageCerts}
-    </div>
-
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("program.costs")}</div>
-      ${costs}
-    </div>
-
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("program.requirements_docs")}</div>
-      ${requirements}
+      ${section(
+        t("program.about"),
+        row(t("program.field"), p.field ? escapeHtml(fieldName(p.field)) : dash) +
+          row(t("program.language"), escapeHtml(instructionLanguage(p.language_of_instruction))) +
+          row(t("program.intake"), escapeHtml(p.intake_term)) +
+          (p.notes ? `<div class="sheet-note">${escapeHtml(p.notes)}</div>` : "") +
+          missingNote(p.missing_fields)
+      )}
+      ${section(t("program.language_certs"), languageCerts)}
+      ${section(t("program.costs"), costs)}
+      ${section(t("program.requirements_docs"), requirements)}
+      ${scholarship}
+      ${section(t("scholarships.deadlines"), deadlines)}
     </div>
 
-    ${
-      p.has_scholarship === null || p.has_scholarship === undefined
-        ? ""
-        : `<div class="sheet-section">
-             <div class="sheet-section-title">${t("program.own_scholarship")}</div>
-             ${
-               // Bitta karta: holat + izoh; havola bo'lsa kartaning o'zi bosiladi.
-               p.has_scholarship
-                 ? p.scholarship_url
-                   ? `<button type="button" class="sch-card sheet-scholarship" data-url="${escapeHtml(
-                       p.scholarship_url
-                     )}">
-                        <span class="sch-ico">${icon("award")}</span>
-                        <span class="sch-text">
-                          <span class="sch-title">${t("program.scholarship_title_yes")}</span>
-                          <span class="sch-sub">${t("program.scholarship_sub_link")}</span>
-                        </span>
-                        <span class="sch-go">${icon("chevron")}</span>
-                      </button>`
-                   : `<div class="sch-card">
-                        <span class="sch-ico">${icon("award")}</span>
-                        <span class="sch-text">
-                          <span class="sch-title">${t("program.scholarship_title_yes")}</span>
-                          <span class="sch-sub">${t("program.scholarship_sub_nolink")}</span>
-                        </span>
-                      </div>`
-                 : `<button type="button" class="sch-card sch-none" id="sheet-to-grants">
-                      <span class="sch-ico">${icon("award")}</span>
-                      <span class="sch-text">
-                        <span class="sch-title">${t("program.scholarship_title_no")}</span>
-                        <span class="sch-sub">${t("program.scholarship_sub_no")}</span>
-                      </span>
-                      <span class="sch-go">${icon("chevron")}</span>
-                    </button>`
-             }
-           </div>`
-    }
-
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.deadlines")}</div>
-      ${deadlines}
-    </div>
-
-    <div class="sheet-verified">${t("program.verified_at", {
-      date: escapeHtml(p.verified_at),
-    })}</div>
-
-    <div class="sheet-actions">
-      <button type="button" class="btn ${
-        p.saved ? "btn-done" : "btn-accent"
-      } btn-block" id="sheet-save" ${p.saved ? "disabled" : ""}>
-        ${p.saved ? icon("check") + t("match.saved") : icon("plus") + t("match.save")}
-      </button>
-      <button type="button" class="btn btn-soft btn-block" id="sheet-open-site">
+    <div class="pg-bar">
+      <button type="button" class="pg-save${p.saved ? " is-saved" : ""}" id="sheet-save" ${
+        p.saved ? "disabled" : ""
+      } aria-label="${escapeHtml(t(p.saved ? "match.saved" : "match.save"))}">${icon("bookmark")}</button>
+      <button type="button" class="btn btn-accent pg-open" id="sheet-open-site">
         ${t("program.official_page")}
       </button>
     </div>
   `,
-    sheet
+    sheet,
+    { tall: true, page: true }
   );
 
   // Dasturning o'z stipendiyasi yo'q — davlat grantlariga yo'naltiramiz.
@@ -2863,8 +2892,7 @@ async function openProgramSheet(programId) {
       haptic("light");
       await api(`/saved/${p.id}`, { method: "POST" });
       saveBtn.disabled = true;
-      saveBtn.className = "btn btn-done btn-block";
-      saveBtn.innerHTML = icon("check") + t("match.saved");
+      saveBtn.classList.add("is-saved");
       haptic("success");
       showToast(t("match.saved_toast"));
     });
@@ -3440,7 +3468,6 @@ function wizDraftFromProfile() {
     cert_type: cert ? cert.type : null,
     cert_score: cert ? String(cert.score) : "",
     university_rank_range: profile.university_rank_range || "",
-    application_fee_ok: profile.application_fee_ok,
   };
 }
 
@@ -3609,19 +3636,13 @@ function wizStepBody(key) {
       score
     );
   }
-  // prefs: reyting + ariza to'lovi
+  // prefs: universitet reytingi
   return `
-    <div class="wz-sub">${t("profile.rank")}</div>
     <div class="wz-group" data-group="rank">
       ${[{ v: "", l: t("profile.rank_any") }]
         .concat(RANK_RANGES.map((r) => ({ v: r, l: r })))
         .map((o) => wizOption(o.v, o.l, d.university_rank_range === o.v))
         .join("")}
-    </div>
-    <div class="wz-sub">${t("profile.app_fee")}</div>
-    <div class="wz-group" data-group="fee">
-      ${wizOption("yes", t("wizard.fee_yes"), d.application_fee_ok === true)}
-      ${wizOption("no", t("wizard.fee_no"), d.application_fee_ok === false)}
     </div>`;
 }
 
@@ -3643,7 +3664,6 @@ function bindWizStep(key) {
   if (key === "language") single(body, (v) => (d.study_language = v));
   if (key === "prefs") {
     single(body.querySelector('[data-group="rank"]'), (v) => (d.university_rank_range = v));
-    single(body.querySelector('[data-group="fee"]'), (v) => (d.application_fee_ok = v === "yes"));
   }
   if (key === "countries") {
     const rows = () => Array.from(body.querySelectorAll('.wz-opt:not([data-value="all"])'));
@@ -3762,9 +3782,6 @@ async function saveProfile() {
     university_rank_range: d.university_rank_range,
   };
   if (d.degree_level) payload.degree_level = d.degree_level;
-  if (d.application_fee_ok !== null && d.application_fee_ok !== undefined) {
-    payload.application_fee_ok = d.application_fee_ok;
-  }
   if (d.cert_type === "none") {
     payload.language_cert_type = "";
   } else if (d.cert_type && d.cert_score) {
@@ -3832,9 +3849,10 @@ async function findPrograms() {
   if (btn) btn.disabled = true;
   haptic("light");
   try {
-    // Majburiy kanal obunasi bu yerda so'ralmaydi — u botda, til
-    // tanlangandan keyin tekshiriladi (app/bot/handlers/language.py).
+    // Filtr obuna tekshiruvidan OLDIN saqlanadi: kanalga o'tganda Telegram
+    // ilovani yopib yuborishi mumkin va javoblar yo'qolmasligi kerak.
     await saveProfile();
+    if (!(await ensureSubscribed())) return;
 
     showFindingOverlay();
     const startedAt = Date.now();
@@ -3851,6 +3869,106 @@ async function findPrograms() {
     hideFindingOverlay();
     if (btn) btn.disabled = false;
   }
+}
+
+// ---- Majburiy kanal obunasi ----
+// Bot /start'da to'smaydi: obuna onboarding oxirida, "Find my programs"
+// bosilganda so'raladi. Haqiqiy tekshiruv serverda (`/subscription`); u
+// adminkadagi ozod qilinganlar ro'yxatini ham hisobga oladi.
+
+async function checkSubscription(fresh) {
+  try {
+    return await api(`/subscription${fresh ? "?fresh=1" : ""}`);
+  } catch (e) {
+    // Tekshiruvning o'zi ishlamasa qidiruvni TO'SMAYMIZ — server tomoni
+    // ham shunday (fail-open): noto'g'ri sozlama hammani to'xtatmasin.
+    console.error(e);
+    return { subscribed: true, channels: [] };
+  }
+}
+
+async function ensureSubscribed() {
+  const status = await checkSubscription(false);
+  if (status.subscribed) return true;
+  return openSubscriptionSheet(status.channels);
+}
+
+function openChannelLink(url) {
+  try {
+    tg.openTelegramLink(url);
+  } catch (e) {
+    window.open(url, "_blank");
+  }
+}
+
+/** Kanallar varag'i. A'zo bo'lingach `true`, yopib ketilsa `false`. */
+function openSubscriptionSheet(channels) {
+  return new Promise((resolve) => {
+    ensureSheet();
+    const sheet = document.querySelector(".sheet");
+
+    const rows = (list) =>
+      list
+        .map(
+          (c) => `
+        <button type="button" class="sub-channel" data-url="${escapeHtml(c.invite_url)}">
+          <span class="sub-channel-ico">${icon("chat")}</span>
+          <span class="sub-channel-name">${escapeHtml(c.title)}</span>
+          ${icon("chevron", "ico sub-channel-go")}
+        </button>`
+        )
+        .join("");
+
+    const bindRows = () => {
+      sheet.querySelectorAll(".sub-channel").forEach((row) => {
+        row.addEventListener("click", () => {
+          haptic("light");
+          openChannelLink(row.dataset.url);
+        });
+      });
+    };
+
+    showSheet(
+      `
+      <div class="sheet-handle"></div>
+      <div class="sub-gate">
+        <div class="sub-gate-ico">${icon("bell")}</div>
+        <div class="sub-gate-title">${t("sub.title")}</div>
+        <div class="sub-gate-text">${t("sub.text")}</div>
+        <div class="sub-channels" id="sub-channels">${rows(channels)}</div>
+        <button type="button" class="btn btn-accent btn-block" id="sub-check">
+          ${icon("check")}${t("sub.check")}
+        </button>
+      </div>
+    `,
+      sheet
+    );
+    bindRows();
+    // showSheet() oldingi kutuvchini chaqirib bo'lgandan KEYIN o'rnatiladi.
+    onSheetClose = () => resolve(false);
+
+    const checkBtn = document.getElementById("sub-check");
+    checkBtn.addEventListener("click", async () => {
+      haptic("light");
+      checkBtn.disabled = true;
+      try {
+        const status = await checkSubscription(true);
+        if (status.subscribed) {
+          onSheetClose = null;
+          closeSheet();
+          resolve(true);
+          return;
+        }
+        haptic("warning");
+        showToast(t("sub.still_missing"));
+        // A'zo bo'lingan kanallar ro'yxatdan tushadi.
+        document.getElementById("sub-channels").innerHTML = rows(status.channels);
+        bindRows();
+      } finally {
+        checkBtn.disabled = false;
+      }
+    });
+  });
 }
 
 async function resetProfile() {

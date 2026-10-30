@@ -325,29 +325,17 @@ async def test_rank_range_below_500_has_no_upper_bound(session: AsyncSession):
     assert ids == {low.id}
 
 
-async def test_paid_applications_hidden_when_user_declines_fee(session: AsyncSession):
+async def test_application_fee_is_not_a_filter(session: AsyncSession):
+    """Onboarding'da ariza to'lovi so'ralmaydi — eski "faqat bepul" ham yashirmaydi."""
     await _make_program(session, has_application_fee=True)
-    free = await _make_program(session, has_application_fee=False)
-    unknown = await _make_program(session, has_application_fee=None)
+    await _make_program(session, has_application_fee=False)
+    await _make_program(session, has_application_fee=None)
 
     user = await _make_user(session)
     user.application_fee_ok = False
     await session.commit()
 
-    ids = {r.program.id for r in await find_matches(session, user)}
-
-    assert ids == {free.id, unknown.id}
-
-
-async def test_paid_applications_shown_when_user_accepts_fee(session: AsyncSession):
-    await _make_program(session, has_application_fee=True)
-    await _make_program(session, has_application_fee=False)
-
-    user = await _make_user(session)
-    user.application_fee_ok = True
-    await session.commit()
-
-    assert len(await find_matches(session, user)) == 2
+    assert len(await find_matches(session, user)) == 3
 
 
 async def test_country_filter_excludes_other_countries(session: AsyncSession):

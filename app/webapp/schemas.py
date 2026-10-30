@@ -356,6 +356,18 @@ class FeedbackIn(BaseModel):
     text: str
 
 
+class SubscriptionChannelOut(BaseModel):
+    title: str
+    invite_url: str
+
+
+class SubscriptionStatusOut(BaseModel):
+    """Majburiy kanal obunasi holati (Mini App'da "Find my programs"dan keyin)."""
+
+    subscribed: bool
+    channels: list[SubscriptionChannelOut] = []
+
+
 class MentorCountryOut(BaseModel):
     code: str
     flag: str

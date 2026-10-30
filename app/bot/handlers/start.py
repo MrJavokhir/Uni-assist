@@ -7,13 +7,10 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, W
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import subscription_keyboard
 from app.config import settings
 from app.db.models import User
 from app.i18n import t
 from app.services import referral_service
-from app.services.redis_client import redis_client
-from app.services.subscription_service import missing_channels
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
@@ -46,25 +43,19 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
 
 
 async def entry_screen(bot, session: AsyncSession, user: User, full_name: str):
-    """/start dan keyingi ekran: majburiy obuna so'rovi yoki xush kelibsiz.
+    """/start dan keyingi ekran: xush kelibsiz va Mini App tugmasi.
 
-    (matn, klaviatura) qaytaradi. Obuna tasdiqlangan zahoti taklif mukofoti
-    beriladi — u bir martalik, takror chaqirish xavfsiz
-    (app/services/referral_service.py).
+    (matn, klaviatura) qaytaradi. Majburiy kanal obunasi bu yerda EMAS —
+    Mini App'da, onboarding oxirida "Find my programs" bosilganda so'raladi
+    (app/webapp/api.py, `/subscription`); taklif mukofoti ham o'sha yerda.
     """
     lang = user.ui_language.value
-    missing = await missing_channels(bot, session, redis_client, user.telegram_id)
-    if missing:
-        return t("subscription.required", lang), subscription_keyboard(missing, lang)
-
-    await referral_service.reward_and_notify(session, bot, user)
-    await session.commit()
     return t("start.welcome", lang, name=full_name), start_keyboard(lang)
 
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, session: AsyncSession, command: CommandObject) -> None:
-    """/start -> majburiy kanal obunasi -> xush kelibsiz (Mini App tugmasi).
+    """/start -> xush kelibsiz (Mini App tugmasi). Obuna Mini App'da so'raladi.
 
     Til so'ralmaydi: yangi foydalanuvchi ingliz tilida boshlaydi va tilni
     Mini App'dagi Profil -> Til orqali almashtiradi. Ilgari birinchi qadam

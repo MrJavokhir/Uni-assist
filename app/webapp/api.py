@@ -273,6 +273,7 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
         balance_currency=settings_row.currency,
         is_blocked=bool(user.is_blocked),
         notifications_enabled=bool(user.notifications_enabled),
+        onboarding_done=bool(user.onboarding_done),
         bot_username=bot_username,
         referral_link=referral_service.build_link(bot_username, user.telegram_id),
         referral_bonus=float(settings_row.referral_bonus or 0),
@@ -309,6 +310,8 @@ async def update_me(
 ) -> ProfileOut:
     if payload.notifications_enabled is not None:
         _set_notifications(user, payload.notifications_enabled)
+    if payload.onboarding_done is not None:
+        user.onboarding_done = payload.onboarding_done
     if payload.ui_language is not None:
         try:
             user.ui_language = UiLanguage(payload.ui_language)

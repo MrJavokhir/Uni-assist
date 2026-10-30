@@ -29,6 +29,8 @@ class ProfileOut(BaseModel):
     is_blocked: bool
     # Deadline eslatmalarining umumiy sozlamasi (profil sahifasidagi toggle).
     notifications_enabled: bool = True
+    # Qadamli onboarding o'tilganmi — o'tilmagan bo'lsa Mini App uni ochadi.
+    onboarding_done: bool = False
     # Do'stlarni taklif qilish havolasi uchun. Telegram buni
     # `initDataUnsafe` da bermaydi, shuning uchun server aniqlaydi.
     bot_username: str | None = None
@@ -56,6 +58,7 @@ class ProfileIn(BaseModel):
     language_cert_score: float | None = None
     # Eslatmalar toggle'i. Yuborilmasa o'zgarmaydi.
     notifications_enabled: bool | None = None
+    onboarding_done: bool | None = None
 
 
 class GpaConvertOut(BaseModel):

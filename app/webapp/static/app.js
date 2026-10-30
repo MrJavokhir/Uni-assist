@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 81;
+const ASSET_V = 83;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -286,10 +286,6 @@ const I18N = {
     "home.near_short": "{n} yaqin",
     "home.deadline_short": "{n} kun qoldi",
     "home.deadline_none": "Muddat yo'q",
-    "home.fact_country": "Davlat",
-    "home.fact_ielts": "IELTS",
-    "home.fact_tuition": "Kontrakt",
-    "home.fact_rank": "Reyting",
     "home.shortcut_gpa": "GPA konvertor",
     "gpa.title": "GPA konvertor",
     "gpa.subtitle": "O'zbekiston bahosini AQSH, Buyuk Britaniya va Yevropa tizimlariga o'giradi",
@@ -317,7 +313,6 @@ const I18N = {
     "gpa.uk_class.below": "Diplom darajasidan past",
     "gpa.disclaimer": "Bu taxminiy hisob. Yakuniy bahoni universitet yoki tan olish idorasi (WES, UK ENIC, uni-assist) belgilaydi.",
     "home.profile_progress": "Profil to'ldirilgan",
-    "home.section_top": "Eng mos dastur",
     "home.setup_filter": "Qidiruvni sozlash",
     "home.empty_text": "Yo'nalish, daraja va davlatni tanlang — ro'yxat shunga qarab toraytiriladi.",
     "home.refine_filter": "Filtrni to'ldirish",
@@ -707,10 +702,6 @@ const I18N = {
     "home.near_short": "{n} близких",
     "home.deadline_short": "осталось {n} дн.",
     "home.deadline_none": "Без дедлайна",
-    "home.fact_country": "Страна",
-    "home.fact_ielts": "IELTS",
-    "home.fact_tuition": "Контракт",
-    "home.fact_rank": "Рейтинг",
     "home.shortcut_gpa": "Конвертер GPA",
     "gpa.title": "Конвертер GPA",
     "gpa.subtitle": "Переводит узбекскую оценку в системы США, Великобритании и Европы",
@@ -738,7 +729,6 @@ const I18N = {
     "gpa.uk_class.below": "Ниже уровня диплома",
     "gpa.disclaimer": "Это приблизительный расчёт. Итоговую оценку определяет университет или служба признания (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Профиль заполнен",
-    "home.section_top": "Лучшее совпадение",
     "home.setup_filter": "Настроить поиск",
     "home.empty_text": "Выберите направление, уровень и страну — список сузится под вас.",
     "home.refine_filter": "Дополнить фильтр",
@@ -1128,10 +1118,6 @@ const I18N = {
     "home.near_short": "{n} close",
     "home.deadline_short": "{n} days left",
     "home.deadline_none": "No deadline",
-    "home.fact_country": "Country",
-    "home.fact_ielts": "IELTS",
-    "home.fact_tuition": "Tuition",
-    "home.fact_rank": "Ranking",
     "home.shortcut_gpa": "GPA converter",
     "gpa.title": "GPA converter",
     "gpa.subtitle": "Converts an Uzbek grade to the US, UK and European systems",
@@ -1159,7 +1145,6 @@ const I18N = {
     "gpa.uk_class.below": "Below honours level",
     "gpa.disclaimer": "This is an estimate. The final grade is set by the university or a recognition body (WES, UK ENIC, uni-assist).",
     "home.profile_progress": "Profile complete",
-    "home.section_top": "Best match",
     "home.setup_filter": "Set up your search",
     "home.empty_text": "Pick a field, level and country — the list narrows down to fit you.",
     "home.refine_filter": "Refine your filter",
@@ -1703,8 +1688,6 @@ async function renderHome() {
       </div>
     </div>
 
-    <div id="home-top"></div>
-
     <div class="section-head"><span class="section-title">${t("home.section_shortcuts")}</span></div>
     <div class="quick-grid">
       <button type="button" class="quick accent" data-goto="match">
@@ -1781,72 +1764,6 @@ async function renderHome() {
     document.getElementById("mini-saved-bar").children[0].style.width = saved.length
       ? `${(upcoming.length / saved.length) * 100}%`
       : "0";
-  }
-
-  // Eng mos bitta dastur — bosh sahifada haqiqiy natija ko'rinsin, faqat
-  // raqamlar emas. Filtr yo'q bo'lsa "eng mos" degan gap ma'nosiz.
-  const best = ready ? matches.find((m) => m.level === "green") || matches[0] : null;
-  if (best) {
-    const facts = [
-      {
-        label: t("home.fact_country"),
-        value: `<span class="fx-flag">${flag(best.country.iso_code)}</span>`,
-      },
-      { label: t("home.fact_ielts"), value: best.ielts_min ? escapeHtml(String(best.ielts_min)) : "—" },
-      {
-        label: t("home.fact_tuition"),
-        value:
-          best.tuition_amount !== null && best.tuition_amount !== undefined
-            ? `${compactNumber(best.tuition_amount)}<i>${escapeHtml(best.tuition_currency || "")}</i>`
-            : "—",
-      },
-      {
-        label: t("home.fact_rank"),
-        value: best.university_ranking ? "#" + best.university_ranking : "—",
-      },
-    ];
-
-    document.getElementById("home-top").innerHTML = `
-      <div class="section-head"><span class="section-title">${t("home.section_top")}</span></div>
-      <div class="top-card">
-        <div class="top-head">
-          <div class="top-open program-open" data-id="${best.id}" role="button" tabindex="0">
-            ${avatar(best.university, best.university_logo)}
-            <div class="top-head-text">
-              <div class="top-title">${escapeHtml(best.name)}</div>
-              <div class="top-sub">${escapeHtml(best.university)}</div>
-            </div>
-          </div>
-          <button type="button" class="top-btn top-save" data-id="${best.id}" ${
-            best.saved ? "disabled" : ""
-          } aria-label="${escapeHtml(t("match.save"))}">
-            ${best.saved ? icon("check") : icon("plus")}
-          </button>
-          <button type="button" class="top-btn program-open" data-id="${best.id}"
-                  aria-label="${escapeHtml(t("match.details"))}">${icon("chevron")}</button>
-        </div>
-        <div class="top-facts">
-          ${facts
-            .map(
-              (f) => `<div class="top-fact">
-                <div class="top-fact-label">${escapeHtml(f.label)}</div>
-                <div class="top-fact-value">${f.value}</div>
-              </div>`
-            )
-            .join("")}
-        </div>
-      </div>`;
-
-    const topSave = document.querySelector(".top-save");
-    topSave.addEventListener("click", async () => {
-      haptic("light");
-      await api(`/saved/${topSave.dataset.id}`, { method: "POST" });
-      topSave.disabled = true;
-      topSave.innerHTML = icon("check");
-      haptic("success");
-      showToast(t("match.saved_toast"));
-    });
-    bindProgramOpeners(document.getElementById("home-top"));
   }
 
   if (upcoming.length) {
@@ -3494,6 +3411,19 @@ let catalogReady = Promise.resolve();
 // Filtrni ma'lum bir savoldan ochish uchun (masalan "Davlatlar" tugmasi).
 let wizEntryStep = null;
 
+// Filtri bo'sh odamga har safar, filtri bor-u onboarding'ni hali ko'rmaganga
+// (eski filtr sahifasida to'ldirgan) — bir marta.
+function needsOnboarding() {
+  return !hasFilter() || !profile.onboarding_done;
+}
+
+// Onboarding tugatildi yoki o'tkazib yuborildi — qayta majburan chiqmaydi.
+function markOnboardingDone() {
+  if (profile.onboarding_done) return;
+  profile.onboarding_done = true;
+  api("/me", { method: "PATCH", body: JSON.stringify({ onboarding_done: true }) }).catch(() => {});
+}
+
 function openFilter(step) {
   wizEntryStep = step || null;
   switchTab("filter");
@@ -3518,7 +3448,7 @@ function renderFilter() {
   const entry = WIZ_STEPS.indexOf(wizEntryStep);
   wizEntryStep = null;
   // Yangi foydalanuvchiga avval kutib olish ekrani; filtri borga — darhol savollar.
-  const step = entry >= 0 ? entry : hasFilter() ? 0 : -1;
+  const step = entry >= 0 ? entry : needsOnboarding() ? -1 : 0;
   wiz = { step, firstStep: step, draft: wizDraftFromProfile() };
   document.body.classList.add("no-tabbar", "wizard-mode");
   drawWizard();
@@ -3562,6 +3492,7 @@ async function drawWizard() {
       </div>`;
     document.getElementById("wz-skip").addEventListener("click", () => {
       haptic("light");
+      markOnboardingDone();
       leaveWizard();
     });
     document.getElementById("wz-next").addEventListener("click", () => wizGo(0));
@@ -3823,6 +3754,7 @@ async function saveProfile() {
   const d = wiz.draft;
   const payload = {
     ui_language: lang,
+    onboarding_done: true,
     target_country_ids: d.target_country_ids,
     // Har doim yuboriladi: bo'sh qiymat = "farqi yo'q" (tanlov tozalanadi).
     field_id: d.field_id,
@@ -5484,7 +5416,7 @@ async function init() {
   // kutmaydi va bosh sahifa umuman chizilmaydi: ilgari avval bosh sahifa
   // chiqib, 2-3 soniyadan keyin onboarding'ga "sakrab" o'tardi.
   // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
-  const onboarding = !deepLinkTarget() && !hasFilter();
+  const onboarding = !deepLinkTarget() && needsOnboarding();
   if (onboarding) await switchTab("filter");
 
   await catalogReady;

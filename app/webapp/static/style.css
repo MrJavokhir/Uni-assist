@@ -99,11 +99,11 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 10px var(--pad);
-  background: var(--bg); /* fallback for engines without color-mix */
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  /* Chegarasiz: fon sahifa bilan bir xil, oq tasma va chiziq yo'q. */
+  background: var(--surface); /* fallback for engines without color-mix */
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
   backdrop-filter: saturate(180%) blur(16px);
-  border-bottom: 1px solid var(--separator);
 }
 
 .brand {
@@ -1119,101 +1119,6 @@ body.no-tabbar .tabbar { display: none; }
 .split-accent { background: var(--accent); }
 
 /* Eng mos dastur kartasi — hero bilan bir rangda, faqat ochroq. */
-.top-card {
-  position: relative;
-  overflow: hidden;
-  padding: 15px 16px 15px;
-  border: 1px solid var(--separator);
-  border-radius: var(--r-xl);
-  background: var(--accent-soft);
-  background: linear-gradient(
-    140deg,
-    color-mix(in srgb, var(--accent) 15%, var(--card)) 0%,
-    color-mix(in srgb, var(--accent-2) 12%, var(--card)) 100%
-  );
-}
-
-.top-head {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.top-open {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  cursor: pointer;
-}
-.top-head-text { flex: 1; min-width: 0; }
-.top-title {
-  font-size: 14.5px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.top-sub {
-  font-size: 12px;
-  color: var(--hint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.top-btn {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: none;
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform 0.12s ease;
-}
-.top-btn:active { transform: scale(0.9); }
-.top-btn .ico { width: 16px; height: 16px; }
-.top-btn[disabled] { color: var(--green); }
-
-.top-facts {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-top: 14px;
-}
-.top-fact { min-width: 0; }
-.top-fact-label {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--hint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.top-fact-value {
-  margin-top: 2px;
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.top-fact-value i {
-  font-style: normal;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--hint);
-  margin-left: 2px;
-}
-.fx-flag { font-size: 19px; line-height: 1.15; }
 
 /* --- Tezkor amallar: uchta ixcham plitka --- */
 

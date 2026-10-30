@@ -4,9 +4,9 @@ Admin panelda kanal havolasi kiritiladi, bot esa foydalanuvchi o'sha kanal(lar)g
 a'zo ekanini `getChatMember` orqali tekshiradi. Har bir so'rovda Telegram API'ga
 murojaat qilmaslik uchun natija Redis'da qisqa muddatga keshlanadi.
 
-Tekshiruv Mini App'da, "Mos dasturlarni topish" bosilganda bo'ladi
-(app/webapp/api.py, `/subscription`). Bot /start'da TO'SMAYDI: odam avval
-ilovani ko'rib chiqadi, obuna esa u haqiqatan qidirmoqchi bo'lganda so'raladi.
+Tekshiruv botda, til tanlangandan keyin bo'ladi (app/bot/handlers/language.py):
+/start -> til -> obuna -> xush kelibsiz. "A'zo bo'ldim" tugmasi
+app/bot/handlers/subscription.py da.
 
 MUHIM: tekshiruv ishlashi uchun bot kanalda administrator bo'lishi shart. Agar
 bot kanalga kira olmasa (admin emas, kanal o'chirilgan, chat_id noto'g'ri), biz

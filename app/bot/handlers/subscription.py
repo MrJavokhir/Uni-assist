@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +13,12 @@ from app.services.subscription_service import clear_cache, missing_channels
 from app.services.user_service import get_or_create_user
 
 router = Router(name="subscription")
+
+# Kanalga endi qo'shilgan odam uchun Telegram `getChatMember` bir-ikki soniya
+# "left" qaytarishi mumkin. QA'da birinchi "A'zo bo'ldim" "a'zo emassiz"
+# degan, keyingisi o'tgan — shuning uchun rad etishdan oldin bir marta qayta
+# tekshiramiz.
+RECHECK_DELAY_SECONDS = 1.5
 
 
 @router.callback_query(F.data == SUBSCRIPTION_CHECK_CALLBACK)
@@ -28,6 +36,11 @@ async def check_subscription(callback: CallbackQuery, session: AsyncSession) -> 
     missing = await missing_channels(
         callback.bot, session, redis_client, callback.from_user.id, use_cache=False
     )
+    if missing:
+        await asyncio.sleep(RECHECK_DELAY_SECONDS)
+        missing = await missing_channels(
+            callback.bot, session, redis_client, callback.from_user.id, use_cache=False
+        )
 
     if missing:
         await callback.answer(t("subscription.still_missing", lang), show_alert=True)

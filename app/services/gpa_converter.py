@@ -59,8 +59,11 @@ def to_us4(value: float, scale: GpaScale) -> float:
         return round(max(0.0, min(4.0, value)), 2)
 
     if scale == GpaScale.SCALE_5:
-        lo, hi = _SCALE_BOUNDS[GpaScale.SCALE_5]
-        us4 = (value - lo) / (hi - lo) * 4.0
+        # O'zbekistonda 2 — yiqilgan baho, 3 — minimal o'tish. Shuning uchun
+        # shkala 2..5 oralig'iga chiziqli emas, tayanch nuqtalarga bog'lanadi:
+        # 3 -> 2.0 (C), 4 -> 3.0 (B), 5 -> 4.0 (A). Ilgari 2..5 chiziqli edi
+        # va "yaxshi" (4) baho 2.67 bo'lib, ballni sun'iy pasaytirardi.
+        us4 = value - 1.0 if value >= 3.0 else (value - 2.0) * 2.0
         return round(max(0.0, min(4.0, us4)), 2)
 
     if scale == GpaScale.SCALE_100:
@@ -80,8 +83,23 @@ def to_us4(value: float, scale: GpaScale) -> float:
     raise ValueError(f"Noma'lum GPA shkalasi: {scale}")
 
 
+# 5 ballik shkala uchun ECTS — AQSH ekvivalentidan: 5 -> A, 4.5 -> B,
+# 4 -> C, 3.5 -> D, 3 -> E, 3 dan past -> F.
+_ECTS_FROM_US4: list[tuple[float, str]] = [
+    (4.0, "A"),
+    (3.5, "B"),
+    (3.0, "C"),
+    (2.5, "D"),
+    (2.0, "E"),
+]
+
+
 def to_ects(value: float, scale: GpaScale) -> str:
     """Berilgan bahoni taxminiy ECTS harf bahosiga (A-F) o'giradi."""
+    if scale == GpaScale.SCALE_5:
+        us4 = to_us4(value, scale)
+        return next((letter for limit, letter in _ECTS_FROM_US4 if us4 >= limit), "F")
+
     lo, hi = _SCALE_BOUNDS[scale]
     percent = (value - lo) / (hi - lo) * 100
     percent = max(0.0, min(100.0, percent))

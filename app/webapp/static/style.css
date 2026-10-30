@@ -706,6 +706,18 @@ body {
   transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.2, 0.8, 0.3, 1);
 }
 .toast.show { opacity: 0.96; transform: translate(-50%, 0); }
+/* Bekor qilish tugmali toast bosiladigan bo'lishi kerak. */
+.toast.has-action { pointer-events: auto; padding-right: 8px; }
+.toast-undo {
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--bg);
+  cursor: pointer;
+}
 .toast .ico { width: 15px; height: 15px; }
 
 /* ============ Yo'nalish tanlagich ============ */
@@ -2764,3 +2776,44 @@ button.sch-card:active { transform: scale(0.985); }
 .mnt-actions { display: grid; gap: 8px; }
 .mnt-actions:empty { display: none; }
 
+
+/* Muddati o'tgan grant: ro'yxatda pastda va xira — ochiq grantlardan
+   bir qarashda ajralib turadi. */
+.gr-card.is-closed { opacity: 0.6; }
+
+/* Dasturlar: qidiruv va saralash */
+.pr-tools { display: grid; gap: 8px; margin: 4px 0 12px; }
+.pr-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  background: var(--card);
+  border: 1px solid var(--separator);
+}
+.pr-search .ico { width: 18px; height: 18px; opacity: 0.55; flex: none; }
+.pr-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 0;
+}
+
+/* SVG bayroq: matn balandligida, 4:3 */
+.flag-img {
+  display: inline-block;
+  height: 0.85em;
+  width: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: 2px;
+  vertical-align: -0.08em;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+  object-fit: cover;
+}
+.mnt-title .flag-img { margin-right: 4px; }

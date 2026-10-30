@@ -1,17 +1,23 @@
-"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + O'QISH TILI
-+ TIL BALI bo'yicha dasturlarni tanlaydi va 🟢 Mos / 🟡 Yaqin / 🔴 Mos emas
-toifalariga ajratadi.
+"""Filtr: davlat + daraja + yo'nalish + reyting + ariza to'lovi + o'qish tili
+bo'yicha dasturlarni tanlaydi, keyin til bali va GPA bo'yicha uch toifaga
+ajratadi:
 
-Til bali profilda ko'rsatilgan bo'lsa, u yetmaydigan dasturlar ro'yxatga
-umuman tushmaydi (faqat yorliq bilan belgilanmaydi). Ko'rsatilmagan bo'lsa
-hech narsa yashirilmaydi.
+  🟢 Mos   — ma'lum bo'lgan barcha talablar bajarilgan
+  🟡 Yaqin — talabga OZGINA yetmaydi (IELTS 0.5 gacha, TOEFL 8 ball gacha,
+             GPA 4.0 shkalada 0.25 gacha) yoki foydalanuvchi o'z balini
+             kiritmagan — kartada nima yetishmasligi yoziladi
+  yashirin — talabdan ANCHA past: ro'yxatga umuman tushmaydi
 
-🔴 toifadagilar (tuzatib bo'lmaydigan to'siq — o'tgan deadline)
-chaqiruvchi tomonda foydalanuvchiga ko'rsatilmaydi.
+Ilgari ball kiritilganda yetmaydigan hamma dastur yashirilardi va "Yaqin"
+toifasi amalda doim bo'sh qolardi ("131 mos, 0 yaqin"). Endi kichik farq
+ko'rsatiladi — odam aynan qaysi dasturlarga sal ko'proq harakat bilan
+kirishi mumkinligini ko'radi; katta farqdagilar esa avvalgidek ko'rinmaydi.
 
-GPA va yosh chegarasi endi hisobga olinmaydi: admin panelda bu maydonlar
-yuritilmaydi, eski (seed) qiymatlar esa adminga ko'rinmagan holda natijaga
-ta'sir qilib qolardi.
+GPA talablar MATNIDAN olinadi (app/services/gpa_requirement.py) va faqat
+magistr/PhD uchun. Talabi ko'rsatilmagan dastur qoladi — "ma'lum emas"
+degani "talab bajarilmadi" degani emas.
+
+🔴 (o'tgan deadline) chaqiruvchi tomonda ko'rsatilmaydi.
 """
 
 from dataclasses import dataclass, field
@@ -30,6 +36,8 @@ from app.db.models import (
     UniversityRankRange,
     User,
 )
+from app.services.gpa_converter import to_us4
+from app.services.gpa_requirement import gpa_requirement_for
 
 
 class MatchLevel(str, Enum):
@@ -43,10 +51,24 @@ class MatchResult:
     program: Program
     level: MatchLevel
     missing: list[str] = field(default_factory=list)
+    # Talabdan ANCHA past — ro'yxatga tushmaydi.
+    excluded: bool = False
 
 
-# `_language_gap` qaytaradigan kalitlar. Ular "til talabi bajarilmadi" degani.
+# Til talabi kalitlari (kartada "Yetishmayapti: IELTS" deb chiqadi).
 LANGUAGE_MISSING_KEYS = frozenset({"ielts", "toefl", "ielts_toefl"})
+
+# "Yaqin" chegaralari: shundan kam yetishmasa dastur ko'rsatiladi.
+IELTS_CLOSE_GAP = 0.5
+TOEFL_CLOSE_GAP = 8
+GPA_CLOSE_GAP_US4 = 0.25
+
+
+class Gap(str, Enum):
+    MET = "met"
+    UNKNOWN = "unknown"  # foydalanuvchi o'z balini kiritmagan
+    CLOSE = "close"
+    FAR = "far"
 
 # Profildagi reyting oralig'i -> (eng yuqori o'rin, eng quyi o'rin). None = chegarasiz.
 RANK_BOUNDS: dict[UniversityRankRange, tuple[int, int | None]] = {
@@ -108,22 +130,16 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
 
     best_ielts = _best_score(user, LanguageCertType.IELTS)
     best_toefl = _best_score(user, LanguageCertType.TOEFL)
+    user_us4 = _user_us4(user)
 
-    results = [_classify(program, best_ielts, best_toefl) for program in programs]
+    results = [_classify(program, best_ielts, best_toefl, user_us4) for program in programs]
+    return [r for r in results if not r.excluded]
 
-    # Til bali KIRITILGAN bo'lsa — u yetmaydigan dasturlar ro'yxatdan butunlay
-    # chiqariladi. Ilgari ular "🟡 Yaqin" yorlig'i bilan qolaverar edi va
-    # foydalanuvchi "IELTS 6 yozdim, lekin 7 talab qiladigan dasturlar hamon
-    # chiqyapti — filtr ishlamayapti" deb hisoblardi. Ball KIRITILMAGAN bo'lsa
-    # hech narsa yashirilmaydi: aks holda yangi foydalanuvchi bo'sh ro'yxat
-    # ko'rardi.
-    #
-    # Talabi umuman ko'rsatilmagan dastur qoladi — "ma'lum emas" degani "talab
-    # bajarilmadi" degani emas, va kartada bu ochiq yozib qo'yiladi.
-    if best_ielts is not None or best_toefl is not None:
-        results = [r for r in results if not (set(r.missing) & LANGUAGE_MISSING_KEYS)]
 
-    return results
+def _user_us4(user: User) -> float | None:
+    if user.gpa_raw is None or user.gpa_scale is None:
+        return None
+    return to_us4(float(user.gpa_raw), user.gpa_scale)
 
 
 def _best_score(user: User, cert_type: LanguageCertType) -> float | None:
@@ -134,7 +150,10 @@ def _best_score(user: User, cert_type: LanguageCertType) -> float | None:
 
 
 def _classify(
-    program: Program, best_ielts: float | None, best_toefl: float | None
+    program: Program,
+    best_ielts: float | None,
+    best_toefl: float | None,
+    user_us4: float | None,
 ) -> MatchResult:
     now = datetime.now(UTC)
     close_deadline = next(
@@ -144,12 +163,22 @@ def _classify(
         return MatchResult(program=program, level=MatchLevel.RED, missing=["deadline"])
 
     missing: list[str] = []
+    gaps: list[Gap] = []
+
     req = program.requirement
     if req is not None:
-        language_gap = _language_gap(req.ielts_min, req.toefl_min, best_ielts, best_toefl)
-        if language_gap:
-            missing.append(language_gap)
+        key, gap = _language_gap(req.ielts_min, req.toefl_min, best_ielts, best_toefl)
+        if gap is not Gap.MET:
+            missing.append(key)
+            gaps.append(gap)
 
+    gap = _gpa_gap(gpa_requirement_for(program), user_us4)
+    if gap is not Gap.MET:
+        missing.append("gpa")
+        gaps.append(gap)
+
+    if Gap.FAR in gaps:
+        return MatchResult(program=program, level=MatchLevel.YELLOW, missing=missing, excluded=True)
     if missing:
         return MatchResult(program=program, level=MatchLevel.YELLOW, missing=missing)
     return MatchResult(program=program, level=MatchLevel.GREEN, missing=[])
@@ -160,20 +189,42 @@ def _language_gap(
     toefl_min: int | None,
     best_ielts: float | None,
     best_toefl: float | None,
-) -> str | None:
-    """Til talabi bajarilmagan bo'lsa yetishmayotgan sertifikat kalitini qaytaradi.
+) -> tuple[str, Gap]:
+    """Til talabi qanchalik bajarilgan.
 
     Dastur IELTS ham, TOEFL ham qabul qilsa — ulardan BIRI yetarli.
     Kalitlar: "ielts", "toefl" yoki ikkalasi qabul qilinsa "ielts_toefl".
     """
     accepted = []
     if ielts_min is not None:
-        accepted.append(("ielts", float(ielts_min), best_ielts))
+        accepted.append(("ielts", float(ielts_min), best_ielts, IELTS_CLOSE_GAP))
     if toefl_min is not None:
-        accepted.append(("toefl", float(toefl_min), best_toefl))
+        accepted.append(("toefl", float(toefl_min), best_toefl, TOEFL_CLOSE_GAP))
     if not accepted:
-        return None
+        return "", Gap.MET
 
-    if any(score is not None and score >= minimum for _, minimum, score in accepted):
-        return None
-    return "_".join(key for key, _, _ in accepted)
+    key = "_".join(name for name, _, _, _ in accepted)
+    with_score = [(m, s, c) for _, m, s, c in accepted if s is not None]
+    if any(score >= minimum for minimum, score, _ in with_score):
+        return key, Gap.MET
+    if not with_score:
+        # Hech qanday til bali kiritilmagan bo'lsa — noma'lum (ko'rsatiladi).
+        # Boshqa sertifikati bor-u, dastur uni qabul qilmasa — mos emas.
+        has_any = best_ielts is not None or best_toefl is not None
+        return key, Gap.FAR if has_any else Gap.UNKNOWN
+    if any(minimum - score <= close for minimum, score, close in with_score):
+        return key, Gap.CLOSE
+    return key, Gap.FAR
+
+
+def _gpa_gap(requirement, user_us4: float | None) -> Gap:
+    if requirement is None:
+        return Gap.MET
+    if user_us4 is None:
+        return Gap.UNKNOWN
+    needed = to_us4(requirement.value, requirement.scale)
+    if user_us4 >= needed:
+        return Gap.MET
+    if needed - user_us4 <= GPA_CLOSE_GAP_US4:
+        return Gap.CLOSE
+    return Gap.FAR

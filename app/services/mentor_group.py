@@ -52,7 +52,11 @@ CLAIM_PREFIX = "claim:"
 CLOSE_PREFIX = "close:"
 RATE_PREFIX = "rate:"
 
-LEVEL_LABELS = {MentorLevel.BACHELOR: "Bakalavr", MentorLevel.MASTER: "Magistratura"}
+LEVEL_LABELS = {
+    MentorLevel.BACHELOR: "Bakalavr",
+    MentorLevel.MASTER: "Magistratura",
+    MentorLevel.PHD: "PhD",
+}
 TOPIC_LABELS = {
     MentorTopic.ADMISSION: "🎯 Kirish",
     MentorTopic.DOCUMENTS: "📄 Hujjatlar",

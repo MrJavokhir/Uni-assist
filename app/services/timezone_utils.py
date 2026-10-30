@@ -23,3 +23,13 @@ def from_tashkent(local_naive: datetime) -> datetime:
     vaqtlari siljib ketardi.
     """
     return local_naive.replace(tzinfo=TASHKENT_TZ).astimezone(ZoneInfo("UTC"))
+
+
+def format_deadline_date(dt_utc: datetime) -> str:
+    """Deadline'ni faqat SANA sifatida ko'rsatadi ("2027-07-31").
+
+    Katalogdagi muddatlar sana sifatida kiritiladi va UTC yarim tunda
+    saqlanadi. Vaqt bilan ko'rsatilganda Toshkentga o'girilib hamma joyda
+    "05:00" chiqardi — bu universitetning haqiqiy soati emas, chalg'itardi.
+    """
+    return to_tashkent(dt_utc).date().isoformat()

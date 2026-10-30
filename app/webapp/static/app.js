@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 72;
+const ASSET_V = 73;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -119,12 +119,14 @@ function initials(text) {
     .toUpperCase();
 }
 
+// Bayroq — SVG rasm. Emoji bayroqlar Windows'da (Telegram Desktop) chizilmaydi
+// va "UZ", "DE" kabi ikki harf bo'lib ko'rinardi.
+const FLAG_BASE = "https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/";
+
 function flag(isoCode) {
-  // ISO alpha-2 kodini bayroq emojisiga aylantiradi: har bir harf o'zining
-  // "regional indicator" belgisiga ko'chiriladi (A -> 🇦).
-  const code = String(isoCode || "").trim().toUpperCase();
-  if (!/^[A-Z]{2}$/.test(code)) return "🏳️";
-  return String.fromCodePoint(...[...code].map((ch) => 0x1f1e6 + ch.charCodeAt(0) - 65));
+  const code = String(isoCode || "").trim().toLowerCase();
+  if (!/^[a-z]{2}$/.test(code)) return "";
+  return `<img class="flag-img" src="${FLAG_BASE}${code}.svg" alt="${code.toUpperCase()}" loading="lazy">`;
 }
 
 function countryName(country) {
@@ -220,6 +222,7 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "Bosh sahifa",
+    "common.back": "Orqaga",
     "profile.no_name": "Foydalanuvchi",
     "account.balance": "Hisobim",
     "account.topup_hint": "To'ldirish botda: /topup buyrug'ini yozing",
@@ -243,7 +246,7 @@ const I18N = {
     "faq.q1": "Dasturlar qayerdan olingan?",
     "faq.a1": "Har bir dastur universitetning rasmiy sahifasidan kiritilgan. Ko'rsatilmagan ma'lumot to'qilmaydi — bo'sh qoldiriladi.",
     "faq.q2": "Filtrni qanday sozlayman?",
-    "faq.a2": "Bosh sahifadagi «Qidiruvni sozlash» tugmasi orqali. Daraja, yo'nalish, baho va davlatlarni belgilasangiz, faqat sizga mos dasturlar qoladi.",
+    "faq.a2": "Bosh sahifadagi «Qidiruvni sozlash» (yoki «Filtrni to'ldirish») tugmasi yoki Profil → «Qidiruv filtri» orqali. Daraja, yo'nalish, baho va davlatlarni belgilasangiz, faqat sizga mos dasturlar qoladi.",
     "faq.q3": "Balansni qanday to'ldiraman?",
     "faq.a3": "Botga /topup yozing, summani kiriting va kartaga o'tkazing. So'ng /chekyubor orqali chek rasmini yuboring — admin tekshirgach balans to'ldiriladi.",
     "faq.q4": "Admission Kit nima?",
@@ -279,6 +282,9 @@ const I18N = {
     "kit.pick_time_text": "Uchrashuv uchun qulay vaqtni tanlang. Tanlaganingizdan keyin narx hisobingizdan yechiladi.",
     "kit.no_slots": "Hozircha bo'sh vaqt yo'q",
     "kit.no_slots_text": "Yangi vaqtlar qo'shilishi bilan bu yerda paydo bo'ladi.",
+    "kit.waitlist": "Menga xabar bering",
+    "kit.waitlist_done": "Ro'yxatdasiz",
+    "kit.waitlist_toast": "Yangi vaqt qo'shilishi bilan sizga yozamiz",
     "kit.slots_left": "{count} ta bo'sh vaqt",
     "kit.slot_taken": "Bu vaqtni boshqa birov band qildi. Boshqasini tanlang.",
     "kit.booked_title": "Yozildingiz",
@@ -386,6 +392,12 @@ const I18N = {
     "onboard.cta": "Filtrni sozlash",
     "onboard.skip": "Keyinroq",
     "match.save": "Saqlash",
+    "match.search_placeholder": "Dastur, universitet yoki davlat",
+    "match.search_empty": "Bu so'z bo'yicha dastur topilmadi",
+    "match.sort.relevance": "Moslik",
+    "match.sort.price": "Arzonroq",
+    "match.sort.ranking": "Reyting",
+    "match.sort.deadline": "Muddat yaqin",
     "match.saved": "Saqlangan",
     "match.missing": "Yetishmayapti: {list}",
     "match.green": "Mos",
@@ -414,6 +426,8 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS yoki TOEFL",
+    "match.missing_key.gpa": "GPA",
+    "program.gpa_min": "Min. GPA",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
     "program.no_requirements": "Talablar kiritilmagan.",
@@ -457,6 +471,7 @@ const I18N = {
     "scholarships.extra_dormitory": "Yotoqxona",
     "scholarships.extra_language": "Til kursi",
     "scholarships.deadline": "Muddat: {date}",
+    "scholarships.closed_badge": "Qabul yopilgan",
     "scholarships.details": "Batafsil",
     "scholarships.official_site": "Rasmiy saytga o'tish",
     "scholarships.about": "Grant haqida",
@@ -511,6 +526,8 @@ const I18N = {
     "saved.tag_muted": "Eslatma o'chiq",
     "saved.btn_site": "Rasmiy sayt",
     "saved.btn_mute": "Eslatmani o'chirish",
+    "saved.btn_unmute": "Eslatmani yoqish",
+    "saved.unmuted_toast": "Eslatma qayta yoqildi",
     "saved.btn_suggest": "Sanani bilaman",
     "saved.btn_suggested": "Taklif yuborilgan",
     "saved.muted_toast": "Bu dastur bo'yicha eslatmalar o'chirildi",
@@ -539,6 +556,7 @@ const I18N = {
     "month.11": "noyabr",
     "month.12": "dekabr",
     "saved.removed_toast": "O'chirildi",
+    "common.undo": "Bekor qilish",
     "saved.status.planning": "Rejada",
     "saved.status.applied": "Topshirdim",
     "saved.status.rejected": "Rad etildi",
@@ -557,6 +575,7 @@ const I18N = {
     "mentor.level": "Daraja",
     "mentor.level.bachelor": "Bakalavr",
     "mentor.level.master": "Magistratura",
+    "mentor.level.phd": "PhD",
     "mentor.topic": "Mavzu",
     "mentor.topic.admission": "Kirish",
     "mentor.topic.documents": "Hujjatlar",
@@ -599,6 +618,7 @@ const I18N = {
     "mentor.reason.paid_or_ad": "Pullik xizmat yoki reklama",
     "mentor.reason.other": "Boshqa",
     "mentor.become_row": "Mentor bo'lish",
+    "mentor.apply_text": "Uni Assistda Mentor bo'lmoqchiman",
     "mentor.become_row_sub": "Xorijda o'qiyotgan bo'lsangiz",
     "mentor.err.generic": "Xatolik yuz berdi, qayta urinib ko'ring",
     "mentor.err.disabled": "Bu imkoniyat hozircha mavjud emas",
@@ -629,6 +649,7 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "На главную",
+    "common.back": "Назад",
     "profile.no_name": "Пользователь",
     "account.balance": "Мой счёт",
     "account.topup_hint": "Пополнение в боте: отправьте команду /topup",
@@ -652,7 +673,7 @@ const I18N = {
     "faq.q1": "Откуда взяты программы?",
     "faq.a1": "Каждая программа внесена с официальной страницы университета. Неуказанные данные не выдумываются — поле остаётся пустым.",
     "faq.q2": "Как настроить фильтр?",
-    "faq.a2": "Через кнопку «Настроить поиск» на главной. Укажите ступень, направление, балл и страны — останутся только подходящие программы.",
+    "faq.a2": "Через кнопку «Настроить поиск» (или «Дополнить фильтр») на главной либо Профиль → «Фильтр поиска». Укажите ступень, направление, балл и страны — останутся только подходящие программы.",
     "faq.q3": "Как пополнить счёт?",
     "faq.a3": "Отправьте боту /topup, укажите сумму и переведите на карту. Затем через /chekyubor отправьте фото чека — после проверки баланс пополнится.",
     "faq.q4": "Что такое Admission Kit?",
@@ -688,6 +709,9 @@ const I18N = {
     "kit.pick_time_text": "Выберите удобное время встречи. После выбора стоимость спишется с баланса.",
     "kit.no_slots": "Свободного времени пока нет",
     "kit.no_slots_text": "Как только появятся новые слоты, они будут здесь.",
+    "kit.waitlist": "Сообщить мне",
+    "kit.waitlist_done": "Вы в списке",
+    "kit.waitlist_toast": "Напишем вам, как только появится новое время",
     "kit.slots_left": "свободных слотов: {count}",
     "kit.slot_taken": "Это время успели занять. Выберите другое.",
     "kit.booked_title": "Вы записаны",
@@ -795,6 +819,12 @@ const I18N = {
     "onboard.cta": "Настроить фильтр",
     "onboard.skip": "Позже",
     "match.save": "Сохранить",
+    "match.search_placeholder": "Программа, университет или страна",
+    "match.search_empty": "По этому запросу программ нет",
+    "match.sort.relevance": "Соответствие",
+    "match.sort.price": "Дешевле",
+    "match.sort.ranking": "Рейтинг",
+    "match.sort.deadline": "Ближайший дедлайн",
     "match.saved": "Сохранено",
     "match.missing": "Не хватает: {list}",
     "match.green": "Подходит",
@@ -823,6 +853,8 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS или TOEFL",
+    "match.missing_key.gpa": "GPA",
+    "program.gpa_min": "Мин. GPA",
     "program.ielts_min": "Мин. IELTS",
     "program.toefl_min": "Мин. TOEFL",
     "program.no_requirements": "Требования не указаны.",
@@ -866,6 +898,7 @@ const I18N = {
     "scholarships.extra_dormitory": "Общежитие",
     "scholarships.extra_language": "Языковой курс",
     "scholarships.deadline": "Дедлайн: {date}",
+    "scholarships.closed_badge": "Приём закрыт",
     "scholarships.details": "Подробнее",
     "scholarships.official_site": "Перейти на официальный сайт",
     "scholarships.about": "О гранте",
@@ -920,6 +953,8 @@ const I18N = {
     "saved.tag_muted": "Напоминания выкл.",
     "saved.btn_site": "Официальный сайт",
     "saved.btn_mute": "Отключить напоминание",
+    "saved.btn_unmute": "Включить напоминание",
+    "saved.unmuted_toast": "Напоминание включено",
     "saved.btn_suggest": "Я знаю дату",
     "saved.btn_suggested": "Предложение отправлено",
     "saved.muted_toast": "Напоминания по этой программе отключены",
@@ -948,6 +983,7 @@ const I18N = {
     "month.11": "ноябре",
     "month.12": "декабре",
     "saved.removed_toast": "Удалено",
+    "common.undo": "Отменить",
     "saved.status.planning": "В планах",
     "saved.status.applied": "Подал",
     "saved.status.rejected": "Отказ",
@@ -966,6 +1002,7 @@ const I18N = {
     "mentor.level": "Уровень",
     "mentor.level.bachelor": "Бакалавриат",
     "mentor.level.master": "Магистратура",
+    "mentor.level.phd": "Аспирантура (PhD)",
     "mentor.topic": "Тема",
     "mentor.topic.admission": "Поступление",
     "mentor.topic.documents": "Документы",
@@ -1008,6 +1045,7 @@ const I18N = {
     "mentor.reason.paid_or_ad": "Платные услуги или реклама",
     "mentor.reason.other": "Другое",
     "mentor.become_row": "Стать ментором",
+    "mentor.apply_text": "Хочу стать ментором в Uni Assist",
     "mentor.become_row_sub": "Если вы учитесь за рубежом",
     "mentor.err.generic": "Произошла ошибка, попробуйте ещё раз",
     "mentor.err.disabled": "Эта функция пока недоступна",
@@ -1038,6 +1076,7 @@ const I18N = {
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
     "kit.back": "Back to home",
+    "common.back": "Back",
     "profile.no_name": "User",
     "account.balance": "My balance",
     "account.topup_hint": "Top up in the bot: send the /topup command",
@@ -1061,9 +1100,9 @@ const I18N = {
     "faq.q1": "Where does the programme data come from?",
     "faq.a1": "Every programme is entered from the university's official page. Anything not stated there is left empty rather than guessed.",
     "faq.q2": "How do I set up the filter?",
-    "faq.a2": "Use «Set up your search» on the home screen. Once you set degree, field, grade and countries, only matching programmes remain.",
+    "faq.a2": "Tap «Set up your search» (or «Refine your filter») on the home screen, or open Profile → «Search filter». Once you set degree, field, grade and countries, only matching programmes remain.",
     "faq.q3": "How do I top up my balance?",
-    "faq.a3": "Send /topup to the bot, enter the amount and transfer to the card. Then send the receipt photo via /chekyubor — the balance is credited after review.",
+    "faq.a3": "Send /topup to the bot, enter the amount and transfer to the card. Then send the receipt photo via the /chekyubor (“send receipt”) command — the balance is credited after review.",
     "faq.q4": "What is the Admission Kit?",
     "faq.a4": "Guides and services for your application: motivation letter, CV, mentor sessions and full support.",
     "error.title": "Could not load the data",
@@ -1097,6 +1136,9 @@ const I18N = {
     "kit.pick_time_text": "Choose a time that works for you. The price is taken from your balance once you pick.",
     "kit.no_slots": "No free times yet",
     "kit.no_slots_text": "New slots will show up here as soon as they are added.",
+    "kit.waitlist": "Notify me",
+    "kit.waitlist_done": "You're on the list",
+    "kit.waitlist_toast": "We'll message you as soon as a new time is added",
     "kit.slots_left": "{count} slots free",
     "kit.slot_taken": "Someone just took that time. Please pick another.",
     "kit.booked_title": "You are booked",
@@ -1204,6 +1246,12 @@ const I18N = {
     "onboard.cta": "Set up filter",
     "onboard.skip": "Later",
     "match.save": "Save",
+    "match.search_placeholder": "Programme, university or country",
+    "match.search_empty": "No programmes match this search",
+    "match.sort.relevance": "Best match",
+    "match.sort.price": "Cheapest",
+    "match.sort.ranking": "Ranking",
+    "match.sort.deadline": "Deadline soon",
     "match.saved": "Saved",
     "match.missing": "Missing: {list}",
     "match.green": "Match",
@@ -1232,6 +1280,8 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS or TOEFL",
+    "match.missing_key.gpa": "GPA",
+    "program.gpa_min": "Min. GPA",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
     "program.no_requirements": "No requirements recorded.",
@@ -1275,6 +1325,7 @@ const I18N = {
     "scholarships.extra_dormitory": "Dormitory",
     "scholarships.extra_language": "Language course",
     "scholarships.deadline": "Deadline: {date}",
+    "scholarships.closed_badge": "Applications closed",
     "scholarships.details": "Details",
     "scholarships.official_site": "Open official website",
     "scholarships.about": "About this grant",
@@ -1329,6 +1380,8 @@ const I18N = {
     "saved.tag_muted": "Reminders off",
     "saved.btn_site": "Official site",
     "saved.btn_mute": "Mute reminders",
+    "saved.btn_unmute": "Turn reminders on",
+    "saved.unmuted_toast": "Reminders are back on",
     "saved.btn_suggest": "I know the date",
     "saved.btn_suggested": "Suggestion sent",
     "saved.muted_toast": "Reminders for this programme are off",
@@ -1357,6 +1410,7 @@ const I18N = {
     "month.11": "November",
     "month.12": "December",
     "saved.removed_toast": "Removed",
+    "common.undo": "Undo",
     "saved.status.planning": "Planning",
     "saved.status.applied": "Applied",
     "saved.status.rejected": "Rejected",
@@ -1375,6 +1429,7 @@ const I18N = {
     "mentor.level": "Level",
     "mentor.level.bachelor": "Bachelor's",
     "mentor.level.master": "Master's",
+    "mentor.level.phd": "PhD",
     "mentor.topic": "Topic",
     "mentor.topic.admission": "Admission",
     "mentor.topic.documents": "Documents",
@@ -1417,6 +1472,7 @@ const I18N = {
     "mentor.reason.paid_or_ad": "Paid services or advertising",
     "mentor.reason.other": "Other",
     "mentor.become_row": "Become a mentor",
+    "mentor.apply_text": "I'd like to become a mentor on Uni Assist",
     "mentor.become_row_sub": "If you study abroad",
     "mentor.err.generic": "Something went wrong, please try again",
     "mentor.err.disabled": "This feature isn't available yet",
@@ -1467,10 +1523,53 @@ function showToast(message) {
     el.className = "toast";
     document.body.appendChild(el);
   }
+  if (el._commit) el._commit();
   el.innerHTML = `${icon("check")}<span>${escapeHtml(message)}</span>`;
+  el.classList.remove("has-action");
   el.classList.add("show");
   clearTimeout(el._timer);
   el._timer = setTimeout(() => el.classList.remove("show"), 1900);
+}
+
+/** Bekor qilish tugmali toast. `onUndo` bosilsa chaqiriladi, `onCommit` —
+ *  vaqt tugaganda (ya'ni amal haqiqatan bajariladi). */
+function showUndoToast(message, onUndo, onCommit, ms = 5000) {
+  let el = document.querySelector(".toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "toast";
+    document.body.appendChild(el);
+  }
+  // Oldingi kutilayotgan amal darhol bajariladi — ikkita toast ustma-ust
+  // turmasin va birinchisi "yo'qolib" qolmasin.
+  if (el._commit) el._commit();
+  clearTimeout(el._timer);
+
+  let done = false;
+  const commit = () => {
+    if (done) return;
+    done = true;
+    el._commit = null;
+    onCommit();
+  };
+  el._commit = commit;
+  el.innerHTML = `<span>${escapeHtml(message)}</span><button type="button" class="toast-undo">${t(
+    "common.undo"
+  )}</button>`;
+  el.classList.add("show", "has-action");
+  el.querySelector(".toast-undo").addEventListener("click", () => {
+    if (done) return;
+    done = true;
+    el._commit = null;
+    clearTimeout(el._timer);
+    el.classList.remove("show", "has-action");
+    haptic("light");
+    onUndo();
+  });
+  el._timer = setTimeout(() => {
+    el.classList.remove("show", "has-action");
+    commit();
+  }, ms);
 }
 
 function skeletons(count, short) {
@@ -2050,68 +2149,88 @@ async function renderMatch() {
     return;
   }
 
-  el.innerHTML = noFilterNote(matches.length) + miniFilterBar() + matches
-    .map((m) => {
-      const isGreen = m.level === "green";
-      // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
-      const missing = m.missing.length
-        ? `<span class="pill amber">${t("match.missing", {
-            list: m.missing.map((k) => t("match.missing_key." + k)).join(", "),
-          })}</span>`
-        : "";
-      // Tuzilishi grant kartasi bilan bir xil: sarlavha -> faktlar -> amal.
-      const fee =
-        m.tuition_amount !== null && m.tuition_amount !== undefined
-          ? `${Number(m.tuition_amount).toLocaleString()} ${escapeHtml(m.tuition_currency || "")}`
-          : "";
+  el.innerHTML =
+    noFilterNote(matches.length) +
+    miniFilterBar() +
+    `<div class="pr-tools">
+       <div class="pr-search">${icon("search")}<input type="search" id="match-search" placeholder="${t(
+         "match.search_placeholder"
+       )}" value="${escapeHtml(matchQuery)}" autocomplete="off"></div>
+       <div class="filter-scroll" id="match-sort">
+         ${MATCH_SORTS.map(
+           (key) =>
+             `<div class="chip ${matchSort === key ? "active" : ""}" data-value="${key}">${t(
+               "match.sort." + key
+             )}</div>`
+         ).join("")}
+       </div>
+     </div>
+     <div id="match-list"></div>`;
 
-      return `
-        <div class="card pr-card">
-          <div class="pr-head program-open" data-id="${m.id}" role="button" tabindex="0">
-            ${avatar(m.university, m.university_logo)}
-            <div class="pr-head-text">
-              <div class="card-title">${escapeHtml(m.name)}${
-                m.abbreviation ? `<span class="abbr">${escapeHtml(m.abbreviation)}</span>` : ""
-              }</div>
-              <div class="card-sub">${escapeHtml(m.university)}</div>
-              <div class="pr-countries">
-                <span class="pill"><span class="chip-flag">${flag(
-                  m.country.iso_code
-                )}</span>${escapeHtml(countryName(m.country))}</span>
-                ${
-                  m.university_ranking
-                    ? `<span class="pill rank-pill">${icon("award")}${t("program.ranking", {
-                        n: m.university_ranking,
-                      })}</span>`
-                    : ""
-                }
-              </div>
-            </div>
-            <span class="card-chevron">${icon("chevron")}</span>
-          </div>
+  const listEl = document.getElementById("match-list");
+  const drawList = () => {
+    const shown = sortMatches(filterMatches(matches, matchQuery), matchSort);
+    listEl.innerHTML = shown.length
+      ? shown.map(matchCard).join("")
+      : `<div class="empty"><div class="empty-text">${t("match.search_empty")}</div></div>`;
+    bindMatchCards(listEl);
+  };
 
-          <div class="pr-facts">
-            <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${
-              isGreen ? t("match.green") : t("match.yellow")
-            }</span>
-            ${fee ? `<span class="pill">${icon("spark")}${fee}</span>` : ""}
-            ${m.ielts_min ? `<span class="pill">IELTS ${m.ielts_min}</span>` : ""}
-            ${m.toefl_min ? `<span class="pill">TOEFL ${m.toefl_min}</span>` : ""}
-            ${missing}
-          </div>
+  document.getElementById("match-search").addEventListener("input", (event) => {
+    matchQuery = event.target.value;
+    drawList();
+  });
+  el.querySelectorAll("#match-sort .chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      haptic("light");
+      matchSort = chip.dataset.value;
+      el.querySelectorAll("#match-sort .chip").forEach((c) => c.classList.toggle("active", c === chip));
+      drawList();
+    });
+  });
+  drawList();
 
-          <div class="pr-actions">
-            <button type="button" class="btn ${m.saved ? "btn-done" : "btn-soft"} save-btn" data-id="${m.id}" ${
-              m.saved ? "disabled" : ""
-            }>
-              ${m.saved ? icon("check") + t("match.saved") : icon("plus") + t("match.save")}
-            </button>
-          </div>
-        </div>`;
-    })
-    .join("");
+  bindFilterCta(el);
+  bindMiniFilter(el);
+}
 
-  el.querySelectorAll(".save-btn").forEach((btn) => {
+// Qidiruv va saralash tab almashganda saqlanib qoladi.
+let matchQuery = "";
+let matchSort = "relevance";
+const MATCH_SORTS = ["relevance", "price", "ranking", "deadline"];
+
+function filterMatches(items, query) {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return items;
+  return items.filter((m) => {
+    const hay = [m.name, m.abbreviation, m.university, countryName(m.country)]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/** Qiymati yo'q dasturlar har doim oxirida. "relevance" — server tartibi. */
+function sortMatches(items, sort) {
+  const keyOf = {
+    price: (m) => approxUsd(m.tuition_amount, m.tuition_currency),
+    ranking: (m) => m.university_ranking,
+    deadline: (m) => m.nearest_deadline,
+  }[sort];
+  if (!keyOf) return items;
+  const missing = (v) => v === null || v === undefined;
+  return [...items].sort((a, b) => {
+    const ka = keyOf(a);
+    const kb = keyOf(b);
+    if (missing(ka)) return missing(kb) ? 0 : 1;
+    if (missing(kb)) return -1;
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  });
+}
+
+function bindMatchCards(root) {
+  root.querySelectorAll(".save-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       haptic("light");
       await api(`/saved/${btn.dataset.id}`, { method: "POST" });
@@ -2122,10 +2241,66 @@ async function renderMatch() {
       showToast(t("match.saved_toast"));
     });
   });
+  bindProgramOpeners(root);
+}
 
-  bindFilterCta(el);
-  bindMiniFilter(el);
-  bindProgramOpeners(el);
+function matchCard(m) {
+  const isGreen = m.level === "green";
+  // Kalitlar ("ielts", "toefl", "ielts_toefl") foydalanuvchi tiliga o'giriladi.
+  const missing = m.missing.length
+    ? `<span class="pill amber">${t("match.missing", {
+        list: m.missing.map((k) => t("match.missing_key." + k)).join(", "),
+      })}</span>`
+    : "";
+  // Tuzilishi grant kartasi bilan bir xil: sarlavha -> faktlar -> amal.
+  const fee =
+    m.tuition_amount !== null && m.tuition_amount !== undefined
+      ? feeWithUsd(m.tuition_amount, m.tuition_currency)
+      : "";
+
+  return `
+    <div class="card pr-card">
+      <div class="pr-head program-open" data-id="${m.id}" role="button" tabindex="0">
+        ${avatar(m.university, m.university_logo)}
+        <div class="pr-head-text">
+          <div class="card-title">${escapeHtml(m.name)}${
+            m.abbreviation ? `<span class="abbr">${escapeHtml(m.abbreviation)}</span>` : ""
+          }</div>
+          <div class="card-sub">${escapeHtml(m.university)}</div>
+          <div class="pr-countries">
+            <span class="pill"><span class="chip-flag">${flag(
+              m.country.iso_code
+            )}</span>${escapeHtml(countryName(m.country))}</span>
+            ${
+              m.university_ranking
+                ? `<span class="pill rank-pill">${icon("award")}${t("program.ranking", {
+                    n: m.university_ranking,
+                  })}</span>`
+                : ""
+            }
+          </div>
+        </div>
+        <span class="card-chevron">${icon("chevron")}</span>
+      </div>
+
+      <div class="pr-facts">
+        <span class="pill ${isGreen ? "green" : "amber"}">${isGreen ? icon("check") : icon("spark")}${
+          isGreen ? t("match.green") : t("match.yellow")
+        }</span>
+        ${fee ? `<span class="pill">${icon("spark")}${fee}</span>` : ""}
+        ${m.ielts_min ? `<span class="pill">IELTS ${m.ielts_min}</span>` : ""}
+        ${m.toefl_min ? `<span class="pill">TOEFL ${m.toefl_min}</span>` : ""}
+        ${missing}
+      </div>
+
+      <div class="pr-actions">
+        <button type="button" class="btn ${m.saved ? "btn-done" : "btn-soft"} save-btn" data-id="${m.id}" ${
+          m.saved ? "disabled" : ""
+        }>
+          ${m.saved ? icon("check") + t("match.saved") : icon("plus") + t("match.save")}
+        </button>
+      </div>
+    </div>`;
 }
 
 function bindProgramOpeners(root) {
@@ -2148,6 +2323,36 @@ function avatar(name, logoUrl) {
   return `<div class="avatar">${fallback}<img src="${escapeHtml(
     logoUrl
   )}" alt="" loading="lazy" onerror="this.remove()"></div>`;
+}
+
+// ============ Narxlar: taxminiy USD ============
+
+// 1 birlik = N USD, taxminiy (2026-yil oktabr). Faqat "≈" yozuvi va narx
+// bo'yicha saralash uchun: katalogda GBP, EUR, MYR, KRW va boshqalar aralash,
+// ularni ko'z bilan solishtirib bo'lmaydi. Aniq summa — universitet saytida.
+const APPROX_USD = {
+  USD: 1,
+  EUR: 1.15,
+  GBP: 1.33,
+  MYR: 0.235,
+  KRW: 0.00072,
+  CZK: 0.047,
+  PLN: 0.27,
+  NOK: 0.098,
+  HUF: 0.0029,
+};
+
+function approxUsd(amount, currency) {
+  const rate = APPROX_USD[String(currency || "").toUpperCase()];
+  return rate && amount !== null && amount !== undefined ? Number(amount) * rate : null;
+}
+
+/** "18,500 GBP · ≈ $24,600" — USD bo'lmagan narx yoniga taxminiy dollar. */
+function feeWithUsd(amount, currency) {
+  const base = `${Number(amount).toLocaleString()} ${escapeHtml(currency || "")}`;
+  const usd = approxUsd(amount, currency);
+  if (usd === null || String(currency).toUpperCase() === "USD") return base;
+  return `${base} · ≈ $${(Math.round(usd / 100) * 100).toLocaleString()}`;
 }
 
 // ============ Scholarships (davlat stipendiyalari) ============
@@ -2223,7 +2428,11 @@ function scholarshipCard(s) {
     )
     .join("");
 
-  const deadline = s.nearest_deadline
+  // Muddati o'tgan grant — kartaning o'zida aniq belgi. Ilgari "Deadline
+  // passed" faqat ichida yozilardi va karta ochiq grantdek ko'rinardi.
+  const deadline = s.closed
+    ? `<span class="pill">${icon("clock")}${t("scholarships.closed_badge")}</span>`
+    : s.nearest_deadline
     ? `<span class="pill ${
         s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left <= 30 ? "red" : ""
       }">${icon("clock")}${t("scholarships.deadline", { date: escapeHtml(s.nearest_deadline) })}</span>`
@@ -2233,7 +2442,7 @@ function scholarshipCard(s) {
   const stipend = stipendText(s);
 
   return `
-    <div class="card gr-card details-btn" data-id="${s.id}" role="button" tabindex="0">
+    <div class="card gr-card details-btn${s.closed ? " is-closed" : ""}" data-id="${s.id}" role="button" tabindex="0">
       <div class="gr-head">
         ${avatar(s.name, s.logo)}
         <div class="gr-head-text">
@@ -2566,7 +2775,13 @@ async function openProgramSheet(programId) {
 
   // Til sertifikati: faqat dastur qabul qiladiganlari. Ikkalasi bo'lsa —
   // ulardan biri yetarli ekani alohida aytiladi.
+  // Minimal GPA talablar matnidan hisoblanadi (faqat magistr/PhD).
+  const gpaRow =
+    p.gpa_min !== null && p.gpa_min !== undefined
+      ? row(t("program.gpa_min"), `${p.gpa_min} / ${p.gpa_scale === "100" ? "100" : "4.0"}`)
+      : "";
   const certRows =
+    gpaRow +
     (req.ielts_min !== null && req.ielts_min !== undefined
       ? row(t("program.ielts_min"), req.ielts_min)
       : "") +
@@ -2618,7 +2833,14 @@ async function openProgramSheet(programId) {
         );
   const costs =
     cost || feeRow
-      ? (cost ? row(t("program.tuition"), money(cost.tuition_amount, cost.currency)) : "") +
+      ? (cost
+          ? row(
+              t("program.tuition"),
+              cost.tuition_amount === null || cost.tuition_amount === undefined
+                ? dash
+                : feeWithUsd(cost.tuition_amount, cost.currency)
+            )
+          : "") +
         feeRow +
         (cost
           ? `<div class="sheet-note">${t("program.cost_disclaimer", {
@@ -2766,6 +2988,9 @@ async function openProgramSheet(programId) {
     toGrants.addEventListener("click", () => {
       haptic("light");
       closeSheet();
+      // Ilgari barcha davlatlar ochilardi — Malayziya dasturidan kelgan odam
+      // AQSH va Buyuk Britaniya grantlarini ko'rardi.
+      scholarshipCountryId = p.country ? p.country.id : null;
       switchTab("scholarships");
     });
   }
@@ -3069,13 +3294,16 @@ function savedCard(s) {
       )}">${t("saved.btn_site")}</button>`
     );
   }
-  if (s.reminders_active) {
-    actions.push(
-      `<button type="button" class="btn btn-quiet mute-btn" data-id="${s.id}">${t(
-        "saved.btn_mute"
-      )}</button>`
-    );
-  }
+  // Eslatma o'chiq bo'lsa ham qayta yoqish imkoni doim bor.
+  actions.push(
+    s.reminders_active
+      ? `<button type="button" class="btn btn-quiet mute-btn" data-id="${s.id}">${t(
+          "saved.btn_mute"
+        )}</button>`
+      : `<button type="button" class="btn btn-quiet unmute-btn" data-id="${s.id}">${t(
+          "saved.btn_unmute"
+        )}</button>`
+  );
   if (s.deadline_precision === "unknown") {
     actions.push(
       `<button type="button" class="btn btn-quiet suggest-btn" data-program="${s.program_id}">${t(
@@ -3229,17 +3457,47 @@ function bindSavedActions(el) {
     });
   });
 
+  el.querySelectorAll(".unmute-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      haptic("light");
+      await api(`/saved/${btn.dataset.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ reminders_active: true }),
+      });
+      showToast(t("saved.unmuted_toast"));
+      await renderSaved();
+    });
+  });
+
   el.querySelectorAll(".suggest-btn").forEach((btn) => {
     btn.addEventListener("click", () => openSuggestSheet(Number(btn.dataset.program)));
   });
 
+  // Olib tashlash darhol bajarilmaydi: karta yashiriladi va 5 soniya
+  // "Bekor qilish" imkoni beriladi. Ilgari na tasdiq, na qaytarish bor edi —
+  // tasodifiy bosish dasturni butunlay o'chirib yuborardi.
   el.querySelectorAll(".remove-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", () => {
       haptic("medium");
-      await api(`/saved/${btn.dataset.id}`, { method: "DELETE" });
-      btn.closest(".card").remove();
-      showToast(t("saved.removed_toast"));
-      if (!el.querySelector(".card")) await renderSaved();
+      const card = btn.closest(".card");
+      card.hidden = true;
+      showUndoToast(
+        t("saved.removed_toast"),
+        () => {
+          card.hidden = false;
+        },
+        async () => {
+          try {
+            await api(`/saved/${btn.dataset.id}`, { method: "DELETE" });
+          } catch (err) {
+            card.hidden = false;
+            showToast(err.message);
+            return;
+          }
+          card.remove();
+          if (!el.querySelector(".card")) await renderSaved();
+        }
+      );
     });
   });
 }
@@ -3343,7 +3601,7 @@ function renderFilter() {
 
   el.innerHTML = `
     <button type="button" class="kit-back" id="filter-back">
-      ${icon("chevron")}<span>${t("kit.back")}</span>
+      ${icon("chevron")}<span>${t("common.back")}</span>
     </button>
     ${profileSection("cap", t("profile.section_academic"))}
     <div class="group">
@@ -3565,7 +3823,7 @@ function renderFilter() {
   document.getElementById("reset-profile-btn").addEventListener("click", resetProfile);
   document.getElementById("filter-back").addEventListener("click", () => {
     haptic("light");
-    switchTab("home");
+    switchTab(previousTab && previousTab !== "filter" ? previousTab : "home");
   });
 
   updateGpaPreview();
@@ -3805,7 +4063,8 @@ function bindKitBack(root) {
 function servicePriceText(service) {
   const unlock = inviteUnlock(service);
   if (service.price_amount === null || service.price_amount === undefined) {
-    return escapeHtml(t("kit.price_ask"));
+    // Vaqt yo'q bo'lsa "Narx kelishiladi" chalg'itadi — kelishadigan narsa yo'q.
+    return escapeHtml(t(isFullyBooked(service) ? "kit.no_slots" : "kit.price_ask"));
   }
   const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
     service.price_currency
@@ -3936,7 +4195,7 @@ function serviceBtnInner(service) {
     return icon("lock") + t("kit.buy");
   }
   if (service.requested) return icon("check") + t("kit.requested");
-  if (isFullyBooked(service)) return icon("clock") + t("kit.no_slots");
+  if (isFullyBooked(service)) return icon("clock") + t("kit.waitlist");
   if (needsBooking(service)) return icon("clock") + t("kit.pick_time");
   const unlock = inviteUnlock(service);
   if (unlock && unlock.ready) return icon("spark") + t("kit.unlock_free");
@@ -3948,16 +4207,15 @@ function serviceBtnClass(service) {
     if (isSoon(service)) return " is-done";
     return service.requested ? " is-get" : " is-buy";
   }
-  if (service.requested || isFullyBooked(service)) return " is-done";
+  if (service.requested) return " is-done";
   return "";
 }
 
-// Tugma bosilmaydigan holatlar: qo'llanma hali tayyor emas, so'rov
-// allaqachon yuborilgan yoki bo'sh vaqt qolmagan.
+// Tugma bosilmaydigan holatlar: qo'llanma hali tayyor emas yoki so'rov
+// allaqachon yuborilgan. Bo'sh vaqt qolmagan bo'lsa tugma ishlaydi —
+// "Menga xabar bering" (kutish ro'yxati).
 function serviceBtnDisabled(service) {
-  return (
-    isSoon(service) || (!isGuide(service) && service.requested) || isFullyBooked(service)
-  );
+  return isSoon(service) || (!isGuide(service) && service.requested);
 }
 
 // Vaqt tanlanadigan xizmatda qancha joy qolganini kartada ko'rsatamiz —
@@ -4226,6 +4484,7 @@ async function renderKit() {
             data-id="${service.id}"
             data-guide="${isGuide(service) ? "1" : "0"}"
             data-booking="${needsBooking(service) ? "1" : "0"}"
+            data-waitlist="${isFullyBooked(service) ? "1" : "0"}"
             data-file="${service.has_file ? "1" : "0"}"
             data-owned="${service.requested ? "1" : "0"}"
             ${serviceBtnDisabled(service) ? "disabled" : ""}>
@@ -4247,6 +4506,22 @@ async function renderKit() {
       // faqat fayl botga qayta yuboriladi.
       if (btn.dataset.owned === "1" && btn.dataset.guide === "1") {
         await deliverPdf(btn.dataset.id, btn);
+        return;
+      }
+
+      if (btn.dataset.waitlist === "1") {
+        btn.disabled = true;
+        try {
+          await api(`/services/${btn.dataset.id}/waitlist`, { method: "POST" });
+        } catch (err) {
+          btn.disabled = false;
+          showToast(err.message);
+          return;
+        }
+        btn.classList.add("is-done");
+        btn.innerHTML = icon("check") + t("kit.waitlist_done");
+        haptic("success");
+        showToast(t("kit.waitlist_toast"));
         return;
       }
 
@@ -4671,7 +4946,7 @@ async function renderMentorList(el) {
             .map(
               (q) => `
       <button type="button" class="mnt-item" data-id="${q.id}">
-        <span class="mnt-flag">${q.flag}</span>
+        <span class="mnt-flag">${flag(q.country_code)}</span>
         <span class="mnt-item-body">
           <span class="mnt-item-title">${escapeHtml(q.country_name)} · #${q.number}</span>
           <span class="mnt-item-sub">${mentorDate(q.created_at)}</span>
@@ -4734,7 +5009,7 @@ async function renderMentorCountries(el) {
               .map(
                 (c) => `
             <button type="button" class="mnt-country" data-code="${c.code}">
-              <span class="mnt-flag">${c.flag}</span>
+              <span class="mnt-flag">${flag(c.code)}</span>
               <span class="mnt-country-name">${escapeHtml(c.name)}</span>
               ${icon("chevron", "ico mnt-go")}
             </button>`
@@ -4767,7 +5042,7 @@ async function renderMentorForm(el) {
   const max = mentorConfig.question_max_chars;
   el.innerHTML = `
     ${mentorBack(t("mentor.choose_country"))}
-    <div class="mnt-title">${country.flag} ${escapeHtml(country.name)}</div>
+    <div class="mnt-title">${flag(country.code)} ${escapeHtml(country.name)}</div>
     ${
       mentorLimitLeft() <= 0
         ? mentorLimitBlock()
@@ -4777,8 +5052,9 @@ async function renderMentorForm(el) {
         <label>${t("mentor.level")}</label>
         ${mentorChips(
           "mentor-level",
-          ["bachelor", "master"].map((v) => ({ value: v, label: t("mentor.level." + v) })),
-          mentorState.level || ""
+          ["bachelor", "master", "phd"].map((v) => ({ value: v, label: t("mentor.level." + v) })),
+          // Profilda daraja tanlangan bo'lsa, oldindan belgilanadi.
+          mentorState.level || (profile && profile.degree_level) || ""
         )}
       </div>
       <div class="field">
@@ -4911,7 +5187,7 @@ async function renderMentorChat(el) {
   el.innerHTML = `
     ${mentorBack("Uni Buddy")}
     <div class="mnt-chat-head">
-      <span class="mnt-flag">${q.flag}</span>
+      <span class="mnt-flag">${flag(q.country_code)}</span>
       <div class="mnt-chat-head-text">
         <div class="mnt-item-title">${escapeHtml(q.country_name)} · #${q.number}</div>
         <div class="mnt-item-sub">${t("mentor.level." + q.level)} · ${t("mentor.topic." + q.topic)}</div>
@@ -5097,13 +5373,12 @@ async function openBuddy() {
 // Oraliq oyna yo'q: bosilganda darhol admin bilan Telegram suhbati tayyor
 // matn bilan ochiladi.
 
-const MENTOR_APPLY_TEXT = "Uni Assistda Mentor bo'lmoqchiman";
 
 function applyAsMentor() {
   haptic("light");
   const username = mentorConfig && mentorConfig.admin_username;
   if (!username) return;
-  const url = `https://t.me/${encodeURIComponent(username)}?text=${encodeURIComponent(MENTOR_APPLY_TEXT)}`;
+  const url = `https://t.me/${encodeURIComponent(username)}?text=${encodeURIComponent(t("mentor.apply_text"))}`;
   try {
     tg.openTelegramLink(url);
   } catch (e) {
@@ -5132,8 +5407,17 @@ function updateNavLabels() {
   });
 }
 
+// Filtr bir necha joydan ochiladi (bosh sahifa, profil, dasturlar) —
+// "Orqaga" foydalanuvchini qayerdan kelgan bo'lsa, o'sha yerga qaytaradi.
+let currentTab = "home";
+let previousTab = "home";
+
 async function switchTab(tabName) {
   haptic("light");
+  if (tabName !== currentTab) {
+    previousTab = currentTab;
+    currentTab = tabName;
+  }
   // Pastki menyu har bir o'tishda qaytadi; uni yashiradigan ekran
   // (Uni Buddy formasi va chati) o'zi qayta yashiradi.
   document.body.classList.remove("no-tabbar");

@@ -106,6 +106,8 @@ class MatchProgramOut(BaseModel):
     toefl_min: int | None = None
     # Universitetning jahon reytingidagi o'rni (QS)
     university_ranking: int | None = None
+    # Eng yaqin hali o'tmagan ariza muddati (YYYY-MM-DD) — muddat bo'yicha saralash uchun.
+    nearest_deadline: str | None = None
 
 
 class ProgramRequirementOut(BaseModel):
@@ -135,6 +137,10 @@ class ProgramDetailOut(BaseModel):
     id: int
     # Aniq sana bo'lmaganda, odatda qaysi oyda yopilishi (1-12).
     deadline_month: int | None = None
+    # Minimal GPA — talablar matnidan hisoblanadi (faqat magistr/PhD).
+    # Shkala: "4" yoki "100".
+    gpa_min: float | None = None
+    gpa_scale: str | None = None
     name: str
     abbreviation: str | None
     university: str
@@ -257,6 +263,8 @@ class ScholarshipOut(BaseModel):
     nearest_deadline: str | None
     nearest_deadline_days_left: int | None
     deadlines: list[ScholarshipDeadlineOut]
+    # Barcha muddatlari o'tgan — ro'yxatda pastda, kartada "Yopilgan".
+    closed: bool = False
 
 
 class ServiceOut(BaseModel):

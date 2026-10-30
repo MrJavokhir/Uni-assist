@@ -10,9 +10,20 @@ def test_to_us4_scale_4_passthrough():
 
 
 def test_to_us4_scale_5():
+    """Tayanch nuqtalar: 3 -> 2.0, 4 -> 3.0, 5 -> 4.0; 2 — yiqilgan."""
     assert to_us4(5.0, GpaScale.SCALE_5) == 4.0
+    assert to_us4(4.0, GpaScale.SCALE_5) == 3.0
+    assert to_us4(3.0, GpaScale.SCALE_5) == 2.0
     assert to_us4(2.0, GpaScale.SCALE_5) == 0.0
-    assert to_us4(3.5, GpaScale.SCALE_5) == pytest.approx(2.0, abs=0.01)
+    assert to_us4(4.5, GpaScale.SCALE_5) == pytest.approx(3.5, abs=0.01)
+
+
+def test_good_grade_is_not_underrated():
+    """Hisobotdagi holat: "yaxshi" (4) baho US 2.67 / UK Third / ECTS D chiqardi."""
+    result = convert(4.0, GpaScale.SCALE_5)
+    assert result.us4 == 3.0
+    assert result.ects == "C"
+    assert result.uk == "lower_second"
 
 
 def test_to_us4_scale_100():

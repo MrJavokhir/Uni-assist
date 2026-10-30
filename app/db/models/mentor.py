@@ -44,6 +44,7 @@ if TYPE_CHECKING:
 class MentorLevel(str, enum.Enum):
     BACHELOR = "bachelor"
     MASTER = "master"
+    PHD = "phd"
 
 
 class MentorTopic(str, enum.Enum):

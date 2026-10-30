@@ -17,6 +17,7 @@ from app.db.models import (
     AdmissionService,
     Country,
     DeadlineSuggestion,
+    DeadlineType,
     DegreeLevel,
     Field,
     GpaScale,
@@ -38,6 +39,7 @@ from app.db.models import (
 from app.db.session import get_session
 from app.services import booking_service, kit_service, payment_service, referral_service
 from app.services.gpa_converter import convert as convert_gpa
+from app.services.gpa_requirement import gpa_requirement_for
 from app.services.matching_service import MatchLevel, find_matches
 from app.services.reminder_service import (
     IMMEDIATE_SOON_DAYS,
@@ -45,7 +47,7 @@ from app.services.reminder_service import (
     resolve_deadline,
     send_immediate_if_due,
 )
-from app.services.timezone_utils import TASHKENT_TZ, format_tashkent
+from app.services.timezone_utils import TASHKENT_TZ, format_deadline_date
 from app.services.user_service import (
     get_or_create_user,
     set_target_countries,
@@ -508,6 +510,7 @@ async def get_program(
     requirement = program.requirement
     cost = program.cost
 
+    gpa = gpa_requirement_for(program)
     return ProgramDetailOut(
         id=program.id,
         name=program.name,
@@ -561,10 +564,12 @@ async def get_program(
             else None
         ),
         deadline_month=program.deadline_month,
+        gpa_min=gpa.value if gpa else None,
+        gpa_scale=gpa.scale.value if gpa else None,
         deadlines=[
             ProgramDeadlineOut(
                 type=d.type.value,
-                date=format_tashkent(d.date_utc),
+                date=format_deadline_date(d.date_utc),
                 days_left=(d.date_utc.date() - now.date()).days,
                 intake_term=d.intake_term,
             )
@@ -579,12 +584,21 @@ async def get_program(
 @router.get("/scholarships", response_model=list[ScholarshipOut])
 async def list_scholarships(
     country_id: int | None = None,
+    all_levels: bool = False,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> list[ScholarshipOut]:
     """Davlat stipendiyalari — dasturga bog'liq bo'lmagan holda.
 
     `country_id` berilsa, faqat shu davlatga tegishli grantlar qaytariladi.
+
+    Profilda daraja tanlangan bo'lsa, boshqa darajadagi grantlar
+    ko'rsatilmaydi (magistr profiliga "MEXT Undergraduate" chiqmasin).
+    Darajasi ko'rsatilmagan grant qoladi. `all_levels=1` — hammasi.
+
+    Tartib: muddati hali o'tmaganlar tepada (mashhurlik bo'yicha), barcha
+    muddati o'tganlar — pastda va `closed=true` bilan. Ilgari Chevening va
+    Fulbright muddati o'tgan bo'lsa ham eng tepada, hech qanday belgisiz turardi.
     """
     stmt = (
         select(Scholarship)
@@ -602,15 +616,22 @@ async def list_scholarships(
 
     scholarships = (await session.execute(stmt)).scalars().all()
 
+    degree = user.degree_level.value if user.degree_level is not None and not all_levels else None
+
     now = datetime.now(UTC)
     output = []
     for scholarship in scholarships:
+        levels = list(scholarship.degree_levels or [])
+        if degree and levels and degree not in levels:
+            continue
+
         upcoming = [d for d in scholarship.deadlines if d.date_utc >= now]
         candidates = upcoming or list(scholarship.deadlines)
         nearest = min(candidates, key=lambda d: d.date_utc) if candidates else None
 
         output.append(
             ScholarshipOut(
+                closed=bool(scholarship.deadlines) and not upcoming,
                 id=scholarship.id,
                 name=scholarship.name,
                 description=_localized_description(scholarship, user.ui_language.value),
@@ -667,14 +688,14 @@ async def list_scholarships(
                 university_choice=scholarship.university_choice.value,
                 application_linked_to_program=scholarship.application_linked_to_program,
                 source_url=scholarship.source_url,
-                nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
+                nearest_deadline=format_deadline_date(nearest.date_utc) if nearest else None,
                 nearest_deadline_days_left=(
                     (nearest.date_utc.date() - now.date()).days if nearest else None
                 ),
                 deadlines=[
                     ScholarshipDeadlineOut(
                         type=d.type.value,
-                        date=format_tashkent(d.date_utc),
+                        date=format_deadline_date(d.date_utc),
                         days_left=(d.date_utc.date() - now.date()).days,
                         intake_term=d.intake_term,
                     )
@@ -682,6 +703,7 @@ async def list_scholarships(
                 ],
             )
         )
+    output.sort(key=lambda item: item.closed)
     return output
 
 
@@ -691,12 +713,18 @@ async def get_matches(
 ) -> list[MatchProgramOut]:
     results = await find_matches(session, user)
     saved_ids = {sp.program_id for sp in user.saved_programs}
+    now = datetime.now(UTC)
 
     output = []
     for result in results:
         if result.level == MatchLevel.RED:
             continue
         program = result.program
+        upcoming = [
+            d.date_utc
+            for d in program.deadlines
+            if d.type == DeadlineType.APPLICATION_CLOSE and d.date_utc >= now
+        ]
         output.append(
             MatchProgramOut(
                 id=program.id,
@@ -716,6 +744,7 @@ async def get_matches(
                 else None,
                 toefl_min=program.requirement.toefl_min if program.requirement else None,
                 university_ranking=program.university.ranking,
+                nearest_deadline=format_deadline_date(min(upcoming)) if upcoming else None,
             )
         )
     return output
@@ -860,7 +889,7 @@ async def list_saved(
                 country=_country_out(program.university.country),
                 status=saved.status.value,
                 reminders_active=saved.reminders_active,
-                nearest_deadline=format_tashkent(nearest.date_utc) if nearest else None,
+                nearest_deadline=format_deadline_date(nearest.date_utc) if nearest else None,
                 nearest_deadline_days_left=days_left,
                 deadline_precision=info.precision.value,
                 deadline_month=info.month,
@@ -886,11 +915,20 @@ async def update_saved_status(
 
     if payload.status is not None:
         try:
-            saved.status = SavedProgramStatus(payload.status)
+            new_status = SavedProgramStatus(payload.status)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail="Noto'g'ri holat") from exc
-        if saved.status == SavedProgramStatus.APPLIED:
+        if new_status == SavedProgramStatus.APPLIED:
             saved.reminders_active = False
+        elif (
+            saved.status == SavedProgramStatus.APPLIED
+            and new_status == SavedProgramStatus.PLANNING
+        ):
+            # "Ariza berdim" eslatmani o'zi o'chirgan edi — odam fikrini
+            # o'zgartirib "Rejada" ga qaytsa, eslatma ham qaytadi. Ilgari u
+            # o'chiqligicha qolib, qayta yoqish tugmasi ham yo'q edi.
+            saved.reminders_active = True
+        saved.status = new_status
 
     # Kartadagi "eslatmani o'chirish" FAQAT shu dasturga ta'sir qiladi —
     # umumiy sozlama (users.notifications_enabled) o'zgarmaydi.
@@ -1198,23 +1236,54 @@ async def send_feedback(
     if len(text) > 2000:
         text = text[:2000] + "..."
 
+    header = (
+        "💬 <b>Yangi fikr</b>\n\n"
+        f"👤 @{user.username or '—'}\n"
+        f"🆔 <code>{user.telegram_id}</code>\n\n"
+    )
+    return {"sent": await _notify_admins(session, header + escape(text))}
+
+
+@router.post("/services/{service_id}/waitlist", status_code=201)
+async def join_service_waitlist(
+    service_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Bo'sh vaqti qolmagan xizmat uchun "Menga xabar bering".
+
+    Ilgari bunday kartada tugma o'chiq turar va "Narx kelishiladi" yozilardi —
+    foydalanuvchi qiziqish bildira olmasdi. Adminlar so'rovni darhol oladi va
+    yangi vaqt qo'shganda shu odamga yozadi; alohida jadval kerak emas.
+    """
+    service = await session.get(AdmissionService, service_id)
+    if service is None or not service.is_active:
+        raise HTTPException(status_code=404, detail="Xizmat topilmadi")
+
+    text = (
+        "⏳ <b>Kutish ro'yxati</b>\n\n"
+        f"Xizmat: {escape(service.title_uz)}\n"
+        f"👤 @{escape(user.username or '—')}\n"
+        f"🆔 <code>{user.telegram_id}</code>\n\n"
+        "Bo'sh vaqt qolmagan — yangi vaqt qo'shilganda shu foydalanuvchiga xabar bering."
+    )
+    return {"sent": await _notify_admins(session, text)}
+
+
+async def _notify_admins(session: AsyncSession, html: str) -> bool:
+    """Bot adminlariga HTML xabar yuboradi. Ro'yxat yoki token bo'sh bo'lsa — False."""
     admin_ids = await payment_service.active_admin_ids(session)
     if not admin_ids or not settings.bot_token:
-        logger.warning("Fikr yuborilmadi: bot adminlari ro'yxati yoki token bo'sh")
-        return {"sent": False}
+        logger.warning("Adminlarga xabar yuborilmadi: bot adminlari ro'yxati yoki token bo'sh")
+        return False
 
     bot = Bot(token=settings.bot_token)
     try:
-        header = (
-            "💬 <b>Yangi fikr</b>\n\n"
-            f"👤 @{user.username or '—'}\n"
-            f"🆔 <code>{user.telegram_id}</code>\n\n"
-        )
         for admin_id in admin_ids:
             try:
-                await bot.send_message(admin_id, header + escape(text), parse_mode="HTML")
+                await bot.send_message(admin_id, html, parse_mode="HTML")
             except Exception:
-                logger.exception("Adminga fikr yetmadi: %s", admin_id)
+                logger.exception("Adminga xabar yetmadi: %s", admin_id)
     finally:
         await bot.session.close()
-    return {"sent": True}
+    return True

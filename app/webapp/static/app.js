@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 86;
+const ASSET_V = 87;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -180,6 +180,8 @@ const DATE_LOCALES = { uz: "uz-Latn-UZ", ru: "ru-RU", en: "en-US" };
 function shortDate(iso) {
   const d = new Date(`${iso}T00:00:00`);
   if (isNaN(d)) return escapeHtml(iso);
+  // Brauzerlar o'zbekcha oy nomlarini bilmaydi ("M11 10" chiqardi) — o'zimiznikidan.
+  if (lang === "uz") return `${d.getDate()}-${t("month." + (d.getMonth() + 1))}`;
   try {
     return d.toLocaleDateString(DATE_LOCALES[lang] || "en-US", { day: "numeric", month: "short" });
   } catch (e) {
@@ -363,6 +365,13 @@ const I18N = {
     "match.no_filter_cta": "Sozlash",
     "onboard.title": "Keling, sizga mos dasturlarni topamiz",
     "onboard.skip": "Keyinroq",
+    "sub.step": "Oxirgi qadam",
+    "sub.join": "Qo'shilish",
+    "first.title": "Sizga eng mos dasturlar",
+    "first.closes": "Muddat: {date}",
+    "first.tba": "Muddat e'lon qilinmagan",
+    "first.cta": "Barchasini ko'rish",
+    "program.ask_mentor": "{country}dagi mentorga savol bering",
     "sub.title": "Natijalarni ko'rish uchun kanalga a'zo bo'ling",
     "sub.text": "Javoblaringiz saqlandi. Quyidagi kanal(lar)ga a'zo bo'lib, «A'zo bo'ldim» tugmasini bosing — mos dasturlar darhol chiqadi.",
     "sub.check": "A'zo bo'ldim",
@@ -785,6 +794,13 @@ const I18N = {
     "match.no_filter_cta": "Настроить",
     "onboard.title": "Давайте подберём подходящие программы",
     "onboard.skip": "Позже",
+    "sub.step": "Последний шаг",
+    "sub.join": "Подписаться",
+    "first.title": "Ваши первые совпадения",
+    "first.closes": "До {date}",
+    "first.tba": "Срок не объявлен",
+    "first.cta": "Смотреть все",
+    "program.ask_mentor": "Спросите ментора: {country}",
     "sub.title": "Подпишитесь на канал, чтобы увидеть результаты",
     "sub.text": "Ответы сохранены. Подпишитесь на канал(ы) ниже и нажмите «Я подписался» — подходящие программы появятся сразу.",
     "sub.check": "Я подписался",
@@ -1207,6 +1223,13 @@ const I18N = {
     "match.no_filter_cta": "Set up",
     "onboard.title": "Let's find programmes that fit you",
     "onboard.skip": "Later",
+    "sub.step": "One last step",
+    "sub.join": "Join",
+    "first.title": "Your first matches",
+    "first.closes": "Closes {date}",
+    "first.tba": "Not announced",
+    "first.cta": "Start exploring",
+    "program.ask_mentor": "Ask a mentor in {country}",
     "sub.title": "Join the channel to see your results",
     "sub.text": "Your answers are saved. Join the channel(s) below and tap “I've joined” — matching programmes will show up right away.",
     "sub.check": "I've joined",
@@ -2216,11 +2239,11 @@ function matchCard(m) {
 
 function bindProgramOpeners(root) {
   root.querySelectorAll(".program-open").forEach((node) => {
-    node.addEventListener("click", () => openProgramSheet(node.dataset.id));
+    node.addEventListener("click", () => openProgramPage(node.dataset.id));
     node.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openProgramSheet(node.dataset.id);
+        openProgramPage(node.dataset.id);
       }
     });
   });
@@ -2456,7 +2479,7 @@ function closeSheet() {
   sheet?.classList.remove("open");
   // Balandlik faqat o'sha varaqqa tegishli — yopilganda olib tashlanadi,
   // aks holda keyingi kichik varaq ham balandligicha ochilardi.
-  sheet?.classList.remove("sheet-tall", "sheet-page");
+  sheet?.classList.remove("sheet-tall");
   document.body.style.overflow = "";
   try {
     tg?.BackButton?.hide();
@@ -2472,7 +2495,6 @@ function showSheet(html, sheet, options) {
   sheet.innerHTML = html;
   document.querySelector(".sheet-backdrop").classList.add("open");
   sheet.classList.toggle("sheet-tall", !!(options && options.tall));
-  sheet.classList.toggle("sheet-page", !!(options && options.page));
   sheet.classList.add("open");
   document.body.style.overflow = "hidden";
   try {
@@ -2624,17 +2646,59 @@ function openGpaSheet() {
   render();
 }
 
-async function openProgramSheet(programId) {
+// ---- Dastur sahifasi ----
+// Ilgari pastdan chiqadigan yarim oyna edi — endi alohida to'liq sahifa
+// (Scout'dagidek). Orqaga — Telegram'ning tugmasi yoki sahifadagi tugma;
+// dastur qayerdan ochilgan bo'lsa (ro'yxat, saqlanganlar, ...) o'sha yerga.
+let programPageId = null;
+let programReturnTab = "match";
+
+function openProgramPage(programId) {
   haptic("light");
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
+  // Mentor formasidan qaytilganda qaytish manzili o'zgarmaydi.
+  if (currentTab !== "program" && currentTab !== "mentor") programReturnTab = currentTab;
+  programPageId = Number(programId);
+  closeSheet();
+  return switchTab("program");
+}
 
-  showSheet(
-    `<div class="sheet-handle"></div>${skeletons(4)}`,
-    sheet
-  );
+function leaveProgramPage() {
+  haptic("light");
+  switchTab(programReturnTab && programReturnTab !== "program" ? programReturnTab : "match");
+}
 
-  const p = await api(`/programs/${programId}`);
+// Telegram'ning sarlavhadagi "orqaga" tugmasi — faqat to'liq sahifalarda.
+let pageBackHandler = null;
+
+function showPageBack(handler) {
+  hidePageBack();
+  pageBackHandler = handler;
+  try {
+    tg?.BackButton?.onClick(handler);
+    tg?.BackButton?.show();
+  } catch (e) {
+    /* eski klientlar */
+  }
+}
+
+function hidePageBack() {
+  if (!pageBackHandler) return;
+  try {
+    tg?.BackButton?.offClick(pageBackHandler);
+    tg?.BackButton?.hide();
+  } catch (e) {
+    /* eski klientlar */
+  }
+  pageBackHandler = null;
+}
+
+async function renderProgramPage() {
+  const el = document.getElementById("view-program");
+  document.body.classList.add("page-mode");
+  showPageBack(leaveProgramPage);
+  el.innerHTML = skeletons(4);
+
+  const p = await api(`/programs/${programPageId}`);
 
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
@@ -2796,16 +2860,35 @@ async function openProgramSheet(programId) {
                </button>`
         );
 
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
+  // Shu davlatdagi mentor (Uni Buddy) — savol guruhga ketadi.
+  const mentorOn = mentorConfig && mentorConfig.enabled;
+  const mentorCountry = mentorOn
+    ? mentorConfig.countries.find((c) => c.code === String(p.country.iso_code).toUpperCase())
+    : null;
+  const mentorCard = mentorOn
+    ? `<button type="button" class="pg-mentor" id="pg-mentor">
+         <img src="icon-buddy.png?v=${ASSET_V}" alt="" aria-hidden="true">
+         <span class="pg-mentor-text">
+           <span class="pg-mentor-title">${t("program.ask_mentor", {
+             country: escapeHtml(countryName(p.country)),
+           })}</span>
+           <span class="pg-mentor-sub">${t("buddy.tagline")}</span>
+         </span>
+         <span class="pg-mentor-go">${icon("arrow")}</span>
+       </button>`
+    : "";
+
+  el.innerHTML = `
     <div class="pg">
-      <div class="pg-hero">
-        ${avatar(p.university, p.university_logo)}
+      <div class="pg-top">
+        <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
+          "chevron"
+        )}</button>
         <span class="pg-country"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
           countryName(p.country)
         )}</span>
       </div>
+      <div class="pg-hero">${avatar(p.university, p.university_logo)}</div>
       <h2 class="pg-title">${escapeHtml(p.name)}${
         p.abbreviation ? `<span class="abbr">${escapeHtml(p.abbreviation)}</span>` : ""
       }</h2>
@@ -2841,6 +2924,7 @@ async function openProgramSheet(programId) {
       ${section(t("program.requirements_docs"), requirements)}
       ${scholarship}
       ${section(t("scholarships.deadlines"), deadlines)}
+      ${mentorCard}
     </div>
 
     <div class="pg-bar">
@@ -2851,17 +2935,23 @@ async function openProgramSheet(programId) {
         ${t("program.official_page")}
       </button>
     </div>
-  `,
-    sheet,
-    { tall: true, page: true }
-  );
+  `;
+
+  document.getElementById("pg-back").addEventListener("click", leaveProgramPage);
+  document.getElementById("pg-mentor")?.addEventListener("click", () => {
+    haptic("light");
+    openMentor(mentorCountry ? "form" : "countries", {
+      country: mentorCountry ? mentorCountry.code : undefined,
+      from: "program",
+      returnProgram: p.id,
+    });
+  });
 
   // Dasturning o'z stipendiyasi yo'q — davlat grantlariga yo'naltiramiz.
   const toGrants = document.getElementById("sheet-to-grants");
   if (toGrants) {
     toGrants.addEventListener("click", () => {
       haptic("light");
-      closeSheet();
       // Ilgari barcha davlatlar ochilardi — Malayziya dasturidan kelgan odam
       // AQSH va Buyuk Britaniya grantlarini ko'rardi.
       scholarshipCountryId = p.country ? p.country.id : null;
@@ -3853,20 +3943,11 @@ async function findPrograms() {
     // ilovani yopib yuborishi mumkin va javoblar yo'qolmasligi kerak.
     await saveProfile();
     if (!(await ensureSubscribed())) return;
-
-    showFindingOverlay();
-    const startedAt = Date.now();
-    await switchTab("match");
-    // Oyna eng kamida shuncha turadi. Javob tez kelsa ham u "chaqnab"
-    // o'tib ketmasligi kerak — aks holda nima bo'lgani ko'rinmay qoladi.
-    const left = FINDING_MS - (Date.now() - startedAt);
-    if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
-    haptic("success");
+    await showResults();
   } catch (err) {
     haptic("error");
     showToast(err.message);
   } finally {
-    hideFindingOverlay();
     if (btn) btn.disabled = false;
   }
 }
@@ -3901,72 +3982,226 @@ function openChannelLink(url) {
   }
 }
 
-/** Kanallar varag'i. A'zo bo'lingach `true`, yopib ketilsa `false`. */
+// Kanalga o'tganda Telegram Mini App'ni yopib yuborishi mumkin. Belgi
+// qolsa, keyingi ochilishda odam o'sha joyga — obuna dialogiga qaytadi.
+const PENDING_RESULTS_KEY = "ua_pending_results";
+
+function setPendingResults(on) {
+  try {
+    if (on) localStorage.setItem(PENDING_RESULTS_KEY, "1");
+    else localStorage.removeItem(PENDING_RESULTS_KEY);
+  } catch (e) {
+    /* xususiy rejim — belgisiz ham ishlaydi */
+  }
+}
+
+function hasPendingResults() {
+  try {
+    return localStorage.getItem(PENDING_RESULTS_KEY) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+/** O'rtadagi obuna dialogi. A'zo bo'lingach `true`, yopib ketilsa `false`.
+ *  Kanaldan qaytganda (ilova yana ko'rinsa) a'zolik o'zi tekshiriladi. */
 function openSubscriptionSheet(channels) {
   return new Promise((resolve) => {
-    ensureSheet();
-    const sheet = document.querySelector(".sheet");
+    setPendingResults(true);
+    document.getElementById("sub-gate")?.remove();
+    const el = document.createElement("div");
+    el.id = "sub-gate";
+    el.className = "sg";
 
     const rows = (list) =>
       list
         .map(
           (c) => `
-        <button type="button" class="sub-channel" data-url="${escapeHtml(c.invite_url)}">
-          <span class="sub-channel-ico">${icon("chat")}</span>
-          <span class="sub-channel-name">${escapeHtml(c.title)}</span>
-          ${icon("chevron", "ico sub-channel-go")}
+        <button type="button" class="sg-channel" data-url="${escapeHtml(c.invite_url)}">
+          <span class="sg-channel-ava">${escapeHtml(initials(c.title))}</span>
+          <span class="sg-channel-name">${escapeHtml(c.title)}</span>
+          <span class="sg-channel-join">${t("sub.join")}</span>
         </button>`
         )
         .join("");
 
+    el.innerHTML = `
+      <div class="sg-card" role="dialog" aria-modal="true" aria-labelledby="sg-title">
+        <button type="button" class="sg-close" id="sg-close" aria-label="${t("onboard.skip")}">${icon(
+          "close"
+        )}</button>
+        <div class="sg-art">
+          <span class="sg-halo"></span><span class="sg-halo sg-halo-2"></span>
+          <img src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
+        </div>
+        <div class="sg-step">${t("sub.step")}</div>
+        <div class="sg-title" id="sg-title">${t("sub.title")}</div>
+        <div class="sg-text">${t("sub.text")}</div>
+        <div class="sg-channels" id="sg-channels">${rows(channels)}</div>
+        <button type="button" class="btn btn-accent btn-block" id="sg-check">
+          ${icon("check")}${t("sub.check")}
+        </button>
+      </div>`;
+    document.body.append(el);
+    document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => el.classList.add("open"));
+
     const bindRows = () => {
-      sheet.querySelectorAll(".sub-channel").forEach((row) => {
+      el.querySelectorAll(".sg-channel").forEach((row) => {
         row.addEventListener("click", () => {
           haptic("light");
           openChannelLink(row.dataset.url);
         });
       });
     };
-
-    showSheet(
-      `
-      <div class="sheet-handle"></div>
-      <div class="sub-gate">
-        <div class="sub-gate-ico">${icon("bell")}</div>
-        <div class="sub-gate-title">${t("sub.title")}</div>
-        <div class="sub-gate-text">${t("sub.text")}</div>
-        <div class="sub-channels" id="sub-channels">${rows(channels)}</div>
-        <button type="button" class="btn btn-accent btn-block" id="sub-check">
-          ${icon("check")}${t("sub.check")}
-        </button>
-      </div>
-    `,
-      sheet
-    );
     bindRows();
-    // showSheet() oldingi kutuvchini chaqirib bo'lgandan KEYIN o'rnatiladi.
-    onSheetClose = () => resolve(false);
 
-    const checkBtn = document.getElementById("sub-check");
-    checkBtn.addEventListener("click", async () => {
-      haptic("light");
-      checkBtn.disabled = true;
+    let done = false;
+    let checking = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      document.removeEventListener("visibilitychange", onReturn);
+      try {
+        tg?.offEvent?.("activated", onReturn);
+      } catch (e) {
+        /* eski klientlar */
+      }
+      // Yopib ketsa — keyingi ochilishda qayta chiqmasin.
+      if (!ok) setPendingResults(false);
+      el.classList.remove("open");
+      document.body.style.overflow = "";
+      setTimeout(() => el.remove(), 280);
+      resolve(ok);
+    };
+
+    const recheck = async (silent) => {
+      if (checking || done) return;
+      checking = true;
+      const btn = document.getElementById("sg-check");
+      btn.disabled = true;
       try {
         const status = await checkSubscription(true);
         if (status.subscribed) {
-          onSheetClose = null;
-          closeSheet();
-          resolve(true);
+          haptic("success");
+          finish(true);
           return;
         }
-        haptic("warning");
-        showToast(t("sub.still_missing"));
+        if (!silent) {
+          haptic("warning");
+          showToast(t("sub.still_missing"));
+        }
         // A'zo bo'lingan kanallar ro'yxatdan tushadi.
-        document.getElementById("sub-channels").innerHTML = rows(status.channels);
+        document.getElementById("sg-channels").innerHTML = rows(status.channels);
         bindRows();
       } finally {
-        checkBtn.disabled = false;
+        checking = false;
+        btn.disabled = false;
       }
+    };
+
+    // Kanaldan qaytildi — Mini App yana ko'rinadi: tugma bosilishini kutmasdan tekshiramiz.
+    const onReturn = () => {
+      if (document.visibilityState !== "hidden") recheck(true);
+    };
+    document.addEventListener("visibilitychange", onReturn);
+    try {
+      tg?.onEvent?.("activated", onReturn);
+    } catch (e) {
+      /* eski klientlar */
+    }
+
+    document.getElementById("sg-check").addEventListener("click", () => {
+      haptic("light");
+      recheck(false);
+    });
+    document.getElementById("sg-close").addEventListener("click", () => {
+      haptic("light");
+      finish(false);
+    });
+  });
+}
+
+// ---- Natijalar: qidirish animatsiyasi -> "Sizga eng mos 3 ta dastur" ----
+
+async function showResults() {
+  setPendingResults(false);
+  showFindingOverlay();
+  const startedAt = Date.now();
+  let matches = [];
+  try {
+    matches = await api("/match");
+  } finally {
+    // Oyna eng kamida shuncha turadi — javob tez kelsa ham "chaqnab" o'tmasin.
+    const left = FINDING_MS - (Date.now() - startedAt);
+    if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
+    hideFindingOverlay();
+  }
+  haptic("success");
+  if (!matches.length) {
+    await switchTab("match");
+    return;
+  }
+  showFirstMatches(matches);
+}
+
+/** Eng mos 3 ta: avval to'liq moslar, so'ng "yaqin"lar — server tartibida. */
+function bestThree(matches) {
+  return [...matches.filter((m) => m.level === "green"), ...matches.filter((m) => m.level !== "green")].slice(
+    0,
+    3
+  );
+}
+
+function showFirstMatches(matches) {
+  document.getElementById("first-matches")?.remove();
+  const el = document.createElement("div");
+  el.id = "first-matches";
+  el.className = "fmx";
+  el.innerHTML = `
+    <div class="fmx-body">
+      <img class="fmx-art" src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      <h2 class="fmx-title">${t("first.title")}</h2>
+      ${bestThree(matches)
+        .map(
+          (m, i) => `
+        <button type="button" class="fmx-card" data-id="${m.id}" style="--i:${i}">
+          <span class="fmx-card-title">${escapeHtml(m.name)}</span>
+          <span class="fmx-card-sub">${escapeHtml(m.university)}</span>
+          <span class="fmx-meta">
+            <span class="fmx-chip${m.nearest_deadline ? " is-open" : ""}">${
+              m.nearest_deadline
+                ? t("first.closes", { date: shortDate(m.nearest_deadline) })
+                : t("first.tba")
+            }</span>
+            <span class="chip-flag">${flag(m.country.iso_code)}</span>${escapeHtml(countryName(m.country))}
+          </span>
+        </button>`
+        )
+        .join("")}
+    </div>
+    <div class="fmx-bar">
+      <button type="button" class="btn btn-accent btn-block" id="fmx-go">${t("first.cta")}</button>
+    </div>`;
+  document.body.append(el);
+  requestAnimationFrame(() => el.classList.add("open"));
+
+  const close = () => {
+    el.classList.remove("open");
+    setTimeout(() => el.remove(), 280);
+  };
+  document.getElementById("fmx-go").addEventListener("click", async () => {
+    haptic("light");
+    await switchTab("match");
+    close();
+  });
+  el.querySelectorAll(".fmx-card").forEach((card) => {
+    card.addEventListener("click", async () => {
+      haptic("light");
+      // Dasturdan "orqaga" bosilganda butun ro'yxat ochiladi.
+      await switchTab("match");
+      close();
+      openProgramPage(card.dataset.id);
     });
   });
 }
@@ -4908,7 +5143,8 @@ function bindMentorBack(target) {
   if (!btn) return;
   btn.addEventListener("click", () => {
     haptic("light");
-    if (typeof target === "string") switchTab(target);
+    if (typeof target === "function") target();
+    else if (typeof target === "string") switchTab(target);
     else openMentor(target.screen, target);
   });
 }
@@ -4994,7 +5230,12 @@ async function renderMentorCountries(el) {
   // Ro'yxatdan kelinganda unga qaytish tugmasi bor. Bosh sahifadan
   // kelinganda yo'q — pastdagi menyu shu vazifani bajaradi.
   const fromList = mentorState.from === "list";
-  const backBtn = fromList ? mentorBack("Uni Buddy") : "";
+  const fromProgram = mentorState.returnProgram;
+  const backBtn = fromProgram
+    ? mentorBack(t("common.back"))
+    : fromList
+      ? mentorBack("Uni Buddy")
+      : "";
   if (!mentorConfig.enabled) {
     el.innerHTML = `${backBtn}<div class="empty"><div class="empty-title">${t(
       "mentor.err.disabled"
@@ -5027,11 +5268,16 @@ async function renderMentorCountries(el) {
           })}</div>`
     }`;
 
-  if (fromList) bindMentorBack({ screen: "list" });
+  if (fromProgram) bindMentorBack(() => openProgramPage(fromProgram));
+  else if (fromList) bindMentorBack({ screen: "list" });
   el.querySelectorAll(".mnt-country").forEach((row) => {
     row.addEventListener("click", () => {
       haptic("light");
-      openMentor("form", { country: row.dataset.code, from: mentorState.from });
+      openMentor("form", {
+        country: row.dataset.code,
+        from: mentorState.from,
+        returnProgram: mentorState.returnProgram,
+      });
     });
   });
 }
@@ -5040,13 +5286,17 @@ async function renderMentorCountries(el) {
 
 async function renderMentorForm(el) {
   const country = mentorConfig.countries.find((c) => c.code === mentorState.country);
-  const back = { screen: "countries", from: mentorState.from };
+  // Dastur sahifasidan kelinganda "orqaga" o'sha dasturga qaytaradi.
+  const fromProgram = mentorState.returnProgram;
+  const back = fromProgram
+    ? () => openProgramPage(fromProgram)
+    : { screen: "countries", from: mentorState.from };
   if (!country) return openMentor("countries", { from: mentorState.from });
 
   const min = mentorConfig.question_min_chars;
   const max = mentorConfig.question_max_chars;
   el.innerHTML = `
-    ${mentorBack(t("mentor.choose_country"))}
+    ${mentorBack(fromProgram ? t("common.back") : t("mentor.choose_country"))}
     <div class="mnt-title">${flag(country.code)} ${escapeHtml(country.name)}</div>
     ${
       mentorLimitLeft() <= 0
@@ -5402,6 +5652,7 @@ const RENDERERS = {
   saved: renderSaved,
   profile: renderProfile,
   mentor: renderMentor,
+  program: renderProgramPage,
 };
 
 function updateNavLabels() {
@@ -5425,7 +5676,8 @@ async function switchTab(tabName) {
   }
   // Pastki menyu har bir o'tishda qaytadi; uni yashiradigan ekran
   // (Uni Buddy formasi va chati) o'zi qayta yashiradi.
-  document.body.classList.remove("no-tabbar", "wizard-mode");
+  document.body.classList.remove("no-tabbar", "wizard-mode", "page-mode");
+  if (tabName !== "program") hidePageBack();
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
   document.querySelectorAll(".view").forEach((v) => {
     v.hidden = v.id !== `view-${tabName}`;
@@ -5491,7 +5743,7 @@ async function applyDeepLink() {
   const program = target.match(/^program_(\d+)$/);
   if (program) {
     await switchTab("saved");
-    openProgramSheet(Number(program[1]));
+    openProgramPage(Number(program[1]));
     return true;
   }
   const question = target.match(/^question_(\d+)$/);
@@ -5534,7 +5786,10 @@ async function init() {
   // kutmaydi va bosh sahifa umuman chizilmaydi: ilgari avval bosh sahifa
   // chiqib, 2-3 soniyadan keyin onboarding'ga "sakrab" o'tardi.
   // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
-  const onboarding = !deepLinkTarget() && needsOnboarding();
+  // Kanalga o'tib ilova yopilgan bo'lsa — o'sha joyga: oxirgi savol + obuna dialogi.
+  const resume = !deepLinkTarget() && hasPendingResults() && hasFilter();
+  const onboarding = !deepLinkTarget() && (resume || needsOnboarding());
+  if (resume) wizEntryStep = "prefs";
   if (onboarding) await switchTab("filter");
   document.body.classList.remove("booting");
 
@@ -5545,6 +5800,11 @@ async function init() {
   if (!onboarding) {
     const routed = await applyDeepLink();
     if (!routed) await renderHome();
+  }
+  if (resume) {
+    ensureSubscribed()
+      .then((ok) => ok && showResults())
+      .catch((err) => showToast(err.message));
   }
 
   tabbar.removeAttribute("aria-busy");

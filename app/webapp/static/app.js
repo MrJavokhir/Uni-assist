@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 83;
+const ASSET_V = 85;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -5418,6 +5418,7 @@ async function init() {
   // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
   const onboarding = !deepLinkTarget() && needsOnboarding();
   if (onboarding) await switchTab("filter");
+  document.body.classList.remove("booting");
 
   await catalogReady;
   updateNavLabels();

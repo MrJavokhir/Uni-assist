@@ -70,7 +70,8 @@ body {
   padding: 0;
   background: var(--surface);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  /* Butun ilova Manrope'da (onboarding'dagi geometrik shrift). Yuklanmasa — tizim shrifti. */
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
@@ -79,6 +80,19 @@ body {
      yuborardi. `manipulation` — kattalashtirish yo'q, bosish kechikmaydi. */
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Ilova qaysi ekranni ko'rsatishni hal qilguncha tepa qator va menyu
+   ko'rinmaydi: aks holda onboarding'dan oldin logo bir lahza chaqnab o'tardi. */
+body.booting .topbar,
+body.booting .tabbar { display: none; }
+
+/* Brauzer forma elementlariga tizim shriftini beradi — ular ham Manrope'da bo'lsin. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
 }
 
 #app {
@@ -2035,7 +2049,6 @@ button.sch-card:active { transform: scale(0.985); }
   border-radius: 50%;
   background: linear-gradient(140deg, var(--accent), var(--accent-2));
   color: var(--on-accent);
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 21px;
   font-weight: 800;
 }
@@ -2043,7 +2056,6 @@ button.sch-card:active { transform: scale(0.985); }
 .pf-text { flex: 1; min-width: 0; display: block; }
 .pf-name {
   display: block;
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -2085,7 +2097,6 @@ button.sch-card:active { transform: scale(0.985); }
 .pf-balance-label { display: block; font-size: 12.5px; font-weight: 600; color: rgba(255, 255, 255, 0.82); }
 .pf-balance-value {
   display: block;
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -2156,7 +2167,6 @@ button.sch-card:active { transform: scale(0.985); }
 .pf-heading {
   margin: 4px 0 16px;
   text-align: center;
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 20px;
   font-weight: 700;
 }
@@ -2590,8 +2600,6 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
 .wz {
   display: flex;
   flex-direction: column;
-  /* Namunadagidek geometrik shrift — faqat onboarding'da. Yuklanmasa tizim shrifti. */
-  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   min-height: calc(var(--tg-viewport-stable-height, 100vh) - 8px);
 }
 .wz-top {

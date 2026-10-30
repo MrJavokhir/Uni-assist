@@ -1,6 +1,7 @@
-"""Botdagi majburiy obuna: /start -> til -> obuna -> xush kelibsiz.
+"""Botdagi majburiy obuna: /start -> obuna -> xush kelibsiz.
 
-Obuna til tanlangandan KEYIN so'raladi (app/bot/handlers/language.py).
+/start til so'ramaydi (app/bot/handlers/start.py); chat tarixidagi eski til
+tugmalari ham o'sha ekranga olib boradi (app/bot/handlers/language.py).
 Diqqat markazida: obuna bo'lmagan odam Mini App tugmasini olmasligi,
 ozod qilingan o'tishi va taklif mukofoti faqat obunadan keyin, BIR MARTA
 berilishi.
@@ -9,8 +10,9 @@ berilishi.
 from decimal import Decimal
 
 import pytest
+from sqlalchemy import select
 
-from app.bot.handlers import language
+from app.bot.handlers import language, start
 from app.db.models import RequiredChannel, SubscriptionExemption, User
 from app.services import payment_service
 
@@ -64,7 +66,7 @@ def _reset(monkeypatch):
     _FakeBot.status = "left"
     _FakeBot.sent = []
     # Kesh testlarni bir-biriga bog'lab qo'ymasin.
-    monkeypatch.setattr(language, "redis_client", None)
+    monkeypatch.setattr(start, "redis_client", None)
 
 
 async def _user(session, telegram_id: int = TG_ID, **kwargs) -> User:
@@ -165,3 +167,49 @@ async def test_referral_reward_only_after_subscription_and_once(session) -> None
     await language.choose_language(_FakeCallback(), session)
     await session.refresh(inviter)
     assert Decimal(str(inviter.balance)) == Decimal(1000)
+
+
+class _FakeStartMessage:
+    def __init__(self, telegram_id: int = TG_ID) -> None:
+        self.from_user = _FromUser(telegram_id)
+        self.from_user.language_code = "ru"
+        self.bot = _FakeBot()
+        self.answers: list[tuple[str, object]] = []
+
+    async def answer(self, text: str, reply_markup=None) -> None:
+        self.answers.append((text, reply_markup))
+
+
+class _NoArgs:
+    args = None
+
+
+@pytest.mark.asyncio
+async def test_start_skips_language_and_opens_in_english(session) -> None:
+    """/start til so'ramaydi: yangi foydalanuvchi ingliz tilida, darhol xush kelibsiz.
+
+    Telegram tili ruscha bo'lsa ham — til Mini App Profil'idan almashtiriladi.
+    """
+    msg = _FakeStartMessage()
+
+    await start.cmd_start(msg, session, _NoArgs())
+
+    text, markup = msg.answers[-1]
+    assert "Tilni tanlang" not in text
+    assert any(b.web_app for b in _buttons(markup)), "darhol Mini App tugmasi"
+    user = (await session.execute(select(User).where(User.telegram_id == TG_ID))).scalar_one()
+    assert user.ui_language.value == "en"
+
+
+@pytest.mark.asyncio
+async def test_start_asks_to_subscribe_in_english(session) -> None:
+    await _channel(session)
+    msg = _FakeStartMessage()
+
+    await start.cmd_start(msg, session, _NoArgs())
+
+    text, markup = msg.answers[-1]
+    buttons = _buttons(markup)
+    assert [b.url for b in buttons if b.url] == ["https://t.me/uniassist_uz"]
+    assert not any(b.web_app for b in buttons)
+    assert "join" in text.lower()

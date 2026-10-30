@@ -1,8 +1,9 @@
-"""Til tanlash — /start dan keyingi birinchi qadam.
+"""Til tanlash tugmalari — endi /start da ko'rsatilmaydi.
 
-Tartib: /start -> til -> majburiy kanal obunasi -> xush kelibsiz (Mini App
-tugmasi). Obuna til tanlangandan KEYIN so'raladi: aks holda odam kanal
-so'rovini tushunmaydigan tilda ko'rardi.
+/start to'g'ridan-to'g'ri obuna / xush kelibsiz ekraniga o'tadi
+(app/bot/handlers/start.py), til Mini App Profil'idan almashtiriladi. Bu
+handler chat tarixida qolgan eski til tugmalari bosilganda ishlashi uchun
+saqlangan.
 
 Obuna kerak bo'lmasa (kanal qo'shilmagan, foydalanuvchi ozod qilingan yoki
 allaqachon a'zo) darhol xush kelibsiz xabari chiqadi. Taklif mukofoti obuna
@@ -14,13 +15,10 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.handlers.start import start_keyboard
-from app.bot.keyboards import LANGUAGE_CALLBACK_PREFIX, subscription_keyboard
+from app.bot.handlers.start import entry_screen
+from app.bot.keyboards import LANGUAGE_CALLBACK_PREFIX
 from app.db.models import UiLanguage
 from app.i18n import t
-from app.services import referral_service
-from app.services.redis_client import redis_client
-from app.services.subscription_service import missing_channels
 from app.services.user_service import get_or_create_user
 
 router = Router(name="language")
@@ -42,18 +40,5 @@ async def choose_language(callback: CallbackQuery, session: AsyncSession) -> Non
     lang = ui_language.value
     await callback.answer(t("language.saved", lang))
 
-    missing = await missing_channels(callback.bot, session, redis_client, callback.from_user.id)
-    if missing:
-        await callback.message.edit_text(
-            t("subscription.required", lang),
-            reply_markup=subscription_keyboard(missing, lang),
-        )
-        return
-
-    await referral_service.reward_and_notify(session, callback.bot, user)
-    await session.commit()
-
-    await callback.message.edit_text(
-        t("start.welcome", lang, name=callback.from_user.full_name),
-        reply_markup=start_keyboard(lang),
-    )
+    text, markup = await entry_screen(callback.bot, session, user, callback.from_user.full_name)
+    await callback.message.edit_text(text, reply_markup=markup)

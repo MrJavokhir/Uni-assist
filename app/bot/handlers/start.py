@@ -7,17 +7,16 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, W
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.bot.keyboards import language_keyboard
+from app.bot.keyboards import subscription_keyboard
 from app.config import settings
 from app.db.models import User
 from app.i18n import t
 from app.services import referral_service
+from app.services.redis_client import redis_client
+from app.services.subscription_service import missing_channels
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
-
-# Til hali tanlanmagani uchun uchala tilda ham yoziladi.
-CHOOSE_LANGUAGE = "Tilni tanlang · Выберите язык · Choose your language"
 
 # Telegram Mini App'ning statik fayllarini agressiv keshlaydi va yangi deploy
 # foydalanuvchiga yetib bormaydi. Har ishga tushishda URL'ga yangi "v" qo'shamiz —
@@ -46,13 +45,30 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
     )
 
 
+async def entry_screen(bot, session: AsyncSession, user: User, full_name: str):
+    """/start dan keyingi ekran: majburiy obuna so'rovi yoki xush kelibsiz.
+
+    (matn, klaviatura) qaytaradi. Obuna tasdiqlangan zahoti taklif mukofoti
+    beriladi — u bir martalik, takror chaqirish xavfsiz
+    (app/services/referral_service.py).
+    """
+    lang = user.ui_language.value
+    missing = await missing_channels(bot, session, redis_client, user.telegram_id)
+    if missing:
+        return t("subscription.required", lang), subscription_keyboard(missing, lang)
+
+    await referral_service.reward_and_notify(session, bot, user)
+    await session.commit()
+    return t("start.welcome", lang, name=full_name), start_keyboard(lang)
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, session: AsyncSession, command: CommandObject) -> None:
-    """/start — birinchi qadam har doim til tanlash.
+    """/start -> majburiy kanal obunasi -> xush kelibsiz (Mini App tugmasi).
 
-    Keyin majburiy kanal obunasi, so'ng xush kelibsiz xabari keladi
-    (app/bot/handlers/language.py). /start qayta berilsa tilni almashtirish
-    imkonini ham beradi.
+    Til so'ralmaydi: yangi foydalanuvchi ingliz tilida boshlaydi va tilni
+    Mini App'dagi Profil -> Til orqali almashtiradi. Ilgari birinchi qadam
+    uch tilli til tanlash edi.
 
     Taklif havolasi (`/start ref123`) FAQAT birinchi kirishda hisobga
     olinadi, shuning uchun foydalanuvchi bor-yo'qligi yaratishdan OLDIN
@@ -76,4 +92,5 @@ async def cmd_start(message: Message, session: AsyncSession, command: CommandObj
             await referral_service.attach(session, user, referrer_id)
             await session.commit()
 
-    await message.answer(CHOOSE_LANGUAGE, reply_markup=language_keyboard())
+    text, markup = await entry_screen(message.bot, session, user, message.from_user.full_name)
+    await message.answer(text, reply_markup=markup)

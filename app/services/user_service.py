@@ -9,19 +9,9 @@ from app.db.models import Country, LanguageCertType, UiLanguage, User, UserLangu
 _PROFILE_RELATIONSHIPS = ("target_countries", "language_certificates", "other_tests", "saved_programs")
 
 
-def _language_from_telegram(code: str | None) -> UiLanguage:
-    """Telegram interfeys tilidan boshlang'ich til.
-
-    Yangi foydalanuvchining `ui_language`i doim "uz" bo'lib qolardi va Mini App
-    bot orqali emas, to'g'ridan-to'g'ri ochilganda ruszabon foydalanuvchi ham
-    o'zbekcha ko'rardi. Botda til so'raladi va uni ustiga yozadi — bu faqat
-    oqilona boshlang'ich qiymat.
-    """
-    base = (code or "").split("-")[0].lower()
-    try:
-        return UiLanguage(base)
-    except ValueError:
-        return UiLanguage.UZ
+# Yangi foydalanuvchi har doim ingliz tilida boshlaydi: botda til so'ralmaydi,
+# u Mini App'dagi Profil -> Til orqali almashtiriladi.
+DEFAULT_UI_LANGUAGE = UiLanguage.EN
 
 
 async def get_or_create_user(
@@ -45,7 +35,7 @@ async def get_or_create_user(
     user = User(
         telegram_id=telegram_id,
         username=username,
-        ui_language=_language_from_telegram(language_code),
+        ui_language=DEFAULT_UI_LANGUAGE,
     )
     session.add(user)
     await session.commit()

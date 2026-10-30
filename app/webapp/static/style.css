@@ -91,37 +91,93 @@ body {
 /* ============ Top bar ============ */
 
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px var(--pad);
-  background: var(--bg); /* fallback for engines without color-mix */
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
-  backdrop-filter: saturate(180%) blur(16px);
-  border-bottom: 1px solid var(--separator);
+  gap: 12px;
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px var(--pad) 4px;
 }
 
-.brand {
+/* Scout uslubidagi katta sahifa nomi (onboarding bilan bir xil shrift). */
+.page-title {
+  margin: 0;
+  min-width: 0;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-btn {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm), 0 4px 14px rgba(16, 20, 40, 0.06);
+  cursor: pointer;
+}
+.topbar-btn .ico { width: 23px; height: 23px; }
+.topbar-dot {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
+/* Bosh sahifa qidiruvi */
+.home-search {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 6px 6px 6px 16px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.home-search > .ico { flex: none; width: 21px; height: 21px; color: var(--hint); }
+.home-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  padding: 10px 0;
 }
-
-/* Loyiha logotipi (shaffof PNG) — ilgari bu yerda gradientli kvadrat ichida
-   umumiy "shapka" ikonkasi turardi. */
-.brand-mark {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
+.home-search input::-webkit-search-cancel-button { display: none; }
+.home-search-go {
   flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
 }
+.home-search-go .ico { width: 21px; height: 21px; }
 
 /* ============ Layout ============ */
 
@@ -2011,68 +2067,6 @@ button.sch-card:active { transform: scale(0.985); }
 
 /* ============ Profil: akkaunt menyusi ============ */
 
-.acc-head {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  margin-bottom: 14px;
-}
-
-.acc-avatar {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  flex: none;
-  border-radius: 50%;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--on-accent);
-  background: linear-gradient(140deg, var(--accent), var(--accent-2));
-}
-.acc-avatar .ico { width: 24px; height: 24px; }
-
-.acc-head-text { min-width: 0; }
-.acc-name {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.acc-sub {
-  font-size: 13px;
-  color: var(--hint);
-}
-
-/* Balans kartasi. To'ldirish botda bo'lgani uchun bu yerda tugma YO'Q —
-   faqat qoldiq va nima qilish kerakligi yoziladi. */
-.acc-balance {
-  border-radius: var(--r-xl);
-  padding: 18px;
-  margin-bottom: 14px;
-  color: var(--on-accent);
-  background: linear-gradient(140deg, var(--accent) 0%, var(--accent-2) 100%);
-  box-shadow: var(--shadow-accent);
-}
-.acc-balance-label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.85);
-}
-.acc-balance-value {
-  margin-top: 4px;
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
-.acc-balance-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.82);
-}
-
 .acc-group {
   background: var(--card);
   border-radius: var(--r-lg);
@@ -2159,6 +2153,158 @@ button.sch-card:active { transform: scale(0.985); }
   color: var(--hint);
   opacity: 0.55;
 }
+
+/* ---- Profil sahifasi (Scout uslubi) ---- */
+.pf-card,
+.pf-group {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+  border-radius: var(--r-xl);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.pf-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.pf-avatar {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex: none;
+  border-radius: 50%;
+  background: #ffc93c;
+  color: #1c1c1e;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+}
+.pf-avatar .ico { width: 26px; height: 26px; }
+.pf-text { flex: 1; min-width: 0; display: block; }
+.pf-name {
+  display: block;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pf-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--hint);
+}
+
+/* Balans: to'q karta (Scout'dagi "Talk to an advisor" o'rnida) */
+.pf-balance {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 18px 16px;
+  border-radius: var(--r-xl);
+  background: #141b2d;
+  color: #ffffff;
+}
+.pf-balance-ico {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  flex: none;
+  border-radius: 50%;
+  background: #ffc93c;
+  color: #1c1c1e;
+}
+.pf-balance-ico .ico { width: 24px; height: 24px; }
+.pf-balance-label { display: block; font-size: 12.5px; font-weight: 600; color: rgba(255, 255, 255, 0.7); }
+.pf-balance-value {
+  display: block;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.pf-balance-hint { display: block; margin-top: 3px; font-size: 12px; line-height: 1.35; color: rgba(255, 255, 255, 0.68); }
+.pf-balance-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 12px 9px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pf-balance-btn .ico { width: 15px; height: 15px; }
+
+.pf-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 16px;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+}
+/* Ajratuvchi chiziq ikonkadan keyin boshlanadi */
+.pf-row + .pf-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 54px;
+  right: 16px;
+  border-top: 1px solid var(--separator);
+}
+.pf-row:active { background: var(--surface); }
+.pf-ico { flex: none; display: grid; place-items: center; width: 24px; color: var(--accent-ink); }
+.pf-ico .ico { width: 23px; height: 23px; }
+.pf-title { display: block; font-size: 16.5px; font-weight: 500; letter-spacing: -0.01em; }
+.pf-value {
+  flex: none;
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  color: var(--hint);
+}
+.pf-chevron { width: 17px; height: 17px; flex: none; color: var(--hint); opacity: 0.7; }
+/* Qiymatli qatorda sarlavha bo'linmaydi — sig'masa qiymat "…" bilan qisqaradi. */
+.pf-row.has-value .pf-text { flex: 1 0 auto; max-width: 62%; }
+.pf-row.has-value .pf-title { white-space: nowrap; }
+.pf-row.has-value .pf-value { flex: 0 1 auto; min-width: 0; max-width: none; margin-left: auto; }
+.pf-row-static .switch { margin-left: auto; }
+
+/* Profil sarlavhasi: markazda va kichikroq, qo'ng'iroqcha yo'q */
+.topbar.is-centered { justify-content: center; padding-top: 14px; }
+.topbar.is-centered .page-title { font-size: 20px; font-weight: 700; }
+.topbar.is-centered .topbar-btn { display: none; }
 
 /* Til tanlashda faol qator brend rangida. */
 .lang-pick.is-active .acc-title { color: var(--accent-ink); }

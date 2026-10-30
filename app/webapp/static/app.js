@@ -3,7 +3,8 @@ if (tg) {
   tg.ready();
   tg.expand();
   try {
-    tg.setHeaderColor("secondary_bg_color");
+    // Sarlavha brend ko'k rangda; matn rangini Telegram fonga qarab o'zi tanlaydi.
+    tg.setHeaderColor("#0057ff");
     tg.setBackgroundColor("secondary_bg_color");
   } catch (e) {
     /* older Telegram clients */
@@ -87,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 76;
+const ASSET_V = 78;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -211,6 +212,8 @@ const I18N = {
     "profile.no_name": "Foydalanuvchi",
     "account.balance": "Hisobim",
     "account.topup_hint": "To'ldirish botda: /topup buyrug'ini yozing",
+    "profile.completeness": "profil {n}%",
+    "account.topup_btn": "To'ldirish",
     "account.filter": "Qidiruv filtri",
     "account.filter_sub": "Daraja, yo'nalish, davlatlar, til",
     "account.language": "Til",
@@ -630,6 +633,8 @@ const I18N = {
     "profile.no_name": "Пользователь",
     "account.balance": "Мой счёт",
     "account.topup_hint": "Пополнение в боте: отправьте команду /topup",
+    "profile.completeness": "профиль {n}%",
+    "account.topup_btn": "Пополнить",
     "account.filter": "Фильтр поиска",
     "account.filter_sub": "Ступень, направление, страны, язык",
     "account.language": "Язык",
@@ -1049,6 +1054,8 @@ const I18N = {
     "profile.no_name": "User",
     "account.balance": "My balance",
     "account.topup_hint": "Top up in the bot: send the /topup command",
+    "profile.completeness": "profile {n}%",
+    "account.topup_btn": "Top up",
     "account.filter": "Search filter",
     "account.filter_sub": "Degree, field, countries, language",
     "account.language": "Language",
@@ -1637,6 +1644,13 @@ async function renderHome() {
   // tashlandi: ikkala tugma ham pastdagi tab panelida bor edi, ism esa
   // Profil sahifasida ko'rinadi. Sahifa darhol asosiy kartadan boshlanadi.
   el.innerHTML = `
+    <form class="home-search" id="home-search" role="search">
+      ${icon("search")}
+      <input type="search" id="home-search-input" placeholder="${t(
+        "match.search_placeholder"
+      )}" autocomplete="off" enterkeyhint="search">
+      <button type="submit" class="home-search-go" aria-label="${t("nav.match")}">${icon("arrow")}</button>
+    </form>
     ${
       // Filtr hali sozlanmagan bo'lsa halqa ham, foiz ham ko'rsatilmaydi.
       // Ilgari bu yerda bo'sh oq halqa ichida chiziqcha turardi — u xuddi
@@ -1715,6 +1729,13 @@ async function renderHome() {
     </div>
   `;
 
+  // Qidiruv Dasturlar sahifasida shu so'z bilan ochiladi (u yerdagi qidiruv maydoni).
+  document.getElementById("home-search").addEventListener("submit", (event) => {
+    event.preventDefault();
+    matchQuery = document.getElementById("home-search-input").value.trim();
+    document.activeElement?.blur();
+    switchTab("match");
+  });
   document.getElementById("home-cta").addEventListener("click", () => switchTab("filter"));
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
 
@@ -1841,6 +1862,9 @@ async function renderHome() {
     });
     bindProgramOpeners(document.getElementById("home-top"));
   }
+
+  const dot = document.getElementById("topbar-dot");
+  if (dot) dot.hidden = !(upcoming.length && upcoming[0].nearest_deadline_days_left <= 7);
 
   if (upcoming.length) {
     const n = upcoming[0];
@@ -4473,15 +4497,20 @@ async function renderKit() {
 // Balans BOTDA to'ldiriladi (/topup). Mini App ichida to'lov qabul
 // qilinmaydi: chek qo'lda tekshiriladi va bu bot suhbatida qulayroq.
 
-function profileRow(id, iconName, title, value, extraClass) {
+// Profil qatori (Scout uslubi): chapda fonsiz ko'k ikonka, o'ngda qisqa qiymat.
+// `sub` — sarlavha ostidagi izoh (masalan taklif mukofoti).
+function profileRow(id, iconName, title, opts = {}) {
+  // `valueId` — qiymat keyin to'ldiriladi (masalan saqlanganlar soni).
+  const hasValue = (opts.value !== undefined && opts.value !== "") || opts.valueId;
   return `
-    <button type="button" class="acc-row ${extraClass || ""}" id="${id}">
-      <span class="acc-ico">${icon(iconName)}</span>
-      <span class="acc-text">
-        <span class="acc-title">${title}</span>
-        ${value ? `<span class="acc-value">${value}</span>` : ""}
+    <button type="button" class="pf-row${hasValue ? " has-value" : ""}" id="${id}">
+      <span class="pf-ico">${icon(iconName)}</span>
+      <span class="pf-text">
+        <span class="pf-title">${title}</span>
+        ${opts.sub ? `<span class="pf-sub">${opts.sub}</span>` : ""}
       </span>
-      ${icon("chevron", "acc-chevron")}
+      ${hasValue ? `<span class="pf-value"${opts.valueId ? ` id="${opts.valueId}"` : ""}>${opts.value || ""}</span>` : ""}
+      ${icon("chevron", "pf-chevron")}
     </button>`;
 }
 
@@ -4490,16 +4519,20 @@ function profileRow(id, iconName, title, value, extraClass) {
 function notificationsRow() {
   const on = profile.notifications_enabled !== false;
   return `
-    <div class="acc-row acc-row-static" id="acc-notif">
-      <span class="acc-ico">${icon("clock")}</span>
-      <span class="acc-text">
-        <span class="acc-title">${t("profile.notifications")}</span>
-        <span class="acc-value">${t("profile.notif_hint")}</span>
-      </span>
-      <span class="switch ${on ? "is-on" : ""}" role="switch" aria-checked="${on}">
+    <div class="pf-row pf-row-static" id="acc-notif">
+      <span class="pf-ico">${icon("bell")}</span>
+      <span class="pf-text"><span class="pf-title">${t("profile.notifications")}</span></span>
+      <span class="switch ${on ? "is-on" : ""}" role="switch" aria-checked="${on}" aria-label="${t(
+        "profile.notif_hint"
+      )}">
         <span class="switch-knob"></span>
       </span>
     </div>`;
+}
+
+// "Magistratura · 2 ta davlat" — filtr qatorining o'ngidagi qisqa xulosa.
+function filterSummary() {
+  return [degreeLabel(), countriesLabel()].filter(Boolean).map(escapeHtml).join(" · ");
 }
 
 function renderProfile() {
@@ -4509,39 +4542,70 @@ function renderProfile() {
   const balance = `${Number(profile.balance || 0).toLocaleString()} ${escapeHtml(
     profile.balance_currency || ""
   )}`;
+  const userSub = [username ? "@" + escapeHtml(username) : "", t("profile.completeness", { n: profileCompleteness() })]
+    .filter(Boolean)
+    .join(" · ");
 
   el.innerHTML = `
-    <div class="acc-head">
-      <div class="acc-avatar">${escapeHtml(initials(name)) || icon("user")}</div>
-      <div class="acc-head-text">
-        <div class="acc-name">${escapeHtml(name) || t("profile.no_name")}</div>
-        <div class="acc-sub">${username ? "@" + escapeHtml(username) : ""}</div>
-      </div>
-    </div>
+    <button type="button" class="pf-card pf-user" id="acc-user">
+      <span class="pf-avatar">${escapeHtml(initials(name)) || icon("user")}</span>
+      <span class="pf-text">
+        <span class="pf-name">${escapeHtml(name) || t("profile.no_name")}</span>
+        <span class="pf-sub">${userSub}</span>
+      </span>
+      ${icon("chevron", "pf-chevron")}
+    </button>
 
-    <div class="acc-balance">
-      <div class="acc-balance-label">${t("account.balance")}</div>
-      <div class="acc-balance-value">${balance}</div>
-      <div class="acc-balance-hint">${t("account.topup_hint")}</div>
-    </div>
-
-    <div class="acc-group">
+    <div class="pf-balance">
+      <span class="pf-balance-ico">${icon("wallet")}</span>
+      <span class="pf-text">
+        <span class="pf-balance-label">${t("account.balance")}</span>
+        <span class="pf-balance-value">${balance}</span>
+        <span class="pf-balance-hint">${t("account.topup_hint")}</span>
+      </span>
       ${
-        mentorConfig && mentorConfig.admin_username
-          ? profileRow("acc-mentor", "cap", t("mentor.become_row"), t("mentor.become_row_sub"))
+        profile.bot_username
+          ? `<button type="button" class="pf-balance-btn" id="acc-topup">${t("account.topup_btn")}${icon(
+              "chevron"
+            )}</button>`
           : ""
       }
-      ${profileRow("acc-filter", "search", t("account.filter"), t("account.filter_sub"))}
-      ${profileRow("acc-lang", "lang", t("account.language"), LANG_LABELS[lang] || lang)}
+    </div>
+
+    <div class="pf-group">
+      ${profileRow("acc-filter", "target", t("account.filter"), { value: filterSummary() || "—" })}
+      ${profileRow("acc-saved", "bookmark", t("nav.saved"), { value: "", valueId: "acc-saved-count" })}
       ${notificationsRow()}
-      ${profileRow("acc-invite", "spark", t("account.invite"), inviteSubtitle())}
-      ${profileRow("acc-help", "shield", t("account.help"), "")}
-      ${profileRow("acc-feedback", "plane", t("account.feedback"), "")}
+    </div>
+
+    <div class="pf-group">
+      ${profileRow("acc-lang", "globe", t("account.language"), { value: LANG_LABELS[lang] || lang })}
+      ${profileRow("acc-invite", "gift", t("account.invite"), { sub: inviteSubtitle() })}
+      ${
+        mentorConfig && mentorConfig.admin_username
+          ? profileRow("acc-mentor", "cap", t("mentor.become_row"), { sub: t("mentor.become_row_sub") })
+          : ""
+      }
+      ${profileRow("acc-help", "shield", t("account.help"))}
+      ${profileRow("acc-feedback", "chat", t("account.feedback"))}
     </div>`;
 
-  document.getElementById("acc-filter").addEventListener("click", () => {
+  const openFilterTab = () => {
     haptic("light");
     switchTab("filter");
+  };
+  document.getElementById("acc-user").addEventListener("click", openFilterTab);
+  document.getElementById("acc-filter").addEventListener("click", openFilterTab);
+  document.getElementById("acc-saved").addEventListener("click", () => switchTab("saved"));
+  document.getElementById("acc-topup")?.addEventListener("click", () => {
+    haptic("light");
+    // To'ldirish botda (/topup) — bot suhbati ochiladi.
+    const url = `https://t.me/${encodeURIComponent(profile.bot_username)}`;
+    try {
+      tg.openTelegramLink(url);
+    } catch (e) {
+      window.open(url, "_blank");
+    }
   });
   document.getElementById("acc-lang").addEventListener("click", openLanguageSheet);
   document.getElementById("acc-notif").addEventListener("click", async () => {
@@ -4561,6 +4625,14 @@ function renderProfile() {
   document.getElementById("acc-help").addEventListener("click", openHelpSheet);
   document.getElementById("acc-feedback").addEventListener("click", openFeedbackSheet);
   document.getElementById("acc-mentor")?.addEventListener("click", applyAsMentor);
+
+  // Saqlanganlar soni sahifani kutdirmasdan keyin to'ldiriladi.
+  api("/saved")
+    .then((items) => {
+      const count = document.getElementById("acc-saved-count");
+      if (count) count.textContent = items.length;
+    })
+    .catch(() => {});
 }
 
 const LANG_LABELS = { uz: "O'zbekcha", ru: "Русский", en: "English" };
@@ -5311,8 +5383,18 @@ function updateNavLabels() {
 let currentTab = "home";
 let previousTab = "home";
 
+// Tepadagi katta sarlavha: bosh sahifada ilova nomi, qolganlarida bo'lim nomi.
+const PAGE_TITLES = { home: () => "Uni Assist", mentor: () => "Uni Buddy" };
+
+function setPageTitle(tabName) {
+  const el = document.getElementById("page-title");
+  if (el) el.textContent = (PAGE_TITLES[tabName] || (() => t("nav." + tabName)))();
+  document.querySelector(".topbar")?.classList.toggle("is-centered", tabName === "profile");
+}
+
 async function switchTab(tabName) {
   haptic("light");
+  setPageTitle(tabName);
   if (tabName !== currentTab) {
     previousTab = currentTab;
     currentTab = tabName;
@@ -5434,6 +5516,9 @@ async function init() {
   await catalogReady;
   updateNavLabels();
   bindTabs();
+  setPageTitle(currentTab);
+  // Qo'ng'iroqcha — saqlangan dasturlar va ularning muddatlari.
+  document.getElementById("topbar-bell").addEventListener("click", () => switchTab("saved"));
 
   if (!onboarding) {
     const routed = await applyDeepLink();

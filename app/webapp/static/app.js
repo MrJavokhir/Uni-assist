@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 75;
+const ASSET_V = 76;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -212,7 +212,7 @@ const I18N = {
     "account.balance": "Hisobim",
     "account.topup_hint": "To'ldirish botda: /topup buyrug'ini yozing",
     "account.filter": "Qidiruv filtri",
-    "account.filter_sub": "Daraja, yo'nalish, baho, davlatlar",
+    "account.filter_sub": "Daraja, yo'nalish, davlatlar, til",
     "account.language": "Til",
     "account.invite": "Do'stlarni taklif qilish",
     "account.invite_sub": "Har bir do'st uchun {bonus}",
@@ -631,7 +631,7 @@ const I18N = {
     "account.balance": "Мой счёт",
     "account.topup_hint": "Пополнение в боте: отправьте команду /topup",
     "account.filter": "Фильтр поиска",
-    "account.filter_sub": "Ступень, направление, балл, страны",
+    "account.filter_sub": "Ступень, направление, страны, язык",
     "account.language": "Язык",
     "account.invite": "Пригласить друзей",
     "account.invite_sub": "{bonus} за каждого друга",
@@ -1050,7 +1050,7 @@ const I18N = {
     "account.balance": "My balance",
     "account.topup_hint": "Top up in the bot: send the /topup command",
     "account.filter": "Search filter",
-    "account.filter_sub": "Degree, field, grade, countries",
+    "account.filter_sub": "Degree, field, countries, language",
     "account.language": "Language",
     "account.invite": "Invite friends",
     "account.invite_sub": "{bonus} for every friend",
@@ -5355,11 +5355,17 @@ function bindTabs() {
  * ishlaydi), shuning uchun parametr URL hash'ida keladi: `#program_12`.
  * Telegram `start_param` bersa, u ham tekshiriladi.
  */
+//
+// Faqat TANILGAN yo'nalish qaytariladi. Telegram Mini App'ni ochganda hash'ga
+// o'zining `tgWebAppData=...` parametrlarini yozadi — ilgari u ham "havola"
+// deb olinib, yangi foydalanuvchiga onboarding umuman ko'rsatilmasdi.
+const DEEP_LINK = /^(profile|program_\d+|question_\d+|suggest_\d+)$/;
+
 function deepLinkTarget() {
   const fromHash = (location.hash || "").replace(/^#/, "");
   const fromStart =
     (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
-  return fromHash || fromStart || "";
+  return [fromHash, fromStart].find((value) => DEEP_LINK.test(value)) || "";
 }
 
 async function applyDeepLink() {

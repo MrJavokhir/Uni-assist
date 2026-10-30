@@ -48,7 +48,7 @@ function keyboardJustDismissed() {
 
 // Tugma/chip bosilganda klaviatura touchstart'da yopilsa, ekran siljib bosish
 // boshqa joyga tushib qolishi mumkin — ular uchun bosish bajarilgach yopiladi.
-const TAPPABLE = "button, a, label, .chip, .country-row, [role='button']";
+const TAPPABLE = "button, a, label, .chip, .wz-opt, [role='button']";
 
 document.addEventListener(
   "touchstart",
@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 73;
+const ASSET_V = 74;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -136,21 +136,6 @@ function countryName(country) {
 // Yo'nalish (`fields` ma'lumotnomasi) nomi foydalanuvchi tilida.
 function fieldName(field) {
   return field ? field["name_" + lang] || field.name_uz : "";
-}
-
-// Profildagi yo'nalish tanlovi: qiymat — yo'nalish ID'si.
-function majorOptions(selectedId) {
-  return (
-    `<option value="">${escapeHtml(t("profile.major_placeholder"))}</option>` +
-    majors
-      .map(
-        (m) =>
-          `<option value="${m.id}" ${String(selectedId) === String(m.id) ? "selected" : ""}>${escapeHtml(
-            fieldName(m)
-          )}</option>`
-      )
-      .join("")
-  );
 }
 
 // Bazada o'qitish tili KANONIK INGLIZCHA nom bilan saqlanadi ("English") —
@@ -333,10 +318,6 @@ const I18N = {
     "home.setup_filter": "Qidiruvni sozlash",
     "home.empty_text": "Yo'nalish, daraja va davlatni tanlang — ro'yxat shunga qarab toraytiriladi.",
     "home.refine_filter": "Filtrni to'ldirish",
-
-    "profile.section_academic": "Ta'lim",
-    "profile.section_language": "Til sertifikati",
-    "profile.section_preferences": "Afzalliklar",
     "profile.degree_level": "Daraja",
     "profile.degree_level.bachelor": "Bakalavr",
     "profile.degree_level.master": "Magistratura",
@@ -344,31 +325,17 @@ const I18N = {
     "profile.major": "Yo'nalish",
     "profile.major_placeholder": "— yo'nalishni tanlang —",
     "profile.major_empty": "Katalogda hali yo'nalish yo'q.",
-    "profile.gpa_scale": "Baholash tizimi",
     "profile.gpa_scale.5": "5 balli",
     "profile.gpa_scale.100": "100 balli",
     "profile.gpa_scale.4": "4.0 GPA",
-    "profile.gpa_value": "Bahoingiz",
-    "profile.gpa_us4": "US GPA",
-    "profile.gpa_ects": "ECTS",
-    "profile.gpa_bavarian": "Germaniya",
     "profile.study_language": "O'qish tili",
     "profile.study_language_any": "Farqi yo'q",
-    "profile.study_language_hint": "Dastur qaysi tilda o'qitiladi. Sertifikat balidan alohida.",
-    "profile.lang_cert_type": "Sertifikat turi",
-    "profile.lang_cert_none": "Yo'q",
-    "profile.lang_cert_score": "Ball",
     "profile.countries": "Maqsad davlatlar",
     "profile.countries_all": "Barchasi",
-    "profile.countries_none": "Tanlanmagan",
     "profile.countries_count": "{n} ta davlat",
     "profile.rank": "Universitet reytingi",
-    "profile.rank_hint": "Jahon reytingidagi o'rin",
     "profile.rank_any": "Farqi yo'q",
     "profile.app_fee": "Ariza to'lovi",
-    "profile.app_fee_hint": "Ariza to'lovi bo'lgan dasturlar ham mos keladimi?",
-    "profile.yes": "Ha",
-    "profile.no": "Yo'q",
     "profile.reset": "Hammasini tozalash",
     "profile.reset_confirm": "Profildagi barcha tanlovlar o'chiriladi. Saqlangan dasturlarga tegilmaydi. Davom etamizmi?",
     "profile.reset_toast": "Profil tozalandi",
@@ -385,12 +352,23 @@ const I18N = {
     "match.no_filter_count": "Butun katalog: {n} ta dastur, sizga moslanmagan",
     "match.no_filter_cta": "Sozlash",
     "onboard.title": "Keling, sizga mos dasturlarni topamiz",
-    "onboard.text": "Bir daqiqa vaqt oling. Bir necha savolga javob bersangiz, katalogdan aynan sizga to'g'ri keladigan dasturlar ajratiladi.",
-    "onboard.step1": "Daraja va yo'nalishni tanlaysiz",
-    "onboard.step2": "Bahoingiz va til sertifikatingizni kiritasiz",
-    "onboard.step3": "Qaysi davlatlarda o'qimoqchi ekaningizni belgilaysiz",
-    "onboard.cta": "Filtrni sozlash",
     "onboard.skip": "Keyinroq",
+    "wizard.tagline": "Grantlar, qabul va muddatlar — bir joyda.",
+    "wizard.start": "Boshlash",
+    "wizard.skip": "O'tkazish",
+    "wizard.next": "Davom etish",
+    "wizard.q.degree": "Qaysi darajada o'qimoqchisiz?",
+    "wizard.q.field": "Qaysi yo'nalishda?",
+    "wizard.q.countries": "Qayerda?",
+    "wizard.hint.countries": "Bir nechtasini tanlashingiz mumkin",
+    "wizard.q.language": "Qaysi tilda o'qimoqchisiz?",
+    "wizard.q.english": "Ingliz tili darajangiz?",
+    "wizard.cert_none": "Sertifikat yo'q",
+    "wizard.score_ielts": "IELTS balingiz",
+    "wizard.score_toefl": "TOEFL iBT balingiz (0–120)",
+    "wizard.q.prefs": "Yana ikki savol",
+    "wizard.fee_yes": "Pullik ariza ham bo'laveradi",
+    "wizard.fee_no": "Faqat bepul ariza",
     "match.save": "Saqlash",
     "match.search_placeholder": "Dastur, universitet yoki davlat",
     "match.search_empty": "Bu so'z bo'yicha dastur topilmadi",
@@ -426,7 +404,6 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS yoki TOEFL",
-    "match.missing_key.gpa": "GPA",
     "program.gpa_min": "Min. GPA",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
@@ -760,10 +737,6 @@ const I18N = {
     "home.setup_filter": "Настроить поиск",
     "home.empty_text": "Выберите направление, уровень и страну — список сузится под вас.",
     "home.refine_filter": "Дополнить фильтр",
-
-    "profile.section_academic": "Образование",
-    "profile.section_language": "Языковой сертификат",
-    "profile.section_preferences": "Предпочтения",
     "profile.degree_level": "Степень",
     "profile.degree_level.bachelor": "Бакалавриат",
     "profile.degree_level.master": "Магистратура",
@@ -771,30 +744,16 @@ const I18N = {
     "profile.major": "Направление",
     "profile.major_placeholder": "— выберите направление —",
     "profile.major_empty": "В каталоге пока нет направлений.",
-    "profile.gpa_scale": "Система оценок",
     "profile.gpa_scale.5": "5-балльная",
     "profile.gpa_scale.100": "100-балльная",
     "profile.gpa_scale.4": "4.0 GPA",
-    "profile.gpa_value": "Ваш балл",
-    "profile.gpa_us4": "US GPA",
-    "profile.gpa_ects": "ECTS",
-    "profile.gpa_bavarian": "Германия",
     "profile.study_language": "Язык обучения",
     "profile.study_language_any": "Не важно",
-    "profile.study_language_hint": "На каком языке ведётся программа. Это не балл сертификата.",
-    "profile.lang_cert_type": "Тип сертификата",
-    "profile.lang_cert_none": "Нет",
-    "profile.lang_cert_score": "Балл",
     "profile.countries": "Целевые страны",
-    "profile.countries_none": "Не выбрано",
     "profile.countries_count": "Стран: {n}",
     "profile.rank": "Рейтинг университета",
-    "profile.rank_hint": "Место в мировом рейтинге",
     "profile.rank_any": "Не важно",
     "profile.app_fee": "Плата за подачу заявки",
-    "profile.app_fee_hint": "Подходят ли программы с платной подачей заявки?",
-    "profile.yes": "Да",
-    "profile.no": "Нет",
     "profile.countries_all": "Все страны",
     "profile.reset": "Очистить всё",
     "profile.reset_confirm": "Все данные профиля будут удалены. Сохранённые программы не тронем. Продолжить?",
@@ -812,12 +771,23 @@ const I18N = {
     "match.no_filter_count": "Весь каталог: {n} программ, без подбора под вас",
     "match.no_filter_cta": "Настроить",
     "onboard.title": "Давайте подберём подходящие программы",
-    "onboard.text": "Это займёт минуту. Ответьте на несколько вопросов, и из каталога останутся только те программы, которые вам подходят.",
-    "onboard.step1": "Выберете ступень и направление",
-    "onboard.step2": "Укажете свой балл и языковой сертификат",
-    "onboard.step3": "Отметите страны, где хотите учиться",
-    "onboard.cta": "Настроить фильтр",
     "onboard.skip": "Позже",
+    "wizard.tagline": "Гранты, поступление и дедлайны — в одном месте.",
+    "wizard.start": "Начать",
+    "wizard.skip": "Пропустить",
+    "wizard.next": "Продолжить",
+    "wizard.q.degree": "Куда хотите поступить?",
+    "wizard.q.field": "Какое направление?",
+    "wizard.q.countries": "Где?",
+    "wizard.hint.countries": "Можно выбрать несколько",
+    "wizard.q.language": "На каком языке учиться?",
+    "wizard.q.english": "Ваш уровень английского?",
+    "wizard.cert_none": "Нет сертификата",
+    "wizard.score_ielts": "Ваш балл IELTS",
+    "wizard.score_toefl": "Ваш балл TOEFL iBT (0–120)",
+    "wizard.q.prefs": "Ещё два вопроса",
+    "wizard.fee_yes": "Платная подача — тоже подходит",
+    "wizard.fee_no": "Только бесплатная подача",
     "match.save": "Сохранить",
     "match.search_placeholder": "Программа, университет или страна",
     "match.search_empty": "По этому запросу программ нет",
@@ -853,7 +823,6 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS или TOEFL",
-    "match.missing_key.gpa": "GPA",
     "program.gpa_min": "Мин. GPA",
     "program.ielts_min": "Мин. IELTS",
     "program.toefl_min": "Мин. TOEFL",
@@ -1187,10 +1156,6 @@ const I18N = {
     "home.setup_filter": "Set up your search",
     "home.empty_text": "Pick a field, level and country — the list narrows down to fit you.",
     "home.refine_filter": "Refine your filter",
-
-    "profile.section_academic": "Academic",
-    "profile.section_language": "Language certificate",
-    "profile.section_preferences": "Preferences",
     "profile.degree_level": "Degree",
     "profile.degree_level.bachelor": "Bachelor's",
     "profile.degree_level.master": "Master's",
@@ -1198,30 +1163,16 @@ const I18N = {
     "profile.major": "Major",
     "profile.major_placeholder": "— select a field —",
     "profile.major_empty": "No fields in the catalog yet.",
-    "profile.gpa_scale": "Grading system",
     "profile.gpa_scale.5": "5-point",
     "profile.gpa_scale.100": "100-point",
     "profile.gpa_scale.4": "4.0 GPA",
-    "profile.gpa_value": "Your grade",
-    "profile.gpa_us4": "US GPA",
-    "profile.gpa_ects": "ECTS",
-    "profile.gpa_bavarian": "Germany",
     "profile.study_language": "Language of study",
     "profile.study_language_any": "Any",
-    "profile.study_language_hint": "The language the programme is taught in. Separate from your test score.",
-    "profile.lang_cert_type": "Certificate type",
-    "profile.lang_cert_none": "None",
-    "profile.lang_cert_score": "Score",
     "profile.countries": "Target countries",
-    "profile.countries_none": "None selected",
     "profile.countries_count": "{n} countries",
     "profile.rank": "University ranking",
-    "profile.rank_hint": "Position in world rankings",
     "profile.rank_any": "Any",
     "profile.app_fee": "Application fee",
-    "profile.app_fee_hint": "Are programs with an application fee acceptable?",
-    "profile.yes": "Yes",
-    "profile.no": "No",
     "profile.countries_all": "All countries",
     "profile.reset": "Reset everything",
     "profile.reset_confirm": "All profile choices will be cleared. Saved programs stay untouched. Continue?",
@@ -1239,12 +1190,23 @@ const I18N = {
     "match.no_filter_count": "Whole catalogue: {n} programmes, not matched to you",
     "match.no_filter_cta": "Set up",
     "onboard.title": "Let's find programmes that fit you",
-    "onboard.text": "It takes a minute. Answer a few questions and the catalogue narrows down to the programmes that actually fit you.",
-    "onboard.step1": "Pick your degree level and field",
-    "onboard.step2": "Add your grade and language certificate",
-    "onboard.step3": "Choose the countries you want to study in",
-    "onboard.cta": "Set up filter",
     "onboard.skip": "Later",
+    "wizard.tagline": "Scholarships, admissions and deadlines — in one place.",
+    "wizard.start": "Get started",
+    "wizard.skip": "Skip",
+    "wizard.next": "Continue",
+    "wizard.q.degree": "What do you want to study?",
+    "wizard.q.field": "Which field?",
+    "wizard.q.countries": "Where?",
+    "wizard.hint.countries": "You can pick several",
+    "wizard.q.language": "Language of instruction?",
+    "wizard.q.english": "Your English level?",
+    "wizard.cert_none": "No certificate",
+    "wizard.score_ielts": "Your IELTS score",
+    "wizard.score_toefl": "Your TOEFL iBT score (0–120)",
+    "wizard.q.prefs": "Two more questions",
+    "wizard.fee_yes": "Paid applications are fine",
+    "wizard.fee_no": "Free applications only",
     "match.save": "Save",
     "match.search_placeholder": "Programme, university or country",
     "match.search_empty": "No programmes match this search",
@@ -1280,7 +1242,6 @@ const I18N = {
     "match.missing_key.ielts": "IELTS",
     "match.missing_key.toefl": "TOEFL",
     "match.missing_key.ielts_toefl": "IELTS or TOEFL",
-    "match.missing_key.gpa": "GPA",
     "program.gpa_min": "Min. GPA",
     "program.ielts_min": "Min. IELTS",
     "program.toefl_min": "Min. TOEFL",
@@ -1633,7 +1594,6 @@ function hasFilter() {
 function profileCompleteness() {
   const checks = [
     ...filterFields(),
-    profile.gpa_raw !== null && profile.gpa_scale !== null,
     profile.language_certificates.length > 0,
     // "Farqi yo'q" ham javob: ariza to'lovi bo'yicha tanlov qilingani yetarli.
     // Reyting oralig'i ixtiyoriy afzallik — foizga qo'shilmaydi.
@@ -2102,9 +2062,9 @@ function bindMiniFilter(root) {
     chip.addEventListener("click", () => {
       haptic("light");
       const key = chip.dataset.mf;
-      // Davlatlar va "Hammasi" — to'liq filtr sahifasida.
+      // Davlatlar — onboarding'ning o'sha savolida, "Hammasi" — boshidan.
       if (key === "all" || key === "countries") {
-        switchTab("filter");
+        openFilter(key === "countries" ? "countries" : null);
         return;
       }
       openQuickFilterSheet(key);
@@ -2579,45 +2539,6 @@ function showSheet(html, sheet, options) {
 // foydalanuvchi uning nima uchun kerakligini tushunmaydi. Shuning uchun
 // ilova ochilganda filtr bo'sh bo'lsa, birinchi bo'lib shu oyna chiqadi.
 // Sessiyada bir marta: sahifalar orasida yurganda qayta ochilmasin.
-let onboardingShown = false;
-
-function openOnboardingSheet() {
-  onboardingShown = true;
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
-  const steps = [1, 2, 3]
-    .map(
-      (n) => `
-      <li class="onb-step"><span class="onb-num">${n}</span><span>${t("onboard.step" + n)}</span></li>`
-    )
-    .join("");
-
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
-    <div class="onb">
-      <img class="onb-ico" src="icon-bell.png?v=${ASSET_V}" alt="" aria-hidden="true">
-      <div class="onb-title">${t("onboard.title")}</div>
-      <div class="onb-text">${t("onboard.text")}</div>
-      <ol class="onb-steps">${steps}</ol>
-      <button type="button" class="btn btn-accent btn-block" id="onb-cta">${t("onboard.cta")}</button>
-      <button type="button" class="btn btn-quiet btn-block" id="onb-skip">${t("onboard.skip")}</button>
-    </div>
-  `,
-    sheet
-  );
-
-  document.getElementById("onb-cta").addEventListener("click", () => {
-    haptic("light");
-    closeSheet();
-    switchTab("filter");
-  });
-  document.getElementById("onb-skip").addEventListener("click", () => {
-    haptic("light");
-    closeSheet();
-  });
-}
-
 // ============ GPA konvertor ============
 
 // Har bir O'zbekiston shkalasi uchun ruxsat etilgan oraliq va namuna qiymat.
@@ -3544,289 +3465,305 @@ function openSuggestSheet(programId) {
 
 // ============ Profile ============
 
-// Bo'lim sarlavhasi + ikonka (faqat profil ekranida ishlatiladi).
-function profileSection(iconName, title) {
-  return `<div class="section-head">
-      <span class="section-title sec-ico">${icon(iconName)}<span>${title}</span></span>
-    </div>`;
-}
-
 const RANK_RANGES = ["1-100", "101-300", "301-500", "500+"];
 
-// Filtr endi ALOHIDA sahifa: pastki panelda yo'q, unga faqat bosh
-// sahifadan va Dasturlar ro'yxatidagi ogohlantirishdan kiriladi. Profil
-// tabi esa akkaunt menyusi bo'lib qoldi (renderProfile).
-// O'qish tili variantlari. Ro'yxat katalogdan keladi, nomlar esa
-// foydalanuvchi tiliga o'giriladi (LANGUAGE_NAMES).
-function studyLanguageOptions(selected) {
-  const any = `<option value="" ${selected ? "" : "selected"}>${escapeHtml(
-    t("profile.study_language_any")
-  )}</option>`;
-  return (
-    any +
-    studyLanguages
-      .map(
-        (value) =>
-          `<option value="${escapeHtml(value)}" ${
-            String(selected) === String(value) ? "selected" : ""
-          }>${escapeHtml(instructionLanguage(value))}</option>`
-      )
-      .join("")
-  );
+// ============ Filtr: qadamli onboarding ============
+//
+// Ilgari filtr bitta uzun sahifa edi (daraja, yo'nalish, GPA, til, davlatlar,
+// reyting, ariza to'lovi) — yangi foydalanuvchi uni ko'rib cho'chib qolardi.
+// Endi har bir savol alohida ekranda, tepada qadamlar chizig'i, pastda
+// "Davom etish". GPA so'ralmaydi — moslik unga qaramaydi
+// (app/services/matching_service.py).
+//
+// Javoblar `wiz.draft` da yig'iladi va faqat oxirgi qadamda saqlanadi:
+// yarim yo'lda chiqib ketgan odamning eski filtri buzilmaydi.
+
+const WIZ_STEPS = ["degree", "field", "countries", "language", "english", "prefs"];
+const IELTS_SCORES = ["4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0"];
+
+let wiz = null;
+// Filtrni ma'lum bir savoldan ochish uchun (masalan "Davlatlar" tugmasi).
+let wizEntryStep = null;
+
+function openFilter(step) {
+  wizEntryStep = step || null;
+  switchTab("filter");
+}
+
+function wizDraftFromProfile() {
+  const cert = profile.language_certificates[0];
+  return {
+    degree_level: profile.degree_level || "",
+    field_id: profile.field_id || null,
+    target_country_ids: (profile.target_country_ids || []).map(Number),
+    study_language: profile.study_language || "",
+    // null — savolga javob berilmagan (saqlanganiga tegilmaydi), "none" — sertifikat yo'q
+    cert_type: cert ? cert.type : null,
+    cert_score: cert ? String(cert.score) : "",
+    university_rank_range: profile.university_rank_range || "",
+    application_fee_ok: profile.application_fee_ok,
+  };
 }
 
 function renderFilter() {
-  const el = document.getElementById("view-filter");
-  const cert = profile.language_certificates[0] || {};
-  const certType = cert.type || "";
-  const certScore = cert.score ?? "";
-  const feeValue =
-    profile.application_fee_ok === null || profile.application_fee_ok === undefined
-      ? ""
-      : profile.application_fee_ok
-        ? "yes"
-        : "no";
+  const entry = WIZ_STEPS.indexOf(wizEntryStep);
+  wizEntryStep = null;
+  // Yangi foydalanuvchiga avval kutib olish ekrani; filtri borga — darhol savollar.
+  const step = entry >= 0 ? entry : hasFilter() ? 0 : -1;
+  wiz = { step, firstStep: step, draft: wizDraftFromProfile() };
+  document.body.classList.add("no-tabbar", "wizard-mode");
+  drawWizard();
+}
 
-  const chips = (id, options, activeValue, multi) => `
-    <div class="chip-group" id="${id}">
-      ${options
-        .map((o) => {
-          const active = multi ? activeValue.includes(o.value) : String(activeValue) === String(o.value);
-          return `<div class="chip ${active ? "active" : ""}" data-value="${escapeHtml(o.value)}">${escapeHtml(
-            o.label
-          )}</div>`;
-        })
-        .join("")}
-    </div>`;
+function leaveWizard() {
+  switchTab(previousTab && previousTab !== "filter" ? previousTab : "home");
+}
+
+async function wizGo(step) {
+  haptic("light");
+  if (step < -1 || (step === -1 && wiz.firstStep !== -1)) {
+    leaveWizard();
+    return;
+  }
+  if (step >= WIZ_STEPS.length) {
+    await findPrograms();
+    return;
+  }
+  wiz.step = step;
+  await drawWizard();
+  window.scrollTo({ top: 0 });
+}
+
+async function drawWizard() {
+  const el = document.getElementById("view-filter");
+  if (wiz.step === -1) {
+    el.innerHTML = `
+      <div class="wz wz-welcome">
+        <div class="wz-top"><span></span><button type="button" class="wz-skip" id="wz-skip">${t(
+          "wizard.skip"
+        )}</button></div>
+        <div class="wz-hero">
+          <div class="wz-logo"><img src="logo-mark.png?v=${ASSET_V}" alt="" aria-hidden="true"></div>
+          <h1 class="wz-brand">Uni Assist</h1>
+          <p class="wz-tagline">${t("wizard.tagline")}</p>
+        </div>
+        <div class="wz-foot">
+          <button type="button" class="btn btn-accent btn-block" id="wz-next">${t("wizard.start")}</button>
+        </div>
+      </div>`;
+    document.getElementById("wz-skip").addEventListener("click", () => {
+      haptic("light");
+      leaveWizard();
+    });
+    document.getElementById("wz-next").addEventListener("click", () => wizGo(0));
+    return;
+  }
+
+  const key = WIZ_STEPS[wiz.step];
+  if (key === "field") {
+    // Yo'nalishlar darajaga bog'liq: bakalavrga faqat PhD'da bor yo'nalish chiqmasin.
+    await loadMajors(wiz.draft.degree_level || null);
+    if (wiz.draft.field_id && !majors.some((m) => m.id === wiz.draft.field_id)) wiz.draft.field_id = null;
+  }
+  const last = wiz.step === WIZ_STEPS.length - 1;
+  const progress = WIZ_STEPS.map((_, i) => `<span class="${i <= wiz.step ? "on" : ""}"></span>`).join("");
+  const hint = key === "countries" ? `<p class="wz-hint">${t("wizard.hint.countries")}</p>` : "";
 
   el.innerHTML = `
-    <button type="button" class="kit-back" id="filter-back">
-      ${icon("chevron")}<span>${t("common.back")}</span>
-    </button>
-    ${profileSection("cap", t("profile.section_academic"))}
-    <div class="group">
-      <div class="field">
-        <label>${t("profile.degree_level")}</label>
-        ${chips(
-          "degree-chips",
-          ["bachelor", "master", "phd"].map((d) => ({ value: d, label: t("profile.degree_level." + d) })),
-          profile.degree_level || ""
-        )}
+    <div class="wz">
+      <div class="wz-top">
+        <button type="button" class="wz-back" id="wz-back" aria-label="${t("common.back")}">${icon("chevron")}</button>
+        <div class="wz-progress">${progress}</div>
+        <button type="button" class="wz-skip" id="wz-skip">${t("wizard.skip")}</button>
       </div>
-      <div class="field">
-        <label>${t("profile.major")}</label>
-        <select id="major-input" class="select-input">
-          ${majorOptions(profile.field_id)}
-        </select>
+      <h1 class="wz-title">${t("wizard.q." + key)}</h1>
+      ${hint}
+      <div class="wz-body" id="wz-body">${wizStepBody(key)}</div>
+      <div class="wz-foot">
+        <button type="button" class="btn btn-accent btn-block" id="${last ? "find-programs-btn" : "wz-next"}">
+          ${last ? icon("spark") + t("profile.find") : t("wizard.next")}
+        </button>
         ${
-          majors.length
-            ? ""
-            : `<small class="field-hint">${escapeHtml(t("profile.major_empty"))}</small>`
+          last && hasFilter()
+            ? `<button type="button" class="btn btn-quiet btn-block" id="reset-profile-btn">${t(
+                "profile.reset"
+              )}</button>`
+            : ""
         }
       </div>
-      <div class="field">
-        <label>${t("profile.gpa_scale")}</label>
-        ${chips(
-          "gpa-scale-chips",
-          ["5", "100", "4"].map((s) => ({ value: s, label: t("profile.gpa_scale." + s) })),
-          profile.gpa_scale || ""
-        )}
-      </div>
-      <div class="field">
-        <label>${t("profile.gpa_value")}</label>
-        <!-- cert-score-input bilan bir xil sabab: type="number" da
-             vergulli lokalda nuqta yo'qolib, "3.5" -> "35" bo'lardi. -->
-        <input type="text" inputmode="decimal" autocomplete="off"
-               id="gpa-value-input" placeholder="—" value="${
-          profile.gpa_raw ?? ""
-        }" />
-        <div id="gpa-preview"></div>
-      </div>
-    </div>
+    </div>`;
 
-    ${profileSection("lang", t("profile.section_language"))}
-    <div class="group">
-      <div class="field">
-        <label>${t("profile.study_language")}</label>
-        <select id="study-language-input" class="select-input">
-          ${studyLanguageOptions(profile.study_language)}
-        </select>
-        <small class="field-hint">${escapeHtml(t("profile.study_language_hint"))}</small>
-      </div>
-      <div class="field">
-        <label>${t("profile.lang_cert_type")}</label>
-        ${chips(
-          "cert-type-chips",
-          [
-            { value: "IELTS", label: "IELTS" },
-            { value: "TOEFL", label: "TOEFL" },
-            { value: "", label: t("profile.lang_cert_none") },
-          ],
-          certType
-        )}
-      </div>
-      <div class="field" id="cert-score-field" ${certType ? "" : "hidden"}>
-        <label>${t("profile.lang_cert_score")}</label>
-        <!-- ATAYLAB type="text": type="number" da qurilma lokali vergul
-             ishlatsa, iOS "." bosilishini shunchaki yutib yuborardi va
-             "7.5" o'rniga "75" qolardi. Endi vergul ham, nuqta ham
-             qabul qilinadi va o'qishda nuqtaga keltiriladi. -->
-        <input type="text" inputmode="decimal" autocomplete="off"
-               id="cert-score-input" placeholder="—" value="${certScore}" />
-      </div>
-    </div>
+  document.getElementById("wz-back").addEventListener("click", () => wizGo(wiz.step - 1));
+  document.getElementById("wz-skip").addEventListener("click", () => wizGo(wiz.step + 1));
+  document
+    .getElementById(last ? "find-programs-btn" : "wz-next")
+    .addEventListener("click", () => wizGo(wiz.step + 1));
+  document.getElementById("reset-profile-btn")?.addEventListener("click", resetProfile);
+  bindWizStep(key);
+  syncWizNext();
+}
 
-    ${profileSection("globe", t("profile.section_preferences"))}
-    <div class="group">
-      <div class="field field-collapse">
-        <button type="button" class="collapse-head" id="country-toggle" aria-expanded="false" aria-controls="country-collapse">
-          <span class="collapse-label">${t("profile.countries")}</span>
-          <span class="collapse-value" id="country-summary"></span>
-          <span class="collapse-chevron">${icon("chevron")}</span>
-        </button>
-        <div class="collapse-body" id="country-collapse" hidden>
-          <div class="country-list" id="country-list">
-            <button type="button" class="country-row country-all" id="country-all">
-              <span class="country-flag">${icon("globe")}</span>
-              <span class="country-name">${escapeHtml(t("profile.countries_all"))}</span>
-              <span class="country-check">${icon("check")}</span>
-            </button>
-            ${countries
-              .map((c) => {
-                const active = profile.target_country_ids.map(String).includes(String(c.id));
-                return `
-                  <button type="button" class="country-row ${active ? "active" : ""}" data-value="${c.id}">
-                    <span class="country-flag">${flag(c.iso_code)}</span>
-                    <span class="country-name">${escapeHtml(countryName(c))}</span>
-                    <span class="country-check">${icon("check")}</span>
-                  </button>`;
-              })
-              .join("")}
-          </div>
-        </div>
-      </div>
-      <div class="field">
-        <label>${t("profile.rank")}</label>
-        ${chips(
-          "rank-chips",
-          [{ value: "", label: t("profile.rank_any") }].concat(
-            RANK_RANGES.map((r) => ({ value: r, label: r }))
-          ),
-          profile.university_rank_range || ""
-        )}
-        <small class="field-hint">${escapeHtml(t("profile.rank_hint"))}</small>
-      </div>
-      <div class="field">
-        <label>${t("profile.app_fee")}</label>
-        ${chips(
-          "fee-chips",
-          [
-            { value: "yes", label: t("profile.yes") },
-            { value: "no", label: t("profile.no") },
-          ],
-          feeValue
-        )}
-        <small class="field-hint">${escapeHtml(t("profile.app_fee_hint"))}</small>
-      </div>
-    </div>
+function wizOption(value, label, active, opts = {}) {
+  return `
+    <button type="button" class="wz-opt${active ? " active" : ""}${opts.multi ? " is-multi" : ""}" data-value="${escapeHtml(
+      String(value)
+    )}">
+      ${opts.flag ? `<span class="wz-flag">${opts.flag}</span>` : ""}
+      <span class="wz-opt-label">${escapeHtml(label)}</span>
+      <span class="wz-mark">${icon("check")}</span>
+    </button>`;
+}
 
-    <button type="button" class="btn btn-accent btn-block" id="find-programs-btn">
-      ${icon("spark")}${t("profile.find")}
-    </button>
-    <button type="button" class="btn btn-danger-soft btn-block" id="reset-profile-btn">
-      ${icon("trash")}${t("profile.reset")}
-    </button>
-  `;
-
-  bindChips("gpa-scale-chips", updateGpaPreview);
-  bindChips("rank-chips");
-  bindChips("fee-chips");
-  bindChips("cert-type-chips", (value) => {
-    document.getElementById("cert-score-field").hidden = !value;
-  });
-
-  // Diqqat: "Barchasi" qatorida `data-value` yo'q — tanlangan davlatlarni
-  // yig'ishda u chetlab o'tilishi uchun hamma joyda `[data-value]` ishlatiladi.
-  const countryRows = () =>
-    Array.from(document.querySelectorAll("#country-list .country-row[data-value]"));
-  const allRow = document.getElementById("country-all");
-  const summary = document.getElementById("country-summary");
-
-  // Ro'yxat yopiq turganda ham nima tanlangani ko'rinib tursin: bayroqlar
-  // (ko'pi bilan 4 ta) va davlatlar soni sarlavha qatorida ko'rsatiladi.
-  const syncSummary = () => {
-    const rows = countryRows();
-    const selected = rows.filter((r) => r.classList.contains("active"));
-    if (!selected.length) {
-      summary.innerHTML = `<span class="collapse-empty">${escapeHtml(t("profile.countries_none"))}</span>`;
-      return;
-    }
-    if (selected.length === rows.length) {
-      summary.textContent = t("profile.countries_all");
-      return;
-    }
-    const flags = selected
-      .slice(0, 4)
-      .map((r) => `<span class="summary-flag">${escapeHtml(r.querySelector(".country-flag").textContent)}</span>`)
+function wizStepBody(key) {
+  const d = wiz.draft;
+  if (key === "degree") {
+    return ["bachelor", "master", "phd"]
+      .map((v) => wizOption(v, t("profile.degree_level." + v), d.degree_level === v))
       .join("");
-    const label =
-      selected.length === 1
-        ? selected[0].querySelector(".country-name").textContent
-        : t("profile.countries_count", { n: selected.length });
-    summary.innerHTML = `${flags}<span>${escapeHtml(label)}</span>`;
-  };
+  }
+  if (key === "field") {
+    if (!majors.length) return `<p class="wz-hint">${escapeHtml(t("profile.major_empty"))}</p>`;
+    return (
+      wizOption("", t("profile.study_language_any"), !d.field_id) +
+      majors.map((m) => wizOption(m.id, fieldName(m), d.field_id === m.id)).join("")
+    );
+  }
+  if (key === "countries") {
+    const all = countries.length > 0 && countries.every((c) => d.target_country_ids.includes(c.id));
+    return (
+      wizOption("all", t("profile.countries_all"), all, { multi: true, flag: icon("globe") }) +
+      countries
+        .map((c) =>
+          wizOption(c.id, countryName(c), d.target_country_ids.includes(c.id), {
+            multi: true,
+            flag: flag(c.iso_code),
+          })
+        )
+        .join("")
+    );
+  }
+  if (key === "language") {
+    return (
+      wizOption("", t("profile.study_language_any"), !d.study_language) +
+      studyLanguages.map((v) => wizOption(v, instructionLanguage(v), d.study_language === v)).join("")
+    );
+  }
+  if (key === "english") {
+    const score =
+      d.cert_type === "IELTS"
+        ? `<div class="wz-sub">${t("wizard.score_ielts")}</div>
+           <div class="wz-scores" id="wz-ielts">${IELTS_SCORES.map(
+             (v) =>
+               `<button type="button" class="wz-score${Number(d.cert_score) === Number(v) ? " active" : ""}" data-value="${v}">${v}</button>`
+           ).join("")}</div>`
+        : d.cert_type === "TOEFL"
+          ? `<div class="wz-sub">${t("wizard.score_toefl")}</div>
+             <input type="text" inputmode="numeric" autocomplete="off" class="wz-input" id="wz-toefl"
+                    placeholder="90" value="${escapeHtml(d.cert_score)}">`
+          : "";
+    return (
+      wizOption("none", t("wizard.cert_none"), d.cert_type === "none") +
+      wizOption("IELTS", "IELTS", d.cert_type === "IELTS") +
+      wizOption("TOEFL", "TOEFL iBT", d.cert_type === "TOEFL") +
+      score
+    );
+  }
+  // prefs: reyting + ariza to'lovi
+  return `
+    <div class="wz-sub">${t("profile.rank")}</div>
+    <div class="wz-group" data-group="rank">
+      ${[{ v: "", l: t("profile.rank_any") }]
+        .concat(RANK_RANGES.map((r) => ({ v: r, l: r })))
+        .map((o) => wizOption(o.v, o.l, d.university_rank_range === o.v))
+        .join("")}
+    </div>
+    <div class="wz-sub">${t("profile.app_fee")}</div>
+    <div class="wz-group" data-group="fee">
+      ${wizOption("yes", t("wizard.fee_yes"), d.application_fee_ok === true)}
+      ${wizOption("no", t("wizard.fee_no"), d.application_fee_ok === false)}
+    </div>`;
+}
 
-  const syncAllRow = () => {
-    const rows = countryRows();
-    allRow.classList.toggle("active", rows.length > 0 && rows.every((r) => r.classList.contains("active")));
-    syncSummary();
-  };
-
-  countryRows().forEach((row) => {
-    row.addEventListener("click", () => {
-      haptic("light");
-      row.classList.toggle("active");
-      syncAllRow();
+function bindWizStep(key) {
+  const body = document.getElementById("wz-body");
+  const d = wiz.draft;
+  const single = (container, onPick) => {
+    container.querySelectorAll(":scope > .wz-opt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        haptic("light");
+        container.querySelectorAll(":scope > .wz-opt").forEach((b) => b.classList.toggle("active", b === btn));
+        onPick(btn.dataset.value);
+      });
     });
-  });
+  };
 
-  allRow.addEventListener("click", () => {
-    haptic("light");
-    const turnOn = !allRow.classList.contains("active");
-    countryRows().forEach((r) => r.classList.toggle("active", turnOn));
-    allRow.classList.toggle("active", turnOn);
-    syncSummary();
-  });
+  if (key === "degree") single(body, (v) => (d.degree_level = v));
+  if (key === "field") single(body, (v) => (d.field_id = v ? Number(v) : null));
+  if (key === "language") single(body, (v) => (d.study_language = v));
+  if (key === "prefs") {
+    single(body.querySelector('[data-group="rank"]'), (v) => (d.university_rank_range = v));
+    single(body.querySelector('[data-group="fee"]'), (v) => (d.application_fee_ok = v === "yes"));
+  }
+  if (key === "countries") {
+    const rows = () => Array.from(body.querySelectorAll('.wz-opt:not([data-value="all"])'));
+    const allRow = body.querySelector('[data-value="all"]');
+    const sync = () => {
+      d.target_country_ids = rows()
+        .filter((r) => r.classList.contains("active"))
+        .map((r) => Number(r.dataset.value));
+      allRow.classList.toggle("active", rows().every((r) => r.classList.contains("active")));
+    };
+    rows().forEach((row) =>
+      row.addEventListener("click", () => {
+        haptic("light");
+        row.classList.toggle("active");
+        sync();
+      })
+    );
+    allRow.addEventListener("click", () => {
+      haptic("light");
+      const on = !allRow.classList.contains("active");
+      rows().forEach((r) => r.classList.toggle("active", on));
+      sync();
+    });
+  }
+  if (key === "english") {
+    body.querySelectorAll(":scope > .wz-opt").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        haptic("light");
+        if (d.cert_type !== btn.dataset.value) d.cert_score = "";
+        d.cert_type = btn.dataset.value;
+        // Ball maydoni turga qarab almashadi — qadam qayta chiziladi.
+        body.innerHTML = wizStepBody("english");
+        bindWizStep("english");
+        syncWizNext();
+      });
+    });
+    body.querySelectorAll(".wz-score").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        haptic("light");
+        body.querySelectorAll(".wz-score").forEach((b) => b.classList.toggle("active", b === btn));
+        d.cert_score = btn.dataset.value;
+        syncWizNext();
+      });
+    });
+    document.getElementById("wz-toefl")?.addEventListener("input", (event) => {
+      d.cert_score = decimalValue(event.target);
+      syncWizNext();
+    });
+  }
+}
 
-  // Davlatlar ro'yxati uzun — sukut bo'yicha yig'ilgan holda turadi.
-  const countryToggle = document.getElementById("country-toggle");
-  const countryCollapse = document.getElementById("country-collapse");
-  countryToggle.addEventListener("click", () => {
-    haptic("light");
-    const open = countryToggle.getAttribute("aria-expanded") === "true";
-    countryToggle.setAttribute("aria-expanded", String(!open));
-    countryCollapse.hidden = open;
-  });
-
-  syncAllRow();
-
-  // Daraja o'zgarsa, yo'nalishlar ro'yxati ham o'sha darajadagilarga
-  // qisqaradi — aks holda bakalavrga faqat PhD'da bor yo'nalish ko'rinardi.
-  bindChips("degree-chips", async (value) => {
-    const selected = document.getElementById("major-input").value;
-    await loadMajors(value);
-    document.getElementById("major-input").innerHTML = majorOptions(selected);
-  });
-
-  document.getElementById("gpa-value-input").addEventListener("input", updateGpaPreview);
-  document.getElementById("find-programs-btn").addEventListener("click", findPrograms);
-  document.getElementById("reset-profile-btn").addEventListener("click", resetProfile);
-  document.getElementById("filter-back").addEventListener("click", () => {
-    haptic("light");
-    switchTab(previousTab && previousTab !== "filter" ? previousTab : "home");
-  });
-
-  updateGpaPreview();
+// IELTS/TOEFL tanlangan-u, ball kiritilmagan bo'lsa davom etib bo'lmaydi:
+// aks holda sertifikat jimgina saqlanmay qolardi.
+function syncWizNext() {
+  const d = wiz.draft;
+  const btn = document.getElementById("wz-next") || document.getElementById("find-programs-btn");
+  if (!btn || WIZ_STEPS[wiz.step] !== "english") return;
+  const toefl = Number(d.cert_score);
+  btn.disabled =
+    (d.cert_type === "IELTS" && !d.cert_score) ||
+    (d.cert_type === "TOEFL" && !(d.cert_score && toefl >= 0 && toefl <= 120));
 }
 
 function bindChips(containerId, onChange, multi) {
@@ -3872,67 +3809,26 @@ function decimalValue(el) {
     : raw.slice(0, first + 1) + raw.slice(first + 1).replace(/\./g, "");
 }
 
-async function updateGpaPreview() {
-  const scale = activeChip("gpa-scale-chips");
-  const value = decimalValue(document.getElementById("gpa-value-input"));
-  const box = document.getElementById("gpa-preview");
-  if (!scale || !value) {
-    box.innerHTML = "";
-    return;
-  }
-  try {
-    const r = await api(`/gpa/convert?value=${encodeURIComponent(value)}&scale=${encodeURIComponent(scale)}`);
-    box.innerHTML = `
-      <div class="gpa-preview">
-        <div class="gpa-cell"><div class="gpa-cell-value">${r.us4}</div><div class="gpa-cell-label">${t(
-          "profile.gpa_us4"
-        )}</div></div>
-        <div class="gpa-cell"><div class="gpa-cell-value">${r.ects}</div><div class="gpa-cell-label">${t(
-          "profile.gpa_ects"
-        )}</div></div>
-        <div class="gpa-cell"><div class="gpa-cell-value">${r.bavarian}</div><div class="gpa-cell-label">${t(
-          "profile.gpa_bavarian"
-        )}</div></div>
-      </div>
-      <div class="disclaimer">${icon("clock")}<span>${escapeHtml(r.disclaimer)}</span></div>`;
-  } catch (e) {
-    box.innerHTML = "";
-  }
-}
-
 async function saveProfile() {
-  const selectedCountries = Array.from(
-    document.querySelectorAll("#country-list .country-row[data-value].active")
-  ).map((row) => Number(row.dataset.value));
-  const payload = { ui_language: lang, target_country_ids: selectedCountries };
-
-  const degree = activeChip("degree-chips");
-  const fieldValue = document.getElementById("major-input").value;
-  const gpaScale = activeChip("gpa-scale-chips");
-  const gpaValue = document.getElementById("gpa-value-input").value;
-  const certType = activeChip("cert-type-chips");
-  const certScoreEl = document.getElementById("cert-score-input");
-  const certScore = decimalValue(certScoreEl);
-  const fee = activeChip("fee-chips");
-
-  if (degree) payload.degree_level = degree;
-  // Har doim yuboriladi: bo'sh tanlov (null) yo'nalishni tozalaydi.
-  payload.field_id = fieldValue ? Number(fieldValue) : null;
-  if (gpaScale && gpaValue) {
-    payload.gpa_scale = gpaScale;
-    payload.gpa_raw = parseFloat(gpaValue);
+  const d = wiz.draft;
+  const payload = {
+    ui_language: lang,
+    target_country_ids: d.target_country_ids,
+    // Har doim yuboriladi: bo'sh qiymat = "farqi yo'q" (tanlov tozalanadi).
+    field_id: d.field_id,
+    study_language: d.study_language,
+    university_rank_range: d.university_rank_range,
+  };
+  if (d.degree_level) payload.degree_level = d.degree_level;
+  if (d.application_fee_ok !== null && d.application_fee_ok !== undefined) {
+    payload.application_fee_ok = d.application_fee_ok;
   }
-  if (certType && certScore) {
-    payload.language_cert_type = certType;
-    payload.language_cert_score = parseFloat(certScore);
+  if (d.cert_type === "none") {
+    payload.language_cert_type = "";
+  } else if (d.cert_type && d.cert_score) {
+    payload.language_cert_type = d.cert_type;
+    payload.language_cert_score = parseFloat(d.cert_score);
   }
-  // Har doim yuboriladi: "Farqi yo'q" tanlansa bo'sh satr saqlangan
-  // tanlovni tozalaydi.
-  payload.university_rank_range = activeChip("rank-chips") || "";
-  const studyLanguageEl = document.getElementById("study-language-input");
-  if (studyLanguageEl) payload.study_language = studyLanguageEl.value || "";
-  if (fee) payload.application_fee_ok = fee === "yes";
-
   profile = await api("/me", { method: "PATCH", body: JSON.stringify(payload) });
 }
 
@@ -5420,7 +5316,7 @@ async function switchTab(tabName) {
   }
   // Pastki menyu har bir o'tishda qaytadi; uni yashiradigan ekran
   // (Uni Buddy formasi va chati) o'zi qayta yashiradi.
-  document.body.classList.remove("no-tabbar");
+  document.body.classList.remove("no-tabbar", "wizard-mode");
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
   document.querySelectorAll(".view").forEach((v) => {
     v.hidden = v.id !== `view-${tabName}`;
@@ -5535,8 +5431,9 @@ async function init() {
   // chiqmaydi: odam aniq bir maqsad bilan kelgan.
   const routed = await applyDeepLink();
   if (!routed) {
-    if (!hasFilter() && !onboardingShown) openOnboardingSheet();
     await renderHome();
+    // Filtr bo'sh bo'lsa — darhol qadamli onboarding (kutib olish ekranidan).
+    if (!hasFilter()) await switchTab("filter");
   }
 
   tabbar.removeAttribute("aria-busy");

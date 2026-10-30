@@ -444,31 +444,6 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.gpa-preview {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.gpa-cell {
-  flex: 1;
-  background: var(--surface);
-  border-radius: var(--r-md);
-  padding: 9px 8px;
-  text-align: center;
-}
-.gpa-cell-value {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.gpa-cell-label {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--hint);
-  margin-top: 1px;
-}
-
 .disclaimer {
   display: flex;
   gap: 7px;
@@ -722,25 +697,6 @@ body {
 
 /* ============ Yo'nalish tanlagich ============ */
 
-.select-input {
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  border: none;
-  border-radius: var(--r-md);
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 12px 38px 12px 14px;
-  /* O'ng tomondagi ochiluvchi ko'rsatkich (data: URI — tashqi so'rovsiz) */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-}
-.select-input:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
-
 .field-hint {
   display: block;
   margin-top: 6px;
@@ -749,64 +705,6 @@ body {
 }
 
 /* ============ Davlatlar ro'yxati (bayroq bilan) ============ */
-
-.country-list {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--r-md);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.country-row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  width: 100%;
-  padding: 11px 13px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.14s ease;
-}
-.country-row + .country-row { border-top: 1px solid var(--separator); }
-.country-row:active { background: var(--accent-soft); }
-.country-row.active { background: var(--accent-soft); font-weight: 600; }
-
-/* Windows'da bayroq emojilari (regional indicator) umuman chizilmaydi —
-   o'rniga "US", "GB" kabi ikkita harf ko'rinadi. Shuning uchun bu quticha
-   ikkala holatda ham tartibli ko'rinadigan qilib o'lchamlanadi. */
-.country-flag {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  flex: none;
-  font-size: 21px;
-  line-height: 1;
-  letter-spacing: 0;
-}
-.country-name { flex: 1; min-width: 0; }
-
-.country-check {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--on-accent);
-  flex: none;
-  opacity: 0;
-  transform: scale(0.6);
-  transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-.country-check .ico { width: 13px; height: 13px; }
-.country-row.active .country-check { opacity: 1; transform: none; }
 
 /* ============ Bir qatorli filtr lentasi ============ */
 
@@ -907,14 +805,6 @@ body.no-tabbar .tabbar { display: none; }
   background: var(--red-soft);
   color: var(--red);
 }
-
-/* "Barchasi" qatori qolganlaridan ajralib tursin */
-.country-row.country-all {
-  font-weight: 700;
-  border-bottom: 1px solid var(--separator);
-}
-.country-all .country-flag .ico { width: 19px; height: 19px; color: var(--hint); }
-.country-all.active .country-flag .ico { color: var(--accent-ink); }
 
 /* Diplom qisqartmasi (MBA, LLM, B.Sc.) — dastur nomi yonida.
    DIQQAT: bu blok ilgari obuna ekrani uslublari bilan birga tasodifan
@@ -1326,7 +1216,6 @@ body.no-tabbar .tabbar { display: none; }
 
 /* --- Tezkor amallar: uchta ixcham plitka --- */
 
-
 .quick-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1593,65 +1482,6 @@ button.sch-card:active { transform: scale(0.985); }
 }
 
 /* ============ Yig'iladigan bo'lim (davlatlar ro'yxati) ============ */
-
-.field-collapse { padding: 0; }
-
-.collapse-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px 0;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 15px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.collapse-label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--hint);
-  flex: none;
-}
-
-.collapse-value {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex: 1;
-  min-width: 0;
-  justify-content: flex-end;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-}
-.collapse-value > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.collapse-empty { color: var(--hint); font-weight: 500; }
-.summary-flag { font-size: 15px; line-height: 1; flex: none; }
-
-.collapse-chevron {
-  display: grid;
-  place-items: center;
-  flex: none;
-  color: var(--hint);
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-.collapse-chevron .ico { width: 15px; height: 15px; }
-.collapse-head[aria-expanded="true"] .collapse-chevron { transform: rotate(90deg); }
-
-.collapse-body {
-  padding-bottom: 12px;
-  animation: enter 0.18s ease;
-}
 
 /* Universitet reytingi (QS) — dastur kartasi va tafsilot oynasida */
 .pill.rank-pill {
@@ -1946,71 +1776,6 @@ button.sch-card:active { transform: scale(0.985); }
 .fx-bar-go .ico { width: 14px; height: 14px; }
 
 /* ============ Birinchi kirishda yo'naltirish ============ */
-
-.onb {
-  padding-bottom: 4px;
-  text-align: center;
-}
-
-/* Ikonka fonsiz, oynaning o'z yuzasida turadi. Ilgari orqasiga rangli
-   plitka qo'yilgandi, lekin u ikonkani "ramkaga" solib qo'yardi.
-   Ko'tarilib turgan taassurotni endi faqat soya beradi: yumshoq uzoq
-   soya hajm hosil qiladi, tig'iz yaqin soya esa chetini ajratadi. */
-.onb-ico {
-  display: block;
-  width: 88px;
-  height: 88px;
-  margin: 2px auto 16px;
-  object-fit: contain;
-  filter: drop-shadow(0 12px 18px rgba(16, 20, 40, 0.32))
-          drop-shadow(0 3px 5px rgba(16, 20, 40, 0.2));
-}
-
-.onb-title {
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-}
-
-.onb-text {
-  margin-top: 8px;
-  font-size: 13.5px;
-  line-height: 1.45;
-  color: var(--hint);
-}
-
-.onb-steps {
-  list-style: none;
-  margin: 18px 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-  text-align: left;
-}
-
-.onb-step {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  font-size: 13.5px;
-  line-height: 1.35;
-}
-
-.onb-num {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--accent-ink);
-  background: var(--accent-soft);
-}
-
-.onb .btn-block { margin-top: 8px; }
 
 /* ============ Admission Kit ============ */
 
@@ -2776,7 +2541,6 @@ button.sch-card:active { transform: scale(0.985); }
 .mnt-actions { display: grid; gap: 8px; }
 .mnt-actions:empty { display: none; }
 
-
 /* Muddati o'tgan grant: ro'yxatda pastda va xira — ochiq grantlardan
    bir qarashda ajralib turadi. */
 .gr-card.is-closed { opacity: 0.6; }
@@ -2817,3 +2581,171 @@ button.sch-card:active { transform: scale(0.985); }
   object-fit: cover;
 }
 .mnt-title .flag-img { margin-right: 4px; }
+
+/* ============ Qadamli onboarding (filtr) ============ */
+body.wizard-mode .topbar { display: none; }
+body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
+
+.wz {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(var(--tg-viewport-stable-height, 100vh) - 8px);
+}
+.wz-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+}
+.wz-back {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: -8px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.wz-back .ico { width: 22px; height: 22px; transform: rotate(180deg); }
+.wz-progress { flex: 1; display: flex; gap: 6px; }
+.wz-progress span {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--separator);
+  transition: background 0.25s ease;
+}
+.wz-progress span.on { background: var(--accent); }
+.wz-top > span:first-child { flex: 1; }
+.wz-skip {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--hint);
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 0 8px 8px;
+  cursor: pointer;
+}
+.wz-title {
+  margin: 22px 0 6px;
+  font-size: 26px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.wz-hint { margin: 0 0 4px; color: var(--hint); }
+.wz-body { display: grid; gap: 10px; margin-top: 14px; }
+.wz-group { display: grid; gap: 10px; }
+.wz-sub {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wz-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--separator);
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.wz-opt-label { flex: 1; min-width: 0; }
+.wz-flag { flex: none; display: inline-flex; font-size: 20px; }
+.wz-flag .flag-img { height: 18px; }
+.wz-flag .ico { width: 20px; height: 20px; color: var(--accent-ink); }
+/* Radio (bitta tanlov) — doira, ko'p tanlov — yumaloq kvadrat */
+.wz-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--separator);
+  border-radius: 50%;
+  color: transparent;
+}
+.wz-opt.is-multi .wz-mark { border-radius: 7px; }
+.wz-mark .ico { width: 14px; height: 14px; }
+.wz-opt.active { border-color: var(--accent); background: var(--accent-soft); }
+.wz-opt.active .wz-mark { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+
+.wz-scores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.wz-score {
+  padding: 12px 0;
+  border: 1.5px solid var(--separator);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.wz-score.active { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+.wz-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid var(--separator);
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+.wz-input:focus { outline: 0; border-color: var(--accent); }
+
+.wz-foot {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  display: grid;
+  gap: 4px;
+  padding: 16px 0 calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--surface) 28%);
+}
+.wz-foot .btn:disabled { opacity: 0.45; }
+
+.wz-welcome .wz-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 8px;
+}
+.wz-logo {
+  display: grid;
+  place-items: center;
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  /* Logotip PNG'sining foni oq — doira ham oq, aks holda ichida kvadrat ko'rinadi. */
+  background: #fff;
+  box-shadow: 0 0 0 10px var(--accent-soft), var(--shadow-sm);
+}
+.wz-logo img { width: 112px; height: 112px; object-fit: contain; }
+.wz-brand {
+  margin: 28px 0 8px;
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.wz-tagline { margin: 0; max-width: 300px; color: var(--hint); font-size: 16px; }

@@ -359,11 +359,21 @@ async def update_me(
     if payload.target_country_ids is not None:
         await set_target_countries(session, user, payload.target_country_ids)
 
-    if payload.language_cert_type is not None and payload.language_cert_score is not None:
+    # Onboarding'da bitta sertifikat tanlanadi: "" = "Sertifikat yo'q" (hammasi
+    # o'chiriladi), boshqa tur tanlansa eskisi almashtiriladi. Ilgari IELTS'dan
+    # TOEFL'ga o'tgan odamda eski IELTS ko'rinmay saqlanib, moslikka ta'sir qilardi.
+    if payload.language_cert_type == "":
+        for certificate in list(user.language_certificates):
+            await session.delete(certificate)
+        await session.commit()
+    elif payload.language_cert_type is not None and payload.language_cert_score is not None:
         try:
             cert_type = LanguageCertType(payload.language_cert_type)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail="Noto'g'ri sertifikat turi") from exc
+        for certificate in list(user.language_certificates):
+            if certificate.type != cert_type:
+                await session.delete(certificate)
         await upsert_language_certificate(session, user, cert_type, payload.language_cert_score)
 
     # session'da expire_on_commit=False bo'lgani uchun `user`dagi allaqachon

@@ -239,11 +239,11 @@ async def test_large_language_gap_is_hidden(session: AsyncSession):
     assert await find_matches(session, user) == []
 
 
-@pytest.mark.parametrize("user_gpa", [2.5])
-async def test_gpa_below_requirement_is_hidden(session: AsyncSession, user_gpa):
-    """Hisobotdagi holat: GPA 2.5, UPM magistraturasi CGPA 2.75 so'raydi.
+async def test_gpa_does_not_affect_match(session: AsyncSession):
+    """GPA filtrda so'ralmaydi — saqlangan past GPA ham dasturni yashirmaydi.
 
-    Farq 0.25 dan katta emas — shuning uchun bu "Yaqin". 2.4 bo'lsa yashiriladi.
+    Talabda "min CGPA 2.75" bo'lsa-yu, profilda eski 2.0 qolgan bo'lsa ham
+    dastur "Mos": foydalanuvchi bu qiymatni endi o'zgartira olmaydi.
     """
     await _make_program(
         session,
@@ -251,59 +251,18 @@ async def test_gpa_below_requirement_is_hidden(session: AsyncSession, user_gpa):
         ielts_min=None,
         requirements_text="Bachelor degree in a related field, min CGPA 2.750/4.00",
     )
-    close_user = await _make_user(session, gpa_raw=user_gpa, gpa_scale=GpaScale.SCALE_4, ielts_score=None)
+    low_gpa = await _make_user(session, gpa_raw=2.0, gpa_scale=GpaScale.SCALE_4, ielts_score=None)
 
-    results = await find_matches(session, close_user)
-    assert results[0].level == MatchLevel.YELLOW
-    assert results[0].missing == ["gpa"]
+    results = await find_matches(session, low_gpa)
 
-    close_user.gpa_raw = 2.4
+    assert results[0].level == MatchLevel.GREEN
+    assert results[0].missing == []
+
+    low_gpa.gpa_raw = None
+    low_gpa.gpa_scale = None
     await session.commit()
-    assert await find_matches(session, close_user) == []
-
-
-async def test_gpa_met_is_green(session: AsyncSession):
-    await _make_program(
-        session,
-        degree_level=DegreeLevel.MASTER,
-        ielts_min=None,
-        requirements_text="Bachelor degree with CGPA 3.00 (2.50-2.99 with work experience)",
-    )
-    user = await _make_user(session, gpa_raw=3.2, gpa_scale=GpaScale.SCALE_4, ielts_score=None)
-
-    results = await find_matches(session, user)
-
+    results = await find_matches(session, low_gpa)
     assert results[0].level == MatchLevel.GREEN
-
-
-async def test_gpa_ignored_for_bachelor(session: AsyncSession):
-    """Bakalavr talabidagi "CGPA 3.00" — foundation yo'li, foydalanuvchi bahosi bilan solishtirilmaydi."""
-    await _make_program(
-        session,
-        ielts_min=None,
-        requirements_text="A recognised foundation certificate with CGPA 3.00",
-    )
-    user = await _make_user(session, gpa_raw=2.0, gpa_scale=GpaScale.SCALE_4, ielts_score=None)
-
-    results = await find_matches(session, user)
-
-    assert results[0].level == MatchLevel.GREEN
-
-
-async def test_unknown_gpa_marks_close_not_hidden(session: AsyncSession):
-    """GPA kiritilmagan bo'lsa dastur yashirilmaydi, "GPA" kerakligi yoziladi."""
-    await _make_program(
-        session,
-        degree_level=DegreeLevel.MASTER,
-        ielts_min=None,
-        requirements_text="Bachelor degree, minimum GPA 80/100",
-    )
-    user = await _make_user(session, gpa_raw=None, gpa_scale=None, ielts_score=None)
-
-    results = await find_matches(session, user)
-
-    assert results[0].level == MatchLevel.YELLOW
-    assert results[0].missing == ["gpa"]
 
 
 async def test_toefl_only_program_hidden_for_ielts_holder(session: AsyncSession):

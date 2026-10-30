@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 79;
+const ASSET_V = 81;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1644,13 +1644,6 @@ async function renderHome() {
   // tashlandi: ikkala tugma ham pastdagi tab panelida bor edi, ism esa
   // Profil sahifasida ko'rinadi. Sahifa darhol asosiy kartadan boshlanadi.
   el.innerHTML = `
-    <form class="home-search" id="home-search" role="search">
-      ${icon("search")}
-      <input type="search" id="home-search-input" placeholder="${t(
-        "match.search_placeholder"
-      )}" autocomplete="off" enterkeyhint="search">
-      <button type="submit" class="home-search-go" aria-label="${t("nav.match")}">${icon("arrow")}</button>
-    </form>
     ${
       // Filtr hali sozlanmagan bo'lsa halqa ham, foiz ham ko'rsatilmaydi.
       // Ilgari bu yerda bo'sh oq halqa ichida chiziqcha turardi — u xuddi
@@ -1729,13 +1722,6 @@ async function renderHome() {
     </div>
   `;
 
-  // Qidiruv Dasturlar sahifasida shu so'z bilan ochiladi (u yerdagi qidiruv maydoni).
-  document.getElementById("home-search").addEventListener("submit", (event) => {
-    event.preventDefault();
-    matchQuery = document.getElementById("home-search-input").value.trim();
-    document.activeElement?.blur();
-    switchTab("match");
-  });
   document.getElementById("home-cta").addEventListener("click", () => switchTab("filter"));
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
 
@@ -1862,9 +1848,6 @@ async function renderHome() {
     });
     bindProgramOpeners(document.getElementById("home-top"));
   }
-
-  const dot = document.getElementById("topbar-dot");
-  if (dot) dot.hidden = !(upcoming.length && upcoming[0].nearest_deadline_days_left <= 7);
 
   if (upcoming.length) {
     const n = upcoming[0];
@@ -4547,6 +4530,7 @@ function renderProfile() {
     .join(" · ");
 
   el.innerHTML = `
+    <h1 class="pf-heading">${t("nav.profile")}</h1>
     <button type="button" class="pf-card pf-user" id="acc-user">
       <span class="pf-avatar">${escapeHtml(initials(name)) || icon("user")}</span>
       <span class="pf-text">
@@ -5383,18 +5367,8 @@ function updateNavLabels() {
 let currentTab = "home";
 let previousTab = "home";
 
-// Tepadagi katta sarlavha: bosh sahifada ilova nomi, qolganlarida bo'lim nomi.
-const PAGE_TITLES = { home: () => "Uni Assist", mentor: () => "Uni Buddy" };
-
-function setPageTitle(tabName) {
-  const el = document.getElementById("page-title");
-  if (el) el.textContent = (PAGE_TITLES[tabName] || (() => t("nav." + tabName)))();
-  document.querySelector(".topbar")?.classList.toggle("is-centered", tabName === "profile");
-}
-
 async function switchTab(tabName) {
   haptic("light");
-  setPageTitle(tabName);
   if (tabName !== currentTab) {
     previousTab = currentTab;
     currentTab = tabName;
@@ -5516,9 +5490,6 @@ async function init() {
   await catalogReady;
   updateNavLabels();
   bindTabs();
-  setPageTitle(currentTab);
-  // Qo'ng'iroqcha — saqlangan dasturlar va ularning muddatlari.
-  document.getElementById("topbar-bell").addEventListener("click", () => switchTab("saved"));
 
   if (!onboarding) {
     const routed = await applyDeepLink();

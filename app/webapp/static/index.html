@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <title>Uni Assist</title>
-<link rel="icon" type="image/png" href="favicon.png?v=79" />
-<link rel="apple-touch-icon" href="logo-mark.png?v=79" />
+<link rel="icon" type="image/png" href="favicon.png?v=81" />
+<link rel="apple-touch-icon" href="logo-mark.png?v=81" />
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- Onboarding sarlavhalari uchun (namunadagi geometrik shrift); kirill ham bor. -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" />
-<link rel="stylesheet" href="style.css?v=79" />
+<link rel="stylesheet" href="style.css?v=81" />
 </head>
 <body>
 
@@ -22,9 +22,6 @@
   </symbol>
   <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
     <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9"/><path d="M10 19.5a2 2 0 0 0 4 0"/>
-  </symbol>
-  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M5 12h14M13 6l6 6-6 6"/>
   </symbol>
   <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/>
@@ -105,11 +102,10 @@
 
 <div id="app">
   <header class="topbar">
-    <h1 class="page-title" id="page-title">Uni Assist</h1>
-    <button type="button" class="topbar-btn" id="topbar-bell" aria-label="Deadlines">
-      <svg class="ico"><use href="#i-bell"/></svg>
-      <span class="topbar-dot" id="topbar-dot" hidden></span>
-    </button>
+    <div class="brand">
+      <img class="brand-mark" src="logo-mark.png?v=81" alt="" width="30" height="30">
+      <span>Uni Assist</span>
+    </div>
   </header>
 
   <main id="views">
@@ -146,6 +142,6 @@
     </button>
   </nav>
 </div>
-<script src="app.js?v=79"></script>
+<script src="app.js?v=81"></script>
 </body>
 </html>

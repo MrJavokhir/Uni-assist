@@ -44,6 +44,7 @@ from app.db.models import (
     UniversityChoiceType,
 )
 from app.db.session import async_session_factory
+from app.services.cover_images import apply_cover_upload, cover_url
 
 # Tahrirlashda forma universitetning TO'LIQ holati: bu chegaradan oshgan
 # dasturlar formaga sig'masa, saqlashda o'chib ketadi — shuning uchun katta.
@@ -472,6 +473,7 @@ class UniversityWizard(BaseView):
             "city": university.city,
             "website": university.website or "",
             "logo_url": university.logo_url or "",
+            "cover_url": cover_url("university", university),
             "timezone": university.timezone,
             "ranking": _as_str(university.ranking),
             "programs": programs,
@@ -506,6 +508,7 @@ class UniversityWizard(BaseView):
         university.logo_url = _text(form, "logo_url")
         university.timezone = _text(form, "timezone")
         university.ranking = _integer(form, "ranking")
+        await apply_cover_upload(university, form.get("cover_image"), _checked(form, "cover_remove"))
         if existing is None:
             session.add(university)
         await session.flush()
@@ -900,6 +903,7 @@ class ScholarshipWizard(BaseView):
             "name": scholarship.name,
             "source_url": scholarship.source_url or "",
             "logo_url": scholarship.logo_url or "",
+            "cover_url": cover_url("scholarship", scholarship),
             "description": scholarship.description or "",
             "description_ru": scholarship.description_ru or "",
             "description_en": scholarship.description_en or "",
@@ -976,6 +980,7 @@ class ScholarshipWizard(BaseView):
         scholarship.description_ru = _multiline(form, "description_ru")
         scholarship.description_en = _multiline(form, "description_en")
         scholarship.logo_url = _text(form, "logo_url")
+        await apply_cover_upload(scholarship, form.get("cover_image"), _checked(form, "cover_remove"))
         scholarship.coverage_type = _enum(form, "coverage_type", CoverageType) or CoverageType.FULL
         scholarship.coverage_percent = _integer(form, "coverage_percent")
         scholarship.stipend_amount = _number(form, "stipend_amount")

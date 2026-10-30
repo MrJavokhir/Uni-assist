@@ -138,6 +138,8 @@ class ProgramDetailOut(BaseModel):
     """Dastur kartasi bosilganda ochiladigan to'liq ma'lumot."""
 
     id: int
+    # Universitet rasmi (admin yuklagan) — sahifa tepasida; None = rasm yo'q.
+    cover_url: str | None = None
     # Aniq sana bo'lmaganda, odatda qaysi oyda yopilishi (1-12).
     deadline_month: int | None = None
     # Minimal GPA — talablar matnidan hisoblanadi (faqat magistr/PhD).
@@ -268,6 +270,8 @@ class ScholarshipOut(BaseModel):
     deadlines: list[ScholarshipDeadlineOut]
     # Barcha muddatlari o'tgan — ro'yxatda pastda, kartada "Yopilgan".
     closed: bool = False
+    # Grant rasmi (admin yuklagan) — sahifa tepasida.
+    cover_url: str | None = None
 
 
 class ServiceOut(BaseModel):
@@ -362,6 +366,8 @@ class ServiceInquiryIn(BaseModel):
     country_id: int | None = None
     topics: list[str] = []
     text: str = ""
+    # Bog'lanish uchun telefon raqam yoki Telegram username.
+    contact: str = ""
 
 
 class SubscriptionChannelOut(BaseModel):

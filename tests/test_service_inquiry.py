@@ -40,7 +40,12 @@ async def test_inquiry_reaches_admins_with_details_and_no_charge(session, sent) 
 
     result = await api.send_service_inquiry(
         service.id,
-        ServiceInquiryIn(country_id=country.id, topics=["documents", "visa", "bogus"], text="IELTS 6.5 bor"),
+        ServiceInquiryIn(
+            country_id=country.id,
+            topics=["documents", "visa", "bogus"],
+            text="IELTS 6.5 bor",
+            contact="+998 90 123 45 67",
+        ),
         user,
         session,
     )
@@ -52,6 +57,7 @@ async def test_inquiry_reaches_admins_with_details_and_no_charge(session, sent) 
     assert "Hujjatlar, Viza" in html  # noma'lum kalit tashlab yuboriladi
     assert "IELTS 6.5 bor" in html
     assert 'href="tg://user?id=777"' in html
+    assert "+998 90 123 45 67" in html
     await session.refresh(user)
     assert Decimal(str(user.balance)) == Decimal(50000), "pul yechilmasligi kerak"
 
@@ -62,6 +68,8 @@ async def test_inquiry_without_country_says_not_sure(session, sent) -> None:
     await api.send_service_inquiry(service.id, ServiceInquiryIn(topics=["other"]), user, session)
 
     assert "Hali aniq emas" in sent[0]
+    # Aloqa qoldirilmasa — Telegram username'i.
+    assert "Aloqa: @aziz" in sent[0]
 
 
 async def test_guide_service_does_not_accept_inquiry(session, sent) -> None:

@@ -495,3 +495,7 @@ body {
 /* So'rov holati jadval ichida almashadi — tanlagich qisilib, yorliq
    o'qilmay qolmasligi uchun eng kam kenglik. */
 .ua-kit-status { min-width: 140px; }
+
+/* Sehrgar: universitet/grant rasmi ko'rinishi */
+.ua-cover-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.ua-cover-preview { width: 160px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid #e3e6ec; }

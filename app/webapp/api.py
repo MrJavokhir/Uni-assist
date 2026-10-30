@@ -6,7 +6,7 @@ from html import escape
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -38,6 +38,7 @@ from app.db.models import (
 )
 from app.db.session import get_session
 from app.services import booking_service, kit_service, payment_service, referral_service
+from app.services.cover_images import cover_url
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.gpa_requirement import gpa_requirement_for
 from app.services.matching_service import MatchLevel, find_matches
@@ -409,6 +410,27 @@ RESETTABLE_FILTER_FIELDS = (
 )
 
 
+@router.get("/images/{kind}/{item_id}", include_in_schema=False)
+async def get_cover_image(
+    kind: str, item_id: int, session: AsyncSession = Depends(get_session)
+) -> Response:
+    """Universitet/grant rasmi. Ochiq: `<img>` sarlavha yubora olmaydi, rasm esa
+    katalogning ochiq qismi. Manzilda `?v=` bor — javob uzoq keshlanadi."""
+    model = {"university": University, "scholarship": Scholarship}.get(kind)
+    if model is None:
+        raise HTTPException(status_code=404)
+    row = (
+        await session.execute(select(model.cover_data, model.cover_type).where(model.id == item_id))
+    ).one_or_none()
+    if row is None or not row.cover_data:
+        raise HTTPException(status_code=404)
+    return Response(
+        content=row.cover_data,
+        media_type=row.cover_type or "image/jpeg",
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
+
+
 @router.get("/subscription", response_model=SubscriptionStatusOut)
 async def get_subscription(
     fresh: bool = False,
@@ -571,6 +593,7 @@ async def get_program(
     gpa = gpa_requirement_for(program)
     return ProgramDetailOut(
         id=program.id,
+        cover_url=cover_url("university", program.university),
         name=program.name,
         abbreviation=program.abbreviation,
         university=program.university.name,
@@ -690,6 +713,7 @@ async def list_scholarships(
         output.append(
             ScholarshipOut(
                 closed=bool(scholarship.deadlines) and not upcoming,
+                cover_url=cover_url("scholarship", scholarship),
                 id=scholarship.id,
                 name=scholarship.name,
                 description=_localized_description(scholarship, user.ui_language.value),
@@ -1340,6 +1364,8 @@ async def send_service_inquiry(
     topics = [INQUIRY_TOPICS[key] for key in payload.topics if key in INQUIRY_TOPICS]
     text = (payload.text or "").strip()[:1500]
     name = escape(user.username and f"@{user.username}" or str(user.telegram_id))
+    # Foydalanuvchi qoldirgan aloqa; bo'sh bo'lsa — Telegram username'i.
+    contact = (payload.contact or "").strip()[:100] or (f"@{user.username}" if user.username else "—")
 
     lines = [
         "📝 <b>Xizmat so'rovi</b>",
@@ -1347,6 +1373,7 @@ async def send_service_inquiry(
         f"Xizmat: <b>{escape(service.title_uz)}</b>",
         f'👤 <a href="tg://user?id={user.telegram_id}">{name}</a>',
         f"🆔 <code>{user.telegram_id}</code>",
+        f"📞 Aloqa: {escape(contact)}",
         f"🌍 Davlat: {escape(country.name_uz) if country else 'Hali aniq emas'}",
         f"🧩 Yordam: {escape(', '.join(topics)) if topics else '—'}",
     ]

@@ -16,7 +16,7 @@
   </div>
   {% endif %}
 
-  <form method="post" class="ua-wizard">
+  <form method="post" class="ua-wizard" enctype="multipart/form-data">
     {% if prefill and prefill.id %}
     <input type="hidden" name="scholarship_id" value="{{ prefill.id }}">
     {% endif %}
@@ -47,6 +47,19 @@
             <input type="url" name="logo_url" class="form-control{{ err('logo_url') }}"
                    value="{{ val('logo_url') }}" placeholder="bo'sh bo'lsa saytdan olinadi">
             {{ errmsg('logo_url') }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Grant rasmi</label>
+            {% if prefill and prefill.cover_url %}
+            <div class="ua-cover-row">
+              <img class="ua-cover-preview" src="{{ prefill.cover_url }}" alt="">
+              <label class="form-check-label"><input type="checkbox" name="cover_remove" class="form-check-input">
+                Rasmni o'chirish</label>
+            </div>
+            {% endif %}
+            <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-control">
+            <small class="form-hint">JPG, PNG yoki WebP, 3 MB gacha. Gorizontal (taxminan 16:9) rasm
+              Mini App'da grant sahifasi tepasida chiqadi. Yangi fayl tanlanmasa, eski rasm qoladi.</small>
           </div>
           <div class="col-md-6">
             <label class="form-label">Qaysi davlat(lar)da o'qiladi</label>

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 89;
+const ASSET_V = 91;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -359,6 +359,9 @@ const I18N = {
     "inquiry.country": "Qaysi davlat bo'yicha?",
     "inquiry.country_unsure": "Hali aniq emas",
     "inquiry.topics": "Nimada yordam kerak?",
+    "inquiry.topic_placeholder": "Tanlang",
+    "inquiry.contact": "Bog'lanish uchun raqam yoki Telegram username",
+    "inquiry.need_contact": "Bog'lanish uchun raqam yoki username qoldiring",
     "inquiry.topic.university": "Universitet tanlash",
     "inquiry.topic.documents": "Hujjatlar",
     "inquiry.topic.essay": "Motivatsion xat / esse",
@@ -370,7 +373,7 @@ const I18N = {
     "inquiry.text": "Qo'shimcha izoh",
     "inquiry.text_placeholder": "Vaziyatingizni qisqacha yozing (ixtiyoriy)",
     "inquiry.send": "Yuborish",
-    "inquiry.need_topic": "Kamida bitta yo'nalishni tanlang",
+    "inquiry.need_topic": "Nimada yordam kerakligini tanlang",
     "inquiry.sent": "So'rovingiz yuborildi — tez orada bog'lanamiz",
     "sub.step": "Oxirgi qadam",
     "sub.join": "Qo'shilish",
@@ -795,6 +798,9 @@ const I18N = {
     "inquiry.country": "По какой стране?",
     "inquiry.country_unsure": "Пока не знаю",
     "inquiry.topics": "С чем нужна помощь?",
+    "inquiry.topic_placeholder": "Выберите",
+    "inquiry.contact": "Телефон или Telegram username для связи",
+    "inquiry.need_contact": "Оставьте телефон или username для связи",
     "inquiry.topic.university": "Выбор университета",
     "inquiry.topic.documents": "Документы",
     "inquiry.topic.essay": "Мотивационное письмо / эссе",
@@ -806,7 +812,7 @@ const I18N = {
     "inquiry.text": "Комментарий",
     "inquiry.text_placeholder": "Кратко опишите ситуацию (необязательно)",
     "inquiry.send": "Отправить",
-    "inquiry.need_topic": "Выберите хотя бы одну тему",
+    "inquiry.need_topic": "Выберите, с чем нужна помощь",
     "inquiry.sent": "Заявка отправлена — скоро свяжемся",
     "sub.step": "Последний шаг",
     "sub.join": "Подписаться",
@@ -1231,6 +1237,9 @@ const I18N = {
     "inquiry.country": "Which country?",
     "inquiry.country_unsure": "Not sure yet",
     "inquiry.topics": "What do you need help with?",
+    "inquiry.topic_placeholder": "Choose one",
+    "inquiry.contact": "Phone number or Telegram username",
+    "inquiry.need_contact": "Leave a phone number or username so we can reach you",
     "inquiry.topic.university": "Choosing a university",
     "inquiry.topic.documents": "Documents",
     "inquiry.topic.essay": "Motivation letter / essay",
@@ -1242,7 +1251,7 @@ const I18N = {
     "inquiry.text": "Anything to add?",
     "inquiry.text_placeholder": "Briefly describe your situation (optional)",
     "inquiry.send": "Send",
-    "inquiry.need_topic": "Pick at least one topic",
+    "inquiry.need_topic": "Choose what you need help with",
     "inquiry.sent": "Request sent — we'll be in touch soon",
     "sub.step": "One last step",
     "sub.join": "Join",
@@ -2933,11 +2942,24 @@ async function renderProgramPage() {
         <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
           "chevron"
         )}</button>
-        <span class="pg-country"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
-          countryName(p.country)
-        )}</span>
+        ${
+          // Rasm bo'lsa davlat yorlig'i rasm ustida turadi.
+          p.cover_url
+            ? ""
+            : `<span class="pg-country"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
+                countryName(p.country)
+              )}</span>`
+        }
       </div>
-      <div class="pg-hero">${avatar(p.university, p.university_logo)}</div>
+      ${
+        p.cover_url
+          ? `<div class="pg-cover">
+               <img src="${escapeHtml(p.cover_url)}" alt="" loading="eager" onerror="this.style.visibility='hidden'">
+               <span class="pg-country pg-cover-pill"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(countryName(p.country))}</span>
+             </div>`
+          : ""
+      }
+      <div class="pg-hero${p.cover_url ? " has-cover" : ""}">${avatar(p.university, p.university_logo)}</div>
       <h2 class="pg-title">${escapeHtml(p.name)}${
         p.abbreviation ? `<span class="abbr">${escapeHtml(p.abbreviation)}</span>` : ""
       }</h2>
@@ -3198,9 +3220,17 @@ function renderGrantPage() {
         <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
           "chevron"
         )}</button>
-        ${countryPill}
+        ${s.cover_url ? "" : countryPill}
       </div>
-      <div class="pg-hero">${avatar(s.name, s.logo)}</div>
+      ${
+        s.cover_url
+          ? `<div class="pg-cover">
+               <img src="${escapeHtml(s.cover_url)}" alt="" loading="eager" onerror="this.style.visibility='hidden'">
+               ${countryPill.replace('class="pg-country"', 'class="pg-country pg-cover-pill"')}
+             </div>`
+          : ""
+      }
+      <div class="pg-hero${s.cover_url ? " has-cover" : ""}">${avatar(s.name, s.logo)}</div>
       <h2 class="pg-title">${escapeHtml(s.name)}</h2>
       ${
         s.countries.length > 1
@@ -4589,12 +4619,17 @@ function renderServicePage() {
   const leave = () => leavePage("service", "kit");
   showPageBack(leave);
 
-  const choice = (value, label, opts = {}) => `
-    <button type="button" class="wz-opt${opts.multi ? " is-multi" : ""}" data-value="${escapeHtml(String(value))}">
-      ${opts.flag ? `<span class="wz-flag">${opts.flag}</span>` : ""}
-      <span class="wz-opt-label">${escapeHtml(label)}</span>
-      <span class="wz-mark">${icon("check")}</span>
-    </button>`;
+  // Ixcham: davlat va mavzu — ochiladigan ro'yxat. Ilgari har biri uzun
+  // variantlar ro'yxati edi va sahifa haddan tashqari cho'zilib ketardi.
+  const select = (id, placeholder, options) => `
+    <div class="inq-select-wrap">
+      <select id="${id}" class="inq-field inq-select">
+        <option value="">${escapeHtml(placeholder)}</option>
+        ${options.map((o) => `<option value="${escapeHtml(String(o.value))}">${escapeHtml(o.label)}</option>`).join("")}
+      </select>
+      ${icon("chevron", "ico inq-caret")}
+    </div>`;
+  const username = TG_USER && TG_USER.username ? "@" + TG_USER.username : "";
 
   el.innerHTML = `
     <div class="pg">
@@ -4607,25 +4642,27 @@ function renderServicePage() {
       <h2 class="pg-title svc-page-title">${escapeHtml(service.title)}</h2>
       ${service.description ? `<div class="pg-sub">${escapeHtml(service.description)}</div>` : ""}
 
-      <section class="pg-card">
-        <h3>${t("inquiry.country")}</h3>
-        <div class="wz-body" id="inq-country">
-          ${choice("", t("inquiry.country_unsure"), { flag: icon("globe") })}
-          ${countries.map((c) => choice(c.id, countryName(c), { flag: flag(c.iso_code) })).join("")}
-        </div>
-      </section>
+      <section class="pg-card inq-card">
+        <label class="inq-label" for="inq-country">${t("inquiry.country")}</label>
+        ${select(
+          "inq-country",
+          t("inquiry.country_unsure"),
+          countries.map((c) => ({ value: c.id, label: countryName(c) }))
+        )}
 
-      <section class="pg-card">
-        <h3>${t("inquiry.topics")}</h3>
-        <p class="wz-hint">${t("wizard.hint.countries")}</p>
-        <div class="wz-body" id="inq-topics">
-          ${INQUIRY_TOPICS.map((k) => choice(k, t("inquiry.topic." + k), { multi: true })).join("")}
-        </div>
-      </section>
+        <label class="inq-label" for="inq-topic">${t("inquiry.topics")}</label>
+        ${select(
+          "inq-topic",
+          t("inquiry.topic_placeholder"),
+          INQUIRY_TOPICS.map((k) => ({ value: k, label: t("inquiry.topic." + k) }))
+        )}
 
-      <section class="pg-card">
-        <h3>${t("inquiry.text")}</h3>
-        <textarea id="inq-text" class="inq-text" rows="4" maxlength="1500"
+        <label class="inq-label" for="inq-contact">${t("inquiry.contact")}</label>
+        <input id="inq-contact" class="inq-field" type="text" autocomplete="tel" maxlength="100"
+               value="${escapeHtml(username)}" placeholder="+998 90 123 45 67 / @username">
+
+        <label class="inq-label" for="inq-text">${t("inquiry.text")}</label>
+        <textarea id="inq-text" class="inq-field inq-text" rows="3" maxlength="1500"
                   placeholder="${escapeHtml(t("inquiry.text_placeholder"))}"></textarea>
       </section>
     </div>
@@ -4635,29 +4672,21 @@ function renderServicePage() {
     </div>`;
 
   document.getElementById("pg-back").addEventListener("click", leave);
-  const countryBox = document.getElementById("inq-country");
-  countryBox.querySelectorAll(".wz-opt").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      haptic("light");
-      countryBox.querySelectorAll(".wz-opt").forEach((b) => b.classList.toggle("active", b === btn));
-    });
-  });
-  document.querySelectorAll("#inq-topics .wz-opt").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      haptic("light");
-      btn.classList.toggle("active");
-    });
-  });
 
   const sendBtn = document.getElementById("inq-send");
   sendBtn.addEventListener("click", async () => {
-    const topics = Array.from(document.querySelectorAll("#inq-topics .wz-opt.active")).map(
-      (b) => b.dataset.value
-    );
-    const country = countryBox.querySelector(".wz-opt.active");
-    if (!topics.length) {
+    const topic = document.getElementById("inq-topic").value;
+    const country = document.getElementById("inq-country").value;
+    const contact = document.getElementById("inq-contact").value.trim();
+    if (!topic) {
       haptic("warning");
       showToast(t("inquiry.need_topic"));
+      return;
+    }
+    if (!contact) {
+      haptic("warning");
+      showToast(t("inquiry.need_contact"));
+      document.getElementById("inq-contact").focus();
       return;
     }
     sendBtn.disabled = true;
@@ -4665,8 +4694,9 @@ function renderServicePage() {
       await api(`/services/${service.id}/inquiry`, {
         method: "POST",
         body: JSON.stringify({
-          country_id: country && country.dataset.value ? Number(country.dataset.value) : null,
-          topics,
+          country_id: country ? Number(country) : null,
+          topics: [topic],
+          contact,
           text: document.getElementById("inq-text").value.trim(),
         }),
       });

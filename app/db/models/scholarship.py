@@ -76,11 +76,12 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
     # Logotip. Bo'sh bo'lsa `source_url` domenidan avtomatik olinadi.
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
-    # Mini App sahifasi tepasidagi rasm (sehrgarda yuklanadi, bazada saqlanadi).
-    # `cover_version` > 0 — rasm bor; har yangi yuklashda oshadi (kesh uchun).
+    # Mini App sahifasi tepasidagi rasm havolasi (logotip kabi, sehrgarda kiritiladi).
+    cover_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Avval sehrgarda yuklangan rasmlar (eski usul). Yangi rasm yuklanmaydi —
+    # bor rasmlar `cover_url` dagi /api/webapp/images/... manzili orqali beriladi.
     cover_data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     cover_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    cover_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     coverage_type: Mapped[CoverageType] = mapped_column(
         str_enum(CoverageType, "coverage_type"), nullable=False

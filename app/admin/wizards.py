@@ -44,7 +44,6 @@ from app.db.models import (
     UniversityChoiceType,
 )
 from app.db.session import async_session_factory
-from app.services.cover_images import apply_cover_upload, cover_url
 
 # Tahrirlashda forma universitetning TO'LIQ holati: bu chegaradan oshgan
 # dasturlar formaga sig'masa, saqlashda o'chib ketadi — shuning uchun katta.
@@ -318,6 +317,10 @@ class UniversityWizard(BaseView):
                     f"Vaqt zonasi noto'g'ri: {timezone!r} (masalan Europe/Berlin)"
                 )
 
+        cover_error = _cover_url_error(form)
+        if cover_error:
+            university_errors["cover_url"] = cover_error
+
         ranking = _text(form, "ranking")
         if ranking is not None and (not ranking.isdigit() or int(ranking) < 1):
             university_errors["ranking"] = "Reyting musbat butun son bo'lishi kerak"
@@ -384,6 +387,7 @@ class UniversityWizard(BaseView):
             "city": form.get("city") or "",
             "website": form.get("website") or "",
             "logo_url": form.get("logo_url") or "",
+            "cover_url": form.get("cover_url") or "",
             "timezone": form.get("timezone") or "",
             "ranking": form.get("ranking") or "",
             "verified_by": form.get("verified_by") or "",
@@ -486,7 +490,7 @@ class UniversityWizard(BaseView):
             "city": university.city,
             "website": university.website or "",
             "logo_url": university.logo_url or "",
-            "cover_url": cover_url("university", university),
+            "cover_url": university.cover_url or "",
             "timezone": university.timezone,
             "ranking": _as_str(university.ranking),
             "programs": programs,
@@ -521,7 +525,7 @@ class UniversityWizard(BaseView):
         university.logo_url = _text(form, "logo_url")
         university.timezone = _text(form, "timezone")
         university.ranking = _integer(form, "ranking")
-        await apply_cover_upload(university, form.get("cover_image"), _checked(form, "cover_remove"))
+        university.cover_url = _text(form, "cover_url")
         if existing is None:
             session.add(university)
         await session.flush()
@@ -672,6 +676,15 @@ class UniversityWizard(BaseView):
 # --------------------------- grant formasi tekshiruvi ---------------------------
 
 
+def _cover_url_error(form: FormData) -> str | None:
+    """Rasm havolasi: tashqi http(s) manzil yoki avval yuklangan rasmning
+    o'z manzili (/api/webapp/images/...)."""
+    url = _text(form, "cover_url")
+    if url and not url.startswith(("http://", "https://", "/api/webapp/images/")):
+        return "Rasm havolasi http:// yoki https:// bilan boshlanishi kerak"
+    return None
+
+
 def _validate_scholarship(form: FormData) -> dict[str, str]:
     """Formani saqlashdan OLDIN tekshiradi — xato bo'lsa hech narsa yozilmaydi."""
     errors: dict[str, str] = {}
@@ -688,6 +701,10 @@ def _validate_scholarship(form: FormData) -> dict[str, str]:
     logo_url = _text(form, "logo_url")
     if logo_url and not logo_url.startswith(("http://", "https://")):
         errors["logo_url"] = "Logotip havolasi http:// yoki https:// bilan boshlanishi kerak"
+
+    cover_error = _cover_url_error(form)
+    if cover_error:
+        errors["cover_url"] = cover_error
 
     percent = _integer(form, "coverage_percent")
     if percent is not None and not 1 <= percent <= 100:
@@ -755,6 +772,7 @@ def _scholarship_prefill_from_form(
         "name": _text(form, "name") or "",
         "source_url": _text(form, "source_url") or "",
         "logo_url": _text(form, "logo_url") or "",
+        "cover_url": _text(form, "cover_url") or "",
         "description": form.get("description") or "",
         "description_ru": form.get("description_ru") or "",
         "description_en": form.get("description_en") or "",
@@ -916,7 +934,7 @@ class ScholarshipWizard(BaseView):
             "name": scholarship.name,
             "source_url": scholarship.source_url or "",
             "logo_url": scholarship.logo_url or "",
-            "cover_url": cover_url("scholarship", scholarship),
+            "cover_url": scholarship.cover_url or "",
             "description": scholarship.description or "",
             "description_ru": scholarship.description_ru or "",
             "description_en": scholarship.description_en or "",
@@ -993,7 +1011,7 @@ class ScholarshipWizard(BaseView):
         scholarship.description_ru = _multiline(form, "description_ru")
         scholarship.description_en = _multiline(form, "description_en")
         scholarship.logo_url = _text(form, "logo_url")
-        await apply_cover_upload(scholarship, form.get("cover_image"), _checked(form, "cover_remove"))
+        scholarship.cover_url = _text(form, "cover_url")
         scholarship.coverage_type = _enum(form, "coverage_type", CoverageType) or CoverageType.FULL
         scholarship.coverage_percent = _integer(form, "coverage_percent")
         scholarship.stipend_amount = _number(form, "stipend_amount")

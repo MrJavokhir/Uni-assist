@@ -16,7 +16,7 @@
   </div>
   {% endif %}
 
-  <form method="post" class="ua-wizard" enctype="multipart/form-data">
+  <form method="post" class="ua-wizard">
     {% if prefill and prefill.id %}
     <input type="hidden" name="scholarship_id" value="{{ prefill.id }}">
     {% endif %}
@@ -49,17 +49,16 @@
             {{ errmsg('logo_url') }}
           </div>
           <div class="col-md-6">
-            <label class="form-label">Grant rasmi</label>
-            {% if prefill and prefill.cover_url %}
+            <label class="form-label">Grant rasmi havolasi</label>
             <div class="ua-cover-row">
-              <img class="ua-cover-preview" src="{{ prefill.cover_url }}" alt="">
-              <label class="form-check-label"><input type="checkbox" name="cover_remove" class="form-check-input">
-                Rasmni o'chirish</label>
+              <input type="text" inputmode="url" name="cover_url" id="cover-url" class="form-control{{ err('cover_url') }}"
+                     placeholder="https://.../rasm.jpg" value="{{ val('cover_url') }}">
+              <img id="cover-preview" class="ua-cover-preview" alt="" src="{{ val('cover_url') }}"
+                   {% if not (val('cover_url')) %}hidden{% endif %}>
             </div>
-            {% endif %}
-            <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-control">
-            <small class="form-hint">JPG, PNG yoki WebP, 3 MB gacha. Gorizontal (taxminan 16:9) rasm
-              Mini App'da grant sahifasi tepasida chiqadi. Yangi fayl tanlanmasa, eski rasm qoladi.</small>
+            {{ errmsg('cover_url') }}
+            <small class="form-hint" id="cover-hint">To'g'ridan-to'g'ri rasm havolasi (.jpg, .png, .webp) —
+              sahifa manzili emas. Gorizontal (taxminan 16:9) rasm Mini App'da grant sahifasi tepasida chiqadi.</small>
           </div>
           <div class="col-md-6">
             <label class="form-label">Qaysi davlat(lar)da o'qiladi</label>
@@ -442,6 +441,28 @@
       if (!list.querySelector(".ua-program-block")) empty.hidden = false;
       document.getElementById("add-deadline").disabled = false;
     });
+  })();
+  // Rasm havolasi kiritilganda darhol ko'rsatamiz; rasm yuklanmasa ogohlantiramiz.
+  (function () {
+    const input = document.getElementById("cover-url");
+    const preview = document.getElementById("cover-preview");
+    const hint = document.getElementById("cover-hint");
+    if (!input) return;
+    const hintText = hint.textContent;
+    const show = () => {
+      const url = input.value.trim();
+      preview.hidden = !url;
+      hint.classList.remove("ua-logo-bad");
+      hint.textContent = hintText;
+      if (url) preview.src = url;
+    };
+    preview.addEventListener("error", () => {
+      preview.hidden = true;
+      hint.classList.add("ua-logo-bad");
+      hint.textContent = "Bu havoladan rasm yuklanmadi — to'g'ridan-to'g'ri rasm manzilini kiriting.";
+    });
+    input.addEventListener("change", show);
+    input.addEventListener("blur", show);
   })();
 </script>
 {% endblock %}

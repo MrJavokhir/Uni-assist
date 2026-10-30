@@ -38,7 +38,6 @@ from app.db.models import (
 )
 from app.db.session import get_session
 from app.services import booking_service, kit_service, payment_service, referral_service
-from app.services.cover_images import cover_url
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.gpa_requirement import gpa_requirement_for
 from app.services.matching_service import MatchLevel, find_matches
@@ -414,8 +413,9 @@ RESETTABLE_FILTER_FIELDS = (
 async def get_cover_image(
     kind: str, item_id: int, session: AsyncSession = Depends(get_session)
 ) -> Response:
-    """Universitet/grant rasmi. Ochiq: `<img>` sarlavha yubora olmaydi, rasm esa
-    katalogning ochiq qismi. Manzilda `?v=` bor — javob uzoq keshlanadi."""
+    """Avval sehrgarda yuklangan universitet/grant rasmi (endi rasm havola
+    sifatida kiritiladi). Ochiq: `<img>` sarlavha yubora olmaydi. Manzilda
+    `?v=` bor — javob uzoq keshlanadi."""
     model = {"university": University, "scholarship": Scholarship}.get(kind)
     if model is None:
         raise HTTPException(status_code=404)
@@ -600,7 +600,7 @@ async def get_program(
     gpa = gpa_requirement_for(program)
     return ProgramDetailOut(
         id=program.id,
-        cover_url=cover_url("university", program.university),
+        cover_url=program.university.cover_url,
         name=program.name,
         abbreviation=program.abbreviation,
         university=program.university.name,
@@ -720,7 +720,7 @@ async def list_scholarships(
         output.append(
             ScholarshipOut(
                 closed=bool(scholarship.deadlines) and not upcoming,
-                cover_url=cover_url("scholarship", scholarship),
+                cover_url=scholarship.cover_url,
                 id=scholarship.id,
                 name=scholarship.name,
                 description=_localized_description(scholarship, user.ui_language.value),

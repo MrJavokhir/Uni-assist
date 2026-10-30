@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 93;
+const ASSET_V = 94;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -216,8 +216,6 @@ const I18N = {
     "home.stat_green": "Mos dasturlar",
     "home.stat_yellow": "Yaqin dasturlar",
     "home.stat_saved": "Saqlangan",
-    "home.alert_title": "Yaqinlashayotgan muddat",
-    "home.alert_body": "{program} · {days} kun qoldi",
     "home.grants_title": "Muddati yaqin grantlar",
     "home.see_all": "Barchasi",
     "home.gs_left": "{n} kun qoldi",
@@ -293,8 +291,6 @@ const I18N = {
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
     "home.recap_cta": "Ko'rish",
     "home.near_short": "{n} yaqin",
-    "home.deadline_short": "{n} kun qoldi",
-    "home.deadline_none": "Muddat yo'q",
     "home.shortcut_gpa": "GPA konvertor",
     "gpa.title": "GPA konvertor",
     "gpa.subtitle": "O'zbekiston bahosini AQSH, Buyuk Britaniya va Yevropa tizimlariga o'giradi",
@@ -655,8 +651,6 @@ const I18N = {
     "home.stat_green": "Подходящие",
     "home.stat_yellow": "Почти подходят",
     "home.stat_saved": "Сохранённые",
-    "home.alert_title": "Приближается дедлайн",
-    "home.alert_body": "{program} · осталось {days} дн.",
     "home.grants_title": "Скоро закрываются",
     "home.see_all": "Все",
     "home.gs_left": "осталось {n} дн.",
@@ -732,8 +726,6 @@ const I18N = {
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
     "home.recap_cta": "Смотреть",
     "home.near_short": "{n} близких",
-    "home.deadline_short": "осталось {n} дн.",
-    "home.deadline_none": "Без дедлайна",
     "home.shortcut_gpa": "Конвертер GPA",
     "gpa.title": "Конвертер GPA",
     "gpa.subtitle": "Переводит узбекскую оценку в системы США, Великобритании и Европы",
@@ -1094,8 +1086,6 @@ const I18N = {
     "home.stat_green": "Matching",
     "home.stat_yellow": "Close matches",
     "home.stat_saved": "Saved",
-    "home.alert_title": "Deadline approaching",
-    "home.alert_body": "{program} · {days} day(s) left",
     "home.grants_title": "Closing soon",
     "home.see_all": "See all",
     "home.gs_left": "{n} days left",
@@ -1171,8 +1161,6 @@ const I18N = {
     "home.recap_text": "Every programme that fits your profile, in one place.",
     "home.recap_cta": "Explore",
     "home.near_short": "{n} close",
-    "home.deadline_short": "{n} days left",
-    "home.deadline_none": "No deadline",
     "home.shortcut_gpa": "GPA converter",
     "gpa.title": "GPA converter",
     "gpa.subtitle": "Converts an Uzbek grade to the US, UK and European systems",
@@ -1694,8 +1682,6 @@ async function renderHome() {
       <div class="gs-track"><div class="gs-card gs-skeleton"></div><div class="gs-card gs-skeleton"></div></div>
     </div>
 
-    <div id="home-alert"></div>
-
     <div class="hx-grid">
       <div class="hx-recap" data-goto="kit" role="button" tabindex="0">
         <div class="hx-recap-title">${t("kit.title")}</div>
@@ -1759,15 +1745,11 @@ async function renderHome() {
     });
   });
 
-  const [matches, saved] = await Promise.all([api("/match"), api("/saved")]);
+  const matches = await api("/match");
   const green = matches.filter((m) => m.level === "green").length;
   const yellow = matches.filter((m) => m.level === "yellow").length;
   const total = green + yellow;
   const greenShare = total ? (green / total) * 100 : 0;
-
-  const upcoming = saved
-    .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
-    .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left);
 
   document.getElementById("mini-green-value").textContent = ready ? green : "—";
   document.getElementById("mini-green-foot").innerHTML = `<span class="hx-tag">${
@@ -1776,35 +1758,6 @@ async function renderHome() {
   const greenBar = document.getElementById("mini-green-bar");
   greenBar.children[0].style.width = ready ? `${greenShare}%` : "0";
   greenBar.children[1].style.width = ready ? `${100 - greenShare}%` : "0";
-
-  const savedValue = document.getElementById("mini-saved-value");
-  if (savedValue) {
-    savedValue.textContent = saved.length;
-    document.getElementById("mini-saved-foot").innerHTML = `<span class="hx-tag">${
-      upcoming.length
-        ? t("home.deadline_short", { n: upcoming[0].nearest_deadline_days_left })
-        : t("home.deadline_none")
-    }</span>`;
-    document.getElementById("mini-saved-bar").children[0].style.width = saved.length
-      ? `${(upcoming.length / saved.length) * 100}%`
-      : "0";
-  }
-
-  if (upcoming.length) {
-    const n = upcoming[0];
-    const urgent = n.nearest_deadline_days_left <= 7;
-    document.getElementById("home-alert").innerHTML = `
-      <div class="alert ${urgent ? "urgent" : ""}">
-        <div class="alert-ico">${icon("clock")}</div>
-        <div>
-          <div class="alert-title">${t("home.alert_title")}</div>
-          <div class="alert-body">${t("home.alert_body", {
-            program: escapeHtml(n.program_name),
-            days: n.nearest_deadline_days_left,
-          })}</div>
-        </div>
-      </div>`;
-  }
 }
 
 // ---- Home: muddati yaqin grantlar karuseli ----

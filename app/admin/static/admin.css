@@ -497,5 +497,6 @@ body {
 .ua-kit-status { min-width: 140px; }
 
 /* Sehrgar: universitet/grant rasmi ko'rinishi */
-.ua-cover-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.ua-cover-preview { width: 160px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid #e3e6ec; }
+.ua-cover-row { display: flex; align-items: center; gap: 9px; }
+.ua-cover-row .form-control { flex: 1; min-width: 0; }
+.ua-cover-preview { width: 68px; height: 38px; flex: none; object-fit: cover; border-radius: 8px; border: 1px solid #e3e6ec; }

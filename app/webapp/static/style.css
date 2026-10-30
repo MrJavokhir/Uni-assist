@@ -3070,7 +3070,7 @@ body.page-mode #views { padding-top: 10px; padding-bottom: calc(96px + env(safe-
 }
 .gs-track {
   display: flex;
-  gap: 12px;
+  gap: var(--pad);
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding: 0 var(--pad);
@@ -3081,8 +3081,9 @@ body.page-mode #views { padding-top: 10px; padding-bottom: calc(96px + env(safe-
   -webkit-overflow-scrolling: touch;
 }
 .gs-track::-webkit-scrollbar { display: none; }
+/* Bir vaqtda bitta karta to'liq ko'rinadi (keyingisi chetdan chiqib turmaydi). */
 .gs-card {
-  flex: 0 0 86%;
+  flex: 0 0 100%;
   scroll-snap-align: start;
   background: var(--card);
   border-radius: var(--r-xl);

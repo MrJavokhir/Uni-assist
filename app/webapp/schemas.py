@@ -356,6 +356,14 @@ class FeedbackIn(BaseModel):
     text: str
 
 
+class ServiceInquiryIn(BaseModel):
+    """Admission Kit'dagi qo'lda bajariladigan xizmatga so'rov (forma)."""
+
+    country_id: int | None = None
+    topics: list[str] = []
+    text: str = ""
+
+
 class SubscriptionChannelOut(BaseModel):
     title: str
     invite_url: str

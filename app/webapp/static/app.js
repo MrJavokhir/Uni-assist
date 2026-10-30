@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 87;
+const ASSET_V = 89;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -280,15 +280,6 @@ const I18N = {
     "kit.open_bot": "Botni ochish",
     "kit.soon": "Tez orada",
     "kit.pdf_soon_hint": "Qo'llanma tayyorlanmoqda — tez orada ochiladi.",
-    "kit.pick_time": "Vaqtni tanlang",
-    "kit.pick_time_text": "Uchrashuv uchun qulay vaqtni tanlang. Tanlaganingizdan keyin narx hisobingizdan yechiladi.",
-    "kit.no_slots": "Hozircha bo'sh vaqt yo'q",
-    "kit.no_slots_text": "Yangi vaqtlar qo'shilishi bilan bu yerda paydo bo'ladi.",
-    "kit.waitlist": "Menga xabar bering",
-    "kit.waitlist_done": "Ro'yxatdasiz",
-    "kit.waitlist_toast": "Yangi vaqt qo'shilishi bilan sizga yozamiz",
-    "kit.slots_left": "{count} ta bo'sh vaqt",
-    "kit.slot_taken": "Bu vaqtni boshqa birov band qildi. Boshqasini tanlang.",
     "kit.booked_title": "Yozildingiz",
     "kit.booked_text": "Uchrashuv vaqti: {slot}. Tez orada siz bilan bog'lanamiz.",
     "kit.minutes": "{count} daqiqa",
@@ -365,6 +356,22 @@ const I18N = {
     "match.no_filter_cta": "Sozlash",
     "onboard.title": "Keling, sizga mos dasturlarni topamiz",
     "onboard.skip": "Keyinroq",
+    "inquiry.country": "Qaysi davlat bo'yicha?",
+    "inquiry.country_unsure": "Hali aniq emas",
+    "inquiry.topics": "Nimada yordam kerak?",
+    "inquiry.topic.university": "Universitet tanlash",
+    "inquiry.topic.documents": "Hujjatlar",
+    "inquiry.topic.essay": "Motivatsion xat / esse",
+    "inquiry.topic.scholarship": "Grantlar",
+    "inquiry.topic.visa": "Viza",
+    "inquiry.topic.interview": "Suhbatga tayyorlov",
+    "inquiry.topic.full": "To'liq ariza jarayoni",
+    "inquiry.topic.other": "Boshqa",
+    "inquiry.text": "Qo'shimcha izoh",
+    "inquiry.text_placeholder": "Vaziyatingizni qisqacha yozing (ixtiyoriy)",
+    "inquiry.send": "Yuborish",
+    "inquiry.need_topic": "Kamida bitta yo'nalishni tanlang",
+    "inquiry.sent": "So'rovingiz yuborildi — tez orada bog'lanamiz",
     "sub.step": "Oxirgi qadam",
     "sub.join": "Qo'shilish",
     "first.title": "Sizga eng mos dasturlar",
@@ -709,15 +716,6 @@ const I18N = {
     "kit.open_bot": "Открыть бот",
     "kit.soon": "Скоро",
     "kit.pdf_soon_hint": "Руководство готовится — скоро будет доступно.",
-    "kit.pick_time": "Выберите время",
-    "kit.pick_time_text": "Выберите удобное время встречи. После выбора стоимость спишется с баланса.",
-    "kit.no_slots": "Свободного времени пока нет",
-    "kit.no_slots_text": "Как только появятся новые слоты, они будут здесь.",
-    "kit.waitlist": "Сообщить мне",
-    "kit.waitlist_done": "Вы в списке",
-    "kit.waitlist_toast": "Напишем вам, как только появится новое время",
-    "kit.slots_left": "свободных слотов: {count}",
-    "kit.slot_taken": "Это время успели занять. Выберите другое.",
     "kit.booked_title": "Вы записаны",
     "kit.booked_text": "Время встречи: {slot}. Скоро свяжемся с вами.",
     "kit.minutes": "{count} мин",
@@ -794,6 +792,22 @@ const I18N = {
     "match.no_filter_cta": "Настроить",
     "onboard.title": "Давайте подберём подходящие программы",
     "onboard.skip": "Позже",
+    "inquiry.country": "По какой стране?",
+    "inquiry.country_unsure": "Пока не знаю",
+    "inquiry.topics": "С чем нужна помощь?",
+    "inquiry.topic.university": "Выбор университета",
+    "inquiry.topic.documents": "Документы",
+    "inquiry.topic.essay": "Мотивационное письмо / эссе",
+    "inquiry.topic.scholarship": "Гранты",
+    "inquiry.topic.visa": "Виза",
+    "inquiry.topic.interview": "Подготовка к интервью",
+    "inquiry.topic.full": "Весь процесс поступления",
+    "inquiry.topic.other": "Другое",
+    "inquiry.text": "Комментарий",
+    "inquiry.text_placeholder": "Кратко опишите ситуацию (необязательно)",
+    "inquiry.send": "Отправить",
+    "inquiry.need_topic": "Выберите хотя бы одну тему",
+    "inquiry.sent": "Заявка отправлена — скоро свяжемся",
     "sub.step": "Последний шаг",
     "sub.join": "Подписаться",
     "first.title": "Ваши первые совпадения",
@@ -1138,15 +1152,6 @@ const I18N = {
     "kit.open_bot": "Open the bot",
     "kit.soon": "Coming soon",
     "kit.pdf_soon_hint": "The guide is being prepared — it will open soon.",
-    "kit.pick_time": "Pick a time",
-    "kit.pick_time_text": "Choose a time that works for you. The price is taken from your balance once you pick.",
-    "kit.no_slots": "No free times yet",
-    "kit.no_slots_text": "New slots will show up here as soon as they are added.",
-    "kit.waitlist": "Notify me",
-    "kit.waitlist_done": "You're on the list",
-    "kit.waitlist_toast": "We'll message you as soon as a new time is added",
-    "kit.slots_left": "{count} slots free",
-    "kit.slot_taken": "Someone just took that time. Please pick another.",
     "kit.booked_title": "You are booked",
     "kit.booked_text": "Meeting time: {slot}. We will contact you shortly.",
     "kit.minutes": "{count} min",
@@ -1223,6 +1228,22 @@ const I18N = {
     "match.no_filter_cta": "Set up",
     "onboard.title": "Let's find programmes that fit you",
     "onboard.skip": "Later",
+    "inquiry.country": "Which country?",
+    "inquiry.country_unsure": "Not sure yet",
+    "inquiry.topics": "What do you need help with?",
+    "inquiry.topic.university": "Choosing a university",
+    "inquiry.topic.documents": "Documents",
+    "inquiry.topic.essay": "Motivation letter / essay",
+    "inquiry.topic.scholarship": "Scholarships",
+    "inquiry.topic.visa": "Visa",
+    "inquiry.topic.interview": "Interview prep",
+    "inquiry.topic.full": "The whole application",
+    "inquiry.topic.other": "Something else",
+    "inquiry.text": "Anything to add?",
+    "inquiry.text_placeholder": "Briefly describe your situation (optional)",
+    "inquiry.send": "Send",
+    "inquiry.need_topic": "Pick at least one topic",
+    "inquiry.sent": "Request sent — we'll be in touch soon",
     "sub.step": "One last step",
     "sub.join": "Join",
     "first.title": "Your first matches",
@@ -1769,7 +1790,7 @@ async function renderHome() {
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
-      if (card.dataset.action === "gpa") openGpaSheet();
+      if (card.dataset.action === "gpa") openGpaPage();
       else switchTab(card.dataset.goto);
     });
   });
@@ -2337,7 +2358,7 @@ async function renderScholarships() {
 
   const byId = new Map(items.map((s) => [String(s.id), s]));
   el.querySelectorAll(".details-btn").forEach((btn) => {
-    btn.addEventListener("click", () => openScholarshipSheet(byId.get(btn.dataset.id)));
+    btn.addEventListener("click", () => openScholarshipPage(byId.get(btn.dataset.id)));
   });
 }
 
@@ -2522,26 +2543,40 @@ const GPA_SCALES = {
   4: { min: 0, max: 4, step: "0.01", example: "3.5" },
 };
 
-function openGpaSheet() {
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
+function openGpaPage() {
+  haptic("light");
+  enterPage("gpa");
+  closeSheet();
+  return switchTab("gpa");
+}
+
+function renderGpaPage() {
+  const el = document.getElementById("view-gpa");
+  document.body.classList.add("page-mode");
+  const leave = () => leavePage("gpa", "home");
+  showPageBack(leave);
   // Profilda baho bo'lsa, konvertor shu bilan ochiladi.
   let scale = profile && profile.gpa_scale ? String(profile.gpa_scale) : "100";
   const initial = profile && profile.gpa_raw !== null && profile.gpa_scale ? profile.gpa_raw : "";
 
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
-    <div class="sheet-head gpa-head">
-      <img class="gpa-head-ico" src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
+  el.innerHTML = `
+    <div class="pg">
+    <div class="pg-top">
+      <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
+        "chevron"
+      )}</button>
+      <span></span>
+    </div>
+    <div class="pg-hero pg-hero-row">
+      <img class="pg-hero-ico" src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
       <div>
-        <div class="sheet-title">${t("gpa.title")}</div>
-        <div class="sheet-sub">${t("gpa.subtitle")}</div>
+        <h2 class="pg-title">${t("gpa.title")}</h2>
+        <div class="pg-sub">${t("gpa.subtitle")}</div>
       </div>
     </div>
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("gpa.scale")}</div>
+    <section class="pg-card">
+      <h3>${t("gpa.scale")}</h3>
       <div class="chip-group" id="gpa-sheet-scale">
         ${["5", "100", "4"]
           .map(
@@ -2552,20 +2587,19 @@ function openGpaSheet() {
           )
           .join("")}
       </div>
-    </div>
+    </section>
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("gpa.value")}</div>
+    <section class="pg-card">
+      <h3>${t("gpa.value")}</h3>
       <input type="number" inputmode="decimal" id="gpa-sheet-input" class="gpa-input"
              value="${escapeHtml(initial)}" />
       <div class="gpa-range" id="gpa-sheet-range"></div>
-    </div>
+    </section>
 
     <div id="gpa-sheet-result"></div>
-  `,
-    sheet,
-    { tall: true }
-  );
+    </div>
+  `;
+  document.getElementById("pg-back").addEventListener("click", leave);
 
   const input = document.getElementById("gpa-sheet-input");
   const range = document.getElementById("gpa-sheet-range");
@@ -2614,15 +2648,15 @@ function openGpaSheet() {
       </div>`;
 
     result.innerHTML = `
-      <div class="sheet-section">
-        <div class="sheet-section-title">${t("gpa.results")}</div>
+      <section class="pg-card">
+        <h3>${t("gpa.results")}</h3>
         <div class="gpa-results">
           ${card("US", t("gpa.us"), `${r.us4.toFixed(2)}`, t("gpa.us_sub"))}
           ${card("GB", t("gpa.uk"), escapeHtml(t("gpa.uk_short." + r.uk)), t("gpa.uk_class." + r.uk))}
           ${card("EU", t("gpa.eu"), escapeHtml(r.ects), t("gpa.eu_sub"))}
           ${card("DE", t("gpa.de"), `${r.bavarian.toFixed(1)}`, t("gpa.de_sub"))}
         </div>
-      </div>
+      </section>
       <div class="disclaimer">${icon("clock")}<span>${t("gpa.disclaimer")}</span></div>`;
   };
 
@@ -2665,6 +2699,21 @@ function openProgramPage(programId) {
 function leaveProgramPage() {
   haptic("light");
   switchTab(programReturnTab && programReturnTab !== "program" ? programReturnTab : "match");
+}
+
+// To'liq sahifalar (pastki menyusiz, Telegram "orqaga" tugmasi bilan).
+const PAGE_TABS = new Set(["program", "grant", "service", "gpa"]);
+// Har sahifa qayerdan ochilgan bo'lsa — "orqaga" o'sha yerga.
+const pageReturn = {};
+
+function enterPage(name) {
+  if (currentTab !== name && currentTab !== "mentor") pageReturn[name] = currentTab;
+}
+
+function leavePage(name, fallback) {
+  haptic("light");
+  const back = pageReturn[name];
+  switchTab(back && back !== name ? back : fallback);
 }
 
 // Telegram'ning sarlavhadagi "orqaga" tugmasi — faqat to'liq sahifalarda.
@@ -2989,10 +3038,32 @@ async function renderProgramPage() {
   }
 }
 
-function openScholarshipSheet(s) {
+// ---- Grant sahifasi ----
+// Dastur sahifasi bilan bir xil: to'liq sahifa, kalit faktlar kartasi, oq
+// bo'lim kartalari, pastda rasmiy sayt tugmasi. Ma'lumot ro'yxatdan keladi —
+// alohida so'rov kerak emas.
+let grantPageData = null;
+let grantReturnTab = "scholarships";
+
+function openScholarshipPage(s) {
   haptic("light");
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
+  if (currentTab !== "grant" && currentTab !== "mentor") grantReturnTab = currentTab;
+  grantPageData = s;
+  closeSheet();
+  return switchTab("grant");
+}
+
+function leaveGrantPage() {
+  haptic("light");
+  switchTab(grantReturnTab && grantReturnTab !== "grant" ? grantReturnTab : "scholarships");
+}
+
+function renderGrantPage() {
+  const el = document.getElementById("view-grant");
+  const s = grantPageData;
+  if (!s) return switchTab("scholarships");
+  document.body.classList.add("page-mode");
+  showPageBack(leaveGrantPage);
 
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
@@ -3062,110 +3133,144 @@ function openScholarshipSheet(s) {
               : t("scholarships.deadline_passed");
           return row(
             t("deadline." + d.type),
-            `${escapeHtml(d.date.split(" ")[0])}<br><span class="card-sub">${left}</span>`
+            `${escapeHtml(d.date.split(" ")[0])} <span class="sheet-muted">· ${left}</span>`
           );
         })
         .join("")
     : `<div class="card-sub">${t("scholarships.not_specified")}</div>`;
 
-  const extras = [
+  const extraChips = [
     [s.extras_flight, "plane", "scholarships.extra_flight"],
     [s.extras_insurance, "shield", "scholarships.extra_insurance"],
     [s.extras_dormitory, "bed", "scholarships.extra_dormitory"],
     [s.extras_language_course, "lang", "scholarships.extra_language"],
   ]
     .filter(([on]) => on)
-    .map(([, ic, key]) => `<span class="pill">${icon(ic)}${t(key)}</span>`)
+    .map(([, ic, key]) => `<span class="pg-extra">${icon(ic)}${t(key)}</span>`)
     .join("");
 
-  sheet.innerHTML = `
-    <div class="sheet-handle"></div>
-    <div class="sheet-head">
-      ${avatar(s.name, s.logo)}
-      <div><div class="sheet-title">${escapeHtml(s.name)}</div></div>
-    </div>
-    <div class="meta-row">
-      <span class="pill ${s.coverage_type === "full" ? "green" : "amber"}">${icon("award")}${t(
-        "scholarships.coverage." + s.coverage_type
-      )}</span>
-      ${s.countries
-        .map(
-          (c) =>
-            `<span class="pill"><span class="chip-flag">${flag(c.iso_code)}</span>${escapeHtml(
-              countryName(c)
-            )}</span>`
-        )
-        .join("")}
-    </div>
-    ${
-      s.description
-        ? `<div class="sheet-section">
-             <div class="sheet-section-title">${t("scholarships.about")}</div>
-             <div class="sheet-text">${escapeHtml(s.description)}</div>
-           </div>`
-        : ""
-    }
+  const openDl = s.deadlines.find((d) => d.type === "application_open");
+  const closeDate = s.nearest_deadline ? s.nearest_deadline.split(" ")[0] : "";
+  const daysLeft =
+    s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left !== undefined && s.nearest_deadline_days_left >= 0
+      ? s.nearest_deadline_days_left
+      : null;
+  const dlChip = s.closed
+    ? `<span class="pg-chip is-closed">${t("scholarships.closed_badge")}</span>`
+    : daysLeft !== null
+      ? `<span class="pg-chip ${daysLeft <= 7 ? "is-urgent" : "is-soon"}"><i></i>${t(
+          "scholarships.days_left",
+          { days: daysLeft }
+        )}</span>`
+      : "";
+  const fact = (label, value) =>
+    `<div class="pg-fact"><span>${label}</span><b>${value || "—"}</b></div>`;
+  const section = (title, body) => `<section class="pg-card"><h3>${title}</h3>${body}</section>`;
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.money")}</div>
-      ${row(t("scholarships.stipend"), escapeHtml(stipend))}
-      ${extras ? `<div class="meta-row sheet-extras">${extras}</div>` : ""}
-    </div>
+  const first = s.countries[0];
+  const countryPill = first
+    ? `<span class="pg-country"><span class="chip-flag">${flag(first.iso_code)}</span>${escapeHtml(
+        s.countries.length > 1 ? t("profile.countries_count", { n: s.countries.length }) : countryName(first)
+      )}</span>`
+    : "<span></span>";
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.study")}</div>
-      ${row(t("scholarships.degree_levels"), degrees || dash)}
-      ${row(t("scholarships.duration"), duration)}
-      ${row(
-        t("program.language"),
-        s.study_language ? escapeHtml(instructionLanguage(s.study_language)) : dash
-      )}
-      ${row(t("scholarships.uni_choice"), t("scholarships.uni_choice." + s.university_choice))}
+  // Shu davlatdagi mentor (Uni Buddy) — savol guruhga ketadi.
+  const mentorOn = mentorConfig && mentorConfig.enabled && first;
+  const mentorCountry = mentorOn
+    ? mentorConfig.countries.find((c) => c.code === String(first.iso_code).toUpperCase())
+    : null;
+  const mentorCard = mentorOn
+    ? `<button type="button" class="pg-mentor" id="pg-mentor">
+         <img src="icon-buddy.png?v=${ASSET_V}" alt="" aria-hidden="true">
+         <span class="pg-mentor-text">
+           <span class="pg-mentor-title">${t("program.ask_mentor", {
+             country: escapeHtml(countryName(first)),
+           })}</span>
+           <span class="pg-mentor-sub">${t("buddy.tagline")}</span>
+         </span>
+         <span class="pg-mentor-go">${icon("arrow")}</span>
+       </button>`
+    : "";
+
+  el.innerHTML = `
+    <div class="pg">
+      <div class="pg-top">
+        <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
+          "chevron"
+        )}</button>
+        ${countryPill}
+      </div>
+      <div class="pg-hero">${avatar(s.name, s.logo)}</div>
+      <h2 class="pg-title">${escapeHtml(s.name)}</h2>
       ${
-        s.universities_text
-          ? row(t("scholarships.universities"), multiline(s.universities_text))
+        s.countries.length > 1
+          ? `<div class="pg-sub">${s.countries.map((c) => escapeHtml(countryName(c))).join(" · ")}</div>`
           : ""
       }
-      ${s.selected_by ? row(t("scholarships.selected_by"), escapeHtml(s.selected_by)) : ""}
+      <div class="pg-chips">
+        ${dlChip}
+        <span class="pg-chip ${s.coverage_type === "full" ? "is-full" : ""}">${t(
+          "scholarships.coverage." + s.coverage_type
+        )}</span>
+        ${degrees ? `<span class="pg-chip">${escapeHtml(degrees)}</span>` : ""}
+      </div>
+
+      <div class="pg-facts">
+        ${fact(
+          t("scholarships.stipend"),
+          // Ustun tor — faqat summa; davri ("oyiga") pastdagi bo'limda.
+          s.stipend_amount ? `${Number(s.stipend_amount).toLocaleString()} ${escapeHtml(s.currency)}` : ""
+        )}
+        ${fact(t("program.closes"), closeDate ? shortDate(closeDate) : "")}
+        ${fact(t("program.left"), daysLeft !== null ? t("program.days_n", { n: daysLeft }) : "")}
+      </div>
+      <div class="pg-source">${t("scholarships.verify_hint")}</div>
+
+      ${s.description ? section(t("scholarships.about"), `<div class="sheet-text">${escapeHtml(s.description)}</div>`) : ""}
+      ${section(
+        t("scholarships.money"),
+        row(t("scholarships.stipend"), escapeHtml(stipend)) +
+          (extraChips ? `<div class="pg-extras">${extraChips}</div>` : "")
+      )}
+      ${section(
+        t("scholarships.study"),
+        row(t("scholarships.degree_levels"), degrees || dash) +
+          row(t("scholarships.duration"), duration) +
+          row(
+            t("program.language"),
+            s.study_language ? escapeHtml(instructionLanguage(s.study_language)) : dash
+          ) +
+          row(t("scholarships.uni_choice"), t("scholarships.uni_choice." + s.university_choice)) +
+          (s.universities_text ? row(t("scholarships.universities"), multiline(s.universities_text)) : "") +
+          (s.selected_by ? row(t("scholarships.selected_by"), escapeHtml(s.selected_by)) : "")
+      )}
+      ${section(t("scholarships.requirements"), requirements)}
+      ${section(t("scholarships.deadlines"), deadlines)}
+      ${mentorCard}
     </div>
 
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.requirements")}</div>
-      ${requirements}
-      <div class="sheet-note">${t("scholarships.verify_hint")}</div>
-    </div>
-
-    <div class="sheet-section">
-      <div class="sheet-section-title">${t("scholarships.deadlines")}</div>
-      ${deadlines}
-    </div>
-
-    <div class="sheet-actions">
-      <button type="button" class="btn btn-accent btn-block" id="sheet-open-site">
+    <div class="pg-bar">
+      <button type="button" class="btn btn-accent pg-open" id="grant-open-site">
         ${t("scholarships.official_site")}
       </button>
     </div>
   `;
 
-  document.getElementById("sheet-open-site").addEventListener("click", () => {
+  document.getElementById("pg-back").addEventListener("click", leaveGrantPage);
+  document.getElementById("grant-open-site").addEventListener("click", () => {
     haptic("light");
     // Telegram ichida tashqi havolani to'g'ri ochish usuli.
     if (tg && typeof tg.openLink === "function") tg.openLink(s.source_url);
     else window.open(s.source_url, "_blank", "noopener");
   });
-
-  document.querySelector(".sheet-backdrop").classList.add("open");
-  sheet.classList.add("open");
-  document.body.style.overflow = "hidden";
-
-  try {
-    if (tg?.BackButton) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(closeSheet);
-    }
-  } catch (e) {
-    /* eski klientlar */
-  }
+  document.getElementById("pg-mentor")?.addEventListener("click", () => {
+    haptic("light");
+    openMentor(mentorCountry ? "form" : "countries", {
+      country: mentorCountry ? mentorCountry.code : undefined,
+      from: "grant",
+      returnGrant: true,
+    });
+  });
 }
 
 // ============ Saved ============
@@ -4254,8 +4359,7 @@ function bindKitBack(root) {
 function servicePriceText(service) {
   const unlock = inviteUnlock(service);
   if (service.price_amount === null || service.price_amount === undefined) {
-    // Vaqt yo'q bo'lsa "Narx kelishiladi" chalg'itadi — kelishadigan narsa yo'q.
-    return escapeHtml(t(isFullyBooked(service) ? "kit.no_slots" : "kit.price_ask"));
+    return escapeHtml(t("kit.price_ask"));
   }
   const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
     service.price_currency
@@ -4367,16 +4471,6 @@ function inviteUnlock(service) {
   return { need: need, have: have, ready: have >= need };
 }
 
-// Vaqt tanlanadigan xizmat (1:1 mentor). Bo'sh vaqt qolmagan bo'lsa
-// buyurtma qabul qilinmaydi: vaqtsiz pul olib bo'lmaydi.
-function needsBooking(service) {
-  return !isGuide(service) && service.requires_booking;
-}
-
-function isFullyBooked(service) {
-  return needsBooking(service) && !service.requested && !service.free_slots;
-}
-
 function serviceBtnInner(service) {
   if (isGuide(service)) {
     if (isSoon(service)) return icon("clock") + t("kit.soon");
@@ -4385,11 +4479,7 @@ function serviceBtnInner(service) {
     if (guideUnlock && guideUnlock.ready) return icon("spark") + t("kit.unlock_free");
     return icon("lock") + t("kit.buy");
   }
-  if (service.requested) return icon("check") + t("kit.requested");
-  if (isFullyBooked(service)) return icon("clock") + t("kit.waitlist");
-  if (needsBooking(service)) return icon("clock") + t("kit.pick_time");
-  const unlock = inviteUnlock(service);
-  if (unlock && unlock.ready) return icon("spark") + t("kit.unlock_free");
+  // Qo'lda bajariladigan xizmat — forma sahifasi ochiladi, har doim bosiladi.
   return t("kit.request") + icon("chevron");
 }
 
@@ -4398,35 +4488,13 @@ function serviceBtnClass(service) {
     if (isSoon(service)) return " is-done";
     return service.requested ? " is-get" : " is-buy";
   }
-  if (service.requested) return " is-done";
   return "";
 }
 
-// Tugma bosilmaydigan holatlar: qo'llanma hali tayyor emas yoki so'rov
-// allaqachon yuborilgan. Bo'sh vaqt qolmagan bo'lsa tugma ishlaydi —
-// "Menga xabar bering" (kutish ro'yxati).
+// Tugma faqat PDF'i hali yuklanmagan qo'llanmada bosilmaydi. Qo'lda
+// bajariladigan xizmat formasi istalgancha yuborilishi mumkin.
 function serviceBtnDisabled(service) {
-  return isSoon(service) || (!isGuide(service) && service.requested);
-}
-
-// Vaqt tanlanadigan xizmatda qancha joy qolganini kartada ko'rsatamiz —
-// "hoziroq tanlash kerak" degan signal.
-function serviceSlotRow(service) {
-  if (!needsBooking(service) || service.requested) return "";
-  return `
-    <div class="svc-file">
-      ${icon("clock")}
-      <span class="svc-file-text">
-        <span class="svc-file-name">${
-          service.free_slots
-            ? t("kit.slots_left", { count: service.free_slots })
-            : t("kit.no_slots")
-        }</span>
-        <span class="svc-file-hint">${
-          service.free_slots ? t("kit.pick_time_text") : t("kit.no_slots_text")
-        }</span>
-      </span>
-    </div>`;
+  return isSoon(service);
 }
 
 // Sotib olingandan keyin kartani JOYIDA yangilaymiz. Butun sahifani qayta
@@ -4499,132 +4567,119 @@ function openPdfSentSheet() {
   document.getElementById("pdf-close").addEventListener("click", closeSheet);
 }
 
-// Vaqt tanlash oynasi. Vaqtlar ro'yxat bilan birga emas, AYNAN shu
-// paytda o'qiladi: ular tez o'zgaradi (boshqa birov band qilishi mumkin)
-// va eskirgan ro'yxatdan tanlash xatoga olib borardi.
-async function openSlotSheet(serviceId, btn) {
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">${t("kit.pick_time")}</div>
-    <div class="sheet-text">${t("kit.pick_time_text")}</div>
-    <div id="slot-list">${skeletons(3)}</div>`,
-    sheet,
-    { tall: true }
-  );
+// ---- Xizmat so'rovi sahifasi (1-on-1 mentor sessiya, to'liq yordam) ----
+// Davlat va nimada yordam kerakligi tanlanadi — so'rov bot orqali adminlarga
+// boradi. Pul yechilmaydi va vaqt tanlanmaydi: admin o'zi bog'lanadi.
+let kitServices = [];
+let servicePageId = null;
+const INQUIRY_TOPICS = ["university", "documents", "essay", "scholarship", "visa", "interview", "full", "other"];
 
-  let slots = [];
-  try {
-    slots = await api(`/services/${serviceId}/slots`);
-  } catch (err) {
-    document.getElementById("slot-list").innerHTML =
-      `<div class="sheet-text">${escapeHtml(err.message)}</div>`;
-    return;
-  }
+function openServicePage(serviceId) {
+  haptic("light");
+  enterPage("service");
+  servicePageId = serviceId;
+  return switchTab("service");
+}
 
-  const list = document.getElementById("slot-list");
-  if (!list) return;
+function renderServicePage() {
+  const el = document.getElementById("view-service");
+  const service = kitServices.find((s) => s.id === servicePageId);
+  if (!service) return switchTab("kit");
+  document.body.classList.add("page-mode");
+  const leave = () => leavePage("service", "kit");
+  showPageBack(leave);
 
-  if (!slots.length) {
-    list.innerHTML = `
-      <div class="empty">
-        <div class="empty-ico">${icon("clock")}</div>
-        <div class="empty-title">${t("kit.no_slots")}</div>
-        <div class="empty-text">${t("kit.no_slots_text")}</div>
-      </div>`;
-    return;
-  }
+  const choice = (value, label, opts = {}) => `
+    <button type="button" class="wz-opt${opts.multi ? " is-multi" : ""}" data-value="${escapeHtml(String(value))}">
+      ${opts.flag ? `<span class="wz-flag">${opts.flag}</span>` : ""}
+      <span class="wz-opt-label">${escapeHtml(label)}</span>
+      <span class="wz-mark">${icon("check")}</span>
+    </button>`;
 
-  // Bir kunning vaqtlari birga tursin — ro'yxat sana bo'yicha guruhlanadi.
-  const byDate = [];
-  slots.forEach((slot) => {
-    const last = byDate[byDate.length - 1];
-    if (last && last.date === slot.date_label) last.items.push(slot);
-    else byDate.push({ date: slot.date_label, items: [slot] });
-  });
+  el.innerHTML = `
+    <div class="pg">
+      <div class="pg-top">
+        <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
+          "chevron"
+        )}</button>
+        <span class="pg-country">${servicePriceText(service)}</span>
+      </div>
+      <h2 class="pg-title svc-page-title">${escapeHtml(service.title)}</h2>
+      ${service.description ? `<div class="pg-sub">${escapeHtml(service.description)}</div>` : ""}
 
-  list.innerHTML = byDate
-    .map(
-      (group) => `
-      <div class="slot-day">
-        <div class="slot-day-title">${escapeHtml(group.date)}</div>
-        <div class="slot-row">
-          ${group.items
-            .map(
-              (slot) => `
-            <button type="button" class="slot-btn" data-slot="${slot.id}">
-              <span class="slot-time">${escapeHtml(slot.time_label)}</span>
-              <span class="slot-meta">${t("kit.minutes", {
-                count: slot.duration_minutes,
-              })}${slot.note ? ` · ${escapeHtml(slot.note)}` : ""}</span>
-            </button>`
-            )
-            .join("")}
+      <section class="pg-card">
+        <h3>${t("inquiry.country")}</h3>
+        <div class="wz-body" id="inq-country">
+          ${choice("", t("inquiry.country_unsure"), { flag: icon("globe") })}
+          ${countries.map((c) => choice(c.id, countryName(c), { flag: flag(c.iso_code) })).join("")}
         </div>
-      </div>`
-    )
-    .join("");
+      </section>
 
-  list.querySelectorAll(".slot-btn").forEach((slotBtn) => {
-    slotBtn.addEventListener("click", async () => {
+      <section class="pg-card">
+        <h3>${t("inquiry.topics")}</h3>
+        <p class="wz-hint">${t("wizard.hint.countries")}</p>
+        <div class="wz-body" id="inq-topics">
+          ${INQUIRY_TOPICS.map((k) => choice(k, t("inquiry.topic." + k), { multi: true })).join("")}
+        </div>
+      </section>
+
+      <section class="pg-card">
+        <h3>${t("inquiry.text")}</h3>
+        <textarea id="inq-text" class="inq-text" rows="4" maxlength="1500"
+                  placeholder="${escapeHtml(t("inquiry.text_placeholder"))}"></textarea>
+      </section>
+    </div>
+
+    <div class="pg-bar">
+      <button type="button" class="btn btn-accent pg-open" id="inq-send">${t("inquiry.send")}</button>
+    </div>`;
+
+  document.getElementById("pg-back").addEventListener("click", leave);
+  const countryBox = document.getElementById("inq-country");
+  countryBox.querySelectorAll(".wz-opt").forEach((btn) => {
+    btn.addEventListener("click", () => {
       haptic("light");
-      list.querySelectorAll(".slot-btn").forEach((b) => (b.disabled = true));
-      await bookService(serviceId, slotBtn.dataset.slot, btn, list);
+      countryBox.querySelectorAll(".wz-opt").forEach((b) => b.classList.toggle("active", b === btn));
     });
   });
-}
-
-// Band qilish va to'lov BITTA so'rovda: server ikkalasini bir tranzaksiyada
-// bajaradi, shuning uchun vaqt band bo'lib ulgursa pul ham yechilmaydi.
-async function bookService(serviceId, slotId, btn, list) {
-  try {
-    const result = await api(`/services/${serviceId}/request`, {
-      method: "POST",
-      body: JSON.stringify({ slot_id: Number(slotId) }),
+  document.querySelectorAll("#inq-topics .wz-opt").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      btn.classList.toggle("active");
     });
-    if (profile && typeof result.balance === "number") profile.balance = result.balance;
-    closeSheet();
-    unlockServiceCard(btn, false);
-    haptic("success");
-    openBookedSheet(result.slot_label);
-  } catch (err) {
-    haptic("error");
-    const short = insufficientBalance(err);
-    if (short) {
-      closeSheet();
-      openNeedBalanceSheet(short);
-      return;
-    }
-    if (String(err.message).startsWith("API 409")) {
-      // Oxirgi soniyada band bo'ldi — ro'yxatni yangilab, qaytadan
-      // tanlashga imkon beramiz.
-      showToast(t("kit.slot_taken"));
-      await openSlotSheet(serviceId, btn);
-      return;
-    }
-    list.querySelectorAll(".slot-btn").forEach((b) => (b.disabled = false));
-    showToast(err.message);
-  }
-}
+  });
 
-function openBookedSheet(slotLabel) {
-  ensureSheet();
-  const sheet = document.querySelector(".sheet");
-  showSheet(
-    `
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">${t("kit.booked_title")}</div>
-    <div class="sheet-text">${t("kit.booked_text", {
-      slot: escapeHtml(slotLabel || ""),
-    })}</div>
-    <button type="button" class="btn btn-quiet btn-block" id="booked-close">
-      ${t("onboard.skip")}
-    </button>`,
-    sheet
-  );
-  document.getElementById("booked-close").addEventListener("click", closeSheet);
+  const sendBtn = document.getElementById("inq-send");
+  sendBtn.addEventListener("click", async () => {
+    const topics = Array.from(document.querySelectorAll("#inq-topics .wz-opt.active")).map(
+      (b) => b.dataset.value
+    );
+    const country = countryBox.querySelector(".wz-opt.active");
+    if (!topics.length) {
+      haptic("warning");
+      showToast(t("inquiry.need_topic"));
+      return;
+    }
+    sendBtn.disabled = true;
+    try {
+      await api(`/services/${service.id}/inquiry`, {
+        method: "POST",
+        body: JSON.stringify({
+          country_id: country && country.dataset.value ? Number(country.dataset.value) : null,
+          topics,
+          text: document.getElementById("inq-text").value.trim(),
+        }),
+      });
+    } catch (err) {
+      sendBtn.disabled = false;
+      haptic("error");
+      showToast(err.message);
+      return;
+    }
+    haptic("success");
+    showToast(t("inquiry.sent"));
+    leavePage("service", "kit");
+  });
 }
 
 async function renderKit() {
@@ -4632,6 +4687,7 @@ async function renderKit() {
   el.innerHTML = skeletons(3);
 
   const services = await api("/services");
+  kitServices = services;
 
   if (!services.length) {
     el.innerHTML = `
@@ -4668,14 +4724,11 @@ async function renderKit() {
             : ""
         }
         ${serviceFileRow(service)}
-        ${serviceSlotRow(service)}
         <div class="svc-foot">
           <span class="svc-price">${servicePriceText(service)}</span>
           <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
             data-id="${service.id}"
             data-guide="${isGuide(service) ? "1" : "0"}"
-            data-booking="${needsBooking(service) ? "1" : "0"}"
-            data-waitlist="${isFullyBooked(service) ? "1" : "0"}"
             data-file="${service.has_file ? "1" : "0"}"
             data-owned="${service.requested ? "1" : "0"}"
             ${serviceBtnDisabled(service) ? "disabled" : ""}>
@@ -4700,26 +4753,9 @@ async function renderKit() {
         return;
       }
 
-      if (btn.dataset.waitlist === "1") {
-        btn.disabled = true;
-        try {
-          await api(`/services/${btn.dataset.id}/waitlist`, { method: "POST" });
-        } catch (err) {
-          btn.disabled = false;
-          showToast(err.message);
-          return;
-        }
-        btn.classList.add("is-done");
-        btn.innerHTML = icon("check") + t("kit.waitlist_done");
-        haptic("success");
-        showToast(t("kit.waitlist_toast"));
-        return;
-      }
-
-      // Vaqt tanlanadigan xizmat: avval oyna tanlanadi, pul esa
-      // tanlangandan keyin yechiladi.
-      if (btn.dataset.booking === "1") {
-        await openSlotSheet(btn.dataset.id, btn);
+      // Qo'lda bajariladigan xizmat (1-on-1 mentor, to'liq yordam) — forma sahifasi.
+      if (btn.dataset.guide !== "1") {
+        openServicePage(Number(btn.dataset.id));
         return;
       }
 
@@ -5138,6 +5174,13 @@ function mentorBack(label) {
     </button>`;
 }
 
+// Uni Buddy dastur yoki grant sahifasidan ochilgan bo'lsa — "orqaga" o'sha sahifaga.
+function mentorReturn() {
+  if (mentorState.returnProgram) return () => openProgramPage(mentorState.returnProgram);
+  if (mentorState.returnGrant) return () => switchTab("grant");
+  return null;
+}
+
 function bindMentorBack(target) {
   const btn = document.getElementById("mentor-back");
   if (!btn) return;
@@ -5230,7 +5273,7 @@ async function renderMentorCountries(el) {
   // Ro'yxatdan kelinganda unga qaytish tugmasi bor. Bosh sahifadan
   // kelinganda yo'q — pastdagi menyu shu vazifani bajaradi.
   const fromList = mentorState.from === "list";
-  const fromProgram = mentorState.returnProgram;
+  const fromProgram = mentorReturn();
   const backBtn = fromProgram
     ? mentorBack(t("common.back"))
     : fromList
@@ -5268,7 +5311,7 @@ async function renderMentorCountries(el) {
           })}</div>`
     }`;
 
-  if (fromProgram) bindMentorBack(() => openProgramPage(fromProgram));
+  if (fromProgram) bindMentorBack(fromProgram);
   else if (fromList) bindMentorBack({ screen: "list" });
   el.querySelectorAll(".mnt-country").forEach((row) => {
     row.addEventListener("click", () => {
@@ -5277,6 +5320,7 @@ async function renderMentorCountries(el) {
         country: row.dataset.code,
         from: mentorState.from,
         returnProgram: mentorState.returnProgram,
+        returnGrant: mentorState.returnGrant,
       });
     });
   });
@@ -5286,11 +5330,9 @@ async function renderMentorCountries(el) {
 
 async function renderMentorForm(el) {
   const country = mentorConfig.countries.find((c) => c.code === mentorState.country);
-  // Dastur sahifasidan kelinganda "orqaga" o'sha dasturga qaytaradi.
-  const fromProgram = mentorState.returnProgram;
-  const back = fromProgram
-    ? () => openProgramPage(fromProgram)
-    : { screen: "countries", from: mentorState.from };
+  // Dastur/grant sahifasidan kelinganda "orqaga" o'sha sahifaga qaytaradi.
+  const fromProgram = mentorReturn();
+  const back = fromProgram || { screen: "countries", from: mentorState.from };
   if (!country) return openMentor("countries", { from: mentorState.from });
 
   const min = mentorConfig.question_min_chars;
@@ -5653,6 +5695,9 @@ const RENDERERS = {
   profile: renderProfile,
   mentor: renderMentor,
   program: renderProgramPage,
+  grant: renderGrantPage,
+  service: renderServicePage,
+  gpa: renderGpaPage,
 };
 
 function updateNavLabels() {
@@ -5677,7 +5722,7 @@ async function switchTab(tabName) {
   // Pastki menyu har bir o'tishda qaytadi; uni yashiradigan ekran
   // (Uni Buddy formasi va chati) o'zi qayta yashiradi.
   document.body.classList.remove("no-tabbar", "wizard-mode", "page-mode");
-  if (tabName !== "program") hidePageBack();
+  if (!PAGE_TABS.has(tabName)) hidePageBack();
   document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
   document.querySelectorAll(".view").forEach((v) => {
     v.hidden = v.id !== `view-${tabName}`;

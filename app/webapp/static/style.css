@@ -3130,3 +3130,45 @@ body.page-mode #views { padding-top: 10px; padding-bottom: calc(96px + env(safe-
   border-top: 1px solid var(--separator);
   background: var(--bg);
 }
+
+/* Grant sahifasi: to'liq grant — yashil chip, qo'shimcha imtiyozlar */
+.pg-chip.is-full { background: var(--green-soft); color: var(--green); }
+.pg-extras { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+.pg-extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.pg-extra .ico { width: 15px; height: 15px; }
+.pg-card .sheet-text { font-size: 14.5px; line-height: 1.55; }
+
+/* GPA sahifasi: ikonka + sarlavha yonma-yon */
+.pg-hero-row { display: flex; align-items: center; gap: 14px; }
+.pg-hero-ico { width: 64px; height: 64px; flex: none; object-fit: contain; }
+.pg-hero-row .pg-title { font-size: 24px; }
+
+/* Xizmat so'rovi sahifasi */
+.svc-page-title { margin-top: 18px; }
+#view-service .pg-card:first-of-type { margin-top: 18px; }
+.pg-card .wz-body { margin-top: 6px; }
+.pg-card .wz-opt { min-height: 50px; padding: 10px 14px; font-size: 15px; background: var(--card); }
+.pg-card .wz-opt.active { background: var(--accent-soft); }
+.inq-text {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--separator);
+  border-radius: var(--r-md);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+.inq-text:focus { outline: 0; border-color: var(--accent); }

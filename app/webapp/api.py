@@ -75,6 +75,7 @@ from app.webapp.schemas import (
     ScholarshipDeadlineOut,
     ScholarshipOut,
     ServiceDeliveryResult,
+    ServiceInquiryIn,
     ServiceOut,
     ServiceRequestIn,
     ServiceRequestResult,
@@ -1301,30 +1302,57 @@ async def send_feedback(
     return {"sent": await _notify_admins(session, header + escape(text))}
 
 
-@router.post("/services/{service_id}/waitlist", status_code=201)
-async def join_service_waitlist(
+# Forma mavzulari — adminga o'zbekcha yuboriladi (kalitlar Mini App bilan bir xil).
+INQUIRY_TOPICS = {
+    "university": "Universitet tanlash",
+    "documents": "Hujjatlar",
+    "essay": "Motivatsion xat / esse",
+    "scholarship": "Grantlar",
+    "visa": "Viza",
+    "interview": "Suhbatga tayyorlov",
+    "full": "To'liq ariza jarayoni",
+    "other": "Boshqa",
+}
+
+
+@router.post("/services/{service_id}/inquiry", status_code=201)
+async def send_service_inquiry(
     service_id: int,
+    payload: ServiceInquiryIn,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
-    """Bo'sh vaqti qolmagan xizmat uchun "Menga xabar bering".
+    """1-on-1 mentor sessiya, to'liq ariza yordami va boshqa qo'lda bajariladigan
+    xizmatlar: foydalanuvchi davlat va nimada yordam kerakligini to'ldiradi,
+    so'rov bot orqali adminlarga keladi.
 
-    Ilgari bunday kartada tugma o'chiq turar va "Narx kelishiladi" yozilardi —
-    foydalanuvchi qiziqish bildira olmasdi. Adminlar so'rovni darhol oladi va
-    yangi vaqt qo'shganda shu odamga yozadi; alohida jadval kerak emas.
+    Ilgari mentor sessiya bo'sh vaqt (slot) tanlashni talab qilardi, to'liq
+    yordam esa darhol balansdan pul yechardi. Endi pul yechilmaydi — admin
+    bog'lanib, narx va vaqtni kelishadi.
     """
     service = await session.get(AdmissionService, service_id)
-    if service is None or not service.is_active:
+    if service is None or not service.is_active or service.kind != ServiceKind.REQUEST:
         raise HTTPException(status_code=404, detail="Xizmat topilmadi")
+    if user.is_blocked:
+        raise HTTPException(status_code=403, detail="Hisobingiz bloklangan")
 
-    text = (
-        "⏳ <b>Kutish ro'yxati</b>\n\n"
-        f"Xizmat: {escape(service.title_uz)}\n"
-        f"👤 @{escape(user.username or '—')}\n"
-        f"🆔 <code>{user.telegram_id}</code>\n\n"
-        "Bo'sh vaqt qolmagan — yangi vaqt qo'shilganda shu foydalanuvchiga xabar bering."
-    )
-    return {"sent": await _notify_admins(session, text)}
+    country = await session.get(Country, payload.country_id) if payload.country_id else None
+    topics = [INQUIRY_TOPICS[key] for key in payload.topics if key in INQUIRY_TOPICS]
+    text = (payload.text or "").strip()[:1500]
+    name = escape(user.username and f"@{user.username}" or str(user.telegram_id))
+
+    lines = [
+        "📝 <b>Xizmat so'rovi</b>",
+        "",
+        f"Xizmat: <b>{escape(service.title_uz)}</b>",
+        f'👤 <a href="tg://user?id={user.telegram_id}">{name}</a>',
+        f"🆔 <code>{user.telegram_id}</code>",
+        f"🌍 Davlat: {escape(country.name_uz) if country else 'Hali aniq emas'}",
+        f"🧩 Yordam: {escape(', '.join(topics)) if topics else '—'}",
+    ]
+    if text:
+        lines += ["", f"💬 {escape(text)}"]
+    return {"sent": await _notify_admins(session, "\n".join(lines))}
 
 
 async def _notify_admins(session: AsyncSession, html: str) -> bool:

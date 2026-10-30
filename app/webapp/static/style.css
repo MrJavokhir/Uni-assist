@@ -2589,6 +2589,8 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
 .wz {
   display: flex;
   flex-direction: column;
+  /* Namunadagidek geometrik shrift — faqat onboarding'da. Yuklanmasa tizim shrifti. */
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   min-height: calc(var(--tg-viewport-stable-height, 100vh) - 8px);
 }
 .wz-top {
@@ -2633,10 +2635,10 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
 }
 .wz-title {
   margin: 22px 0 6px;
-  font-size: 26px;
+  font-size: 27px;
   line-height: 1.2;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 .wz-hint { margin: 0 0 4px; color: var(--hint); }
 .wz-body { display: grid; gap: 10px; margin-top: 14px; }
@@ -2662,7 +2664,7 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
   color: var(--text);
   font: inherit;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -2744,8 +2746,9 @@ body.wizard-mode #views { padding-top: 8px; padding-bottom: 0; }
 .wz-logo img { width: 112px; height: 112px; object-fit: contain; }
 .wz-brand {
   margin: 28px 0 8px;
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
-.wz-tagline { margin: 0; max-width: 300px; color: var(--hint); font-size: 16px; }
+.wz-tagline { margin: 0; max-width: 300px; color: var(--hint); font-size: 16px; font-weight: 500; }
+.wz .btn-block { font-weight: 700; }

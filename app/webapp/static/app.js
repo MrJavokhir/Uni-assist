@@ -87,7 +87,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 74;
+const ASSET_V = 75;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -3482,6 +3482,8 @@ const WIZ_STEPS = ["degree", "field", "countries", "language", "english", "prefs
 const IELTS_SCORES = ["4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0"];
 
 let wiz = null;
+// init() da to'ldiriladi; onboarding savollari katalog yuklanishini kutadi.
+let catalogReady = Promise.resolve();
 // Filtrni ma'lum bir savoldan ochish uchun (masalan "Davlatlar" tugmasi).
 let wizEntryStep = null;
 
@@ -3559,6 +3561,7 @@ async function drawWizard() {
     return;
   }
 
+  await catalogReady;
   const key = WIZ_STEPS[wiz.step];
   if (key === "field") {
     // Yo'nalishlar darajaga bog'liq: bakalavrga faqat PhD'da bor yo'nalish chiqmasin.
@@ -5411,29 +5414,24 @@ async function init() {
   tabbar.setAttribute("aria-busy", "true");
 
   await loadProfile();
-  await loadCountries();
-  await loadMajors();
-  await loadStudyLanguages();
-  await loadMentorConfig();
+  // Katalog so'rovlari bir-biriga bog'liq emas — parallel yuklanadi.
+  // Ilgari beshta so'rov ketma-ket kutilardi.
+  catalogReady = Promise.all([loadCountries(), loadMajors(), loadStudyLanguages(), loadMentorConfig()]);
 
+  // Filtr bo'sh bo'lsa — darhol onboarding'ning kutib olish ekrani. U katalogni
+  // kutmaydi va bosh sahifa umuman chizilmaydi: ilgari avval bosh sahifa
+  // chiqib, 2-3 soniyadan keyin onboarding'ga "sakrab" o'tardi.
+  // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
+  const onboarding = !deepLinkTarget() && !hasFilter();
+  if (onboarding) await switchTab("filter");
+
+  await catalogReady;
   updateNavLabels();
   bindTabs();
 
-  // Filtr bo'sh bo'lsa — birinchi qadam sifatida yo'naltirish oynasi.
-  // ATAYLAB `renderHome()` dan OLDIN: bosh sahifa /match va /saved
-  // so'rovlarini kutadi, oyna esa ularsiz ham chiqaverishi mumkin.
-  // Ilgari oyna shu ikki so'rov tugashini kutib, sezilarli kechikardi.
-  // Bu yerda profil, davlatlar va yo'nalishlar allaqachon yuklangan,
-  // ya'ni "Filtrni sozlash" bosilsa Profil sahifasi darhol chiziladi.
-  // Filtr qo'yilgach oyna boshqa chiqmaydi, shuning uchun alohida
-  // "ko'rsatilgan" belgisini saqlash shart emas.
-  // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga. Onboarding oynasi
-  // chiqmaydi: odam aniq bir maqsad bilan kelgan.
-  const routed = await applyDeepLink();
-  if (!routed) {
-    await renderHome();
-    // Filtr bo'sh bo'lsa — darhol qadamli onboarding (kutib olish ekranidan).
-    if (!hasFilter()) await switchTab("filter");
+  if (!onboarding) {
+    const routed = await applyDeepLink();
+    if (!routed) await renderHome();
   }
 
   tabbar.removeAttribute("aria-busy");

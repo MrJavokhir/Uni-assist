@@ -49,6 +49,10 @@ from app.db.session import async_session_factory
 # dasturlar formaga sig'masa, saqlashda o'chib ketadi — shuning uchun katta.
 MAX_PROGRAMS = 60
 MAX_DEADLINES = 6
+# Starlette formadan sukut bo'yicha ko'pi bilan 1000 ta maydon o'qiydi. Ko'p
+# dasturli universitet (har dasturda o'nlab maydon) bundan oshib, saqlashda
+# "400 Too many fields" berardi.
+FORM_MAX_FIELDS = 20000
 
 
 # --------------------------- forma yordamchilari ---------------------------
@@ -201,7 +205,7 @@ class UniversityWizard(BaseView):
 
         async with async_session_factory() as session:
             if request.method == "POST":
-                form = await request.form()
+                form = await request.form(max_fields=FORM_MAX_FIELDS)
                 university_errors, program_errors = await self._validate(session, form)
                 if not university_errors and not program_errors:
                     try:
@@ -859,7 +863,7 @@ class ScholarshipWizard(BaseView):
 
         async with async_session_factory() as session:
             if request.method == "POST":
-                form = await request.form()
+                form = await request.form(max_fields=FORM_MAX_FIELDS)
                 field_errors = _validate_scholarship(form)
                 if not field_errors:
                     try:

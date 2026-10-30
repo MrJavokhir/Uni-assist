@@ -2641,6 +2641,7 @@ body.page-mode #views { padding-top: 10px; padding-bottom: calc(96px + env(safe-
   cursor: pointer;
 }
 .pg-back .ico { width: 20px; height: 20px; transform: rotate(180deg); }
+body.tg-back .pg-back { display: none; }
 .pg-hero { margin: 18px 0 14px; }
 .pg-hero .avatar { width: 60px; height: 60px; border-radius: 18px; font-size: 18px; }
 .pg-country {
@@ -3210,3 +3211,36 @@ body.page-mode #views { padding-top: 10px; padding-bottom: calc(96px + env(safe-
   transition: width 0.25s ease, background 0.25s ease;
 }
 .gs-dots span.on { width: 18px; background: var(--accent); }
+
+/* "Full match" plitkasi: 3D ikonka o'rnida mos dasturlar soni. */
+.quick.green { --quick-tint: color-mix(in srgb, var(--green) 20%, transparent); }
+.quick-num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 46px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--green);
+}
+
+/* Suzib turuvchi menyu ostidagi bo'shliq: sahifa u yerdan ko'rinib qolmasin. */
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(46px + env(safe-area-inset-bottom));
+  z-index: 29;
+  pointer-events: none;
+  background: linear-gradient(to top, var(--surface) 35%, color-mix(in srgb, var(--surface) 70%, transparent));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  -webkit-mask-image: linear-gradient(to top, #000 65%, transparent);
+  mask-image: linear-gradient(to top, #000 65%, transparent);
+}
+body.booting::after,
+body.page-mode::after,
+body.no-tabbar::after { display: none; }

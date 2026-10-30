@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from html import escape
 
@@ -268,6 +268,16 @@ async def _notify_if_deadline_near(session: AsyncSession, saved: SavedProgram) -
         await bot.session.close()
 
 
+# Onboarding shuncha vaqt amal qiladi — keyin Mini App uni yana ochadi
+# (javoblar profildan oldindan tanlangan holda).
+ONBOARDING_VALID_FOR = timedelta(days=3)
+
+
+def _onboarding_valid(user: User) -> bool:
+    done_at = user.onboarding_done_at
+    return done_at is not None and datetime.now(UTC) - done_at < ONBOARDING_VALID_FOR
+
+
 async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
     """Profil javobi. Valyuta to'lov sozlamalaridan olinadi — balans va
     narxlar hamma joyda bir xil valyutada ko'rsatilishi uchun."""
@@ -278,7 +288,7 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
         balance_currency=settings_row.currency,
         is_blocked=bool(user.is_blocked),
         notifications_enabled=bool(user.notifications_enabled),
-        onboarding_done=bool(user.onboarding_done),
+        onboarding_done=_onboarding_valid(user),
         bot_username=bot_username,
         referral_link=referral_service.build_link(bot_username, user.telegram_id),
         referral_bonus=float(settings_row.referral_bonus or 0),
@@ -316,7 +326,7 @@ async def update_me(
     if payload.notifications_enabled is not None:
         _set_notifications(user, payload.notifications_enabled)
     if payload.onboarding_done is not None:
-        user.onboarding_done = payload.onboarding_done
+        user.onboarding_done_at = datetime.now(UTC) if payload.onboarding_done else None
     if payload.ui_language is not None:
         try:
             user.ui_language = UiLanguage(payload.ui_language)

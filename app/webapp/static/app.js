@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 94;
+const ASSET_V = 98;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -290,7 +290,7 @@ const I18N = {
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
     "home.recap_cta": "Ko'rish",
-    "home.near_short": "{n} yaqin",
+    "home.gpa_tag": "4.0 · ECTS · UK",
     "home.shortcut_gpa": "GPA konvertor",
     "gpa.title": "GPA konvertor",
     "gpa.subtitle": "O'zbekiston bahosini AQSH, Buyuk Britaniya va Yevropa tizimlariga o'giradi",
@@ -317,7 +317,6 @@ const I18N = {
     "gpa.uk_class.third": "Uchinchi daraja (Third Class)",
     "gpa.uk_class.below": "Diplom darajasidan past",
     "gpa.disclaimer": "Bu taxminiy hisob. Yakuniy bahoni universitet yoki tan olish idorasi (WES, UK ENIC, uni-assist) belgilaydi.",
-    "home.setup_filter": "Qidiruvni sozlash",
     "profile.degree_level": "Daraja",
     "profile.degree_level.bachelor": "Bakalavr",
     "profile.degree_level.master": "Magistratura",
@@ -725,7 +724,7 @@ const I18N = {
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
     "home.recap_cta": "Смотреть",
-    "home.near_short": "{n} близких",
+    "home.gpa_tag": "4.0 · ECTS · UK",
     "home.shortcut_gpa": "Конвертер GPA",
     "gpa.title": "Конвертер GPA",
     "gpa.subtitle": "Переводит узбекскую оценку в системы США, Великобритании и Европы",
@@ -752,7 +751,6 @@ const I18N = {
     "gpa.uk_class.third": "Третья степень (Third Class)",
     "gpa.uk_class.below": "Ниже уровня диплома",
     "gpa.disclaimer": "Это приблизительный расчёт. Итоговую оценку определяет университет или служба признания (WES, UK ENIC, uni-assist).",
-    "home.setup_filter": "Настроить поиск",
     "profile.degree_level": "Степень",
     "profile.degree_level.bachelor": "Бакалавриат",
     "profile.degree_level.master": "Магистратура",
@@ -1160,7 +1158,7 @@ const I18N = {
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
     "home.recap_cta": "Explore",
-    "home.near_short": "{n} close",
+    "home.gpa_tag": "4.0 · ECTS · UK",
     "home.shortcut_gpa": "GPA converter",
     "gpa.title": "GPA converter",
     "gpa.subtitle": "Converts an Uzbek grade to the US, UK and European systems",
@@ -1187,7 +1185,6 @@ const I18N = {
     "gpa.uk_class.third": "Third Class Honours",
     "gpa.uk_class.below": "Below honours level",
     "gpa.disclaimer": "This is an estimate. The final grade is set by the university or a recognition body (WES, UK ENIC, uni-assist).",
-    "home.setup_filter": "Set up your search",
     "profile.degree_level": "Degree",
     "profile.degree_level.bachelor": "Bachelor's",
     "profile.degree_level.master": "Master's",
@@ -1693,17 +1690,14 @@ async function renderHome() {
       </div>
 
       <div class="hx-side">
-        <div class="hx-mini" data-goto="match" role="button" tabindex="0">
+        <div class="hx-mini hx-buddy" id="home-gpa" role="button" tabindex="0">
           <div class="hx-mini-head">
-            <span class="hx-mini-label">${t("home.full_match")}</span>
-            <span class="hx-mini-ico">${icon("check")}</span>
+            <span class="hx-mini-label">${t("home.shortcut_gpa")}</span>
           </div>
-          <div class="hx-mini-value" id="mini-green-value">—</div>
-          <div class="hx-mini-foot" id="mini-green-foot"></div>
-          <div class="split" id="mini-green-bar">
-            <span class="split-green" style="width:0"></span>
-            <span class="split-amber" style="width:0"></span>
+          <div class="hx-buddy-art">
+            <img src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
           </div>
+          <div class="hx-mini-foot"><span class="hx-tag">${t("home.gpa_tag")}</span></div>
         </div>
         ${buddyHomeCard()}
       </div>
@@ -1719,15 +1713,16 @@ async function renderHome() {
         <img class="quick-ico" src="icon-grants.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("nav.scholarships")}</span>
       </button>
-      <button type="button" class="quick rose" data-action="gpa">
-        <img class="quick-ico" src="icon-gpa.png?v=${ASSET_V}" alt="" aria-hidden="true">
-        <span class="quick-label">${t("home.shortcut_gpa")}</span>
+      <button type="button" class="quick green" data-goto="match">
+        <span class="quick-num" id="home-green-value">—</span>
+        <span class="quick-label">${t("home.full_match")}</span>
       </button>
     </div>
   `;
 
   renderHomeGrants();
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
+  document.getElementById("home-gpa").addEventListener("click", openGpaPage);
 
   // Tezkor amallar o'z ishlov beruvchisiga ega — ular bu yerga tushmaydi.
   el.querySelectorAll("[data-goto]:not(.quick)").forEach((node) => {
@@ -1740,24 +1735,13 @@ async function renderHome() {
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
-      if (card.dataset.action === "gpa") openGpaPage();
-      else switchTab(card.dataset.goto);
+      switchTab(card.dataset.goto);
     });
   });
 
   const matches = await api("/match");
   const green = matches.filter((m) => m.level === "green").length;
-  const yellow = matches.filter((m) => m.level === "yellow").length;
-  const total = green + yellow;
-  const greenShare = total ? (green / total) * 100 : 0;
-
-  document.getElementById("mini-green-value").textContent = ready ? green : "—";
-  document.getElementById("mini-green-foot").innerHTML = `<span class="hx-tag">${
-    ready ? t("home.near_short", { n: yellow }) : t("home.setup_filter")
-  }</span>`;
-  const greenBar = document.getElementById("mini-green-bar");
-  greenBar.children[0].style.width = ready ? `${greenShare}%` : "0";
-  greenBar.children[1].style.width = ready ? `${100 - greenShare}%` : "0";
+  document.getElementById("home-green-value").textContent = ready ? green : "—";
 }
 
 // ---- Home: muddati yaqin grantlar karuseli ----
@@ -2763,6 +2747,12 @@ function leavePage(name, fallback) {
 // Telegram'ning sarlavhadagi "orqaga" tugmasi — faqat to'liq sahifalarda.
 let pageBackHandler = null;
 
+// Telegram'ning o'z "orqaga" tugmasi (6.1+) bo'lsa, sahifa ichidagi tugma
+// yashiriladi — ikkita bir xil tugma turmasin. Eski klientlarda ichkisi qoladi.
+if (tg && tg.BackButton && typeof tg.isVersionAtLeast === "function" && tg.isVersionAtLeast("6.1")) {
+  document.body.classList.add("tg-back");
+}
+
 function showPageBack(handler) {
   hidePageBack();
   pageBackHandler = handler;
@@ -3705,7 +3695,8 @@ function needsOnboarding() {
   return !hasFilter() || !profile.onboarding_done;
 }
 
-// Onboarding tugatildi yoki o'tkazib yuborildi — qayta majburan chiqmaydi.
+// Onboarding tugatildi yoki o'tkazib yuborildi — 3 kun davomida qayta chiqmaydi
+// (muddatni server hisoblaydi: `profile.onboarding_done`).
 function markOnboardingDone() {
   if (profile.onboarding_done) return;
   profile.onboarding_done = true;

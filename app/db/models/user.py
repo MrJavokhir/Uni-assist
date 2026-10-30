@@ -117,10 +117,11 @@ class User(TimestampMixin, Base):
     balance: Mapped[float] = mapped_column(
         Numeric(12, 2), nullable=False, default=0, server_default="0"
     )
-    # Mini App'dagi qadamli onboarding o'tilganmi (tugatilgan yoki "O'tkazish").
-    # Filtri avvaldan bor odamga ham onboarding bir marta chiqishi uchun.
-    onboarding_done: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=False, server_default="false"
+    # Mini App'dagi qadamli onboarding oxirgi marta qachon o'tilgan (tugatilgan
+    # yoki "O'tkazish"). U `ONBOARDING_VALID_FOR` (3 kun) davomida amal qiladi,
+    # keyin Mini App onboarding'ni yana ochadi. None — hali o'tilmagan.
+    onboarding_done_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
     # Botdagi `/blockuser` buyrug'i qo'yadi: bloklangan odamdan to'lov
     # qabul qilinmaydi.

@@ -12,17 +12,18 @@
   --separator: rgba(128, 132, 142, 0.18);
 
   /* Brend rangi Telegram mavzusidan QAT'I NAZAR o'zgarmaydi — ilovaning
-     o'z identikasi. Signal Blue (#0057FF).
+     o'z identikasi. Scout'dagi to'q ko'k (#315CDF) — avvalgi #0057FF juda
+     och va "chaqnoq" ko'rinardi.
 
      `--accent-ink` — aynan shu rang MATN/IKONKA sifatida ishlatilganda.
      Yorug' mavzuda u `--accent`ning o'zi, qorong'ida esa yorug'roq:
-     #0057FF Telegram tungi foniga (#17212b) nisbatan atigi 2.95:1 beradi,
+     #315CDF Telegram tungi foniga (#17212b) nisbatan past kontrast beradi,
      ya'ni o'qilmaydi. To'ldirilgan tugmada esa aksincha — to'q rang kerak
-     (oq matn ustida 5.52:1). Shuning uchun ikkita alohida o'zgaruvchi. */
-  --accent: #0057ff;
-  --accent-2: #2f8bff;
+     (oq matn ustida ~5.3:1). Shuning uchun ikkita alohida o'zgaruvchi. */
+  --accent: #315cdf;
+  --accent-2: #4d74e6;
   --accent-ink: var(--accent);
-  --accent-soft: rgba(0, 87, 255, 0.10);
+  --accent-soft: rgba(49, 92, 223, 0.10);
   --on-accent: #ffffff;
 
   --green: #22a565;
@@ -39,7 +40,7 @@
 
   --shadow-sm: 0 1px 2px rgba(16, 20, 40, 0.05);
   --shadow-md: 0 2px 6px rgba(16, 20, 40, 0.06), 0 8px 24px rgba(16, 20, 40, 0.05);
-  --shadow-accent: 0 8px 24px rgba(0, 87, 255, 0.30);
+  --shadow-accent: 0 8px 24px rgba(49, 92, 223, 0.30);
 
   --pad: 16px;
 }
@@ -48,8 +49,8 @@
   :root {
     --separator: rgba(160, 165, 180, 0.16);
     /* Qorong'ida matn yorug'roq bo'ladi (5.73:1), fon esa o'zgarmaydi. */
-    --accent-ink: #4d9aff;
-    --accent-soft: rgba(77, 154, 255, 0.18);
+    --accent-ink: #7c9cf5;
+    --accent-soft: rgba(124, 156, 245, 0.18);
     --green-soft: rgba(34, 165, 101, 0.2);
     --amber-soft: rgba(232, 145, 42, 0.2);
     --red-soft: rgba(229, 72, 77, 0.2);
@@ -456,7 +457,7 @@ body {
 .chip.active {
   background: var(--accent);
   color: var(--on-accent);
-  box-shadow: 0 4px 12px rgba(0, 87, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(49, 92, 223, 0.25);
 }
 
 /* Segmented control (saved status) */
@@ -1861,16 +1862,16 @@ button.sch-card:active { transform: scale(0.985); }
 }
 
 /* Xizmatning "rangi" — faqat shu ikki o'zgaruvchida. */
-.svc-card-1 { --svc: #0057ff; --svc-2: #2f8bff; }
+.svc-card-1 { --svc: #315cdf; --svc-2: #4d74e6; }
 .svc-card-2 { --svc: #2f7de8; --svc-2: #35b8e8; }
 .svc-card-3 { --svc: #e8722f; --svc-2: #e8a72f; }
 .svc-card-4 { --svc: #d93f86; --svc-2: #9b5cf6; }
 
-/* Ko'k xizmatlar tungi fonda o'qilmay qoladi: #0057ff Telegram qorong'i
+/* Ko'k xizmatlar tungi fonda o'qilmay qoladi: #315cdf Telegram qorong'i
    foniga nisbatan 2.95:1 beradi. Sariq va pushti kartalarga bu kerak emas —
    ular o'zi yetarlicha ajralib turadi. */
 @media (prefers-color-scheme: dark) {
-  .svc-card-1 { --svc: #4d9aff; --svc-2: #2f8bff; }
+  .svc-card-1 { --svc: #7c9cf5; --svc-2: #4d74e6; }
   .svc-card-2 { --svc: #4aa8f0; --svc-2: #35b8e8; }
 }
 

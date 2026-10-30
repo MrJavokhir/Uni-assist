@@ -4,7 +4,7 @@ if (tg) {
   tg.expand();
   try {
     // Sarlavha brend ko'k rangda; matn rangini Telegram fonga qarab o'zi tanlaydi.
-    tg.setHeaderColor("#0057ff");
+    tg.setHeaderColor("#315cdf");
     tg.setBackgroundColor("secondary_bg_color");
   } catch (e) {
     /* older Telegram clients */
@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 78;
+const ASSET_V = 79;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {

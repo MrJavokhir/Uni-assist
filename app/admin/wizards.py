@@ -15,6 +15,7 @@ Mavjud CRUD bo'limlari saqlanadi — ular tahrirlash va nozik tuzatishlar uchun.
 
 from datetime import UTC, date, datetime
 from typing import Any
+from urllib.parse import quote, urlencode, urlsplit
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqladmin import BaseView, expose
@@ -53,6 +54,30 @@ MAX_DEADLINES = 6
 # dasturli universitet (har dasturda o'nlab maydon) bundan oshib, saqlashda
 # "400 Too many fields" berardi.
 FORM_MAX_FIELDS = 20000
+
+
+def _back_url(request: Request, default: str) -> str:
+    """Sehrgardan qaytiladigan ro'yxat manzili — filtr va sahifasi bilan.
+
+    Birinchi kirishda ro'yxat sahifasidan (Referer) olinadi, keyin `?back=`
+    orqali saqlashlar orasida ham yo'qolmaydi. Faqat admin ichidagi nisbiy
+    manzil qabul qilinadi (boshqa saytga yo'naltirib bo'lmasin).
+    """
+    back = request.query_params.get("back") or ""
+    if not back:
+        referer = urlsplit(request.headers.get("referer") or "")
+        if referer.netloc == request.url.netloc and referer.path.endswith("/list"):
+            back = referer.path + (f"?{referer.query}" if referer.query else "")
+    if not back.startswith("/admin/") or "//" in back or "\\" in back:
+        return default
+    return back
+
+
+def _form_action(request: Request, back_url: str) -> str:
+    """Forma o'z manziliga yuboriladi — qaytish manzili saqlashda yo'qolmasin."""
+    params = dict(request.query_params)
+    params["back"] = back_url
+    return f"{request.url.path}?{urlencode(params)}"
 
 
 # --------------------------- forma yordamchilari ---------------------------
@@ -202,6 +227,7 @@ class UniversityWizard(BaseView):
         errors: list[str] = []
         university_errors: dict[str, str] = {}
         prefill: dict[str, Any] | None = None
+        back_url = _back_url(request, "/admin/university/list")
 
         async with async_session_factory() as session:
             if request.method == "POST":
@@ -219,7 +245,9 @@ class UniversityWizard(BaseView):
                         # Saqlagandan keyin ham tahrirlash rejimida qolamiz, shunda
                         # admin darhol yana dastur qo'sha oladi.
                         return RedirectResponse(
-                            f"{request.url.path}?university_id={created['id']}", status_code=303
+                            f"{request.url.path}?university_id={created['id']}"
+                            f"&back={quote(back_url, safe='')}",
+                            status_code=303,
                         )
 
                 # Hech narsa saqlanmadi — forma admin kiritgan qiymatlar bilan
@@ -285,6 +313,8 @@ class UniversityWizard(BaseView):
                 # "Yangi universitet qo'shish" havolasi uchun — sehrgarning
                 # o'z manzili, query'siz.
                 "wizard_path": request.url.path,
+                "back_url": back_url,
+                "form_action": _form_action(request, back_url),
             },
         )
 
@@ -860,6 +890,7 @@ class ScholarshipWizard(BaseView):
         errors: list[str] = []
         field_errors: dict[str, str] = {}
         prefill: dict[str, Any] | None = None
+        back_url = _back_url(request, "/admin/scholarship/list")
 
         async with async_session_factory() as session:
             if request.method == "POST":
@@ -880,7 +911,9 @@ class ScholarshipWizard(BaseView):
                         )
                         # Saqlagandan keyin ham tahrirlash rejimida qolamiz.
                         return RedirectResponse(
-                            f"{request.url.path}?scholarship_id={saved['id']}", status_code=303
+                            f"{request.url.path}?scholarship_id={saved['id']}"
+                            f"&back={quote(back_url, safe='')}",
+                            status_code=303,
                         )
 
                 # Hech narsa saqlanmadi — forma admin kiritgan qiymatlar bilan
@@ -915,6 +948,8 @@ class ScholarshipWizard(BaseView):
                 "prefill": prefill,
                 "errors": errors,
                 "field_errors": field_errors,
+                "back_url": back_url,
+                "form_action": _form_action(request, back_url),
             },
         )
 

@@ -8,6 +8,7 @@
 {% block content %}
 <div class="col-12">
 <div class="ua-page">
+  <a href="{{ back_url }}" class="ua-back"><i class="fa-solid fa-arrow-left"></i> Ro'yxatga qaytish</a>
 
   {% if errors %}
   <div class="alert alert-danger">
@@ -16,7 +17,7 @@
   </div>
   {% endif %}
 
-  <form method="post" class="ua-wizard">
+  <form method="post" class="ua-wizard" action="{{ form_action }}">
     {% if prefill and prefill.id %}
     <input type="hidden" name="scholarship_id" value="{{ prefill.id }}">
     {% endif %}

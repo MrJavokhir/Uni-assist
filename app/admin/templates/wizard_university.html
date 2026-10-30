@@ -6,6 +6,7 @@
 {% macro feedback(name) %}{% if university_errors.get(name) %}<div class="invalid-feedback d-block">{{ university_errors[name] }}</div>{% endif %}{% endmacro %}
 <div class="col-12">
 <div class="ua-page">
+  <a href="{{ back_url }}" class="ua-back"><i class="fa-solid fa-arrow-left"></i> Ro'yxatga qaytish</a>
 
   {% if errors %}
   <div class="alert alert-danger ua-errors">
@@ -24,7 +25,7 @@
   </div>
   {% endif %}
 
-  <form method="post" class="ua-wizard">
+  <form method="post" class="ua-wizard" action="{{ form_action }}">
     {% if editing %}<input type="hidden" name="university_id" value="{{ prefill.id }}">{% endif %}
 
     {# ---------- 1-qadam: davlat va universitet ---------- #}

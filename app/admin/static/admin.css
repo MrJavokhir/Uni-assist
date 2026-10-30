@@ -500,3 +500,14 @@ body {
 .ua-cover-row { display: flex; align-items: center; gap: 9px; }
 .ua-cover-row .form-control { flex: 1; min-width: 0; }
 .ua-cover-preview { width: 68px; height: 38px; flex: none; object-fit: cover; border-radius: 8px; border: 1px solid #e3e6ec; }
+
+/* Sehrgar: filtrlangan ro'yxatga qaytish */
+.ua-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ua-back:hover { text-decoration: underline; }

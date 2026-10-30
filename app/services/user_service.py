@@ -44,7 +44,7 @@ async def get_or_create_user(
 
 
 async def set_target_countries(session: AsyncSession, user: User, country_ids: list[int]) -> None:
-    stmt = select(Country).where(Country.id.in_(country_ids))
+    stmt = select(Country).where(Country.id.in_(country_ids), Country.hidden.is_(False))
     countries = (await session.execute(stmt)).scalars().all()
     user.target_countries = list(countries)
     await session.commit()

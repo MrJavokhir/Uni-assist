@@ -228,8 +228,21 @@ class UniversityWizard(BaseView):
                     for message in program["_errors"].values()
                 ]
 
+            # Yashirin davlat yangi universitet uchun tanlanmaydi (tahrirlanayotgan
+            # universitetning o'z davlati esa ro'yxatda qoladi).
             countries = (
-                (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
+                (
+                    await session.execute(
+                        select(Country)
+                        .where(
+                            Country.hidden.is_(False)
+                            | Country.universities.any(University.id == (university_id or 0))
+                        )
+                        .order_by(Country.name_uz)
+                    )
+                )
+                .scalars()
+                .all()
             )
             fields = (
                 (await session.execute(select(Field).order_by(Field.sort_order, Field.name_uz)))

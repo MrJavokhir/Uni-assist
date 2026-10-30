@@ -76,6 +76,8 @@ class CountryOut(BaseModel):
     name_ru: str
     name_en: str
     iso_code: str
+    # Yashirin davlat faqat grantlar filtrida chiqadi (hukumat grantlari uchun).
+    hidden: bool = False
 
 
 class FieldOut(BaseModel):

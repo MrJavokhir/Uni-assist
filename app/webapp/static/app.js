@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 91;
+const ASSET_V = 93;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -218,6 +218,11 @@ const I18N = {
     "home.stat_saved": "Saqlangan",
     "home.alert_title": "Yaqinlashayotgan muddat",
     "home.alert_body": "{program} · {days} kun qoldi",
+    "home.grants_title": "Muddati yaqin grantlar",
+    "home.see_all": "Barchasi",
+    "home.gs_left": "{n} kun qoldi",
+    "home.gs_left_one": "1 kun qoldi",
+    "home.gs_today": "Bugun oxirgi kun",
     "home.section_shortcuts": "Tezkor amallar",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
@@ -287,7 +292,6 @@ const I18N = {
     "home.full_match": "To'liq mos",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
     "home.recap_cta": "Ko'rish",
-    "home.unit_program": "dastur",
     "home.near_short": "{n} yaqin",
     "home.deadline_short": "{n} kun qoldi",
     "home.deadline_none": "Muddat yo'q",
@@ -317,10 +321,7 @@ const I18N = {
     "gpa.uk_class.third": "Uchinchi daraja (Third Class)",
     "gpa.uk_class.below": "Diplom darajasidan past",
     "gpa.disclaimer": "Bu taxminiy hisob. Yakuniy bahoni universitet yoki tan olish idorasi (WES, UK ENIC, uni-assist) belgilaydi.",
-    "home.profile_progress": "Profil to'ldirilgan",
     "home.setup_filter": "Qidiruvni sozlash",
-    "home.empty_text": "Yo'nalish, daraja va davlatni tanlang — ro'yxat shunga qarab toraytiriladi.",
-    "home.refine_filter": "Filtrni to'ldirish",
     "profile.degree_level": "Daraja",
     "profile.degree_level.bachelor": "Bakalavr",
     "profile.degree_level.master": "Magistratura",
@@ -354,7 +355,6 @@ const I18N = {
     "match.no_filter_title": "Filtr hali qo'yilmagan",
     "match.no_filter_count": "Butun katalog: {n} ta dastur, sizga moslanmagan",
     "match.no_filter_cta": "Sozlash",
-    "onboard.title": "Keling, sizga mos dasturlarni topamiz",
     "onboard.skip": "Keyinroq",
     "inquiry.country": "Qaysi davlat bo'yicha?",
     "inquiry.country_unsure": "Hali aniq emas",
@@ -657,6 +657,11 @@ const I18N = {
     "home.stat_saved": "Сохранённые",
     "home.alert_title": "Приближается дедлайн",
     "home.alert_body": "{program} · осталось {days} дн.",
+    "home.grants_title": "Скоро закрываются",
+    "home.see_all": "Все",
+    "home.gs_left": "осталось {n} дн.",
+    "home.gs_left_one": "остался 1 день",
+    "home.gs_today": "Последний день",
     "home.section_shortcuts": "Быстрые действия",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
@@ -726,7 +731,6 @@ const I18N = {
     "home.full_match": "Полное совпадение",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
     "home.recap_cta": "Смотреть",
-    "home.unit_program": "программ",
     "home.near_short": "{n} близких",
     "home.deadline_short": "осталось {n} дн.",
     "home.deadline_none": "Без дедлайна",
@@ -756,10 +760,7 @@ const I18N = {
     "gpa.uk_class.third": "Третья степень (Third Class)",
     "gpa.uk_class.below": "Ниже уровня диплома",
     "gpa.disclaimer": "Это приблизительный расчёт. Итоговую оценку определяет университет или служба признания (WES, UK ENIC, uni-assist).",
-    "home.profile_progress": "Профиль заполнен",
     "home.setup_filter": "Настроить поиск",
-    "home.empty_text": "Выберите направление, уровень и страну — список сузится под вас.",
-    "home.refine_filter": "Дополнить фильтр",
     "profile.degree_level": "Степень",
     "profile.degree_level.bachelor": "Бакалавриат",
     "profile.degree_level.master": "Магистратура",
@@ -793,7 +794,6 @@ const I18N = {
     "match.no_filter_title": "Фильтр ещё не настроен",
     "match.no_filter_count": "Весь каталог: {n} программ, без подбора под вас",
     "match.no_filter_cta": "Настроить",
-    "onboard.title": "Давайте подберём подходящие программы",
     "onboard.skip": "Позже",
     "inquiry.country": "По какой стране?",
     "inquiry.country_unsure": "Пока не знаю",
@@ -1096,6 +1096,11 @@ const I18N = {
     "home.stat_saved": "Saved",
     "home.alert_title": "Deadline approaching",
     "home.alert_body": "{program} · {days} day(s) left",
+    "home.grants_title": "Closing soon",
+    "home.see_all": "See all",
+    "home.gs_left": "{n} days left",
+    "home.gs_left_one": "1 day left",
+    "home.gs_today": "Last day",
     "home.section_shortcuts": "Quick actions",
     "nav.kit": "Admission Kit",
     "kit.title": "Admission Kit",
@@ -1165,7 +1170,6 @@ const I18N = {
     "home.full_match": "Full match",
     "home.recap_text": "Every programme that fits your profile, in one place.",
     "home.recap_cta": "Explore",
-    "home.unit_program": "programmes",
     "home.near_short": "{n} close",
     "home.deadline_short": "{n} days left",
     "home.deadline_none": "No deadline",
@@ -1195,10 +1199,7 @@ const I18N = {
     "gpa.uk_class.third": "Third Class Honours",
     "gpa.uk_class.below": "Below honours level",
     "gpa.disclaimer": "This is an estimate. The final grade is set by the university or a recognition body (WES, UK ENIC, uni-assist).",
-    "home.profile_progress": "Profile complete",
     "home.setup_filter": "Set up your search",
-    "home.empty_text": "Pick a field, level and country — the list narrows down to fit you.",
-    "home.refine_filter": "Refine your filter",
     "profile.degree_level": "Degree",
     "profile.degree_level.bachelor": "Bachelor's",
     "profile.degree_level.master": "Master's",
@@ -1232,7 +1233,6 @@ const I18N = {
     "match.no_filter_title": "No filter set yet",
     "match.no_filter_count": "Whole catalogue: {n} programmes, not matched to you",
     "match.no_filter_cta": "Set up",
-    "onboard.title": "Let's find programmes that fit you",
     "onboard.skip": "Later",
     "inquiry.country": "Which country?",
     "inquiry.country_unsure": "Not sure yet",
@@ -1614,6 +1614,8 @@ function skeletons(count, short) {
 
 let profile = null;
 let countries = [];
+// Yashirinlari ham — faqat grantlar filtri uchun (hukumat grantlari).
+let allCountries = [];
 let majors = [];
 // Katalogda haqiqatan uchraydigan o'qish tillari (kanonik inglizcha
 // nomlar). Nomlarni `instructionLanguage()` foydalanuvchi tiliga o'giradi.
@@ -1625,7 +1627,8 @@ async function loadProfile() {
 }
 
 async function loadCountries() {
-  countries = await api("/countries");
+  allCountries = await api("/countries");
+  countries = allCountries.filter((c) => !c.hidden);
 }
 
 async function loadStudyLanguages() {
@@ -1674,70 +1677,22 @@ function profileCompleteness() {
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
-// Bosh sahifadagi katta halqa: ichida raqam, atrofida to'liq mos dasturlar ulushi.
-function bigRing(pct) {
-  // 106px: ichki doiraga "dastur / программ / programmes" so'zi ham bemalol
-  // sig'sin. 98px'da uzunroq so'z chetga tegib, siqilib ko'rinardi.
-  const r = 42;
-  const c = 2 * Math.PI * r;
-  const offset = c * (1 - Math.max(0, Math.min(100, pct)) / 100);
-  return `
-    <svg class="ring-svg" width="106" height="106" viewBox="0 0 106 106">
-      <circle class="ring-bg" cx="53" cy="53" r="${r}" fill="none" stroke-width="10"/>
-      <circle class="ring-fg" cx="53" cy="53" r="${r}" fill="none" stroke-width="10"
-              stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}"/>
-    </svg>`;
-}
-
-// Katta summani qisqartiradi: 9250 -> "9.3k". Faktlar ustuni tor, to'liq raqam sig'maydi.
-function compactNumber(value) {
-  const n = Number(value);
-  if (!isFinite(n)) return "—";
-  if (n >= 10000) return Math.round(n / 1000) + "k";
-  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-  return String(Math.round(n));
-}
-
 // ============ Home ============
 
 async function renderHome() {
   const el = document.getElementById("view-home");
-  const pct = profileCompleteness();
   const ready = hasFilter();
 
-  // Salomlashish qatori (avatar, qidiruv va "saqlangan" tugmalari) olib
-  // tashlandi: ikkala tugma ham pastdagi tab panelida bor edi, ism esa
-  // Profil sahifasida ko'rinadi. Sahifa darhol asosiy kartadan boshlanadi.
+  // Tepada filtr kartasi (profil foizi + halqa) turardi. Filtr endi
+  // onboarding'da majburiy sozlanadi, shuning uchun uning o'rnida muddati
+  // yaqin hukumat grantlari aylanib turadi.
   el.innerHTML = `
-    ${
-      // Filtr hali sozlanmagan bo'lsa halqa ham, foiz ham ko'rsatilmaydi.
-      // Ilgari bu yerda bo'sh oq halqa ichida chiziqcha turardi — u xuddi
-      // yuklanmay qolgan yoki buzilgan elementdek ko'rinardi. Hisoblab
-      // ko'rsatadigan narsa yo'q ekan, o'rniga aniq taklif turadi.
-      ready
-        ? `<div class="hero home-hero">
-             <div class="hero-main">
-               <div class="hero-chip">${icon("spark")}<span>${t(
-                 "home.profile_progress"
-               )}</span></div>
-               <div class="hero-big">${pct}<span>%</span></div>
-               <button type="button" class="hero-pill" id="home-cta">
-                 <span>${t("home.refine_filter")}</span>${icon("chevron")}
-               </button>
-             </div>
-             <div class="ring-lg" id="hero-ring">
-               ${bigRing(0)}
-               <div class="ring-core"><b>—</b><span>${t("home.unit_program")}</span></div>
-             </div>
-           </div>`
-        : `<div class="hero home-hero hero-invite">
-             <div class="hero-lead">${t("onboard.title")}</div>
-             <div class="hero-note">${t("home.empty_text")}</div>
-             <button type="button" class="hero-pill hero-pill-solid" id="home-cta">
-               <span>${t("home.setup_filter")}</span>${icon("chevron")}
-             </button>
-           </div>`
-    }
+    <div id="home-grants">
+      <div class="section-head">
+        <span class="section-title">${t("home.grants_title")}</span>
+      </div>
+      <div class="gs-track"><div class="gs-card gs-skeleton"></div><div class="gs-card gs-skeleton"></div></div>
+    </div>
 
     <div id="home-alert"></div>
 
@@ -1785,7 +1740,7 @@ async function renderHome() {
     </div>
   `;
 
-  document.getElementById("home-cta").addEventListener("click", () => switchTab("filter"));
+  renderHomeGrants();
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
 
   // Tezkor amallar o'z ishlov beruvchisiga ega — ular bu yerga tushmaydi.
@@ -1813,17 +1768,6 @@ async function renderHome() {
   const upcoming = saved
     .filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
     .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left);
-
-  // Halqa faqat filtr sozlangan holatda chiziladi — aks holda bu element
-  // umuman yo'q (hero o'rniga taklif ko'rsatiladi).
-  const ringEl = document.getElementById("hero-ring");
-  if (ringEl) {
-    ringEl.innerHTML =
-      bigRing(greenShare) +
-      `<div class="ring-core"><b>${compactNumber(total)}</b><span>${t(
-        "home.unit_program"
-      )}</span></div>`;
-  }
 
   document.getElementById("mini-green-value").textContent = ready ? green : "—";
   document.getElementById("mini-green-foot").innerHTML = `<span class="hx-tag">${
@@ -1861,6 +1805,144 @@ async function renderHome() {
         </div>
       </div>`;
   }
+}
+
+// ---- Home: muddati yaqin grantlar karuseli ----
+//
+// Ochiq (muddati o'tmagan) grantlar eng yaqin muddat bo'yicha. Kartalar
+// o'zi chapga aylanib turadi; foydalanuvchi barmog'i bilan sursa, bir
+// muddat to'xtab turadi.
+
+const HOME_GRANTS_LIMIT = 8;
+const GRANT_ROTATE_MS = 4500;
+let homeGrantsTimer = null;
+
+function grantDaysLeft(days) {
+  if (days === 0) return t("home.gs_today");
+  if (days === 1) return t("home.gs_left_one");
+  return t("home.gs_left", { n: days });
+}
+
+function grantSlide(s) {
+  const days = s.nearest_deadline_days_left;
+  const tone = days <= 7 ? "red" : days <= 30 ? "amber" : "blue";
+  const first = s.countries[0];
+  const place = !first
+    ? ""
+    : s.countries.length > 1
+    ? t("profile.countries_count", { n: s.countries.length })
+    : countryName(first);
+  // Rasm yuklanmagan grant: davlat bayrog'idan xira fon, o'rtada logotip.
+  const flagCode = first ? String(first.iso_code).toLowerCase() : "";
+  const cover = s.cover_url
+    ? `<img class="gs-img" src="${escapeHtml(s.cover_url)}" alt="" loading="lazy">`
+    : `<div class="gs-fallback">
+         ${/^[a-z]{2}$/.test(flagCode) ? `<img class="gs-flag-bg" src="${FLAG_BASE}${flagCode}.svg" alt="">` : ""}
+         <div class="gs-logo">${avatar(s.name, s.logo)}</div>
+       </div>`;
+  const sub = [
+    (s.degree_levels || []).map((d) => t("profile.degree_level." + d)).join(" / "),
+    t("scholarships.coverage." + s.coverage_type),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return `
+    <div class="gs-card" data-id="${s.id}" role="button" tabindex="0">
+      <div class="gs-cover">
+        ${cover}
+        ${
+          place
+            ? `<span class="gs-pill">${first && s.countries.length === 1 ? `<span class="chip-flag">${flag(
+                first.iso_code
+              )}</span>` : ""}${escapeHtml(place)}</span>`
+            : ""
+        }
+      </div>
+      <div class="gs-body">
+        <div class="gs-title">${escapeHtml(s.name)}</div>
+        <div class="gs-meta">
+          <span class="gs-left ${tone}">${grantDaysLeft(days)}</span>
+          <span class="gs-sub">${escapeHtml(sub)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function renderHomeGrants() {
+  clearInterval(homeGrantsTimer);
+  const box = document.getElementById("home-grants");
+  let items = [];
+  try {
+    items = await api("/scholarships");
+  } catch (e) {
+    items = [];
+  }
+  if (!box.isConnected) return;
+  const soon = items
+    .filter((s) => !s.closed && s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
+    .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left)
+    .slice(0, HOME_GRANTS_LIMIT);
+  if (!soon.length) {
+    box.remove();
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="section-head">
+      <span class="section-title">${t("home.grants_title")}</span>
+      <button type="button" class="section-action" id="home-grants-all">${t("home.see_all")}</button>
+    </div>
+    <div class="gs-track">${soon.map(grantSlide).join("")}</div>
+    ${
+      soon.length > 1
+        ? `<div class="gs-dots">${soon.map((_, i) => `<span class="${i ? "" : "on"}"></span>`).join("")}</div>`
+        : ""
+    }`;
+
+  document.getElementById("home-grants-all").addEventListener("click", () => {
+    haptic("light");
+    switchTab("scholarships");
+  });
+  const byId = new Map(soon.map((s) => [String(s.id), s]));
+  box.querySelectorAll(".gs-card").forEach((card) => {
+    card.addEventListener("click", () => openScholarshipPage(byId.get(card.dataset.id)));
+  });
+  startGrantCarousel(box);
+}
+
+function startGrantCarousel(box) {
+  const track = box.querySelector(".gs-track");
+  const cards = [...track.children];
+  const dots = [...box.querySelectorAll(".gs-dots span")];
+  if (cards.length < 2) return;
+
+  const step = () => cards[1].offsetLeft - cards[0].offsetLeft;
+  const current = () => Math.min(cards.length - 1, Math.round(track.scrollLeft / step()));
+  track.addEventListener(
+    "scroll",
+    () => {
+      const i = current();
+      dots.forEach((d, k) => d.classList.toggle("on", k === i));
+    },
+    { passive: true }
+  );
+
+  // Foydalanuvchi o'zi surayotganda avtomatik aylantirish xalaqit bermasin.
+  let pausedUntil = 0;
+  const pause = () => (pausedUntil = Date.now() + 7000);
+  ["touchstart", "pointerdown", "wheel"].forEach((type) =>
+    track.addEventListener(type, pause, { passive: true })
+  );
+
+  homeGrantsTimer = setInterval(() => {
+    if (!track.isConnected || currentTab !== "home") {
+      clearInterval(homeGrantsTimer);
+      return;
+    }
+    if (document.hidden || Date.now() < pausedUntil) return;
+    const next = (current() + 1) % cards.length;
+    track.scrollTo({ left: next * step(), behavior: "smooth" });
+  }, GRANT_ROTATE_MS);
 }
 
 // ============ Match ============
@@ -2337,7 +2419,7 @@ async function renderScholarships() {
       <div class="chip ${scholarshipCountryId === null ? "active" : ""}" data-value="">${t(
         "scholarships.all_countries"
       )}</div>
-      ${countries
+      ${allCountries
         .map(
           (c) =>
             `<div class="chip ${String(scholarshipCountryId) === String(c.id) ? "active" : ""}" data-value="${

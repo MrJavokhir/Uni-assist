@@ -29,6 +29,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models import (
+    Country,
     DeadlineType,
     LanguageCertType,
     Program,
@@ -86,6 +87,8 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
         selectinload(Program.deadlines),
     )
 
+    # Yashirin davlat universitetlari tavsiya qilinmaydi.
+    stmt = stmt.where(University.country.has(Country.hidden.is_(False)))
     if user.target_countries:
         country_ids = [c.id for c in user.target_countries]
         stmt = stmt.where(University.country_id.in_(country_ids))

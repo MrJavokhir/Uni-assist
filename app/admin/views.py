@@ -1,6 +1,7 @@
 from aiogram import Bot
 from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
+from sqlalchemy import Select, func, select
 from starlette.requests import Request
 from wtforms import SelectField
 from wtforms.validators import InputRequired
@@ -163,6 +164,14 @@ class CountryAdmin(ModelView, model=Country):
 
     def is_visible(self, request: Request) -> bool:
         return False
+
+    # Yashirin davlatlar (faqat hukumat grantlari uchun saqlanadi) ro'yxatda
+    # ko'rinmaydi.
+    def list_query(self, request: Request) -> Select:
+        return select(Country).where(Country.hidden.is_(False))
+
+    def count_query(self, request: Request) -> Select:
+        return select(func.count(Country.id)).where(Country.hidden.is_(False))
 
     column_list = [Country.id, Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]
     column_searchable_list = [Country.name_uz, Country.name_ru, Country.name_en, Country.iso_code]

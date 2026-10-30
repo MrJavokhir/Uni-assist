@@ -517,7 +517,14 @@ async def gpa_convert(value: float, scale: str) -> GpaConvertOut:
 async def list_countries(session: AsyncSession = Depends(get_session)) -> list[CountryOut]:
     countries = (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
     return [
-        CountryOut(id=c.id, name_uz=c.name_uz, name_ru=c.name_ru, name_en=c.name_en, iso_code=c.iso_code)
+        CountryOut(
+            id=c.id,
+            name_uz=c.name_uz,
+            name_ru=c.name_ru,
+            name_en=c.name_en,
+            iso_code=c.iso_code,
+            hidden=c.hidden,
+        )
         for c in countries
     ]
 

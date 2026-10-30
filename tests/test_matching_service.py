@@ -430,3 +430,13 @@ async def test_no_study_language_keeps_every_program(session) -> None:
     results = await find_matches(session, user)
 
     assert len(results) == 2
+
+
+async def test_hidden_country_programs_are_not_recommended(session: AsyncSession):
+    await _make_program(session, country_name="Bruney")
+    country = (await session.execute(select(Country).where(Country.name_uz == "Bruney"))).scalar_one()
+    country.hidden = True
+    await session.commit()
+    user = await _make_user(session)
+
+    assert await find_matches(session, user) == []

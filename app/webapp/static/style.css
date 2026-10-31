@@ -123,17 +123,17 @@ select {
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 16px;
-  font-weight: 700;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 /* Loyiha logotipi (shaffof PNG) — ilgari bu yerda gradientli kvadrat ichida
    umumiy "shapka" ikonkasi turardi. */
 .brand-mark {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   flex: none;
 }
@@ -3269,6 +3269,12 @@ body.no-tabbar::after { display: none; }
 .brand-word {
   display: inline-block;
   transition: transform 0.26s ease, opacity 0.26s ease;
+}
+.brand-word[data-word="kit"] { color: #e8722f; }
+.brand-word[data-word="buddy"] { color: #7a4fe0; }
+@media (prefers-color-scheme: dark) {
+  .brand-word[data-word="kit"] { color: #f39a5c; }
+  .brand-word[data-word="buddy"] { color: #a98bf6; }
 }
 .brand-word.is-out { transform: translateY(-60%); opacity: 0; }
 .brand-word.is-in { transform: translateY(60%); opacity: 0; transition: none; }

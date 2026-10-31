@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 101;
+const ASSET_V = 102;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -6042,6 +6042,8 @@ function startBrandRotation() {
     setTimeout(() => {
       index = (index + 1) % BRAND_WORDS.length;
       word.textContent = BRAND_WORDS[index];
+      // Har so'zning o'z rangi (Kit — to'q sariq, Buddy — binafsha).
+      word.dataset.word = BRAND_WORDS[index].toLowerCase();
       word.classList.remove("is-out");
       word.classList.add("is-in");
       // Keyingi kadrda "in" holatidan joyiga siljiydi.

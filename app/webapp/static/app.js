@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 100;
+const ASSET_V = 101;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -221,6 +221,12 @@ const I18N = {
     "home.gs_left": "{n} kun qoldi",
     "home.gs_left_one": "1 kun qoldi",
     "home.gs_today": "Bugun oxirgi kun",
+    "home.updates_title": "Yangiliklar",
+    "update.kind.new": "Yangi",
+    "update.kind.open": "Ariza ochildi",
+    "update.kind.deadline": "Muddat o'zgardi",
+    "update.kind.info": "Yangilik",
+    "filter.apply": "Qo'llash",
     "home.section_shortcuts": "Tezkor amallar",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Qo'llanmalar",
@@ -656,6 +662,12 @@ const I18N = {
     "home.gs_left": "осталось {n} дн.",
     "home.gs_left_one": "остался 1 день",
     "home.gs_today": "Последний день",
+    "home.updates_title": "Обновления",
+    "update.kind.new": "Новое",
+    "update.kind.open": "Приём открыт",
+    "update.kind.deadline": "Дедлайн изменён",
+    "update.kind.info": "Новость",
+    "filter.apply": "Применить",
     "home.section_shortcuts": "Быстрые действия",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Гайды",
@@ -1091,6 +1103,12 @@ const I18N = {
     "home.gs_left": "{n} days left",
     "home.gs_left_one": "1 day left",
     "home.gs_today": "Last day",
+    "home.updates_title": "Updates",
+    "update.kind.new": "New",
+    "update.kind.open": "Open",
+    "update.kind.deadline": "Deadline changed",
+    "update.kind.info": "Update",
+    "filter.apply": "Apply",
     "home.section_shortcuts": "Quick actions",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Guides",
@@ -1721,9 +1739,12 @@ async function renderHome() {
         <span class="quick-label">${t("home.full_match")}</span>
       </button>
     </div>
+
+    <div id="home-updates"></div>
   `;
 
   renderHomeGrants();
+  renderHomeUpdates();
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
   document.getElementById("home-gpa").addEventListener("click", openGpaPage);
 
@@ -1885,6 +1906,58 @@ function startGrantCarousel(box) {
   }, GRANT_ROTATE_MS);
 }
 
+// ---- Home: Yangiliklar (admin panelda yoziladi) ----
+
+async function renderHomeUpdates() {
+  const box = document.getElementById("home-updates");
+  let items = [];
+  try {
+    items = await api("/updates");
+  } catch (e) {
+    items = [];
+  }
+  if (!box || !box.isConnected || !items.length) return;
+  box.innerHTML = `
+    <div class="section-head"><span class="section-title">${t("home.updates_title")}</span></div>
+    <div class="up-card">
+      ${items
+        .map(
+          (u) => `
+        <button type="button" class="up-row${u.scholarship_id ? " is-link" : ""}" data-grant="${
+          u.scholarship_id || ""
+        }">
+          <span class="up-dot up-${escapeHtml(u.kind)}"></span>
+          <span class="up-text">
+            <span class="up-title">${escapeHtml(u["title_" + lang] || u.title)}</span>
+            <span class="up-meta">${t("update.kind." + u.kind)} · ${shortDate(u.published_on)}</span>
+          </span>
+          ${u.scholarship_id ? icon("chevron", "up-go") : ""}
+        </button>`
+        )
+        .join("")}
+    </div>`;
+  box.querySelectorAll(".up-row.is-link").forEach((row) => {
+    row.addEventListener("click", () => openGrantById(Number(row.dataset.grant)));
+  });
+}
+
+// Grant sahifasini ID bo'yicha ochadi (bot havolasi va yangiliklar uchun).
+async function openGrantById(id) {
+  haptic("light");
+  try {
+    const items = await api("/scholarships?all_levels=true");
+    const found = items.find((s) => s.id === id);
+    if (found) {
+      openScholarshipPage(found);
+      return true;
+    }
+  } catch (e) {
+    /* topilmasa — grantlar ro'yxati */
+  }
+  await switchTab("scholarships");
+  return false;
+}
+
 // ============ Match ============
 
 // Filtr qo'yilmaganda `/match` butun katalogni qaytaradi — ro'yxat to'la
@@ -1915,8 +1988,9 @@ function noFilterNote(total) {
 // ro'yxat tepasida joriy tanlovlar ko'rinib turadi va har biri bir
 // bosishda almashadi.
 //
-// Davlatlar bu yerda YO'Q: ular ko'p tanlovli va ixcham qatorga
-// sig'maydi — o'sha chip to'liq filtr sahifasini ochadi.
+// Davlatlar ko'p tanlovli — ular uchun alohida oyna (belgilab, "Qo'llash").
+// "Filtr" tugmasi barcha maydonlar ro'yxatini ochadi. Ikkalasi ham
+// onboarding'ga OTKAZMAYDI: u faqat birinchi kirish uchun.
 
 function degreeLabel() {
   return profile.degree_level ? t("profile.degree_level." + profile.degree_level) : "";
@@ -2083,17 +2157,97 @@ function openQuickFilterSheet(key) {
   });
 }
 
+function openCountriesSheet() {
+  const picked = new Set((profile.target_country_ids || []).map(Number));
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("profile.countries")}</div>
+    <div class="mf-options mf-multi">
+      ${countries
+        .map(
+          (c) => `
+        <button type="button" class="mf-option${picked.has(c.id) ? " active" : ""}" data-id="${c.id}">
+          <span class="mf-option-main"><span class="chip-flag">${flag(c.iso_code)}</span>${escapeHtml(
+            countryName(c)
+          )}</span>
+          ${icon("check")}
+        </button>`
+        )
+        .join("")}
+    </div>
+    <div class="mf-sheet-foot">
+      <button type="button" class="btn btn-quiet" id="mf-clear">${t("profile.countries_all")}</button>
+      <button type="button" class="btn btn-accent" id="mf-apply">${t("filter.apply")}</button>
+    </div>`,
+    sheet,
+    { tall: true }
+  );
+  sheet.querySelectorAll(".mf-multi .mf-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      const id = Number(btn.dataset.id);
+      if (picked.has(id)) picked.delete(id);
+      else picked.add(id);
+      btn.classList.toggle("active", picked.has(id));
+    });
+  });
+  document.getElementById("mf-apply").addEventListener("click", () =>
+    applyQuickFilter({ target_country_ids: [...picked] })
+  );
+  document.getElementById("mf-clear").addEventListener("click", () =>
+    applyQuickFilter({ target_country_ids: [] })
+  );
+}
+
+// "Filtr" — barcha maydonlar bitta ro'yxatda; har biri o'z oynasini ochadi.
+function openFilterOverview() {
+  const rows = [
+    ["degree", t("profile.degree_level"), degreeLabel()],
+    ["major", t("profile.major"), majorLabel()],
+    ["countries", t("profile.countries"), countriesLabel() || t("profile.countries_all")],
+    ["language", t("profile.study_language"), instructionLanguage(profile.study_language)],
+    ["rank", t("profile.rank"), profile.university_rank_range || t("profile.rank_any")],
+  ];
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("match.filter_all")}</div>
+    <div class="mf-rows">
+      ${rows
+        .map(
+          ([key, label, value]) => `
+        <button type="button" class="mf-row" data-mf="${key}">
+          <span class="mf-row-label">${escapeHtml(label)}</span>
+          <span class="mf-row-value">${escapeHtml(value || t("profile.study_language_any"))}</span>
+          ${icon("chevron")}
+        </button>`
+        )
+        .join("")}
+    </div>`,
+    sheet
+  );
+  sheet.querySelectorAll(".mf-row").forEach((row) => {
+    row.addEventListener("click", () => {
+      haptic("light");
+      if (row.dataset.mf === "countries") openCountriesSheet();
+      else openQuickFilterSheet(row.dataset.mf);
+    });
+  });
+}
+
 function bindMiniFilter(root) {
   root.querySelectorAll(".mf-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
       haptic("light");
       const key = chip.dataset.mf;
-      // Davlatlar — onboarding'ning o'sha savolida, "Hammasi" — boshidan.
-      if (key === "all" || key === "countries") {
-        openFilter(key === "countries" ? "countries" : null);
-        return;
-      }
-      openQuickFilterSheet(key);
+      if (key === "countries") openCountriesSheet();
+      else if (key === "all") openFilterOverview();
+      else openQuickFilterSheet(key);
     });
   });
 }
@@ -3704,11 +3858,6 @@ function markOnboardingDone() {
   if (profile.onboarding_done) return;
   profile.onboarding_done = true;
   api("/me", { method: "PATCH", body: JSON.stringify({ onboarding_done: true }) }).catch(() => {});
-}
-
-function openFilter(step) {
-  wizEntryStep = step || null;
-  switchTab("filter");
 }
 
 function wizDraftFromProfile() {
@@ -5856,13 +6005,7 @@ async function applyDeepLink() {
   const grant = target.match(/^grant_(\d+)$/);
   if (grant) {
     await switchTab("scholarships");
-    try {
-      const items = await api("/scholarships?all_levels=true");
-      const found = items.find((s) => s.id === Number(grant[1]));
-      if (found) openScholarshipPage(found);
-    } catch (e) {
-      /* grant topilmasa — grantlar ro'yxati ochiq qoladi */
-    }
+    await openGrantById(Number(grant[1]));
     return true;
   }
   const question = target.match(/^question_(\d+)$/);
@@ -5877,6 +6020,34 @@ async function applyDeepLink() {
     return true;
   }
   return false;
+}
+
+// Tepadagi "Uni Assist" yozuvi: ikkinchi so'z Assist -> Kit -> Buddy bo'lib
+// almashib turadi (ilovaning uch qismi).
+const BRAND_WORDS = ["Assist", "Kit", "Buddy"];
+const BRAND_ROTATE_MS = 2600;
+
+function startBrandRotation() {
+  const word = document.getElementById("brand-word");
+  if (!word) return;
+  try {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  } catch (e) {
+    /* eski WebView */
+  }
+  let index = 0;
+  setInterval(() => {
+    if (document.hidden) return;
+    word.classList.add("is-out");
+    setTimeout(() => {
+      index = (index + 1) % BRAND_WORDS.length;
+      word.textContent = BRAND_WORDS[index];
+      word.classList.remove("is-out");
+      word.classList.add("is-in");
+      // Keyingi kadrda "in" holatidan joyiga siljiydi.
+      requestAnimationFrame(() => requestAnimationFrame(() => word.classList.remove("is-in")));
+    }, 260);
+  }, BRAND_ROTATE_MS);
 }
 
 async function init() {
@@ -5911,6 +6082,7 @@ async function init() {
   if (resume) wizEntryStep = "prefs";
   if (onboarding) await switchTab("filter");
   document.body.classList.remove("booting");
+  startBrandRotation();
 
   await catalogReady;
   updateNavLabels();

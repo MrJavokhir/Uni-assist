@@ -2,6 +2,7 @@ from app.db.base import Base
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.country import Country
 from app.db.models.field import Field
+from app.db.models.home_update import HomeUpdate, UpdateKind
 from app.db.models.mentor import (
     ComplaintReason,
     ComplaintStatus,
@@ -88,6 +89,7 @@ __all__ = [
     "DegreeLevel",
     "Field",
     "GpaScale",
+    "HomeUpdate",
     "LanguageCertType",
     "MentorComplaint",
     "MentorLevel",
@@ -123,6 +125,7 @@ __all__ = [
     "University",
     "UniversityChoiceType",
     "UniversityRankRange",
+    "UpdateKind",
     "User",
     "UserLanguageCertificate",
     "UserOtherTest",

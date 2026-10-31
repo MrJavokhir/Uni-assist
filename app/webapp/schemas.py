@@ -80,6 +80,19 @@ class CountryOut(BaseModel):
     hidden: bool = False
 
 
+class HomeUpdateOut(BaseModel):
+    """Bosh sahifadagi yangilik. Sarlavhani Mini App foydalanuvchi tilida tanlaydi."""
+
+    id: int
+    title: str
+    title_ru: str | None
+    title_en: str | None
+    kind: str
+    published_on: str
+    # Bosilganda ochiladigan grant (bo'lmasa — yangilik faqat o'qiladi).
+    scholarship_id: int | None
+
+
 class FieldOut(BaseModel):
     """Yo'nalish — Mini App nomini foydalanuvchi tilida o'zi tanlaydi."""
 

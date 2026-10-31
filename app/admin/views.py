@@ -28,6 +28,7 @@ from app.db.models import (
     DeadlineType,
     DegreeLevel,
     Field,
+    HomeUpdate,
     LanguageCertType,
     Payment,
     PaymentSettings,
@@ -45,6 +46,7 @@ from app.db.models import (
     TransactionKind,
     UiLanguage,
     University,
+    UpdateKind,
     User,
 )
 from app.services.redis_client import redis_client
@@ -61,6 +63,13 @@ from app.services.subscription_service import (
 _SERVICE_KIND_LABELS = {
     ServiceKind.FILE: "Yuklab olinadigan qo'llanma",
     ServiceKind.REQUEST: "So'rov (qo'lda bajariladi)",
+}
+
+_UPDATE_KIND_LABELS = {
+    UpdateKind.NEW: "Yangi",
+    UpdateKind.OPEN: "Ariza ochildi",
+    UpdateKind.DEADLINE: "Muddat o'zgardi",
+    UpdateKind.INFO: "Yangilik",
 }
 
 _DEGREE_LABELS = {
@@ -583,6 +592,60 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     }
     column_formatters = _scholarship_formatters
     column_formatters_detail = _scholarship_formatters
+
+
+class HomeUpdateAdmin(ModelView, model=HomeUpdate):
+    """Mini App bosh sahifasi pastidagi "Yangiliklar".
+
+    Eng yangi 5 tasi (sanasi bo'yicha) ko'rsatiladi. Grant tanlansa,
+    yangilik bosilganda o'sha grant sahifasi ochiladi. Ruscha/inglizcha
+    sarlavha bo'sh qolsa, o'zbekchasi chiqadi.
+    """
+
+    name = "Yangilik"
+    name_plural = "Yangiliklar"
+    icon = "fa-solid fa-newspaper"
+
+    column_list = [
+        HomeUpdate.id,
+        HomeUpdate.title,
+        HomeUpdate.kind,
+        HomeUpdate.published_on,
+        HomeUpdate.scholarship,
+        HomeUpdate.is_active,
+    ]
+    column_searchable_list = [HomeUpdate.title]
+    column_default_sort = [(HomeUpdate.published_on, True), (HomeUpdate.id, True)]
+    form_columns = [
+        HomeUpdate.title,
+        HomeUpdate.title_ru,
+        HomeUpdate.title_en,
+        HomeUpdate.kind,
+        HomeUpdate.published_on,
+        HomeUpdate.scholarship,
+        HomeUpdate.is_active,
+    ]
+    form_args = {
+        "title": {"description": "Masalan: «Stipendium Hungaricum 2027/28 qabuli ochildi»"},
+        "kind": {
+            "description": (
+                "Mini App'dagi rangli nuqta va yorliq: Yangi (ko'k), Ariza ochildi (yashil), "
+                "Muddat o'zgardi (to'q sariq), Yangilik (kulrang)."
+            )
+        },
+        "scholarship": {"description": "Ixtiyoriy: tanlansa, yangilik bosilganda grant ochiladi."},
+    }
+    column_labels = _labels(
+        title="Sarlavha (uz)",
+        title_ru="Sarlavha (ru)",
+        title_en="Sarlavha (en)",
+        kind="Turi",
+        published_on="Sana",
+        scholarship="Grant",
+        is_active="Ko'rsatilsin",
+    )
+    column_formatters = {HomeUpdate.kind: enum_label(_UPDATE_KIND_LABELS)}
+    column_formatters_detail = {HomeUpdate.kind: enum_label(_UPDATE_KIND_LABELS)}
 
 
 class ScholarshipDeadlineAdmin(ModelView, model=ScholarshipDeadline):

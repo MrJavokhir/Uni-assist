@@ -22,6 +22,7 @@ from app.admin.views import (
     BotAdminAdmin,
     CountryAdmin,
     FieldAdmin,
+    HomeUpdateAdmin,
     PaymentAdmin,
     PaymentSettingsAdmin,
     ProgramAdmin,
@@ -163,6 +164,8 @@ admin.add_base_view(ScholarshipWizard)
 for view in (
     ScholarshipAdmin,
     ScholarshipDeadlineAdmin,
+    # Mini App bosh sahifasidagi "Yangiliklar" ro'yxati.
+    HomeUpdateAdmin,
     UserAdmin,
 ):
     admin.add_view(view)

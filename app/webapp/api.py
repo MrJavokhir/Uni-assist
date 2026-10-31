@@ -21,6 +21,7 @@ from app.db.models import (
     DegreeLevel,
     Field,
     GpaScale,
+    HomeUpdate,
     LanguageCertType,
     Program,
     SavedProgram,
@@ -62,6 +63,7 @@ from app.webapp.schemas import (
     FeedbackIn,
     FieldOut,
     GpaConvertOut,
+    HomeUpdateOut,
     LanguageCertOut,
     MatchProgramOut,
     ProfileIn,
@@ -521,6 +523,42 @@ async def gpa_convert(value: float, scale: str) -> GpaConvertOut:
             "(WES, Uni-Assist, ANABIN) belgilaydi. Rasmiy ariza uchun shu raqamga to'liq tayanmang."
         ),
     )
+
+
+# Bosh sahifada shuncha eng yangi yangilik ko'rsatiladi.
+HOME_UPDATES_LIMIT = 5
+
+
+@router.get("/updates", response_model=list[HomeUpdateOut])
+async def list_updates(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> list[HomeUpdateOut]:
+    """Bosh sahifa pastidagi "Yangiliklar" (admin panelda yoziladi)."""
+    rows = (
+        (
+            await session.execute(
+                select(HomeUpdate)
+                .where(HomeUpdate.is_active.is_(True))
+                .order_by(HomeUpdate.published_on.desc(), HomeUpdate.id.desc())
+                .limit(HOME_UPDATES_LIMIT)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return [
+        HomeUpdateOut(
+            id=row.id,
+            title=row.title,
+            title_ru=row.title_ru,
+            title_en=row.title_en,
+            kind=row.kind.value,
+            published_on=row.published_on.isoformat(),
+            scholarship_id=row.scholarship_id,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/countries", response_model=list[CountryOut])

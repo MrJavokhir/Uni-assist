@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 98;
+const ASSET_V = 100;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -223,6 +223,10 @@ const I18N = {
     "home.gs_today": "Bugun oxirgi kun",
     "home.section_shortcuts": "Tezkor amallar",
     "nav.kit": "Admission Kit",
+    "kit.section_guides": "Qo'llanmalar",
+    "kit.section_help": "Shaxsiy yordam",
+    "kit.help_meta": "Siz bilan Telegram'da bog'lanamiz",
+    "kit.soon_btn": "Tez orada",
     "kit.title": "Admission Kit",
     "kit.back": "Bosh sahifa",
     "common.back": "Orqaga",
@@ -275,14 +279,11 @@ const I18N = {
     "kit.download": "PDF ni olish",
     "kit.sending": "Yuborilmoqda...",
     "kit.pdf_label": "PDF qo'llanma",
-    "kit.pdf_locked_hint": "Sotib olingach, PDF shu zahoti botga yuboriladi.",
-    "kit.pdf_open_hint": "Qo'llanma sizniki. Istagan vaqtda botga qayta yuborishingiz mumkin.",
     "kit.sent_title": "PDF yuborildi",
     "kit.sent_text": "Qo'llanma bot suhbatiga yuborildi — u yerda ochib, telefoningizga saqlashingiz mumkin.",
     "kit.sent_toast": "PDF botga yuborildi",
     "kit.open_bot": "Botni ochish",
     "kit.soon": "Tez orada",
-    "kit.pdf_soon_hint": "Qo'llanma tayyorlanmoqda — tez orada ochiladi.",
     "kit.booked_title": "Yozildingiz",
     "kit.booked_text": "Uchrashuv vaqti: {slot}. Tez orada siz bilan bog'lanamiz.",
     "kit.minutes": "{count} daqiqa",
@@ -657,6 +658,10 @@ const I18N = {
     "home.gs_today": "Последний день",
     "home.section_shortcuts": "Быстрые действия",
     "nav.kit": "Admission Kit",
+    "kit.section_guides": "Гайды",
+    "kit.section_help": "Личная помощь",
+    "kit.help_meta": "Свяжемся с вами в Telegram",
+    "kit.soon_btn": "Скоро",
     "kit.title": "Admission Kit",
     "kit.back": "На главную",
     "common.back": "Назад",
@@ -709,14 +714,11 @@ const I18N = {
     "kit.download": "Получить PDF",
     "kit.sending": "Отправляем...",
     "kit.pdf_label": "PDF-руководство",
-    "kit.pdf_locked_hint": "После покупки PDF сразу придёт в бот.",
-    "kit.pdf_open_hint": "Руководство ваше. Можно отправить в бот ещё раз в любой момент.",
     "kit.sent_title": "PDF отправлен",
     "kit.sent_text": "Руководство отправлено в чат с ботом — там его можно открыть и сохранить на телефон.",
     "kit.sent_toast": "PDF отправлен в бот",
     "kit.open_bot": "Открыть бот",
     "kit.soon": "Скоро",
-    "kit.pdf_soon_hint": "Руководство готовится — скоро будет доступно.",
     "kit.booked_title": "Вы записаны",
     "kit.booked_text": "Время встречи: {slot}. Скоро свяжемся с вами.",
     "kit.minutes": "{count} мин",
@@ -1091,6 +1093,10 @@ const I18N = {
     "home.gs_today": "Last day",
     "home.section_shortcuts": "Quick actions",
     "nav.kit": "Admission Kit",
+    "kit.section_guides": "Guides",
+    "kit.section_help": "Personal help",
+    "kit.help_meta": "We'll contact you on Telegram",
+    "kit.soon_btn": "Soon",
     "kit.title": "Admission Kit",
     "kit.back": "Back to home",
     "common.back": "Back",
@@ -1143,14 +1149,11 @@ const I18N = {
     "kit.download": "Get the PDF",
     "kit.sending": "Sending...",
     "kit.pdf_label": "PDF guide",
-    "kit.pdf_locked_hint": "Once bought, the PDF is sent to the bot right away.",
-    "kit.pdf_open_hint": "The guide is yours. You can have it sent to the bot again any time.",
     "kit.sent_title": "PDF sent",
     "kit.sent_text": "The guide was sent to your chat with the bot — open it there and save it to your phone.",
     "kit.sent_toast": "PDF sent to the bot",
     "kit.open_bot": "Open the bot",
     "kit.soon": "Coming soon",
-    "kit.pdf_soon_hint": "The guide is being prepared — it will open soon.",
     "kit.booked_title": "You are booked",
     "kit.booked_text": "Meeting time: {slot}. We will contact you shortly.",
     "kit.minutes": "{count} min",
@@ -4490,29 +4493,50 @@ function isSoon(service) {
 
 function serviceTag(service) {
   if (!isGuide(service)) return "";
+  if (isSoon(service)) return `<span class="svc-tag is-soon">${icon("clock")}${t("kit.soon")}</span>`;
   return service.requested
     ? `<span class="svc-tag is-open">${icon("check")}${t("kit.unlocked")}</span>`
     : `<span class="svc-tag is-locked">${icon("lock")}${t("kit.locked")}</span>`;
 }
 
-function serviceFileRow(service) {
-  if (!isGuide(service)) return "";
+// Karta ostidagi kichik satr: qo'llanmada fayl hajmi, xizmatda — qanday
+// bog'lanilishi.
+function serviceMeta(service) {
+  if (!isGuide(service)) return t("kit.help_meta");
   const size = fileSizeLabel(service.file_size);
-  // Fayl nomi ataylab ko'rsatilmaydi: u adminka uchun ish nomi
-  // ("cv_guide_v3_final.pdf") va foydalanuvchiga hech narsa aytmaydi.
-  let hint = t("kit.pdf_locked_hint");
-  if (isSoon(service)) hint = t("kit.pdf_soon_hint");
-  else if (service.requested) hint = t("kit.pdf_open_hint");
+  return size && !isSoon(service) ? `${t("kit.pdf_label")} · ${size}` : t("kit.pdf_label");
+}
+
+function serviceIcon(service) {
+  if (isGuide(service)) return "file";
+  return /mentor/i.test(service.code || "") ? "chat" : "spark";
+}
+
+function serviceCard(service) {
+  const tone = isGuide(service) ? "blue" : /mentor/i.test(service.code || "") ? "amber" : "violet";
   return `
-    <div class="svc-file">
-      ${icon("file")}
-      <span class="svc-file-text">
-        <span class="svc-file-name">${t("kit.pdf_label")}${
-          size && !isSoon(service) ? ` · ${size}` : ""
-        }</span>
-        <span class="svc-file-hint">${hint}</span>
-      </span>
-    </div>`;
+    <article class="svc-card tone-${tone}${isGuide(service) && !service.requested ? " is-locked" : ""}">
+      <div class="svc-top">
+        <span class="svc-ico">${icon(serviceIcon(service))}</span>
+        <div class="svc-head">
+          <h3 class="svc-title">${escapeHtml(service.title)}</h3>
+          <div class="svc-meta">${escapeHtml(serviceMeta(service))}</div>
+        </div>
+        ${serviceTag(service)}
+      </div>
+      ${service.description ? `<p class="svc-text">${escapeHtml(service.description)}</p>` : ""}
+      <div class="svc-foot">
+        <span class="svc-price">${servicePriceText(service)}</span>
+        <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
+          data-id="${service.id}"
+          data-guide="${isGuide(service) ? "1" : "0"}"
+          data-file="${service.has_file ? "1" : "0"}"
+          data-owned="${service.requested ? "1" : "0"}"
+          ${serviceBtnDisabled(service) ? "disabled" : ""}>
+          ${serviceBtnInner(service)}
+        </button>
+      </div>
+    </article>`;
 }
 
 // Do'st taklif qilib ochiladigan xizmat. Hisoblagich profildan keladi
@@ -4529,7 +4553,7 @@ function inviteUnlock(service) {
 
 function serviceBtnInner(service) {
   if (isGuide(service)) {
-    if (isSoon(service)) return icon("clock") + t("kit.soon");
+    if (isSoon(service)) return t("kit.soon_btn");
     if (service.requested) return icon("download") + t("kit.download");
     const guideUnlock = inviteUnlock(service);
     if (guideUnlock && guideUnlock.ready) return icon("spark") + t("kit.unlock_free");
@@ -4573,8 +4597,6 @@ function unlockServiceCard(btn, hasFile) {
     tag.className = "svc-tag is-open";
     tag.innerHTML = icon("check") + t("kit.unlocked");
   }
-  const hint = card.querySelector(".svc-file-hint");
-  if (hint) hint.textContent = t("kit.pdf_open_hint");
 }
 
 // Fayl ILOVAGA emas, BOTGA yuboriladi: Mini App Telegram ichidagi
@@ -4756,44 +4778,27 @@ async function renderKit() {
     return;
   }
 
-  // Sarlavha bandi (orqaga + nom + balans) OLIB TASHLANGAN: sahifaga bosh
-  // sahifadagi "Admission Kit" kartasi orqali kelinadi, ya'ni nom takror
-  // edi; orqaga qaytish pastdagi panelda bor; balans esa Profil sahifasida
-  // ko'rsatiladi. Mablag' yetmasa server 402 qaytaradi va ilova qancha
-  // kerakligini alohida oynada aytadi — shuning uchun uni bu yerda doim
-  // ko'rsatib turish shart emas.
+  // Tepada sarlavha, keyin ikki bo'lim: PDF qo'llanmalar va mentor bilan
+  // bajariladigan xizmatlar. Kartalar ilovaning boshqa joylari (grant
+  // karuseli, dastur sahifasi) bilan bir uslubda: oq karta, yumshoq soya,
+  // chapda rangli ikonka.
+  const guides = services.filter(isGuide);
+  const helps = services.filter((service) => !isGuide(service));
+  const section = (key, items) =>
+    items.length
+      ? `<div class="section-head"><span class="section-title">${t(key)}</span></div>
+         ${items.map(serviceCard).join("")}`
+      : "";
   el.innerHTML = `
-    ${services
-      .map(
-        (service, index) => `
-      <article class="svc-card svc-card-${(index % 4) + 1}${
-        isGuide(service) && !service.requested ? " is-locked" : ""
-      }">
-        <div class="svc-top">
-          <span class="svc-num">${String(index + 1).padStart(2, "0")}</span>
-          <h3 class="svc-title">${escapeHtml(service.title)}</h3>
-          ${serviceTag(service)}
-        </div>
-        ${
-          service.description
-            ? `<p class="svc-text">${escapeHtml(service.description)}</p>`
-            : ""
-        }
-        ${serviceFileRow(service)}
-        <div class="svc-foot">
-          <span class="svc-price">${servicePriceText(service)}</span>
-          <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
-            data-id="${service.id}"
-            data-guide="${isGuide(service) ? "1" : "0"}"
-            data-file="${service.has_file ? "1" : "0"}"
-            data-owned="${service.requested ? "1" : "0"}"
-            ${serviceBtnDisabled(service) ? "disabled" : ""}>
-            ${serviceBtnInner(service)}
-          </button>
-        </div>
-      </article>`
-      )
-      .join("")}
+    <div class="kit-head">
+      <img class="kit-head-ico" src="icon-kit.png?v=${ASSET_V}" alt="" aria-hidden="true">
+      <div>
+        <h2 class="kit-head-title">${t("kit.title")}</h2>
+        <p class="kit-head-sub">${t("kit.subtitle")}</p>
+      </div>
+    </div>
+    ${section("kit.section_guides", guides)}
+    ${section("kit.section_help", helps)}
     <div class="disclaimer">${icon("shield")}<span>${t("kit.note")}</span></div>`;
 
   bindKitBack(el);
@@ -5818,7 +5823,7 @@ function bindTabs() {
 // Faqat TANILGAN yo'nalish qaytariladi. Telegram Mini App'ni ochganda hash'ga
 // o'zining `tgWebAppData=...` parametrlarini yozadi — ilgari u ham "havola"
 // deb olinib, yangi foydalanuvchiga onboarding umuman ko'rsatilmasdi.
-const DEEP_LINK = /^(profile|program_\d+|question_\d+|suggest_\d+)$/;
+const DEEP_LINK = /^(profile|program_\d+|grant_\d+|question_\d+|suggest_\d+)$/;
 
 function deepLinkTarget() {
   const fromHash = (location.hash || "").replace(/^#/, "");
@@ -5845,6 +5850,19 @@ async function applyDeepLink() {
   if (program) {
     await switchTab("saved");
     openProgramPage(Number(program[1]));
+    return true;
+  }
+  // Bot eslatmasidagi "Ilovada ochish" — grant sahifasi.
+  const grant = target.match(/^grant_(\d+)$/);
+  if (grant) {
+    await switchTab("scholarships");
+    try {
+      const items = await api("/scholarships?all_levels=true");
+      const found = items.find((s) => s.id === Number(grant[1]));
+      if (found) openScholarshipPage(found);
+    } catch (e) {
+      /* grant topilmasa — grantlar ro'yxati ochiq qoladi */
+    }
     return true;
   }
   const question = target.match(/^question_(\d+)$/);

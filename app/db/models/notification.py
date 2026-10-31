@@ -11,6 +11,7 @@ from app.db.base import Base, TimestampMixin, str_enum
 
 if TYPE_CHECKING:
     from app.db.models.program import Program
+    from app.db.models.scholarship import Scholarship
     from app.db.models.user import User
 
 
@@ -70,6 +71,35 @@ class NotificationLog(Base):
 
     def __str__(self) -> str:
         return f"{self.notif_type.value} -> user={self.user_id} program={self.program_id}"
+
+
+class ScholarshipNotificationLog(Base):
+    """Hukumat granti muddati haqida yuborilgan eslatma (30 kun qolganda).
+
+    Dublikat nazorati: bitta foydalanuvchiga bitta grantning bitta muddati
+    haqida bir marta. Muddat sanasi kalitda — admin keyingi yil uchun yangi
+    sana kiritsa, eslatma yana ketadi.
+    """
+
+    __tablename__ = "scholarship_notification_logs"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "scholarship_id", "deadline_date", name="uq_scholarship_notification_once"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    scholarship_id: Mapped[int] = mapped_column(
+        ForeignKey("scholarships.id", ondelete="CASCADE"), index=True
+    )
+    deadline_date: Mapped[date] = mapped_column(Date, nullable=False)
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship()
+    scholarship: Mapped["Scholarship"] = relationship()
 
 
 class DeadlineSuggestion(TimestampMixin, Base):

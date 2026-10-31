@@ -18,6 +18,7 @@ from app.db.models.notification import (
     DeadlineSuggestion,
     NotificationLog,
     NotificationType,
+    ScholarshipNotificationLog,
     SuggestionStatus,
 )
 from app.db.models.payment import (
@@ -109,6 +110,7 @@ __all__ = [
     "SavedProgramStatus",
     "Scholarship",
     "ScholarshipDeadline",
+    "ScholarshipNotificationLog",
     "ServiceFile",
     "ServiceKind",
     "ServiceRequest",

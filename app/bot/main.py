@@ -16,6 +16,7 @@ from app.services import mentor_service
 from app.services.mentor_scheduler import SCAN_INTERVAL_SECONDS, run_mentor_scan
 from app.services.redis_client import redis_client
 from app.services.reminder_service import is_send_time, run_reminder_scan
+from app.services.scholarship_reminder_service import run_scholarship_reminder_scan
 from app.services.timezone_utils import TASHKENT_TZ
 
 logging.basicConfig(level=logging.INFO)
@@ -87,6 +88,19 @@ async def reminder_loop(bot: Bot) -> None:
                     result.sent_messages,
                     result.blocked_users,
                 )
+                # Hukumat grantlari: muddatiga 30 kun qolganlar. Alohida
+                # `try` — biri xato bersa, ikkinchisi baribir ishlaydi.
+                try:
+                    async with async_session_factory() as session:
+                        grants = await run_scholarship_reminder_scan(bot, session)
+                    logger.info(
+                        "Grant eslatmalari: %s grant, %s foydalanuvchiga (bloklangan: %s)",
+                        len(grants.due),
+                        grants.sent_users,
+                        grants.blocked_users,
+                    )
+                except Exception:
+                    logger.exception("Grant eslatmalarida xatolik")
         except Exception:
             logger.exception("Eslatmalarni tekshirishda xatolik")
         await asyncio.sleep(REMINDER_TICK_SECONDS)

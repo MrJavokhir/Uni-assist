@@ -26,6 +26,8 @@
   "notif.month_before": "📅 <b>{program} — {university}</b>\nApplications usually close in {month}. Check the official site for the exact date.",
   "notif.month_start": "🔔 Applications for <b>{program}</b> are expected to close this month. Check the official site.",
   "notif.unknown_check": "ℹ️ We don't have a deadline for your saved programme <b>{program}</b>. Please check the official site.",
+  "notif.scholarship_30d": "🎓 <b>{name}</b>\n{days} days left to apply for this scholarship ({date}). Start preparing your documents now!",
+  "notif.scholarship_digest_header": "Scholarships closing soon:",
   "notif.digest_header": "A reminder about your saved programmes:",
   "notif.btn_open": "📲 Open in app",
   "notif.btn_site": "🔗 Official site",

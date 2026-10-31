@@ -27,6 +27,7 @@ from aiogram.enums import ParseMode
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services.reminder_service import run_reminder_scan
+from app.services.scholarship_reminder_service import run_scholarship_reminder_scan
 from app.services.timezone_utils import TASHKENT_TZ
 
 
@@ -63,6 +64,9 @@ async def main() -> int:
             result = await run_reminder_scan(
                 bot, session, today=today, dry_run=args.dry_run
             )
+            grants = await run_scholarship_reminder_scan(
+                bot, session, today=today, dry_run=args.dry_run
+            )
     finally:
         if bot is not None:
             await bot.session.close()
@@ -84,6 +88,10 @@ async def main() -> int:
             )
     else:
         print("\nYuboriladigan eslatma yo'q.")
+
+    print(f"\nGrantlar (30 kun qolgan): {len(grants.due)}  |  foydalanuvchi: {grants.sent_users}")
+    for item in grants.due:
+        print(f"  {item.scholarship.name[:50]:<50} (muddati: {item.deadline_date})")
     return 0
 
 

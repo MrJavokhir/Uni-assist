@@ -26,6 +26,8 @@
   "notif.month_before": "📅 <b>{program} — {university}</b>\nArizasi odatda {month}da yopiladi. Aniq sanani rasmiy saytdan tekshiring.",
   "notif.month_start": "🔔 Bu oy <b>{program}</b> arizasi yopilishi kutilmoqda. Rasmiy saytni tekshiring.",
   "notif.unknown_check": "ℹ️ Siz saqlagan <b>{program}</b> dasturining deadline'i bizda yo'q. Rasmiy saytdan tekshirib qo'ying.",
+  "notif.scholarship_30d": "🎓 <b>{name}</b>\nGrantga ariza topshirish muddati tugashiga {days} kun qoldi ({date}). Hujjatlarni hozirdan tayyorlashni boshlang!",
+  "notif.scholarship_digest_header": "Muddati yaqinlashayotgan grantlar:",
   "notif.digest_header": "Saqlangan dasturlaringiz bo'yicha eslatma:",
   "notif.btn_open": "📲 Ilovada ochish",
   "notif.btn_site": "🔗 Rasmiy sayt",

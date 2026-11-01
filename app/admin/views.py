@@ -6,10 +6,16 @@ from starlette.requests import Request
 from wtforms import SelectField
 from wtforms.validators import InputRequired
 
-from app.admin.filters import DistinctValuesFilter, IsNullFilter, RelationshipFilter
+from app.admin.filters import (
+    ActivityFilter,
+    DistinctValuesFilter,
+    IsNullFilter,
+    RelationshipFilter,
+)
 from app.admin.formatters import (
     enum_label,
     format_bool,
+    format_last_seen,
     format_program_labels,
     format_program_wizard_link,
     format_ranking,
@@ -702,8 +708,12 @@ class UserAdmin(ModelView, model=User):
         User.balance,
         User.is_blocked,
         User.referred_by,
+        User.last_seen_at,
         User.created_at,
     ]
+    # Faollik: kim ilovadan foydalanyapti, kim tashlab ketgan.
+    column_sortable_list = [User.id, User.last_seen_at, User.created_at, User.balance]
+    column_filters = [ActivityFilter()]
     column_details_list = [
         User.id,
         User.telegram_id,
@@ -726,6 +736,7 @@ class UserAdmin(ModelView, model=User):
         User.language_certificates,
         User.other_tests,
         User.saved_programs,
+        User.last_seen_at,
         User.created_at,
     ]
     column_searchable_list = [User.username]
@@ -764,11 +775,13 @@ class UserAdmin(ModelView, model=User):
         language_certificates="Til sertifikatlari",
         other_tests="Boshqa testlar",
         saved_programs="Saqlangan dasturlar",
+        last_seen_at="Oxirgi faollik",
     )
     _user_formatters = {
         User.ui_language: enum_label(_UI_LANG_LABELS),
         User.degree_level: enum_label(_DEGREE_LABELS),
         User.is_blocked: format_bool,
+        User.last_seen_at: format_last_seen,
     }
     column_formatters = _user_formatters
     column_formatters_detail = _user_formatters

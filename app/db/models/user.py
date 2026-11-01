@@ -73,6 +73,20 @@ class SavedProgramStatus(str, enum.Enum):
     ACCEPTED = "accepted"
 
 
+class UserActivityDay(Base):
+    """Foydalanuvchi faol bo'lgan kun (Toshkent kuni) — kuniga bitta qator.
+
+    Admin paneldagi kunlik "faol foydalanuvchilar" grafigi shundan.
+    """
+
+    __tablename__ = "user_activity_days"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    day: Mapped[date] = mapped_column(Date, primary_key=True, index=True)
+
+
 class User(TimestampMixin, Base):
     __tablename__ = "users"
 
@@ -122,6 +136,11 @@ class User(TimestampMixin, Base):
     # keyin Mini App onboarding'ni yana ochadi. None — hali o'tilmagan.
     onboarding_done_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    # Oxirgi faollik: Mini App so'rovi yoki botdagi amal (app/services/activity_service.py).
+    # None — o'zgarish kiritilgandan beri hali kirmagan.
+    last_seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
     )
     # Botdagi `/blockuser` buyrug'i qo'yadi: bloklangan odamdan to'lov
     # qabul qilinmaydi.

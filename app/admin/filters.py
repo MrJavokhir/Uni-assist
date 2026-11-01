@@ -134,3 +134,47 @@ class IsNullFilter:
         if value == "yes":
             return query.filter(self.column.is_(None))
         return query
+
+
+class ActivityFilter:
+    """Foydalanuvchilarni oxirgi faollik bo'yicha ajratadi."""
+
+    has_operator = False
+    template = "sqladmin/filters/lookup_filter.html"
+    title = "Faollik"
+    parameter_name = "activity"
+
+    async def lookups(
+        self,
+        request: Request,
+        model: Any,
+        run_query: Callable[[Select], Any],
+    ) -> list[tuple[str, str]]:
+        return [
+            (ALL_VALUE, "Barchasi"),
+            ("today", "Bugun faol"),
+            ("7d", "7 kunda faol"),
+            ("30d", "30 kunda faol"),
+            ("inactive", "30 kundan beri kirmagan"),
+            ("never", "Hali kuzatilmagan"),
+        ]
+
+    async def get_filtered_query(self, query: Select, value: Any, model: Any) -> Select:
+        from datetime import UTC, datetime, time, timedelta
+
+        from app.services.timezone_utils import TASHKENT_TZ
+
+        column = model.last_seen_at
+        now = datetime.now(UTC)
+        if value == "today":
+            start = datetime.combine(datetime.now(TASHKENT_TZ).date(), time.min, tzinfo=TASHKENT_TZ)
+            return query.filter(column >= start)
+        if value == "7d":
+            return query.filter(column >= now - timedelta(days=7))
+        if value == "30d":
+            return query.filter(column >= now - timedelta(days=30))
+        if value == "inactive":
+            return query.filter(column < now - timedelta(days=30))
+        if value == "never":
+            return query.filter(column.is_(None))
+        return query

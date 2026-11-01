@@ -20,6 +20,7 @@ from app.db.models import (
     SuggestionStatus,
     University,
     User,
+    UserActivityDay,
     user_target_country,
 )
 from app.db.session import async_session_factory
@@ -165,6 +166,37 @@ class StatsView(BaseView):
                 )
             ).scalar_one()
 
+            # --- Faollik (app/services/activity_service.py) ---
+            async def active_since(since: datetime) -> int:
+                return (
+                    await session.execute(
+                        select(func.count(User.id)).where(User.last_seen_at >= since)
+                    )
+                ).scalar_one()
+
+            active_today = await active_since(today_start)
+            active_week = await active_since(now - timedelta(days=7))
+            active_month = await active_since(now - timedelta(days=30))
+            inactive_month = (
+                await session.execute(
+                    select(func.count(User.id)).where(
+                        User.last_seen_at < now - timedelta(days=30)
+                    )
+                )
+            ).scalar_one()
+            never_seen = (
+                await session.execute(
+                    select(func.count(User.id)).where(User.last_seen_at.is_(None))
+                )
+            ).scalar_one()
+            activity_rows = (
+                await session.execute(
+                    select(UserActivityDay.day, func.count(UserActivityDay.user_id))
+                    .where(UserActivityDay.day >= chart_from)
+                    .group_by(UserActivityDay.day)
+                )
+            ).all()
+
             signup_rows = (
                 await session.execute(
                     select(func.date(User.created_at).label("day"), func.count(User.id))
@@ -237,12 +269,15 @@ class StatsView(BaseView):
             degree_choosers = sum(row[1] for row in demand_degree_rows)
 
         signups = {row.day: row[1] for row in signup_rows}
+        active_by_day = {row[0]: row[1] for row in activity_rows}
         chart_labels = []
         chart_values = []
+        active_values = []
         for offset in range(USER_CHART_DAYS):
             day = chart_from + timedelta(days=offset)
             chart_labels.append(day.strftime("%d.%m"))
             chart_values.append(signups.get(day, 0))
+            active_values.append(active_by_day.get(day, 0))
 
         return await self.templates.TemplateResponse(
             request,
@@ -270,6 +305,12 @@ class StatsView(BaseView):
                 "stale_days": VERIFIED_STALE_DAYS,
                 "chart_labels": chart_labels,
                 "chart_values": chart_values,
+                "active_values": active_values,
+                "active_today": active_today,
+                "active_week": active_week,
+                "active_month": active_month,
+                "inactive_month": inactive_month,
+                "never_seen": never_seen,
                 "country_labels": [row[0] for row in country_rows],
                 "country_values": [row[1] for row in country_rows],
                 "stale_records": stale_records,

@@ -110,3 +110,28 @@ def format_verified_at(model: object, attribute: str) -> Markup:
             f"title='{days_old} kun oldin tekshirilgan'>{text} ⚠</span>"
         )
     return Markup(f"<span style='color:#2f9e44'>{text}</span>")
+
+
+def format_last_seen(model: object, attribute: str) -> Markup:
+    """Oxirgi faollik: holat belgisi + qachonligi (Toshkent vaqtida)."""
+    from app.services.activity_service import ACTIVE_DAYS, RECENT_DAYS
+    from app.services.timezone_utils import TASHKENT_TZ
+
+    value = getattr(model, attribute)
+    if value is None:
+        return Markup("<span class='badge bg-secondary-lt'>Kuzatilmagan</span>")
+    local = value.astimezone(TASHKENT_TZ)
+    days = (datetime.now(TASHKENT_TZ).date() - local.date()).days
+    if days == 0:
+        when = f"bugun {local:%H:%M}"
+    elif days == 1:
+        when = f"kecha {local:%H:%M}"
+    else:
+        when = f"{days} kun oldin"
+    if days <= ACTIVE_DAYS:
+        badge = "<span class='badge bg-green-lt'>Faol</span>"
+    elif days <= RECENT_DAYS:
+        badge = "<span class='badge bg-yellow-lt'>Kam faol</span>"
+    else:
+        badge = "<span class='badge bg-red-lt'>Nofaol</span>"
+    return Markup(f"{badge} <span class='text-muted small' title='{local:%Y-%m-%d %H:%M}'>{when}</span>")

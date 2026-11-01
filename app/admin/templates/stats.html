@@ -34,6 +34,50 @@
     {% endfor %}
   </div>
 
+  {# ---------- Foydalanuvchi faolligi ----------
+       Kartalar foydalanuvchilar ro'yxatini shu faollik filtri bilan ochadi. #}
+  <div class="row row-cards mb-3">
+    <div class="col-12 col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Foydalanuvchi faolligi</h3>
+        </div>
+        <div class="card-body">
+          <div class="ua-activity">
+            {% set activity = [
+              ("today", "green", active_today, "Bugun faol"),
+              ("7d", "green", active_week, "7 kunda faol"),
+              ("30d", "accent", active_month, "30 kunda faol"),
+              ("inactive", "red", inactive_month, "30 kundan beri kirmagan")
+            ] %}
+            {% for key, tone, value, label in activity %}
+            <a class="ua-activity-item" href="/admin/user/list?activity={{ key }}">
+              <span class="ua-activity-value {{ tone }}">{{ value }}</span>
+              <span class="ua-activity-label">{{ label }}</span>
+              {% if total_users %}<span class="ua-activity-share">{{ (value * 100 / total_users) | round | int }}%</span>{% endif %}
+            </a>
+            {% endfor %}
+          </div>
+          {% if never_seen %}
+          <div class="text-muted small mt-2">
+            {{ never_seen }} ta foydalanuvchi faollik kuzatila boshlanganidan beri hali kirmagan.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">
+          <h3 class="card-title">Kunlik faol foydalanuvchilar (so'nggi 14 kun)</h3>
+        </div>
+        <div class="card-body">
+          <div class="ua-chart-wrap"><canvas id="chart-active"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   {# ---------- Ma'lumot sifati ogohlantirishi ---------- #}
   {% if stale_total %}
   <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
@@ -220,6 +264,34 @@
     if (typeof Chart === "undefined") return;
     Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     Chart.defaults.color = "#7b7f95";
+
+    var activeCanvas = document.getElementById("chart-active");
+    if (activeCanvas) {
+      new Chart(activeCanvas, {
+        type: "bar",
+        data: {
+          labels: {{ chart_labels | tojson }},
+          datasets: [{
+            data: {{ active_values | tojson }},
+            backgroundColor: "rgba(22, 163, 74, 0.75)",
+            borderRadius: 6,
+            maxBarThickness: 28
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: function (item) { return item.parsed.y + " ta faol"; } } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "rgba(120,124,148,0.12)" } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
 
     var signupCanvas = document.getElementById("chart-signups");
     if (signupCanvas) {

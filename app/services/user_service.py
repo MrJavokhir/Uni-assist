@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.models import Country, LanguageCertType, UiLanguage, User, UserLanguageCertificate
+from app.services.activity_service import touch
 
 _PROFILE_RELATIONSHIPS = ("target_countries", "language_certificates", "other_tests", "saved_programs")
 
@@ -30,6 +31,8 @@ async def get_or_create_user(
         if username and user.username != username:
             user.username = username
             await session.commit()
+        # Har bir murojaat shu yerdan o'tadi — faollik shu yerda belgilanadi.
+        await touch(session, user)
         return user
 
     user = User(
@@ -39,6 +42,7 @@ async def get_or_create_user(
     )
     session.add(user)
     await session.commit()
+    await touch(session, user)
     await session.refresh(user, attribute_names=list(_PROFILE_RELATIONSHIPS))
     return user
 

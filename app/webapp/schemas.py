@@ -111,6 +111,8 @@ class MatchProgramOut(BaseModel):
     abbreviation: str | None = None
     university: str
     university_logo: str | None = None
+    # Universitet rasmi (admin kiritgan) — birinchi natijalar kartasida.
+    university_cover: str | None = None
     country: CountryOut
     degree_level: str
     level: str
@@ -325,8 +327,8 @@ class ServiceOut(BaseModel):
     # Nechta do'st taklif qilinsa xizmat pulsiz ochiladi. 0 — bunday
     # imkoniyat yo'q.
     unlock_invites: int = 0
-    # Shu xizmat uchun sanalgan takliflar (xizmatning `invites_count_from`
-    # sanasidan keyin kelgan do'stlar).
+    # Shu xizmat uchun sanalgan takliflar (xizmat kiritilgandan va oxirgi
+    # bepul ochishdan keyin kelgan do'stlar).
     invites_have: int = 0
     # Kartadagi rasm havolasi (bo'sh bo'lsa — ikonka).
     image_url: str | None = None

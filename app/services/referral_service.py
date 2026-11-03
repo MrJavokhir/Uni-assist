@@ -28,7 +28,7 @@ from decimal import Decimal
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import User
+from app.db.models import AdmissionService, ServiceRequest, User
 from app.i18n import t
 from app.services import payment_service
 
@@ -151,6 +151,31 @@ async def count_invited(
     if since is not None:
         stmt = stmt.where(User.created_at >= since)
     return (await session.execute(stmt)).scalar_one()
+
+
+async def last_free_unlock(session: AsyncSession, user: User) -> datetime | None:
+    """Foydalanuvchi oxirgi marta do'st taklifi bilan xizmat ochgan vaqt."""
+    stmt = select(func.max(ServiceRequest.created_at)).where(
+        ServiceRequest.user_id == user.id, ServiceRequest.unlocked_by_invites.is_(True)
+    )
+    return (await session.execute(stmt)).scalar_one()
+
+
+def invites_start(service: AdmissionService, last_unlock: datetime | None) -> datetime:
+    """Shu xizmat uchun takliflar qaysi vaqtdan sanaladi.
+
+    Har xizmat uchun do'stlar qaytadan taklif qilinadi: xizmat kiritilishidan
+    oldin kelganlar va avvalgi bepul ochishga ishlatilganlar sanalmaydi.
+    """
+    start = service.invites_count_from or service.created_at
+    return max(start, last_unlock) if last_unlock is not None else start
+
+
+async def invites_for_service(
+    session: AsyncSession, user: User, service: AdmissionService
+) -> int:
+    last_unlock = await last_free_unlock(session, user)
+    return await count_invited(session, user, since=invites_start(service, last_unlock))
 
 
 async def reward_and_notify(session: AsyncSession, bot, user: User) -> None:

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 105;
+const ASSET_V = 107;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -381,13 +381,14 @@ const I18N = {
     "inquiry.sent": "So'rovingiz yuborildi — tez orada bog'lanamiz",
     "sub.step": "Oxirgi qadam",
     "sub.join": "Qo'shilish",
+    "first.sub": "Javoblaringiz asosida tanlandi",
     "first.title": "Sizga eng mos dasturlar",
     "first.closes": "Muddat: {date}",
     "first.tba": "Muddat e'lon qilinmagan",
     "first.cta": "Barchasini ko'rish",
     "program.ask_mentor": "{country}dagi mentorga savol bering",
-    "sub.title": "Natijalarni ko'rish uchun kanalga a'zo bo'ling",
-    "sub.text": "Javoblaringiz saqlandi. Quyidagi kanal(lar)ga a'zo bo'lib, «A'zo bo'ldim» tugmasini bosing — mos dasturlar darhol chiqadi.",
+    "sub.title": "Davom etish uchun kanalga a'zo bo'ling",
+    "sub.text": "Natijalaringiz tayyor. Quyidagi kanal(lar)ga a'zo bo'lib, «A'zo bo'ldim» tugmasini bosing — barcha mos dasturlar ochiladi.",
     "sub.check": "A'zo bo'ldim",
     "sub.still_missing": "Hali hamma kanalga a'zo bo'lmadingiz",
     "program.opens": "Ochiladi",
@@ -824,13 +825,14 @@ const I18N = {
     "inquiry.sent": "Заявка отправлена — скоро свяжемся",
     "sub.step": "Последний шаг",
     "sub.join": "Подписаться",
+    "first.sub": "Подобрано по вашим ответам",
     "first.title": "Ваши первые совпадения",
     "first.closes": "До {date}",
     "first.tba": "Срок не объявлен",
     "first.cta": "Смотреть все",
     "program.ask_mentor": "Спросите ментора: {country}",
-    "sub.title": "Подпишитесь на канал, чтобы увидеть результаты",
-    "sub.text": "Ответы сохранены. Подпишитесь на канал(ы) ниже и нажмите «Я подписался» — подходящие программы появятся сразу.",
+    "sub.title": "Подпишитесь на канал, чтобы продолжить",
+    "sub.text": "Ваши результаты готовы. Подпишитесь на канал(ы) ниже и нажмите «Я подписался» — откроются все подходящие программы.",
     "sub.check": "Я подписался",
     "sub.still_missing": "Вы подписались ещё не на все каналы",
     "program.opens": "Открытие",
@@ -1267,13 +1269,14 @@ const I18N = {
     "inquiry.sent": "Request sent — we'll be in touch soon",
     "sub.step": "One last step",
     "sub.join": "Join",
+    "first.sub": "Picked from your answers",
     "first.title": "Your first matches",
     "first.closes": "Closes {date}",
     "first.tba": "Not announced",
     "first.cta": "Start exploring",
     "program.ask_mentor": "Ask a mentor in {country}",
-    "sub.title": "Join the channel to see your results",
-    "sub.text": "Your answers are saved. Join the channel(s) below and tap “I've joined” — matching programmes will show up right away.",
+    "sub.title": "Join the channel to continue",
+    "sub.text": "Your matches are ready. Join the channel(s) below and tap “I've joined” — all your matching programmes will open.",
     "sub.check": "I've joined",
     "sub.still_missing": "You haven't joined all the channels yet",
     "program.opens": "Opens",
@@ -3849,9 +3852,6 @@ const IELTS_SCORES = ["4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8
 let wiz = null;
 // init() da to'ldiriladi; onboarding savollari katalog yuklanishini kutadi.
 let catalogReady = Promise.resolve();
-// Filtrni ma'lum bir savoldan ochish uchun (masalan "Davlatlar" tugmasi).
-let wizEntryStep = null;
-
 // Filtri bo'sh odamga har safar, filtri bor-u onboarding'ni hali ko'rmaganga
 // (eski filtr sahifasida to'ldirgan) — bir marta.
 function needsOnboarding() {
@@ -3881,10 +3881,8 @@ function wizDraftFromProfile() {
 }
 
 function renderFilter() {
-  const entry = WIZ_STEPS.indexOf(wizEntryStep);
-  wizEntryStep = null;
   // Yangi foydalanuvchiga avval kutib olish ekrani; filtri borga — darhol savollar.
-  const step = entry >= 0 ? entry : needsOnboarding() ? -1 : 0;
+  const step = needsOnboarding() ? -1 : 0;
   wiz = { step, firstStep: step, draft: wizDraftFromProfile() };
   document.body.classList.add("no-tabbar", "wizard-mode");
   drawWizard();
@@ -4258,10 +4256,7 @@ async function findPrograms() {
   if (btn) btn.disabled = true;
   haptic("light");
   try {
-    // Filtr obuna tekshiruvidan OLDIN saqlanadi: kanalga o'tganda Telegram
-    // ilovani yopib yuborishi mumkin va javoblar yo'qolmasligi kerak.
     await saveProfile();
-    if (!(await ensureSubscribed())) return;
     await showResults();
   } catch (err) {
     haptic("error");
@@ -4272,7 +4267,7 @@ async function findPrograms() {
 }
 
 // ---- Majburiy kanal obunasi ----
-// Bot /start'da to'smaydi: obuna onboarding oxirida, "Find my programs"
+// Bot /start'da to'smaydi: obuna birinchi natijalardan keyin, "Start exploring"
 // bosilganda so'raladi. Haqiqiy tekshiruv serverda (`/subscription`); u
 // adminkadagi ozod qilinganlar ro'yxatini ham hisobga oladi.
 
@@ -4302,7 +4297,8 @@ function openChannelLink(url) {
 }
 
 // Kanalga o'tganda Telegram Mini App'ni yopib yuborishi mumkin. Belgi
-// qolsa, keyingi ochilishda odam o'sha joyga — obuna dialogiga qaytadi.
+// qolsa, keyingi ochilishda odam o'sha joyga — natijalar ustidagi obuna
+// dialogiga qaytadi (`resumeFirstMatches`).
 const PENDING_RESULTS_KEY = "ua_pending_results";
 
 function setPendingResults(on) {
@@ -4444,7 +4440,6 @@ function openSubscriptionSheet(channels) {
 // ---- Natijalar: qidirish animatsiyasi -> "Sizga eng mos 3 ta dastur" ----
 
 async function showResults() {
-  setPendingResults(false);
   showFindingOverlay();
   const startedAt = Date.now();
   let matches = [];
@@ -4458,10 +4453,32 @@ async function showResults() {
   }
   haptic("success");
   if (!matches.length) {
-    await switchTab("match");
+    // Ko'rsatadigan natija yo'q — obuna darhol so'raladi.
+    if (await ensureSubscribed()) {
+      setPendingResults(false);
+      await switchTab("match");
+    }
     return;
   }
   showFirstMatches(matches);
+}
+
+// Kanalga o'tib ilova yopilgan bo'lsa: a'zo bo'lgan odam darhol dasturlarga,
+// bo'lmagan — natijalar ekraniga va obuna dialogiga qaytadi.
+async function resumeFirstMatches() {
+  const status = await checkSubscription(true);
+  if (status.subscribed) {
+    setPendingResults(false);
+    await switchTab("match");
+    return;
+  }
+  const matches = await api("/match");
+  if (matches.length) {
+    await showFirstMatches(matches)();
+  } else if (await ensureSubscribed()) {
+    setPendingResults(false);
+    await switchTab("match");
+  }
 }
 
 /** Eng mos 3 ta: avval to'liq moslar, so'ng "yaqin"lar — server tartibida. */
@@ -4472,6 +4489,40 @@ function bestThree(matches) {
   );
 }
 
+function firstMatchCard(m, i) {
+  const code = String(m.country.iso_code || "").toLowerCase();
+  // Rasm yuklanmasa yoki kiritilmagan bo'lsa ostidagi rangli fon qoladi.
+  const flagBg = /^[a-z]{2}$/.test(code)
+    ? `<img class="fmx-flag-bg" src="${FLAG_BASE}${code}.svg" alt="">`
+    : "";
+  const cover = m.university_cover
+    ? `<img class="fmx-cover" src="${escapeHtml(m.university_cover)}" alt="" onerror="this.remove()">`
+    : "";
+  return `
+    <button type="button" class="fmx-card" data-id="${m.id}" style="--i:${i}">
+      ${flagBg}${cover}
+      <span class="fmx-shade"></span>
+      <span class="fmx-top">
+        <span class="fmx-pill"><span class="chip-flag">${flag(m.country.iso_code)}</span>${escapeHtml(
+          countryName(m.country)
+        )}</span>
+        <span class="fmx-pill${m.nearest_deadline ? " is-open" : ""}">${
+          m.nearest_deadline
+            ? t("first.closes", { date: shortDate(m.nearest_deadline) })
+            : t("first.tba")
+        }</span>
+      </span>
+      <span class="fmx-info">
+        ${avatar(m.university, m.university_logo)}
+        <span class="fmx-text">
+          <span class="fmx-card-title">${escapeHtml(m.name)}</span>
+          <span class="fmx-card-sub">${escapeHtml(m.university)}</span>
+        </span>
+      </span>
+    </button>`;
+}
+
+/** Natijalar ekrani. Qaytadi: ilovaga kirish (obuna dialogi shu yerdan ochiladi). */
 function showFirstMatches(matches) {
   document.getElementById("first-matches")?.remove();
   const el = document.createElement("div");
@@ -4479,25 +4530,9 @@ function showFirstMatches(matches) {
   el.className = "fmx";
   el.innerHTML = `
     <div class="fmx-body">
-      <img class="fmx-art" src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
       <h2 class="fmx-title">${t("first.title")}</h2>
-      ${bestThree(matches)
-        .map(
-          (m, i) => `
-        <button type="button" class="fmx-card" data-id="${m.id}" style="--i:${i}">
-          <span class="fmx-card-title">${escapeHtml(m.name)}</span>
-          <span class="fmx-card-sub">${escapeHtml(m.university)}</span>
-          <span class="fmx-meta">
-            <span class="fmx-chip${m.nearest_deadline ? " is-open" : ""}">${
-              m.nearest_deadline
-                ? t("first.closes", { date: shortDate(m.nearest_deadline) })
-                : t("first.tba")
-            }</span>
-            <span class="chip-flag">${flag(m.country.iso_code)}</span>${escapeHtml(countryName(m.country))}
-          </span>
-        </button>`
-        )
-        .join("")}
+      <p class="fmx-sub">${t("first.sub")}</p>
+      ${bestThree(matches).map(firstMatchCard).join("")}
     </div>
     <div class="fmx-bar">
       <button type="button" class="btn btn-accent btn-block" id="fmx-go">${t("first.cta")}</button>
@@ -4509,20 +4544,37 @@ function showFirstMatches(matches) {
     el.classList.remove("open");
     setTimeout(() => el.remove(), 280);
   };
-  document.getElementById("fmx-go").addEventListener("click", async () => {
-    haptic("light");
-    await switchTab("match");
-    close();
-  });
-  el.querySelectorAll(".fmx-card").forEach((card) => {
-    card.addEventListener("click", async () => {
-      haptic("light");
+  // Kanal obunasi shu yerda: natijani ko'rgan odam ilovaga kirishdan oldin
+  // a'zo bo'ladi. Kartani bosish ham shu yo'ldan o'tadi, aks holda u obunani
+  // chetlab o'tardi. Dialog yopilsa — natijalar ekranida qoladi.
+  let busy = false;
+  const enterApp = async (programId) => {
+    if (busy) return;
+    busy = true;
+    try {
+      if (!(await ensureSubscribed())) return;
+      setPendingResults(false);
       // Dasturdan "orqaga" bosilganda butun ro'yxat ochiladi.
       await switchTab("match");
       close();
-      openProgramPage(card.dataset.id);
+      if (programId) openProgramPage(programId);
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      busy = false;
+    }
+  };
+  document.getElementById("fmx-go").addEventListener("click", () => {
+    haptic("light");
+    enterApp();
+  });
+  el.querySelectorAll(".fmx-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      haptic("light");
+      enterApp(card.dataset.id);
     });
   });
+  return enterApp;
 }
 
 async function resetProfile() {
@@ -5039,6 +5091,9 @@ async function renderKit() {
               : t("kit.requested_toast")
           );
         }
+        // Do'stlar ishlatildi — boshqa kartalardagi hisob endi eskirgan
+        // ("bepul ochish" ko'rinib turib, pul yechilmasin).
+        if (result.unlocked_by_invites) await renderKit();
       } catch (err) {
         btn.disabled = false;
         haptic("error");
@@ -6128,10 +6183,9 @@ async function init() {
   // kutmaydi va bosh sahifa umuman chizilmaydi: ilgari avval bosh sahifa
   // chiqib, 2-3 soniyadan keyin onboarding'ga "sakrab" o'tardi.
   // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
-  // Kanalga o'tib ilova yopilgan bo'lsa — o'sha joyga: oxirgi savol + obuna dialogi.
+  // Kanalga o'tib ilova yopilgan bo'lsa — o'sha joyga: natijalar + obuna dialogi.
   const resume = !deepLinkTarget() && hasPendingResults() && hasFilter();
-  const onboarding = !deepLinkTarget() && (resume || needsOnboarding());
-  if (resume) wizEntryStep = "prefs";
+  const onboarding = !deepLinkTarget() && !resume && needsOnboarding();
   if (onboarding) await switchTab("filter");
   document.body.classList.remove("booting");
   startBrandRotation();
@@ -6144,11 +6198,7 @@ async function init() {
     const routed = await applyDeepLink();
     if (!routed) await renderHome();
   }
-  if (resume) {
-    ensureSubscribed()
-      .then((ok) => ok && showResults())
-      .catch((err) => showToast(err.message));
-  }
+  if (resume) resumeFirstMatches().catch((err) => showToast(err.message));
 
   tabbar.removeAttribute("aria-busy");
 }

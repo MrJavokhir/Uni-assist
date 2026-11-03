@@ -105,9 +105,8 @@ class AdmissionService(TimestampMixin, Base):
         Integer, nullable=False, default=0, server_default="0"
     )
     # Takliflar SHU vaqtdan keyin kelgan do'stlar bo'yicha sanaladi: yangi
-    # qo'llanmani avvalgi takliflar bilan ochib bo'lmasin. Yangi xizmatda
-    # yaratilgan vaqti qo'yiladi; None — hamma takliflar sanaladi (bu
-    # o'zgarishdan oldingi xizmatlar, ularda yig'ilgan hisob saqlanadi).
+    # qo'llanmani avvalgi takliflar bilan ochib bo'lmasin. None — xizmat
+    # yaratilgan vaqti olinadi (referral_service.invites_for_service).
     invites_count_from: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, server_default=func.now()
     )

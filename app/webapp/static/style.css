@@ -2897,45 +2897,102 @@ body.tg-back .pg-back { display: none; }
   overflow-y: auto;
   padding: 40px 16px 16px;
 }
-.fmx-art {
-  display: block;
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 10px;
-  object-fit: contain;
-  animation: sg-float 2.6s ease-in-out infinite;
-}
-.fmx-title { margin: 0 0 22px; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.fmx-title { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; }
+.fmx-sub { margin: 4px 0 18px; font-size: 14.5px; color: var(--hint); }
+/* Karta — universitet rasmi ustida matn. Rasm kiritilmagan bo'lsa: brend foni
+   va davlat bayrog'idan xira dog'. Pastdagi soya matnni har qanday rasmda
+   o'qiladigan qiladi. */
 .fmx-card {
-  display: block;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   width: 100%;
+  min-height: 172px;
   margin-bottom: 12px;
-  padding: 16px;
+  padding: 12px;
   border: 0;
-  border-radius: 20px;
-  background: var(--surface);
-  color: inherit;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(140deg, #315cdf, #4d74e6);
+  box-shadow: var(--shadow-md);
+  color: #ffffff;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  animation: fmx-in 0.45s both;
-  animation-delay: calc(var(--i) * 120ms + 120ms);
+  animation: fmx-in 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 130ms + 120ms);
+  transition: transform 0.15s ease;
 }
+.fmx-card:active { transform: scale(0.98); }
 @keyframes fmx-in {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
 }
-.fmx-card-title { display: block; font-size: 17px; font-weight: 700; line-height: 1.3; }
-.fmx-card-sub { display: block; margin-top: 3px; font-size: 13px; color: var(--hint); }
-.fmx-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: var(--hint); }
-.fmx-chip {
+.fmx-flag-bg {
+  position: absolute;
+  inset: -25%;
+  width: 150%;
+  height: 150%;
+  object-fit: cover;
+  filter: blur(26px) saturate(1.2);
+  opacity: 0.4;
+}
+.fmx-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fmx-zoom 7s ease-out both;
+}
+@keyframes fmx-zoom {
+  from { transform: scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fmx-cover { animation: none; }
+}
+.fmx-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 14, 30, 0.82) 0%, rgba(10, 14, 30, 0.28) 52%, rgba(10, 14, 30, 0) 78%);
+}
+.fmx-top,
+.fmx-info { position: relative; display: flex; }
+.fmx-top { justify-content: space-between; align-items: flex-start; gap: 8px; }
+.fmx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px 10px;
-  border-radius: 8px;
-  background: var(--separator);
-  color: var(--hint);
-  font-size: 13px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f1115;
+  font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
 }
-.fmx-chip.is-open { background: var(--accent-soft); color: var(--accent-ink); }
+.fmx-pill.is-open { color: #315cdf; }
+.fmx-info { align-items: center; gap: 10px; margin-top: 44px; }
+.fmx-info .avatar {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 13px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+.fmx-text { min-width: 0; }
+.fmx-card-title { display: block; font-size: 16.5px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
+.fmx-card-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .fmx-bar {
   padding: 12px max(16px, calc((100vw - 588px) / 2)) calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--separator);

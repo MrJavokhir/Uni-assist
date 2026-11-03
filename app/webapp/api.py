@@ -874,6 +874,7 @@ async def get_matches(
                 abbreviation=program.abbreviation,
                 university=program.university.name,
                 university_logo=_logo_url(program.university),
+                university_cover=program.university.cover_url,
                 country=_country_out(program.university.country),
                 degree_level=program.degree_level.value,
                 level=result.level.value,
@@ -1141,13 +1142,13 @@ async def list_services(
     # so'rov yuborish ro'yxatni sekinlashtirardi.
     slot_counts = await booking_service.free_counts(session)
 
-    # Takliflar xizmat bo'yicha sanaladi (har birining o'z boshlanish sanasi);
-    # bir xil sanadagilar uchun bir marta so'raladi.
-    invite_counts: dict = {}
+    # Takliflar xizmat bo'yicha sanaladi (har birining o'z boshlanish vaqti).
+    last_unlock = await referral_service.last_free_unlock(session, user)
+    invite_counts: dict[int, int] = {}
     for service in services:
-        if service.unlock_invites and service.invites_count_from not in invite_counts:
-            invite_counts[service.invites_count_from] = await referral_service.count_invited(
-                session, user, since=service.invites_count_from
+        if service.unlock_invites:
+            invite_counts[service.id] = await referral_service.count_invited(
+                session, user, since=referral_service.invites_start(service, last_unlock)
             )
 
     lang = user.ui_language.value
@@ -1170,9 +1171,7 @@ async def list_services(
             requires_booking=service.requires_booking,
             free_slots=slot_counts.get(service.id, 0),
             unlock_invites=service.unlock_invites,
-            invites_have=invite_counts.get(service.invites_count_from, 0)
-            if service.unlock_invites
-            else 0,
+            invites_have=invite_counts.get(service.id, 0),
             image_url=kit_service.icon_url(service),
         )
         for service in services
@@ -1266,9 +1265,7 @@ async def request_service(
     # faqat ko'rsatish uchun va unga ishonib bo'lmaydi.
     unlocked_by_invites = False
     if service.unlock_invites > 0:
-        invites = await referral_service.count_invited(
-            session, user, since=service.invites_count_from
-        )
+        invites = await referral_service.invites_for_service(session, user, service)
         unlocked_by_invites = invites >= service.unlock_invites
 
     if unlocked_by_invites:

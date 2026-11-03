@@ -916,8 +916,8 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         "invites_count_from": {
             "description": (
                 "Faqat shu vaqtdan keyin botga kelgan do'stlar sanaladi — eski takliflar "
-                "yangi qo'llanmani ochmaydi. Yangi xizmatda avtomatik qo'yiladi. "
-                "Bo'sh qoldirilsa, hamma takliflar sanaladi."
+                "yangi qo'llanmani ochmaydi. Bo'sh bo'lsa, xizmat kiritilgan vaqt olinadi. "
+                "Boshqa bepul ochishga ishlatilgan do'stlar ham sanalmaydi."
             )
         },
         "price_note_uz": {"description": "Narx yonidagi qisqa izoh: «bir marta», «1 soat»."},

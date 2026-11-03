@@ -220,9 +220,86 @@ async def test_old_invites_do_not_unlock_new_guide(session) -> None:
 
 
 @pytest.mark.asyncio
-async def test_services_without_start_date_count_all_invites(session) -> None:
+async def test_empty_start_date_also_ignores_older_invites(session) -> None:
+    """Sanasi bo'sh xizmat ham: undan oldin kelgan do'stlar sanalmaydi."""
     service, buyer = await _old_friends_then_service(session, count_from_none=True)
 
     result = await request_service(service.id, payload=None, user=buyer, session=session)
 
+    assert result.unlocked_by_invites is False
+
+
+@pytest.mark.asyncio
+async def test_used_invites_do_not_unlock_next_service(session) -> None:
+    buyer = User(telegram_id=970, username="free", balance=Decimal(20000))
+    first = AdmissionService(
+        code="free-a",
+        title_uz="A",
+        kind=ServiceKind.REQUEST,
+        price_amount=Decimal(10000),
+        price_currency="UZS",
+        unlock_invites=2,
+    )
+    second = AdmissionService(
+        code="free-b",
+        title_uz="B",
+        kind=ServiceKind.REQUEST,
+        price_amount=Decimal(10000),
+        price_currency="UZS",
+        unlock_invites=2,
+    )
+    session.add_all([buyer, first, second])
+    await session.flush()
+    session.add_all(
+        User(telegram_id=971 + i, referred_by_id=buyer.id, referral_confirmed=True)
+        for i in range(2)
+    )
+    await session.commit()
+    first_id, second_id = first.id, second.id
+    session.expunge_all()
+    buyer = (await session.execute(select(User).where(User.telegram_id == 970))).scalar_one()
+
+    opened = await request_service(first_id, payload=None, user=buyer, session=session)
+    assert opened.unlocked_by_invites is True
+
+    # O'sha ikki do'st ikkinchi xizmatga o'tmaydi — pul yechiladi.
+    charged = await request_service(second_id, payload=None, user=buyer, session=session)
+    assert charged.unlocked_by_invites is False
+    assert charged.charged is not None
+
+
+@pytest.mark.asyncio
+async def test_fresh_friends_unlock_next_service(session) -> None:
+    buyer = User(telegram_id=980, username="again", balance=Decimal(0))
+    first = AdmissionService(
+        code="next-a",
+        title_uz="A",
+        kind=ServiceKind.REQUEST,
+        price_amount=Decimal(10000),
+        price_currency="UZS",
+        unlock_invites=1,
+    )
+    second = AdmissionService(
+        code="next-b",
+        title_uz="B",
+        kind=ServiceKind.REQUEST,
+        price_amount=Decimal(10000),
+        price_currency="UZS",
+        unlock_invites=1,
+    )
+    session.add_all([buyer, first, second])
+    await session.flush()
+    session.add(User(telegram_id=981, referred_by_id=buyer.id, referral_confirmed=True))
+    await session.commit()
+    first_id, second_id, buyer_id = first.id, second.id, buyer.id
+    session.expunge_all()
+    buyer = (await session.execute(select(User).where(User.telegram_id == 980))).scalar_one()
+    assert (
+        await request_service(first_id, payload=None, user=buyer, session=session)
+    ).unlocked_by_invites
+
+    session.add(User(telegram_id=982, referred_by_id=buyer_id, referral_confirmed=True))
+    await session.commit()
+
+    result = await request_service(second_id, payload=None, user=buyer, session=session)
     assert result.unlocked_by_invites is True

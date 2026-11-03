@@ -8,7 +8,7 @@ chegaraning aniq ishlashi.
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.db.models import (
     AdmissionService,
@@ -52,9 +52,7 @@ async def _setup(
 
     telegram_id = 901
     for _ in range(confirmed):
-        session.add(
-            User(telegram_id=telegram_id, referred_by_id=buyer.id, referral_confirmed=True)
-        )
+        session.add(User(telegram_id=telegram_id, referred_by_id=buyer.id, referral_confirmed=True))
         telegram_id += 1
     for _ in range(unconfirmed):
         session.add(
@@ -170,3 +168,61 @@ async def test_unlock_works_without_balance(session) -> None:
 
     assert result.unlocked_by_invites is True
     assert Decimal(str(buyer.balance)) == Decimal(0)
+
+
+async def _old_friends_then_service(
+    session, *, count_from_none: bool
+) -> tuple[AdmissionService, User]:
+    """Do'stlar AVVAL keladi (alohida tranzaksiya), qo'llanma KEYIN qo'shiladi."""
+    buyer = User(telegram_id=950, username="old", balance=Decimal(20000))
+    session.add(buyer)
+    await session.flush()
+    session.add_all(
+        User(telegram_id=951 + i, referred_by_id=buyer.id, referral_confirmed=True)
+        for i in range(3)
+    )
+    await session.commit()
+
+    service = AdmissionService(
+        code=f"new-guide-{count_from_none}",
+        title_uz="Yangi qo'llanma",
+        kind=ServiceKind.REQUEST,
+        price_amount=Decimal(10000),
+        price_currency="UZS",
+        unlock_invites=3,
+    )
+    session.add(service)
+    await session.commit()
+    if count_from_none:
+        # Migratsiyadan oldingi xizmatlar kabi (server_default'ni chetlab o'tadi).
+        await session.execute(
+            update(AdmissionService)
+            .where(AdmissionService.id == service.id)
+            .values(invites_count_from=None)
+        )
+        await session.commit()
+    session.expunge_all()
+    service = (
+        await session.execute(select(AdmissionService).where(AdmissionService.code == service.code))
+    ).scalar_one()
+    buyer = (await session.execute(select(User).where(User.telegram_id == 950))).scalar_one()
+    return service, buyer
+
+
+@pytest.mark.asyncio
+async def test_old_invites_do_not_unlock_new_guide(session) -> None:
+    service, buyer = await _old_friends_then_service(session, count_from_none=False)
+
+    result = await request_service(service.id, payload=None, user=buyer, session=session)
+
+    assert result.unlocked_by_invites is False
+    assert result.charged is not None
+
+
+@pytest.mark.asyncio
+async def test_services_without_start_date_count_all_invites(session) -> None:
+    service, buyer = await _old_friends_then_service(session, count_from_none=True)
+
+    result = await request_service(service.id, payload=None, user=buyer, session=session)
+
+    assert result.unlocked_by_invites is True

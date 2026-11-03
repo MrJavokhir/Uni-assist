@@ -22,6 +22,7 @@ katta bo'lsa) va Admission Kit xizmatlarini pulsiz ochish.
 
 import logging
 import re
+from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import func, select, update
@@ -132,16 +133,23 @@ async def reward(session: AsyncSession, user: User) -> tuple[User, Decimal] | No
     return referrer, amount
 
 
-async def count_invited(session: AsyncSession, user: User) -> int:
+async def count_invited(
+    session: AsyncSession, user: User, since: datetime | None = None
+) -> int:
     """Nechta TASDIQLANGAN taklif bor.
 
     Faqat kanalga a'zo bo'lganlar sanaladi. Shunchaki havolani bosib,
     keyin ketib qolgan odam na mukofot beradi, na xizmat ochadi — aks
     holda soxta akkauntlar bilan xizmat ochib olish arzon bo'lardi.
+
+    `since` berilsa — faqat shu vaqtdan keyin botga kelgan do'stlar
+    (yangi qo'llanmani eski takliflar bilan ochib bo'lmaydi).
     """
     stmt = select(func.count(User.id)).where(
         User.referred_by_id == user.id, User.referral_confirmed.is_(True)
     )
+    if since is not None:
+        stmt = stmt.where(User.created_at >= since)
     return (await session.execute(stmt)).scalar_one()
 
 

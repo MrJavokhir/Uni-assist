@@ -3,10 +3,12 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from aiogram import Router
 from aiogram.filters import CommandObject, CommandStart
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.handlers.payment import cmd_topup
 from app.config import settings
 from app.db.models import User
 from app.i18n import t
@@ -53,8 +55,18 @@ async def entry_screen(bot, session: AsyncSession, user: User, full_name: str):
     return t("start.welcome", lang, name=full_name), start_keyboard(lang)
 
 
+# Mini App'dagi "Top up" tugmasi botni `?start=topup` bilan ochadi — to'ldirish
+# darhol boshlanadi (foydalanuvchi /topup yozishi shart emas).
+TOPUP_PAYLOAD = "topup"
+
+
 @router.message(CommandStart())
-async def cmd_start(message: Message, session: AsyncSession, command: CommandObject) -> None:
+async def cmd_start(
+    message: Message,
+    session: AsyncSession,
+    command: CommandObject,
+    state: FSMContext | None = None,
+) -> None:
     """/start -> xush kelibsiz (Mini App tugmasi). Obuna Mini App'da so'raladi.
 
     Til so'ralmaydi: yangi foydalanuvchi ingliz tilida boshlaydi va tilni
@@ -82,6 +94,10 @@ async def cmd_start(message: Message, session: AsyncSession, command: CommandObj
         if referrer_id is not None:
             await referral_service.attach(session, user, referrer_id)
             await session.commit()
+
+    if state is not None and (command.args or "").strip() == TOPUP_PAYLOAD:
+        await cmd_topup(message, session, state)
+        return
 
     text, markup = await entry_screen(message.bot, session, user, message.from_user.full_name)
     await message.answer(text, reply_markup=markup)

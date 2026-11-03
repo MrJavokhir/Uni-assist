@@ -68,7 +68,8 @@ async def cmd_topup(message: Message, session: AsyncSession, state: FSMContext) 
     )
 
 
-@router.message(TopUp.amount, F.text)
+# Buyruqlar (/start, /topup) summa deb olinmaydi — ular o'z handleriga o'tadi.
+@router.message(TopUp.amount, F.text, ~F.text.startswith("/"))
 async def enter_amount(message: Message, session: AsyncSession, state: FSMContext) -> None:
     # Foydalanuvchi "10 000" yoki "10.000" deb yozishi mumkin — bo'shliq va
     # ajratgichlarni tashlab yuboramiz, aks holda har safar xato beraverardi.

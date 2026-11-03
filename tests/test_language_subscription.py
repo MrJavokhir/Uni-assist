@@ -241,3 +241,29 @@ async def test_start_does_not_ask_to_subscribe(session) -> None:
     buttons = _buttons(markup)
     assert any(b.web_app for b in buttons)
     assert not any(b.url for b in buttons), "kanal havolasi botda bo'lmasligi kerak"
+
+
+class _TopUpArgs:
+    args = "topup"
+
+
+class _FakeState:
+    def __init__(self) -> None:
+        self.state = None
+
+    async def set_state(self, value) -> None:
+        self.state = value
+
+
+@pytest.mark.asyncio
+async def test_start_topup_payload_begins_payment(session) -> None:
+    """Mini App'dagi "Top up" botni `?start=topup` bilan ochadi — summa darhol so'raladi."""
+    from app.bot.handlers.payment import TopUp
+
+    msg = _FakeStartMessage()
+    state = _FakeState()
+
+    await start.cmd_start(msg, session, _TopUpArgs(), state)
+
+    assert state.state == TopUp.amount
+    assert "Balans to'ldirish" in msg.answers[-1][0]

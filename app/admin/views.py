@@ -855,6 +855,8 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         AdmissionService.price_note_ru,
         AdmissionService.price_note_en,
         AdmissionService.unlock_invites,
+        AdmissionService.invites_count_from,
+        AdmissionService.image_url,
         AdmissionService.sort_order,
         AdmissionService.is_active,
     ]
@@ -874,6 +876,8 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
         price_note_ru="Narx izohi (ru)",
         price_note_en="Narx izohi (en)",
         unlock_invites="Do'st bilan ochish",
+        invites_count_from="Takliflar shu sanadan sanaladi",
+        image_url="Rasm havolasi",
         sort_order="Tartib",
         is_active="Faol",
     )
@@ -909,6 +913,19 @@ class AdmissionServiceAdmin(ModelView, model=AdmissionService):
                 "Shuncha do'st taklif qilgan odam bu xizmatni PULSIZ oladi. "
                 "0 qo'ysangiz — faqat pulga. Taklif kanalga a'zo bo'lgandan keyin "
                 "sanaladi, shunchaki havolani bosib ketgan odam hisobga olinmaydi."
+            )
+        },
+        "invites_count_from": {
+            "description": (
+                "Faqat shu vaqtdan keyin botga kelgan do'stlar sanaladi — eski takliflar "
+                "yangi qo'llanmani ochmaydi. Yangi xizmatda avtomatik qo'yiladi. "
+                "Bo'sh qoldirilsa, hamma takliflar sanaladi."
+            )
+        },
+        "image_url": {
+            "description": (
+                "Ilovadagi kartada chapdagi rasm (kvadrat yaxshi chiqadi). To'g'ridan-to'g'ri "
+                "rasm havolasi (.png, .jpg). Bo'sh bo'lsa — rangli ikonka."
             )
         },
         "price_note_uz": {"description": "Narx yonidagi qisqa izoh: «bir marta», «1 soat»."},

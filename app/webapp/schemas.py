@@ -323,9 +323,13 @@ class ServiceOut(BaseModel):
     # vaqtsiz pul olib bo'lmaydi.
     free_slots: int = 0
     # Nechta do'st taklif qilinsa xizmat pulsiz ochiladi. 0 — bunday
-    # imkoniyat yo'q. Foydalanuvchining takliflari soni profilda
-    # (`referral_count`), shuning uchun bu yerda takrorlanmaydi.
+    # imkoniyat yo'q.
     unlock_invites: int = 0
+    # Shu xizmat uchun sanalgan takliflar (xizmatning `invites_count_from`
+    # sanasidan keyin kelgan do'stlar).
+    invites_have: int = 0
+    # Kartadagi rasm havolasi (bo'sh bo'lsa — ikonka).
+    image_url: str | None = None
 
 
 class SlotOut(BaseModel):

@@ -34,6 +34,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -103,6 +104,15 @@ class AdmissionService(TimestampMixin, Base):
     unlock_invites: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
+    # Takliflar SHU vaqtdan keyin kelgan do'stlar bo'yicha sanaladi: yangi
+    # qo'llanmani avvalgi takliflar bilan ochib bo'lmasin. Yangi xizmatda
+    # yaratilgan vaqti qo'yiladi; None — hamma takliflar sanaladi (bu
+    # o'zgarishdan oldingi xizmatlar, ularda yig'ilgan hisob saqlanadi).
+    invites_count_from: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, server_default=func.now()
+    )
+    # Kartadagi rasm (logotip kabi havola). Bo'sh bo'lsa — rangli ikonka.
+    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 102;
+const ASSET_V = 104;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -233,6 +233,9 @@ const I18N = {
     "kit.section_help": "Shaxsiy yordam",
     "kit.help_meta": "Siz bilan Telegram'da bog'lanamiz",
     "kit.soon_btn": "Tez orada",
+    "kit.invite_title": "{n} ta do'stni taklif qiling — bepul oling",
+    "kit.invite_ready": "Do'stlar yetarli — bepul oching",
+    "kit.invite_btn": "Taklif qilish",
     "kit.title": "Admission Kit",
     "kit.back": "Bosh sahifa",
     "common.back": "Orqaga",
@@ -275,7 +278,6 @@ const I18N = {
     "kit.empty_title": "Xizmatlar hali qo'shilmagan",
     "kit.empty_text": "Tez orada bu yerda qo'llanmalar va yordam xizmatlari paydo bo'ladi.",
     "kit.note": "Narx balansdan yechiladi. Balansni botda /topup buyrug'i bilan to'ldirasiz.",
-    "kit.unlock_invites": "yoki {n} ta do'st taklif qiling",
     "kit.unlock_progress": "{have} / {need} ta do'st",
     "kit.unlock_free": "Bepul ochish",
     "kit.unlocked_free_toast": "Do'stlaringiz uchun bepul ochildi",
@@ -674,6 +676,9 @@ const I18N = {
     "kit.section_help": "Личная помощь",
     "kit.help_meta": "Свяжемся с вами в Telegram",
     "kit.soon_btn": "Скоро",
+    "kit.invite_title": "Пригласите {n} друзей — получите бесплатно",
+    "kit.invite_ready": "Друзей достаточно — откройте бесплатно",
+    "kit.invite_btn": "Пригласить",
     "kit.title": "Admission Kit",
     "kit.back": "На главную",
     "common.back": "Назад",
@@ -716,7 +721,6 @@ const I18N = {
     "kit.empty_title": "Услуги пока не добавлены",
     "kit.empty_text": "Скоро здесь появятся руководства и услуги поддержки.",
     "kit.note": "Стоимость списывается с баланса. Пополнить — командой /topup в боте.",
-    "kit.unlock_invites": "или пригласите {n} друзей",
     "kit.unlock_progress": "{have} / {need} друзей",
     "kit.unlock_free": "Открыть бесплатно",
     "kit.unlocked_free_toast": "Открыто бесплатно — за приглашённых друзей",
@@ -1115,6 +1119,9 @@ const I18N = {
     "kit.section_help": "Personal help",
     "kit.help_meta": "We'll contact you on Telegram",
     "kit.soon_btn": "Soon",
+    "kit.invite_title": "Invite {n} friends — get it free",
+    "kit.invite_ready": "Enough friends — unlock it free",
+    "kit.invite_btn": "Invite",
     "kit.title": "Admission Kit",
     "kit.back": "Back to home",
     "common.back": "Back",
@@ -1157,7 +1164,6 @@ const I18N = {
     "kit.empty_title": "No services yet",
     "kit.empty_text": "Guides and support services will appear here soon.",
     "kit.note": "The price comes from your balance. Top it up with /topup in the bot.",
-    "kit.unlock_invites": "or invite {n} friends",
     "kit.unlock_progress": "{have} / {need} friends",
     "kit.unlock_free": "Unlock for free",
     "kit.unlocked_free_toast": "Unlocked for free — thanks to your invites",
@@ -4565,22 +4571,15 @@ function bindKitBack(root) {
 // Narx bitta satr matn: gradientli kartada u sarlavha ustidagi "ko'z qoshi"
 // (eyebrow) bo'lib turadi, shuning uchun alohida teglar kerak emas.
 function servicePriceText(service) {
-  const unlock = inviteUnlock(service);
   if (service.price_amount === null || service.price_amount === undefined) {
     return escapeHtml(t("kit.price_ask"));
   }
   const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
     service.price_currency
   )}`;
-  const base = service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
-  if (!unlock) return base;
-  // Pulsiz yo'l narx bilan BIR QATORDA turganda jumla uzun bo'lib,
-  // tugmaga tiqilib qolardi. Endi u narx ostida, mayda qatorda —
-  // va faqat shu yerda: ilgari karta ichida ham takrorlanardi.
-  return `${base}<span class="svc-price-alt">${t("kit.unlock_progress", {
-    have: unlock.have,
-    need: unlock.need,
-  })} · ${t("kit.unlock_invites", { n: unlock.need })}</span>`;
+  // Pulsiz yo'l (do'st taklifi) narx ostida emas, kartadagi alohida
+  // blokda (`inviteBlock`): mayda qatorda uni hech kim payqamasdi.
+  return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;
 }
 
 // `api()` xatoni "API 402: {...}" ko'rinishida beradi — tafsilotni
@@ -4661,12 +4660,51 @@ function serviceIcon(service) {
   return /mentor/i.test(service.code || "") ? "chat" : "spark";
 }
 
+const GUIDE_TONES = ["blue", "teal", "violet", "rose"];
+
+function serviceThumb(service) {
+  if (service.image_url) {
+    return `<span class="svc-ico svc-ico-img"><img src="${escapeHtml(
+      service.image_url
+    )}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('svc-ico-img');this.remove()"></span>`;
+  }
+  return `<span class="svc-ico">${icon(serviceIcon(service))}${
+    isGuide(service) ? `<span class="svc-ico-tag">PDF</span>` : ""
+  }</span>`;
+}
+
+// Do'st taklif qilib bepul olish — kartadagi alohida, ko'zga tashlanadigan blok.
+function inviteBlock(service) {
+  const unlock = inviteUnlock(service);
+  if (!unlock) return "";
+  const pct = Math.min(100, Math.round((unlock.have / unlock.need) * 100));
+  return `
+    <div class="svc-invite${unlock.ready ? " is-ready" : ""}">
+      <span class="svc-invite-ico">${icon(unlock.ready ? "check" : "gift")}</span>
+      <div class="svc-invite-body">
+        <div class="svc-invite-title">${
+          unlock.ready ? t("kit.invite_ready") : t("kit.invite_title", { n: unlock.need })
+        }</div>
+        <div class="svc-invite-bar"><span style="width:${pct}%"></span></div>
+        <div class="svc-invite-count">${t("kit.unlock_progress", {
+          have: unlock.have,
+          need: unlock.need,
+        })}</div>
+      </div>
+      ${unlock.ready ? "" : `<button type="button" class="svc-invite-btn">${t("kit.invite_btn")}</button>`}
+    </div>`;
+}
+
 function serviceCard(service) {
-  const tone = isGuide(service) ? "blue" : /mentor/i.test(service.code || "") ? "amber" : "violet";
+  const tone = isGuide(service)
+    ? GUIDE_TONES[service.id % GUIDE_TONES.length]
+    : /mentor/i.test(service.code || "")
+    ? "amber"
+    : "violet";
   return `
     <article class="svc-card tone-${tone}${isGuide(service) && !service.requested ? " is-locked" : ""}">
       <div class="svc-top">
-        <span class="svc-ico">${icon(serviceIcon(service))}</span>
+        ${serviceThumb(service)}
         <div class="svc-head">
           <h3 class="svc-title">${escapeHtml(service.title)}</h3>
           <div class="svc-meta">${escapeHtml(serviceMeta(service))}</div>
@@ -4674,6 +4712,7 @@ function serviceCard(service) {
         ${serviceTag(service)}
       </div>
       ${service.description ? `<p class="svc-text">${escapeHtml(service.description)}</p>` : ""}
+      ${isSoon(service) ? "" : inviteBlock(service)}
       <div class="svc-foot">
         <span class="svc-price">${servicePriceText(service)}</span>
         <button type="button" class="svc-btn kit-btn${serviceBtnClass(service)}"
@@ -4696,7 +4735,9 @@ function serviceCard(service) {
 function inviteUnlock(service) {
   const need = Number(service.unlock_invites || 0);
   if (!need || service.requested) return null;
-  const have = Number((profile && profile.referral_count) || 0);
+  // Server shu xizmat uchun sanagan takliflar: yangi qo'llanmada faqat u
+  // qo'shilgandan keyin kelgan do'stlar hisoblanadi.
+  const have = Number(service.invites_have || 0);
   return { need: need, have: have, ready: have >= need };
 }
 
@@ -4741,6 +4782,7 @@ function unlockServiceCard(btn, hasFile) {
   const card = btn.closest(".svc-card");
   if (!card) return;
   card.classList.remove("is-locked");
+  card.querySelector(".svc-invite")?.remove();
   const tag = card.querySelector(".svc-tag");
   if (tag) {
     tag.className = "svc-tag is-open";
@@ -4952,6 +4994,13 @@ async function renderKit() {
 
   bindKitBack(el);
 
+  el.querySelectorAll(".svc-invite-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      haptic("light");
+      shareBot();
+    });
+  });
+
   el.querySelectorAll(".kit-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       haptic("light");
@@ -5114,8 +5163,9 @@ function renderProfile() {
   document.getElementById("acc-saved").addEventListener("click", () => switchTab("saved"));
   document.getElementById("acc-topup")?.addEventListener("click", () => {
     haptic("light");
-    // To'ldirish botda (/topup) — bot suhbati ochiladi.
-    const url = `https://t.me/${encodeURIComponent(profile.bot_username)}`;
+    // To'ldirish botda: `?start=topup` bilan ochilganda bot to'lov qadamini
+    // darhol boshlaydi (summa so'raydi) — /topup yozish shart emas.
+    const url = `https://t.me/${encodeURIComponent(profile.bot_username)}?start=topup`;
     try {
       tg.openTelegramLink(url);
     } catch (e) {

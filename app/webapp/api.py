@@ -425,20 +425,25 @@ RESETTABLE_FILTER_FIELDS = (
 async def get_cover_image(
     kind: str, item_id: int, session: AsyncSession = Depends(get_session)
 ) -> Response:
-    """Avval sehrgarda yuklangan universitet/grant rasmi (endi rasm havola
-    sifatida kiritiladi). Ochiq: `<img>` sarlavha yubora olmaydi. Manzilda
+    """Bazadagi rasmlar: Kit xizmati ikonkasi va avval sehrgarda yuklangan
+    universitet/grant rasmi. Ochiq: `<img>` sarlavha yubora olmaydi. Manzilda
     `?v=` bor — javob uzoq keshlanadi."""
-    model = {"university": University, "scholarship": Scholarship}.get(kind)
-    if model is None:
+    source = {
+        "university": (University, University.cover_data, University.cover_type),
+        "scholarship": (Scholarship, Scholarship.cover_data, Scholarship.cover_type),
+        "service": (AdmissionService, AdmissionService.icon_data, AdmissionService.icon_type),
+    }.get(kind)
+    if source is None:
         raise HTTPException(status_code=404)
+    model, data_column, type_column = source
     row = (
-        await session.execute(select(model.cover_data, model.cover_type).where(model.id == item_id))
+        await session.execute(select(data_column, type_column).where(model.id == item_id))
     ).one_or_none()
-    if row is None or not row.cover_data:
+    if row is None or not row[0]:
         raise HTTPException(status_code=404)
     return Response(
-        content=row.cover_data,
-        media_type=row.cover_type or "image/jpeg",
+        content=row[0],
+        media_type=row[1] or "image/jpeg",
         headers={"Cache-Control": "public, max-age=31536000, immutable"},
     )
 
@@ -1168,7 +1173,7 @@ async def list_services(
             invites_have=invite_counts.get(service.invites_count_from, 0)
             if service.unlock_invites
             else 0,
-            image_url=service.image_url,
+            image_url=kit_service.icon_url(service),
         )
         for service in services
     ]

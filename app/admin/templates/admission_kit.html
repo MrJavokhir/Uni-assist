@@ -55,6 +55,31 @@
   </div>
 {% endmacro %}
 
+{# Mini App kartasidagi ikonka: ko'rinish, yuklash va o'chirish. #}
+{% macro icon_cell(row) %}
+  <div class="ua-kit-icon">
+    {% if row.icon_url %}<img class="ua-kit-icon-preview" src="{{ row.icon_url }}" alt="">{% endif %}
+    <div>
+      <form method="post" action="{{ url_for('admin:view-admission-kit-upload-icon') }}"
+            enctype="multipart/form-data">
+        <input type="hidden" name="service_id" value="{{ row.id }}">
+        <label class="btn btn-sm btn-outline-primary text-nowrap">
+          {% if row.has_icon %}Almashtirish{% else %}Yuklash{% endif %}
+          <input type="file" name="file" accept="image/jpeg,image/png,image/webp"
+                 class="ua-kit-file" aria-label="Xizmat ikonkasi"
+                 onchange="if (this.files.length) this.form.submit();">
+        </label>
+      </form>
+      {% if row.has_icon %}
+      <form method="post" action="{{ url_for('admin:view-admission-kit-delete-icon') }}" class="mt-1">
+        <input type="hidden" name="service_id" value="{{ row.id }}">
+        <button type="submit" class="btn btn-sm btn-link text-danger p-0">O'chirish</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
 {% block content %}
 <div class="col-12">
 <div class="ua-page">
@@ -87,6 +112,7 @@
           <thead>
             <tr>
               <th>Qo'llanma</th>
+              <th class="w-1">Ikonka</th>
               <th>Narxi</th>
               <th>Sotib olingan</th>
               <th>Joriy fayl</th>
@@ -98,6 +124,7 @@
             {% for row in guides %}
             <tr>
               <td>{{ service_cell(row) }}</td>
+              <td>{{ icon_cell(row) }}</td>
               <td>{{ price_cell(row, true) }}</td>
               <td>
                 {% if row.bought %}<span class="badge bg-blue-lt">{{ row.bought }}</span>
@@ -173,6 +200,7 @@
           <thead>
             <tr>
               <th>Xizmat</th>
+              <th class="w-1">Ikonka</th>
               <th>Narxi</th>
               <th>So'rovlar</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
@@ -182,6 +210,7 @@
             {% for row in manual %}
             <tr>
               <td>{{ service_cell(row) }}</td>
+              <td>{{ icon_cell(row) }}</td>
               <td>{{ price_cell(row, false) }}</td>
               <td>
                 {% if row.bought %}<span class="badge bg-blue-lt">{{ row.bought }}</span>

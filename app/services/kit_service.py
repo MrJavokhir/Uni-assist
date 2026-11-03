@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 # qo'llanma uchun bu ko'p bilan yetarli, baza satri esa haddan tashqari
 # kattalashib ketmaydi.
 MAX_PDF_BYTES = 20 * 1024 * 1024
+MAX_ICON_BYTES = 1024 * 1024
+ALLOWED_ICON_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 # PDF faylning boshi. Kengaytmaga ishonmaymiz: .pdf deb nomlangan word
 # fayli yuklansa, foydalanuvchi ochib ko'rgandagina bilardi.
@@ -158,3 +160,30 @@ async def deliver_file(
         row.telegram_file_id = sent.document.file_id
         await session.flush()
     return row
+
+
+def save_icon(service: AdmissionService, content_type: str | None, data: bytes) -> None:
+    """Xizmat ikonkasini yozadi. Noto'g'ri fayl `FileRejected` beradi."""
+    kind = (content_type or "").split(";")[0].strip().lower()
+    if kind not in ALLOWED_ICON_TYPES:
+        raise FileRejected("Ikonka JPG, PNG yoki WebP formatida bo'lishi kerak.")
+    if not data:
+        raise FileRejected("Fayl bo'sh.")
+    if len(data) > MAX_ICON_BYTES:
+        raise FileRejected(f"Ikonka juda katta. Chegara — {MAX_ICON_BYTES // 1024 // 1024} MB.")
+    service.icon_data = data
+    service.icon_type = kind
+    service.icon_version = (service.icon_version or 0) + 1
+
+
+def delete_icon(service: AdmissionService) -> None:
+    service.icon_data = None
+    service.icon_type = None
+    service.icon_version = 0
+
+
+def icon_url(service: AdmissionService) -> str | None:
+    """Mini App va admin uchun ikonka manzili; `v` kesh eskirmasligi uchun."""
+    if service.icon_version:
+        return f"/api/webapp/images/service/{service.id}?v={service.icon_version}"
+    return service.image_url

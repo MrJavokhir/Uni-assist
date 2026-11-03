@@ -531,3 +531,14 @@ body {
 .ua-activity-value.red { color: #dc2626; }
 .ua-activity-label { font-size: 13px; font-weight: 600; }
 .ua-activity-share { font-size: 12px; color: #8a8f98; }
+
+/* Admission Kit: xizmat ikonkasi */
+.ua-kit-icon { display: flex; align-items: center; gap: 10px; }
+.ua-kit-icon-preview {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e3e6ec;
+}

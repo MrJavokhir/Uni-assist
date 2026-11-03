@@ -122,6 +122,8 @@ class AdmissionKitView(BaseView):
                     "price": service.price_amount,
                     "currency": service.price_currency,
                     "bought": bought.get(service.id, 0),
+                    "icon_url": kit_service.icon_url(service),
+                    "has_icon": bool(service.icon_version),
                     # Sotib olingan xizmatni o'chirish xarid tarixini ham
                     # olib ketadi (FK CASCADE). Shuning uchun o'chirish
                     # faqat hech kim sotib olmagan xizmatda taklif qilinadi
@@ -309,6 +311,48 @@ class AdmissionKitView(BaseView):
             await session.commit()
             if removed:
                 Flash.success(request, f"«{service.title_uz}» fayli o'chirildi.")
+        return back
+
+    @expose("/admission-kit/upload-icon", methods=["POST"], identity="admission-kit-upload-icon")
+    async def upload_icon(self, request: Request):
+        form = await request.form()
+        back = self._back(request, form)
+        service_id = _int(form.get("service_id"))
+        upload = form.get("file")
+        if service_id is None or upload is None or not getattr(upload, "filename", ""):
+            Flash.error(request, "Fayl tanlanmadi.")
+            return back
+
+        data = await upload.read(kit_service.MAX_ICON_BYTES + 1)
+        async with async_session_factory() as session:
+            service = await session.get(AdmissionService, service_id)
+            if service is None:
+                Flash.error(request, "Xizmat topilmadi.")
+                return back
+            try:
+                kit_service.save_icon(service, upload.content_type, data)
+            except kit_service.FileRejected as exc:
+                Flash.error(request, str(exc))
+                return back
+            await session.commit()
+            Flash.success(request, f"«{service.title_uz}» ikonkasi yuklandi.")
+        return back
+
+    @expose("/admission-kit/delete-icon", methods=["POST"], identity="admission-kit-delete-icon")
+    async def delete_icon(self, request: Request):
+        form = await request.form()
+        back = self._back(request, form)
+        service_id = _int(form.get("service_id"))
+        if service_id is None:
+            return back
+        async with async_session_factory() as session:
+            service = await session.get(AdmissionService, service_id)
+            if service is None:
+                Flash.error(request, "Xizmat topilmadi.")
+                return back
+            kit_service.delete_icon(service)
+            await session.commit()
+            Flash.success(request, f"«{service.title_uz}» ikonkasi o'chirildi.")
         return back
 
     @expose("/admission-kit/toggle-active", methods=["POST"], identity="admission-kit-toggle")

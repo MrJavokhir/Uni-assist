@@ -38,7 +38,13 @@ from app.db.models import (
     User,
 )
 from app.db.session import get_session
-from app.services import booking_service, kit_service, payment_service, referral_service
+from app.services import (
+    booking_service,
+    kit_service,
+    payment_service,
+    referral_service,
+    view_service,
+)
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.gpa_requirement import gpa_requirement_for
 from app.services.matching_service import MatchLevel, find_matches
@@ -84,6 +90,7 @@ from app.webapp.schemas import (
     SlotOut,
     SubscriptionChannelOut,
     SubscriptionStatusOut,
+    ViewCountOut,
 )
 
 logger = logging.getLogger(__name__)
@@ -483,7 +490,8 @@ async def get_subscription(
     return SubscriptionStatusOut(
         subscribed=not missing,
         channels=[
-            SubscriptionChannelOut(title=c.title, invite_url=c.invite_url) for c in missing
+            SubscriptionChannelOut(title=c.title, invite_url=c.invite_url, logo_url=c.logo_url)
+            for c in missing
         ],
     )
 
@@ -653,6 +661,7 @@ async def get_program(
     gpa = gpa_requirement_for(program)
     return ProgramDetailOut(
         id=program.id,
+        view_count=await view_service.count_for(session, view_service.VIEW_PROGRAM, program.id),
         cover_url=program.university.cover_url,
         name=program.name,
         abbreviation=program.abbreviation,
@@ -722,6 +731,32 @@ async def get_program(
     )
 
 
+@router.post("/programs/{program_id}/view", response_model=ViewCountOut)
+async def view_program(
+    program_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ViewCountOut:
+    """Odam dastur sahifasida bir necha soniya turdi — bitta ko'rish."""
+    if await session.get(Program, program_id) is None:
+        raise HTTPException(status_code=404, detail="Program not found")
+    count = await view_service.record(session, user, view_service.VIEW_PROGRAM, program_id)
+    return ViewCountOut(view_count=count)
+
+
+@router.post("/scholarships/{scholarship_id}/view", response_model=ViewCountOut)
+async def view_scholarship(
+    scholarship_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ViewCountOut:
+    """Odam grant sahifasida bir necha soniya turdi — bitta ko'rish."""
+    if await session.get(Scholarship, scholarship_id) is None:
+        raise HTTPException(status_code=404, detail="Scholarship not found")
+    count = await view_service.record(session, user, view_service.VIEW_GRANT, scholarship_id)
+    return ViewCountOut(view_count=count)
+
+
 @router.get("/scholarships", response_model=list[ScholarshipOut])
 async def list_scholarships(
     country_id: int | None = None,
@@ -759,6 +794,8 @@ async def list_scholarships(
 
     degree = user.degree_level.value if user.degree_level is not None and not all_levels else None
 
+    view_counts = await view_service.counts_for(session, view_service.VIEW_GRANT)
+
     now = datetime.now(UTC)
     output = []
     for scholarship in scholarships:
@@ -775,6 +812,7 @@ async def list_scholarships(
                 closed=bool(scholarship.deadlines) and not upcoming,
                 cover_url=scholarship.cover_url,
                 id=scholarship.id,
+                view_count=view_counts.get(scholarship.id, 0),
                 name=scholarship.name,
                 description=_localized_description(scholarship, user.ui_language.value),
                 coverage_type=scholarship.coverage_type.value,

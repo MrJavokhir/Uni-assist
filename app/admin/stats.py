@@ -24,6 +24,7 @@ from app.db.models import (
     user_target_country,
 )
 from app.db.session import async_session_factory
+from app.services import view_service
 from app.services.timezone_utils import TASHKENT_TZ
 
 USER_CHART_DAYS = 14
@@ -31,6 +32,7 @@ STALE_LIST_LIMIT = 8
 # Talabni ko'rsatadigan ro'yxatlar uzunligi: 8 tadan keyin quyruq juda
 # yupqalashadi va grafik o'qilmay qoladi.
 TOP_DEMAND_LIMIT = 8
+TOP_VIEWED_LIMIT = 10
 
 
 @dataclass
@@ -219,6 +221,15 @@ class StatsView(BaseView):
 
             stale_records = await _stale_records(session, stale_cutoff, now)
 
+            top_programs = await view_service.top_programs(session, TOP_VIEWED_LIMIT)
+            top_grants = await view_service.top_grants(session, TOP_VIEWED_LIMIT)
+            program_views, program_views_today = await view_service.totals(
+                session, view_service.VIEW_PROGRAM
+            )
+            grant_views, grant_views_today = await view_service.totals(
+                session, view_service.VIEW_GRANT
+            )
+
             # Foydalanuvchilar NIMA qidirayotgani. Bu qidiruv jurnali emas —
             # bunday jurnal yuritilmaydi. Manba: profildagi filtr tanlovlari,
             # ya'ni odam o'zi uchun belgilab qo'ygan davlat va yo'nalish.
@@ -285,6 +296,12 @@ class StatsView(BaseView):
             {
                 "title": "Boshqaruv paneli",
                 "subtitle": "Katalog holati, ma'lumot sifati va foydalanuvchi faolligi",
+                "top_programs": top_programs,
+                "top_grants": top_grants,
+                "program_views": program_views,
+                "program_views_today": program_views_today,
+                "grant_views": grant_views,
+                "grant_views_today": grant_views_today,
                 "total_users": total_users,
                 "total_universities": total_universities,
                 "total_programs": total_programs,

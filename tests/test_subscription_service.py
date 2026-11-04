@@ -224,3 +224,20 @@ async def test_is_exempt_flag(session) -> None:
 
     assert await is_exempt(session, 7) is True
     assert await is_exempt(session, 8) is False
+
+
+@pytest.mark.asyncio
+async def test_missing_channel_carries_logo(session) -> None:
+    session.add(
+        RequiredChannel(
+            title="Logo",
+            invite_url="https://t.me/logo_ch",
+            logo_url="/webapp/channel-logo.jpg",
+        )
+    )
+    await session.commit()
+    bot = _FakeBot({"@logo_ch": "left"})
+
+    missing = await missing_channels(bot, session, None, 42)
+
+    assert [c.logo_url for c in missing] == ["/webapp/channel-logo.jpg"]

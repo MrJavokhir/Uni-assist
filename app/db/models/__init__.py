@@ -1,5 +1,6 @@
 from app.db.base import Base
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
+from app.db.models.content_view import ContentView
 from app.db.models.country import Country
 from app.db.models.field import Field
 from app.db.models.home_update import HomeUpdate, UpdateKind
@@ -81,6 +82,7 @@ __all__ = [
     "BotAdmin",
     "ComplaintReason",
     "ComplaintStatus",
+    "ContentView",
     "Country",
     "CountryTopic",
     "CoverageType",

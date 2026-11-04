@@ -1189,12 +1189,14 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
         RequiredChannel.title,
         RequiredChannel.invite_url,
         RequiredChannel.chat_id,
+        RequiredChannel.logo_url,
         RequiredChannel.is_active,
     ]
     column_labels = _labels(
         title="Kanal nomi",
         invite_url="Kanal havolasi",
         chat_id="Chat ID (@username yoki -100...)",
+        logo_url="Kanal rasmi havolasi",
         is_active="Faol",
     )
     form_args = {
@@ -1205,6 +1207,9 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
                 "Yopiq kanal uchun raqamli ID kiriting (-1001234567890)."
             )
         },
+        "logo_url": {
+            "description": "Obuna oynasida chiqadi. Bo'sh bo'lsa, nomining bosh harflari ko'rinadi."
+        },
         "is_active": {"description": "O'chirilsa, bu kanalga obuna talab qilinmaydi."},
     }
     column_formatters = {RequiredChannel.is_active: format_bool}
@@ -1214,6 +1219,11 @@ class RequiredChannelAdmin(ModelView, model=RequiredChannel):
         self, data: dict, model: RequiredChannel, is_created: bool, request: Request
     ) -> None:
         url = (data.get("invite_url") or "").strip()
+
+        logo_url = (data.get("logo_url") or "").strip()
+        if logo_url and not logo_url.startswith(("http://", "https://", "/webapp/")):
+            raise ValueError("Kanal rasmi havolasi http:// yoki https:// bilan boshlanishi kerak")
+        data["logo_url"] = logo_url or None
 
         # Admin Chat ID maydoniga ko'pincha to'liq havola yoki "@"siz nom
         # yozib qo'yadi. Ilgari bunday qiymat o'zgartirilmasdan saqlanar,

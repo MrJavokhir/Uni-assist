@@ -151,10 +151,15 @@ class ProgramDeadlineOut(BaseModel):
     intake_term: str
 
 
+class ViewCountOut(BaseModel):
+    view_count: int
+
+
 class ProgramDetailOut(BaseModel):
     """Dastur kartasi bosilganda ochiladigan to'liq ma'lumot."""
 
     id: int
+    view_count: int = 0
     # Universitet rasmi (admin yuklagan) — sahifa tepasida; None = rasm yo'q.
     cover_url: str | None = None
     # Aniq sana bo'lmaganda, odatda qaysi oyda yopilishi (1-12).
@@ -248,6 +253,7 @@ class ScholarshipDeadlineOut(BaseModel):
 
 class ScholarshipOut(BaseModel):
     id: int
+    view_count: int = 0
     name: str
     description: str | None
     coverage_type: str
@@ -394,6 +400,7 @@ class ServiceInquiryIn(BaseModel):
 class SubscriptionChannelOut(BaseModel):
     title: str
     invite_url: str
+    logo_url: str | None = None
 
 
 class SubscriptionStatusOut(BaseModel):

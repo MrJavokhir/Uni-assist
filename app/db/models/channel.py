@@ -22,6 +22,8 @@ class RequiredChannel(TimestampMixin, Base):
     invite_url: Mapped[str] = mapped_column(String(500), nullable=False)
     chat_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Obuna oynasidagi kanal rasmi; bo'sh bo'lsa nomining bosh harflari chiqadi.
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     def __str__(self) -> str:
         return self.title

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 108;
+const ASSET_V = 111;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -228,6 +228,7 @@ const I18N = {
     "update.kind.info": "Yangilik",
     "filter.apply": "Qo'llash",
     "home.section_shortcuts": "Tezkor amallar",
+    "page.views": "Ko'rishlar",
     "home.quick_mentor": "Mentor bilan 1:1 maslahat",
     "home.quick_full": "Arizada to'liq yordam",
     "nav.kit": "Admission Kit",
@@ -383,6 +384,7 @@ const I18N = {
     "inquiry.sent": "So'rovingiz yuborildi — tez orada bog'lanamiz",
     "sub.step": "Oxirgi qadam",
     "sub.join": "Qo'shilish",
+    "sub.joined": "Qo'shildingiz",
     "first.sub": "Javoblaringiz asosida tanlandi",
     "first.title": "Sizga eng mos dasturlar",
     "first.closes": "Muddat: {date}",
@@ -674,6 +676,7 @@ const I18N = {
     "update.kind.info": "Новость",
     "filter.apply": "Применить",
     "home.section_shortcuts": "Быстрые действия",
+    "page.views": "Просмотры",
     "home.quick_mentor": "Консультация с ментором 1:1",
     "home.quick_full": "Полное сопровождение заявки",
     "nav.kit": "Admission Kit",
@@ -829,6 +832,7 @@ const I18N = {
     "inquiry.sent": "Заявка отправлена — скоро свяжемся",
     "sub.step": "Последний шаг",
     "sub.join": "Подписаться",
+    "sub.joined": "Вы подписаны",
     "first.sub": "Подобрано по вашим ответам",
     "first.title": "Ваши первые совпадения",
     "first.closes": "До {date}",
@@ -1120,6 +1124,7 @@ const I18N = {
     "update.kind.info": "Update",
     "filter.apply": "Apply",
     "home.section_shortcuts": "Quick actions",
+    "page.views": "Views",
     "home.quick_mentor": "1-on-1 mentor session",
     "home.quick_full": "Full application support",
     "nav.kit": "Admission Kit",
@@ -1275,6 +1280,7 @@ const I18N = {
     "inquiry.sent": "Request sent — we'll be in touch soon",
     "sub.step": "One last step",
     "sub.join": "Join",
+    "sub.joined": "Joined",
     "first.sub": "Picked from your answers",
     "first.title": "Your first matches",
     "first.closes": "Closes {date}",
@@ -1742,11 +1748,11 @@ async function renderHome() {
     <div class="section-head"><span class="section-title">${t("home.section_shortcuts")}</span></div>
     <div class="quick-grid">
       <button type="button" class="quick amber" data-service="mentor_1on1">
-        <span class="quick-svc tone-amber">${icon("chat")}</span>
+        <img class="quick-ico" src="icon-mentor.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("home.quick_mentor")}</span>
       </button>
       <button type="button" class="quick violet" data-service="full_application">
-        <span class="quick-svc tone-violet">${icon("spark")}</span>
+        <img class="quick-ico" src="icon-application.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("home.quick_full")}</span>
       </button>
       <button type="button" class="quick green" data-goto="match">
@@ -2888,6 +2894,39 @@ function renderGpaPage() {
 let programPageId = null;
 let programReturnTab = "match";
 
+// Sahifada shuncha turgan odam bitta ko'rish bo'ladi (server bir odamni
+// bir sahifada kuniga bir marta sanaydi).
+const VIEW_AFTER_MS = 5000;
+let viewTimer = null;
+
+function trackView(tab, path, onCount) {
+  clearTimeout(viewTimer);
+  const timer = setTimeout(async () => {
+    if (currentTab !== tab) return;
+    // Ilova yig'ilgan: odam sahifada emas, qaytishini kutamiz.
+    if (document.hidden) {
+      trackView(tab, path, onCount);
+      return;
+    }
+    try {
+      const { view_count: count } = await api(path, { method: "POST" });
+      onCount?.(count);
+      if (viewTimer !== timer) return;
+      const label = document.querySelector(`#view-${tab} .pg-views b`);
+      if (label) label.textContent = Number(count).toLocaleString();
+    } catch (err) {
+      console.error(err);
+    }
+  }, VIEW_AFTER_MS);
+  viewTimer = timer;
+}
+
+function viewsPill(count) {
+  return `<span class="pg-views" aria-label="${t("page.views")}">${icon("eye")}<b>${Number(
+    count || 0
+  ).toLocaleString()}</b></span>`;
+}
+
 function openProgramPage(programId) {
   haptic("light");
   // Mentor formasidan qaytilganda qaytish manzili o'zgarmaydi.
@@ -2955,6 +2994,7 @@ async function renderProgramPage() {
   el.innerHTML = skeletons(4);
 
   const p = await api(`/programs/${programPageId}`);
+  trackView("program", `/programs/${p.id}/view`);
 
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
@@ -3146,7 +3186,7 @@ async function renderProgramPage() {
             ? ""
             : `<span class="pg-country"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(
                 countryName(p.country)
-              )}</span>`
+              )}</span>${viewsPill(p.view_count)}`
         }
       </div>
       ${
@@ -3154,6 +3194,7 @@ async function renderProgramPage() {
           ? `<div class="pg-cover">
                <img src="${escapeHtml(p.cover_url)}" alt="" loading="eager" onerror="this.style.visibility='hidden'">
                <span class="pg-country pg-cover-pill"><span class="chip-flag">${flag(p.country.iso_code)}</span>${escapeHtml(countryName(p.country))}</span>
+               ${viewsPill(p.view_count)}
              </div>`
           : ""
       }
@@ -3284,6 +3325,9 @@ function renderGrantPage() {
   if (!s) return switchTab("scholarships");
   document.body.classList.add("page-mode");
   showPageBack(leaveGrantPage);
+  trackView("grant", `/scholarships/${s.id}/view`, (count) => {
+    s.view_count = count;
+  });
 
   const row = (label, value) =>
     `<div class="sheet-row"><span class="sheet-row-label">${label}</span><span class="sheet-row-value">${value}</span></div>`;
@@ -3418,13 +3462,14 @@ function renderGrantPage() {
         <button type="button" class="pg-back" id="pg-back" aria-label="${t("common.back")}">${icon(
           "chevron"
         )}</button>
-        ${s.cover_url ? "" : countryPill}
+        ${s.cover_url ? "" : countryPill + viewsPill(s.view_count)}
       </div>
       ${
         s.cover_url
           ? `<div class="pg-cover">
                <img src="${escapeHtml(s.cover_url)}" alt="" loading="eager" onerror="this.style.visibility='hidden'">
                ${countryPill.replace('class="pg-country"', 'class="pg-country pg-cover-pill"')}
+               ${viewsPill(s.view_count)}
              </div>`
           : ""
       }
@@ -4285,7 +4330,7 @@ async function checkSubscription(fresh) {
     // Tekshiruvning o'zi ishlamasa qidiruvni TO'SMAYMIZ — server tomoni
     // ham shunday (fail-open): noto'g'ri sozlama hammani to'xtatmasin.
     console.error(e);
-    return { subscribed: true, channels: [] };
+    return { subscribed: true, channels: [], failed: true };
   }
 }
 
@@ -4308,6 +4353,10 @@ function openChannelLink(url) {
 // dialogiga qaytadi (`resumeFirstMatches`).
 const PENDING_RESULTS_KEY = "ua_pending_results";
 
+// "Qo'shilish" bosilgandan keyin a'zolik shuncha vaqt fonda tekshiriladi.
+const SUB_POLL_EVERY_MS = 4000;
+const SUB_POLL_FOR_MS = 2 * 60 * 1000;
+
 function setPendingResults(on) {
   try {
     if (on) localStorage.setItem(PENDING_RESULTS_KEY, "1");
@@ -4326,7 +4375,11 @@ function hasPendingResults() {
 }
 
 /** O'rtadagi obuna dialogi. A'zo bo'lingach `true`, yopib ketilsa `false`.
- *  Kanaldan qaytganda (ilova yana ko'rinsa) a'zolik o'zi tekshiriladi. */
+ *
+ *  A'zolikni Telegram oynasida odamning o'zi tasdiqlaydi: bot yoki Mini App
+ *  uni kanalga qo'sha olmaydi. Shuning uchun "Qo'shilish" bosilgandan keyin
+ *  a'zolik fonda tekshirib turiladi va qator yashil bo'ladi; ichkariga esa
+ *  "A'zo bo'ldim" tugmasi kiritadi. */
 function openSubscriptionSheet(channels) {
   return new Promise((resolve) => {
     setPendingResults(true);
@@ -4340,7 +4393,11 @@ function openSubscriptionSheet(channels) {
         .map(
           (c) => `
         <button type="button" class="sg-channel" data-url="${escapeHtml(c.invite_url)}">
-          <span class="sg-channel-ava">${escapeHtml(initials(c.title))}</span>
+          <span class="sg-channel-ava">${escapeHtml(initials(c.title))}${
+            c.logo_url
+              ? `<img class="sg-channel-logo" src="${escapeHtml(c.logo_url)}" alt="" onerror="this.remove()">`
+              : ""
+          }</span>
           <span class="sg-channel-name">${escapeHtml(c.title)}</span>
           <span class="sg-channel-join">${t("sub.join")}</span>
         </button>`
@@ -4368,21 +4425,20 @@ function openSubscriptionSheet(channels) {
     document.body.style.overflow = "hidden";
     requestAnimationFrame(() => el.classList.add("open"));
 
-    const bindRows = () => {
-      el.querySelectorAll(".sg-channel").forEach((row) => {
-        row.addEventListener("click", () => {
-          haptic("light");
-          openChannelLink(row.dataset.url);
-        });
-      });
-    };
-    bindRows();
-
     let done = false;
-    let checking = false;
+    let polling = false;
+    let pollTimer = null;
+    let pollUntil = 0;
+
+    const stopPolling = () => {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    };
+
     const finish = (ok) => {
       if (done) return;
       done = true;
+      stopPolling();
       document.removeEventListener("visibilitychange", onReturn);
       try {
         tg?.offEvent?.("activated", onReturn);
@@ -4397,34 +4453,50 @@ function openSubscriptionSheet(channels) {
       resolve(ok);
     };
 
-    const recheck = async (silent) => {
-      if (checking || done) return;
-      checking = true;
-      const btn = document.getElementById("sg-check");
-      btn.disabled = true;
+    // Server javobida faqat a'zo bo'linmagan kanallar keladi.
+    const paintRows = (status) => {
+      const missing = new Set(status.channels.map((c) => c.invite_url));
+      el.querySelectorAll(".sg-channel").forEach((row) => {
+        const joined = !missing.has(row.dataset.url);
+        if (joined && !row.disabled) haptic("success");
+        row.disabled = joined;
+        row.classList.toggle("is-joined", joined);
+        row.querySelector(".sg-channel-join").innerHTML = joined
+          ? icon("check") + t("sub.joined")
+          : t("sub.join");
+      });
+    };
+
+    const poll = async () => {
+      if (polling || done) return;
+      polling = true;
       try {
         const status = await checkSubscription(true);
-        if (status.subscribed) {
-          haptic("success");
-          finish(true);
-          return;
-        }
-        if (!silent) {
-          haptic("warning");
-          showToast(t("sub.still_missing"));
-        }
-        // A'zo bo'lingan kanallar ro'yxatdan tushadi.
-        document.getElementById("sg-channels").innerHTML = rows(status.channels);
-        bindRows();
+        // Tekshiruv ishlamasa qatorlar yolg'ondan yashil bo'lmasin.
+        if (done || status.failed) return;
+        paintRows(status);
+        if (status.subscribed) stopPolling();
       } finally {
-        checking = false;
-        btn.disabled = false;
+        polling = false;
       }
     };
 
-    // Kanaldan qaytildi — Mini App yana ko'rinadi: tugma bosilishini kutmasdan tekshiramiz.
+    el.querySelectorAll(".sg-channel").forEach((row) => {
+      row.addEventListener("click", () => {
+        haptic("light");
+        openChannelLink(row.dataset.url);
+        pollUntil = Date.now() + SUB_POLL_FOR_MS;
+        if (pollTimer) return;
+        pollTimer = setInterval(() => {
+          if (Date.now() > pollUntil) stopPolling();
+          else poll();
+        }, SUB_POLL_EVERY_MS);
+      });
+    });
+
+    // Kanaldan qaytildi — Mini App yana ko'rinadi.
     const onReturn = () => {
-      if (document.visibilityState !== "hidden") recheck(true);
+      if (document.visibilityState !== "hidden") poll();
     };
     document.addEventListener("visibilitychange", onReturn);
     try {
@@ -4433,9 +4505,23 @@ function openSubscriptionSheet(channels) {
       /* eski klientlar */
     }
 
-    document.getElementById("sg-check").addEventListener("click", () => {
+    const checkBtn = document.getElementById("sg-check");
+    checkBtn.addEventListener("click", async () => {
       haptic("light");
-      recheck(false);
+      checkBtn.disabled = true;
+      try {
+        const status = await checkSubscription(true);
+        if (status.subscribed) {
+          haptic("success");
+          finish(true);
+          return;
+        }
+        haptic("warning");
+        showToast(t("sub.still_missing"));
+        paintRows(status);
+      } finally {
+        checkBtn.disabled = false;
+      }
     });
     document.getElementById("sg-close").addEventListener("click", () => {
       haptic("light");
@@ -6051,6 +6137,7 @@ let previousTab = "home";
 
 async function switchTab(tabName) {
   haptic("light");
+  clearTimeout(viewTimer);
   if (tabName !== currentTab) {
     previousTab = currentTab;
     currentTab = tabName;

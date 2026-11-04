@@ -48,6 +48,7 @@ _USERNAME = re.compile(r"^[A-Za-z0-9_]{4,}$")
 class ChannelInfo:
     title: str
     invite_url: str
+    logo_url: str | None = None
 
 
 def derive_chat_id(invite_url: str) -> str | None:
@@ -194,7 +195,13 @@ async def missing_channels(
             continue
 
         if member.status not in MEMBER_STATUSES:
-            missing.append(ChannelInfo(title=channel.title, invite_url=channel.invite_url))
+            missing.append(
+                ChannelInfo(
+                    title=channel.title,
+                    invite_url=channel.invite_url,
+                    logo_url=channel.logo_url,
+                )
+            )
 
     if not missing and redis is not None:
         try:

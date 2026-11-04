@@ -1,5 +1,45 @@
 {% extends "sqladmin/layout.html" %}
 
+{% macro top_viewed(title, items, total, today, edit_prefix, empty) %}
+<div class="col-12 col-lg-6">
+  <div class="card h-100">
+    <div class="card-header">
+      <h3 class="card-title">{{ title }}</h3>
+      <div class="card-actions">
+        <span class="badge bg-blue-lt">Jami {{ total }} · bugun {{ today }}</span>
+      </div>
+    </div>
+    {% if items %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th class="w-1">#</th>
+            <th>Nomi</th>
+            <th class="w-1 text-end">Ko'rishlar</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="text-muted">{{ loop.index }}</td>
+            <td>
+              <a href="{{ edit_prefix }}{{ item.id }}">{{ item.name }}</a>
+              {% if item.detail %}<div class="text-muted small">{{ item.detail }}</div>{% endif %}
+            </td>
+            <td class="text-end"><strong>{{ item.views }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="ua-empty">{{ empty }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
 {% block content %}
 {# SQLAdmin layout kontentni `row row-deck` ichiga joylaydi, u esa har bir
    `col-*` ni display:flex qiladi. Shuning uchun ichkarida bitta to'liq
@@ -32,6 +72,14 @@
       </a>
     </div>
     {% endfor %}
+  </div>
+
+  {# ---------- Eng ko'p ko'rilganlar ---------- #}
+  <div class="row row-cards mb-3">
+    {{ top_viewed("Eng ko'p ko'rilgan dasturlar", top_programs, program_views, program_views_today,
+                  "/admin/program/edit/", "Hali dastur ko'rilmagan.") }}
+    {{ top_viewed("Eng ko'p ko'rilgan grantlar", top_grants, grant_views, grant_views_today,
+                  "/admin/scholarship/edit/", "Hali grant ko'rilmagan.") }}
   </div>
 
   {# ---------- Foydalanuvchi faolligi ----------

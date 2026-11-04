@@ -542,3 +542,167 @@ body {
   border-radius: 10px;
   border: 1px solid #e3e6ec;
 }
+
+/* ============ Telefon (768px dan tor) ============
+   SQLAdmin shablonlari o'zgartirilmaydi — hammasi CSS bilan. */
+
+/* Filtr kartasining tanasi butun balandlikka cho'zilib, ro'yxatni pastga
+   itarib yubormasin (mentor savollari sahifasi). */
+.card > .card-body.border-bottom { flex-grow: 0; }
+
+@media (max-width: 767.98px) {
+  /* --- Tepadagi panel: logotip chapda, menyu va chiqish o'ngda --- */
+  .navbar-vertical.navbar-dark {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+  }
+  .navbar-vertical > .container-fluid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+  }
+  .navbar-vertical .navbar-brand {
+    order: 1;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .navbar-vertical .navbar-brand h3 { margin: 0; font-size: 1rem; }
+  /* Menyuni o'rab turgan qatlam yo'qoladi: tugma va ro'yxat panelning
+     o'z qatorlariga tushadi. */
+  #navbar-menu { display: contents; }
+  #navbar-menu .navbar-toggler {
+    order: 2;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+  }
+  #navbar-menu .navbar-toggler:focus { box-shadow: 0 0 0 2px rgba(155, 92, 246, 0.6); }
+  #navbar-menu .navbar-toggler-icon {
+    width: 22px;
+    height: 22px;
+    background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3cpath stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' d='M4 7h16M4 12h16M4 17h16'/%3e%3c/svg%3e") center / 100% no-repeat !important;
+    -webkit-mask: none !important;
+    mask: none !important;
+  }
+  #navbar-menu .navbar-toggler-icon::before,
+  #navbar-menu .navbar-toggler-icon::after { display: none !important; }
+  .navbar-vertical > .container-fluid > a.btn[href*="logout"] {
+    order: 3;
+    width: 40px;
+    height: 40px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+  .navbar-vertical > .container-fluid > a.btn[href*="logout"] > span { display: none; }
+  #navbarSupportedContent {
+    order: 4;
+    flex: 0 0 100%;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
+  #navbarSupportedContent .navbar-nav { padding: 6px 0 10px; }
+  .navbar-vertical .nav-link { margin: 1px 0; padding: 10px 12px !important; }
+
+  /* --- Sahifa --- */
+  .page-wrapper .container-fluid,
+  .page-body .container-fluid { padding-left: 12px; padding-right: 12px; }
+  .page-wrapper { padding-top: 12px; }
+  .page-header { margin: 2px 0 10px; }
+  .page-title { font-size: 1.25rem; }
+  /* Sarlavhasi bo'sh sahifalarda (sqladmin ro'yxatlari) bo'sh joy qolmasin. */
+  .page-header:not(:has(.page-title:not(:empty))) { display: none; }
+  .page-wrapper:not(:has(.page-title:not(:empty))) .page-body { padding-top: 12px; }
+  .page-body { margin-top: 0; margin-bottom: 16px; }
+  /* Ustunlar ustma-ust turadi: kartalarni bir xil balandlikka cho'zish
+     kerak emas (aks holda bo'sh oq joy qoladi). */
+  .row-deck > [class*="col"] { display: block; }
+  .row-cards { --tblr-gutter-y: 12px; --tblr-gutter-x: 12px; }
+  .card-header { padding: 12px 14px; }
+  .card-body { padding: 14px; }
+
+  /* --- Ro'yxat: sarlavha va tugmalar --- */
+  .card > .card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card > .card-header > .ms-auto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    margin-left: 0 !important;
+  }
+  .card > .card-header > .ms-auto > * { margin: 0 !important; }
+  .card > .card-header > .ms-auto .btn { padding: 7px 12px; }
+  .card-header .card-actions { margin-left: auto; }
+
+  /* Amallar va qidiruv bir-birining ostida, qidiruv to'liq kenglikda. */
+  .card .d-flex.justify-content-between:has(#search-input) {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card .d-flex.justify-content-between:has(#search-input) > * {
+    width: 100%;
+    max-width: none;
+    flex: none;
+  }
+  #search-input { min-width: 0; }
+
+  /* Jadvallar: ustunlar ezilib, so'zlar qatorma-qator bo'linib ketmasin —
+     jadval o'z kengligida qoladi va yon tomonga suriladi. */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-responsive > .table { min-width: 720px; }
+  .table-responsive > .table.text-nowrap { min-width: 0; }
+  .table td, .table th { padding-left: 10px; padding-right: 10px; }
+
+  /* Pagination: soni, sahifalar va hajm alohida qatorlarda. */
+  .card-footer.d-flex:has(.pagination) {
+    flex-wrap: wrap;
+    justify-content: center !important;
+    row-gap: 10px;
+  }
+  .card-footer.d-flex:has(.pagination) > p { flex: 0 0 100%; text-align: center; }
+  .card-footer .pagination {
+    margin: 0 !important;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .card-footer .pagination .page-link { min-width: 34px; padding: 6px 8px; }
+
+  /* Tafsilot sahifasi: uzun qiymat jadvaldan chiqib ketmasin. */
+  .table td { overflow-wrap: anywhere; }
+  .card-footer.container { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* Formalar: iOS kichik shriftli maydonga fokus bo'lganda sahifani
+     kattalashtirmasin. */
+  .form-control,
+  .form-select { font-size: 16px; }
+
+  /* Admission Kit va boshqa kartalardagi tugma guruhlari o'raladi. */
+  /* Filtr tugmalari bir qatorda, sig'masa yon tomonga suriladi. */
+  .card-body > .btn-group {
+    display: flex;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .card-body > .btn-group > .btn { flex: none; white-space: nowrap; }
+  .ua-kit-status { min-width: 120px; }
+}

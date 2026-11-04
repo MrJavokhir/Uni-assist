@@ -12,15 +12,25 @@ jadval bo'lsa, ular bir-biriga mos kelmay qolishi mumkin edi.
 """
 
 import logging
+from dataclasses import dataclass
+from decimal import Decimal
 from html import escape
 
 from aiogram import Bot
 from aiogram.types import BufferedInputFile
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import undefer
+from sqlalchemy.orm import selectinload, undefer
 
-from app.db.models import AdmissionService, ServiceFile, ServiceRequest, User
+from app.db.models import (
+    AdmissionService,
+    BalanceTransaction,
+    ServiceFile,
+    ServiceKind,
+    ServiceRequest,
+    TransactionKind,
+    User,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +127,82 @@ async def owns(session: AsyncSession, user: User, service_id: int) -> bool:
         ServiceRequest.user_id == user.id, ServiceRequest.service_id == service_id
     )
     return (await session.execute(stmt)).scalar_one_or_none() is not None
+
+
+# Xizmat qanday olingan.
+OBTAINED_PAID = "paid"
+OBTAINED_INVITES = "invites"
+OBTAINED_FREE = "free"
+
+
+@dataclass(frozen=True)
+class ObtainedRow:
+    request: ServiceRequest
+    how: str
+    # Haqiqatda yechilgan summa; pul yechilmagan bo'lsa None.
+    paid: Decimal | None
+
+
+def _paid_amount():
+    """Shu olish uchun balansdan yechilgan summa.
+
+    Xizmatning hozirgi narxiga qaralmaydi: narx keyin qo'yilgan yoki
+    o'zgartirilgan bo'lishi mumkin. Haqiqiy yechim balans tarixida turadi.
+    """
+    return (
+        select(func.sum(-BalanceTransaction.amount))
+        .where(
+            BalanceTransaction.user_id == ServiceRequest.user_id,
+            BalanceTransaction.service_id == ServiceRequest.service_id,
+            BalanceTransaction.kind == TransactionKind.SERVICE,
+        )
+        .correlate(ServiceRequest)
+        .scalar_subquery()
+    )
+
+
+def _how_obtained():
+    return case(
+        (ServiceRequest.unlocked_by_invites.is_(True), OBTAINED_INVITES),
+        (_paid_amount().is_not(None), OBTAINED_PAID),
+        else_=OBTAINED_FREE,
+    )
+
+
+async def obtained_counts(session: AsyncSession) -> dict[int, dict[str, int]]:
+    """Har xizmat necha marta va qanday olingani: {service_id: {how: soni}}."""
+    rows = select(ServiceRequest.service_id, _how_obtained().label("how")).subquery()
+    stmt = select(rows.c.service_id, rows.c.how, func.count()).group_by(
+        rows.c.service_id, rows.c.how
+    )
+    counts: dict[int, dict[str, int]] = {}
+    for service_id, how, count in await session.execute(stmt):
+        counts.setdefault(service_id, {})[how] = count
+    return counts
+
+
+async def obtained_rows(
+    session: AsyncSession,
+    *,
+    how: str | None = None,
+    kind: ServiceKind | None = None,
+    limit: int | None = None,
+) -> list[ObtainedRow]:
+    """Olingan xizmatlar, eng yangisi birinchi."""
+    how_obtained = _how_obtained()
+    stmt = (
+        select(ServiceRequest, how_obtained, _paid_amount())
+        .join(ServiceRequest.service)
+        .options(selectinload(ServiceRequest.service), selectinload(ServiceRequest.user))
+        .order_by(ServiceRequest.id.desc())
+        .limit(limit)
+    )
+    if how is not None:
+        stmt = stmt.where(how_obtained == how)
+    if kind is not None:
+        stmt = stmt.where(AdmissionService.kind == kind)
+    rows = await session.execute(stmt)
+    return [ObtainedRow(request, row_how, paid) for request, row_how, paid in rows]
 
 
 async def deliver_file(

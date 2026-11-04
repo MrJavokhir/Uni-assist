@@ -24,6 +24,25 @@
   <input type="hidden" name="all" value="{{ '1' if show_all else '' }}">
 {% endmacro %}
 
+{# Necha marta olingani va qanday: pulga, do'st taklifi bilan, bepul. #}
+{% macro obtained_cell(row) %}
+  {% if row.bought %}
+    <span class="badge bg-blue-lt">{{ row.bought }}</span>
+    <div class="text-muted small text-nowrap">
+      {% set parts = [] %}
+      {% if row.obtained.get('paid') %}{% set _ = parts.append(row.obtained.paid ~ " pulga") %}{% endif %}
+      {% if row.obtained.get('invites') %}{% set _ = parts.append(row.obtained.invites ~ " do'st bilan") %}{% endif %}
+      {% if row.obtained.get('free') %}{% set _ = parts.append(row.obtained.free ~ " bepul") %}{% endif %}
+      {{ parts | join(" · ") }}
+    </div>
+  {% else %}<span class="text-muted">—</span>{% endif %}
+{% endmacro %}
+
+{% macro how_cell(p) %}
+  <span class="badge {{ p.how[1] }}">{{ p.how[0] }}</span>
+  {% if p.paid %}<div class="text-muted small text-nowrap">{{ p.paid }}</div>{% endif %}
+{% endmacro %}
+
 {% macro row_actions(row) %}
   <a href="{{ url_for('admin:edit', identity='admission-service', pk=row.id) }}"
      class="btn btn-sm btn-outline-secondary">Tahrirlash</a>
@@ -114,7 +133,7 @@
               <th>Qo'llanma</th>
               <th class="w-1">Ikonka</th>
               <th>Narxi</th>
-              <th>Sotib olingan</th>
+              <th>Olingan</th>
               <th>Joriy fayl</th>
               <th class="w-1">PDF</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
@@ -126,10 +145,7 @@
               <td>{{ service_cell(row) }}</td>
               <td>{{ icon_cell(row) }}</td>
               <td>{{ price_cell(row, true) }}</td>
-              <td>
-                {% if row.bought %}<span class="badge bg-blue-lt">{{ row.bought }}</span>
-                {% else %}<span class="text-muted">—</span>{% endif %}
-              </td>
+              <td>{{ obtained_cell(row) }}</td>
               <td>
                 {% if row.file %}
                 <span class="badge bg-green-lt">PDF</span>
@@ -202,7 +218,7 @@
               <th>Xizmat</th>
               <th class="w-1">Ikonka</th>
               <th>Narxi</th>
-              <th>So'rovlar</th>
+              <th>Olingan</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
             </tr>
           </thead>
@@ -212,10 +228,7 @@
               <td>{{ service_cell(row) }}</td>
               <td>{{ icon_cell(row) }}</td>
               <td>{{ price_cell(row, false) }}</td>
-              <td>
-                {% if row.bought %}<span class="badge bg-blue-lt">{{ row.bought }}</span>
-                {% else %}<span class="text-muted">—</span>{% endif %}
-              </td>
+              <td>{{ obtained_cell(row) }}</td>
               <td class="text-nowrap">{{ row_actions(row) }}</td>
             </tr>
             {% endfor %}
@@ -316,7 +329,82 @@
   </div>
   {% endif %}
 
-  {# ======================= 4. So'rovlar ======================= #}
+  {# ======================= 4. Olingan xizmatlar ======================= #}
+  {% set obtained_total = obtained_totals.values() | sum %}
+  <div class="card mb-3" id="obtained">
+    <div class="card-header">
+      <h3 class="card-title">
+        Olingan xizmatlar
+        {% if obtained_total %}<span class="text-muted">({{ obtained_total }})</span>{% endif %}
+      </h3>
+      {% if obtained_total > recent_limit %}
+      <div class="card-actions">
+        {% set got_query = ('&got=' ~ obtained_filter) if obtained_filter else '' %}
+        {% if show_all %}
+        <a href="{{ url_for('admin:view-admission-kit') }}?{{ got_query[1:] }}#obtained" class="btn btn-sm btn-outline-secondary">
+          Oxirgi {{ recent_limit }} tasi
+        </a>
+        {% else %}
+        <a href="{{ url_for('admin:view-admission-kit') }}?all=1{{ got_query }}#obtained" class="btn btn-sm btn-outline-secondary">
+          Hammasi
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if not obtained_total %}
+      <div class="text-muted">Hali hech kim xizmat olmagan.</div>
+      {% else %}
+      {% set all_query = 'all=1&' if show_all else '' %}
+      <div class="btn-group mb-3" role="group" aria-label="Qanday olingani bo'yicha">
+        <a href="{{ url_for('admin:view-admission-kit') }}?{{ all_query }}#obtained"
+           class="btn btn-sm {{ 'btn-primary' if not obtained_filter else 'btn-outline-secondary' }}">
+          Hammasi ({{ obtained_total }})
+        </a>
+        {% for value, label in obtained_labels.items() %}
+        <a href="{{ url_for('admin:view-admission-kit') }}?{{ all_query }}got={{ value }}#obtained"
+           class="btn btn-sm {{ 'btn-primary' if obtained_filter == value else 'btn-outline-secondary' }}">
+          {{ label[0] }} ({{ obtained_totals[value] }})
+        </a>
+        {% endfor %}
+      </div>
+      {% if not obtained_list %}
+      <div class="text-muted">Bu bo'yicha yozuv yo'q.</div>
+      {% else %}
+      <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+        <table class="table table-sm table-vcenter">
+          <thead>
+            <tr>
+              <th>Sana</th>
+              <th>Foydalanuvchi</th>
+              <th>Xizmat</th>
+              <th>Turi</th>
+              <th>Qanday olingan</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in obtained_list %}
+            <tr>
+              <td class="text-muted text-nowrap">{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+              <td><a href="{{ url_for('admin:details', identity='user', pk=p.user_id) }}">{{ p.user }}</a></td>
+              <td>{{ p.service }}</td>
+              <td class="text-muted">{{ p.kind }}</td>
+              <td>{{ how_cell(p) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if not show_all and (obtained_list | length) == recent_limit %}
+      <div class="text-muted small mt-2">Oxirgi {{ recent_limit }} tasi ko'rsatildi.</div>
+      {% endif %}
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {# ======================= 5. So'rovlar ======================= #}
   <div class="card mb-3">
     <div class="card-header">
       <h3 class="card-title">
@@ -345,7 +433,7 @@
       {% else %}
       <p class="text-muted">
         Faqat qo'lda bajariladigan xizmatlar. Narx so'rov kelishidan oldin balansdan yechilgan —
-        yechilgan summa «Balans tarixi»da.
+        yechilgan summa «Balans tarixi»da. Do'st taklifi bilan ochilganlarda pul yechilmaydi.
       </p>
       <div class="table-responsive">
         <table class="table table-sm table-vcenter">
@@ -354,6 +442,7 @@
               <th>Sana</th>
               <th>Foydalanuvchi</th>
               <th>Xizmat</th>
+              <th>Qanday olingan</th>
               <th>Uchrashuv</th>
               <th>Holat</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
@@ -365,6 +454,7 @@
               <td class="text-muted text-nowrap">{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
               <td>{{ p.user }}</td>
               <td>{{ p.service }}</td>
+              <td>{{ how_cell(p) }}</td>
               <td class="text-nowrap">
                 {% if p.slot %}{{ p.slot }}{% else %}<span class="text-muted">—</span>{% endif %}
               </td>

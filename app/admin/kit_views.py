@@ -54,6 +54,12 @@ from app.services.timezone_utils import from_tashkent, to_tashkent
 
 logger = logging.getLogger(__name__)
 
+_OBTAINED_LABELS = {
+    kit_service.OBTAINED_PAID: ("Sotib olgan", "bg-blue-lt"),
+    kit_service.OBTAINED_INVITES: ("Do'st taklifi", "bg-green-lt"),
+    kit_service.OBTAINED_FREE: ("Bepul", "bg-secondary-lt"),
+}
+
 # So'rovlar vaqt o'tib yuzlab bo'lib ketadi. Sahifada oxirgilari ko'rinadi,
 # "hammasini ko'rsatish" esa ?all=1 bilan SHU sahifani ochadi.
 RECENT_REQUESTS = 30
@@ -72,6 +78,31 @@ def _size_label(size_bytes: int) -> str:
     return f"{max(size_bytes // 1024, 1)} KB"
 
 
+def _obtained_item(row: kit_service.ObtainedRow) -> dict:
+    """Olingan xizmat qatori: "So'rovlar" va "Olingan xizmatlar" uchun umumiy."""
+    purchase = row.request
+    service = purchase.service
+    return {
+        "id": purchase.id,
+        "created_at": purchase.created_at,
+        "service": service.title_uz,
+        "kind": "Qo'llanma" if service.kind == ServiceKind.FILE else "Yordam",
+        "user": str(purchase.user) if purchase.user else "—",
+        "user_id": purchase.user_id,
+        "how": _OBTAINED_LABELS[row.how],
+        "paid": f"{row.paid:,.0f} {service.price_currency}" if row.paid is not None else None,
+        "status": _STATUS_LABELS.get(
+            purchase.status.value, (purchase.status.value, "bg-secondary-lt")
+        ),
+        "status_value": purchase.status.value,
+        "slot": (
+            to_tashkent(purchase.slot.starts_at).strftime("%d.%m.%Y %H:%M")
+            if purchase.slot
+            else None
+        ),
+    }
+
+
 def _int(value: object) -> int | None:
     try:
         return int(str(value))
@@ -87,6 +118,9 @@ class AdmissionKitView(BaseView):
     @expose("/admission-kit", methods=["GET"], identity="admission-kit")
     async def page(self, request: Request):
         show_all = request.query_params.get("all") == "1"
+        got = request.query_params.get("got")
+        if got not in _OBTAINED_LABELS:
+            got = None
         async with async_session_factory() as session:
             services = (
                 (
@@ -100,17 +134,14 @@ class AdmissionKitView(BaseView):
                 .all()
             )
 
-            # Qo'llanma nechta marta sotib olingani — qator boshiga bitta
+            # Xizmat necha marta va qanday olingani — qator boshiga bitta
             # so'rov yubormaslik uchun hammasi birdan sanaladi.
-            bought = dict(
-                (
-                    await session.execute(
-                        select(ServiceRequest.service_id, func.count()).group_by(
-                            ServiceRequest.service_id
-                        )
-                    )
-                ).all()
-            )
+            obtained = await kit_service.obtained_counts(session)
+            bought = {service_id: sum(ways.values()) for service_id, ways in obtained.items()}
+            obtained_totals = {
+                how: sum(ways.get(how, 0) for ways in obtained.values())
+                for how in _OBTAINED_LABELS
+            }
 
             guides, manual = [], []
             for service in services:
@@ -122,6 +153,7 @@ class AdmissionKitView(BaseView):
                     "price": service.price_amount,
                     "currency": service.price_currency,
                     "bought": bought.get(service.id, 0),
+                    "obtained": obtained.get(service.id, {}),
                     "icon_url": kit_service.icon_url(service),
                     "has_icon": bool(service.icon_version),
                     # Sotib olingan xizmatni o'chirish xarid tarixini ham
@@ -182,26 +214,22 @@ class AdmissionKitView(BaseView):
                     }
                 )
 
+            limit = None if show_all else RECENT_REQUESTS
+            # Hamma olingan xizmatlar: pulga, do'st taklifi bilan yoki bepul.
+            obtained_list = [
+                _obtained_item(row)
+                for row in await kit_service.obtained_rows(session, how=got, limit=limit)
+            ]
+
             # So'rovlar ro'yxatida FAQAT qo'lda bajariladigan xizmatlar:
-            # qo'llanma sotib olinganda admin hech narsa qilmaydi.
+            # qo'llanma olinganda admin hech narsa qilmaydi.
             request_filter = AdmissionService.kind == ServiceKind.REQUEST
-            purchase_rows = (
-                (
-                    await session.execute(
-                        select(ServiceRequest)
-                        .join(ServiceRequest.service)
-                        .where(request_filter)
-                        .options(
-                            selectinload(ServiceRequest.service),
-                            selectinload(ServiceRequest.user),
-                        )
-                        .order_by(ServiceRequest.id.desc())
-                        .limit(None if show_all else RECENT_REQUESTS)
-                    )
+            purchases = [
+                _obtained_item(row)
+                for row in await kit_service.obtained_rows(
+                    session, kind=ServiceKind.REQUEST, limit=limit
                 )
-                .scalars()
-                .all()
-            )
+            ]
 
             total_requests = (
                 await session.execute(
@@ -212,25 +240,6 @@ class AdmissionKitView(BaseView):
                 )
             ).scalar_one()
 
-            purchases = [
-                {
-                    "id": row.id,
-                    "created_at": row.created_at,
-                    "service": row.service.title_uz if row.service else "—",
-                    "user": str(row.user) if row.user else "—",
-                    "status": _STATUS_LABELS.get(
-                        row.status.value, (row.status.value, "bg-secondary-lt")
-                    ),
-                    "status_value": row.status.value,
-                    "slot": (
-                        to_tashkent(row.slot.starts_at).strftime("%d.%m.%Y %H:%M")
-                        if row.slot
-                        else None
-                    ),
-                }
-                for row in purchase_rows
-            ]
-
         return await self.templates.TemplateResponse(
             request,
             "admission_kit.html",
@@ -240,6 +249,10 @@ class AdmissionKitView(BaseView):
                 "guides": guides,
                 "manual": manual,
                 "purchases": purchases,
+                "obtained_list": obtained_list,
+                "obtained_totals": obtained_totals,
+                "obtained_labels": _OBTAINED_LABELS,
+                "obtained_filter": got,
                 "slot_groups": slot_groups,
                 "requests_total": total_requests,
                 "recent_limit": RECENT_REQUESTS,

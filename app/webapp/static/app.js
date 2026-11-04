@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 107;
+const ASSET_V = 108;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -228,6 +228,8 @@ const I18N = {
     "update.kind.info": "Yangilik",
     "filter.apply": "Qo'llash",
     "home.section_shortcuts": "Tezkor amallar",
+    "home.quick_mentor": "Mentor bilan 1:1 maslahat",
+    "home.quick_full": "Arizada to'liq yordam",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Qo'llanmalar",
     "kit.section_help": "Shaxsiy yordam",
@@ -672,6 +674,8 @@ const I18N = {
     "update.kind.info": "Новость",
     "filter.apply": "Применить",
     "home.section_shortcuts": "Быстрые действия",
+    "home.quick_mentor": "Консультация с ментором 1:1",
+    "home.quick_full": "Полное сопровождение заявки",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Гайды",
     "kit.section_help": "Личная помощь",
@@ -1116,6 +1120,8 @@ const I18N = {
     "update.kind.info": "Update",
     "filter.apply": "Apply",
     "home.section_shortcuts": "Quick actions",
+    "home.quick_mentor": "1-on-1 mentor session",
+    "home.quick_full": "Full application support",
     "nav.kit": "Admission Kit",
     "kit.section_guides": "Guides",
     "kit.section_help": "Personal help",
@@ -1735,13 +1741,13 @@ async function renderHome() {
 
     <div class="section-head"><span class="section-title">${t("home.section_shortcuts")}</span></div>
     <div class="quick-grid">
-      <button type="button" class="quick accent" data-goto="match">
-        <img class="quick-ico" src="icon-programs.png?v=${ASSET_V}" alt="" aria-hidden="true">
-        <span class="quick-label">${t("nav.match")}</span>
+      <button type="button" class="quick amber" data-service="mentor_1on1">
+        <span class="quick-svc tone-amber">${icon("chat")}</span>
+        <span class="quick-label">${t("home.quick_mentor")}</span>
       </button>
-      <button type="button" class="quick amber" data-goto="scholarships">
-        <img class="quick-ico" src="icon-grants.png?v=${ASSET_V}" alt="" aria-hidden="true">
-        <span class="quick-label">${t("nav.scholarships")}</span>
+      <button type="button" class="quick violet" data-service="full_application">
+        <span class="quick-svc tone-violet">${icon("spark")}</span>
+        <span class="quick-label">${t("home.quick_full")}</span>
       </button>
       <button type="button" class="quick green" data-goto="match">
         <span class="quick-num" id="home-green-value">—</span>
@@ -1768,7 +1774,8 @@ async function renderHome() {
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
-      switchTab(card.dataset.goto);
+      if (card.dataset.service) openServiceByCode(card.dataset.service);
+      else switchTab(card.dataset.goto);
     });
   });
 
@@ -4894,6 +4901,20 @@ function openPdfSentSheet() {
 let kitServices = [];
 let servicePageId = null;
 const INQUIRY_TOPICS = ["university", "documents", "essay", "scholarship", "visa", "interview", "full", "other"];
+
+// Xizmatni Kit'ga kirmasdan ochish (Home'dagi tezkor amallar). Xizmat
+// yashirilgan bo'lsa yoki ro'yxat kelmasa, Kit'ning o'zi ochiladi.
+async function openServiceByCode(code) {
+  let service = null;
+  try {
+    kitServices = await api("/services");
+    service = kitServices.find((s) => s.code === code);
+  } catch (err) {
+    /* Kit sahifasi xatoni o'zi ko'rsatadi */
+  }
+  if (service) return openServicePage(service.id);
+  return switchTab("kit");
+}
 
 function openServicePage(serviceId) {
   haptic("light");

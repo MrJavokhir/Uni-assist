@@ -254,6 +254,8 @@ class ScholarshipDeadlineOut(BaseModel):
 class ScholarshipOut(BaseModel):
     id: int
     view_count: int = 0
+    # Admin bosh sahifa karuseliga tanlagan.
+    home_featured: bool = False
     name: str
     description: str | None
     coverage_type: str

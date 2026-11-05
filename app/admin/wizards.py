@@ -818,6 +818,7 @@ def _scholarship_prefill_from_form(
         "stipend_period": _text(form, "stipend_period") or "month",
         "currency": _text(form, "currency") or "USD",
         "extras_flight": _checked(form, "extras_flight"),
+        "home_featured": _checked(form, "home_featured"),
         "extras_insurance": _checked(form, "extras_insurance"),
         "extras_dormitory": _checked(form, "extras_dormitory"),
         "extras_language_course": _checked(form, "extras_language_course"),
@@ -985,6 +986,7 @@ class ScholarshipWizard(BaseView):
             "stipend_period": scholarship.stipend_period or "month",
             "currency": scholarship.currency or "USD",
             "extras_flight": scholarship.extras_flight,
+            "home_featured": scholarship.home_featured,
             "extras_insurance": scholarship.extras_insurance,
             "extras_dormitory": scholarship.extras_dormitory,
             "extras_language_course": scholarship.extras_language_course,
@@ -1068,6 +1070,7 @@ class ScholarshipWizard(BaseView):
         scholarship.duration_max_years = _number(form, "duration_max_years")
         scholarship.selection_stages = _integer(form, "selection_stages")
         scholarship.extras_flight = _checked(form, "extras_flight")
+        scholarship.home_featured = _checked(form, "home_featured")
         scholarship.extras_insurance = _checked(form, "extras_insurance")
         scholarship.extras_dormitory = _checked(form, "extras_dormitory")
         scholarship.extras_language_course = _checked(form, "extras_language_course")

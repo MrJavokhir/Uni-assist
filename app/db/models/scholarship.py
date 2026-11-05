@@ -68,6 +68,13 @@ class Scholarship(TimestampMixin, VerificationMixin, Base):
     # egallab turardi. Teng qiymatlarda alifbo tartibi saqlanadi.
     sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
 
+    # Mini App bosh sahifasidagi aylanib turuvchi karuselda chiqadi. Hech
+    # qaysi grant belgilanmagan bo'lsa, karusel muddati eng yaqinlarini o'zi
+    # tanlaydi (app/webapp/static/app.js, renderHomeGrants).
+    home_featured: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+
     # Tavsif uch tilda — `description` o'zbekcha (asosiy), qolganlari bo'sh
     # bo'lsa Mini App o'zbekchasiga qaytadi.
     description_ru: Mapped[str | None] = mapped_column(Text, nullable=True)

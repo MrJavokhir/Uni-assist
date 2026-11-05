@@ -362,6 +362,16 @@
                    value="{{ (prefill.sort_order if prefill else '100') }}">
             <div class="form-text">Ro'yxatdagi o'rni: kichigi yuqorida. Odatiy 100.</div>
           </div>
+          <div class="col-12">
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="home_featured" {{ on('home_featured') }}>
+              <span class="form-check-label"><strong>Bosh sahifada ko'rsatilsin</strong></span>
+            </label>
+            <div class="form-text">
+              Mini App bosh sahifasidagi aylanib turuvchi kartalarda chiqadi (muddati o'tmagan bo'lsa).
+              Hech qaysi grant belgilanmasa, muddati eng yaqinlari avtomatik chiqadi.
+            </div>
+          </div>
           <div class="col-md-5 text-end">
             <button type="submit" class="btn btn-primary">Grantni saqlash</button>
           </div>

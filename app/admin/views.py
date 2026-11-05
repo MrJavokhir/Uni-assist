@@ -1,8 +1,9 @@
 from aiogram import Bot
-from sqladmin import ModelView
+from sqladmin import ModelView, action
 from sqladmin.filters import BooleanFilter, StaticValuesFilter
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, select, update
 from starlette.requests import Request
+from starlette.responses import RedirectResponse
 from wtforms import SelectField
 from wtforms.validators import InputRequired
 
@@ -475,6 +476,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
         Scholarship.id,
         Scholarship.sort_order,
         Scholarship.name,
+        Scholarship.home_featured,
         Scholarship.countries,
         Scholarship.coverage_type,
         Scholarship.citizenship_eligible,
@@ -531,6 +533,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
             Scholarship.coverage_type, values=_choices(_COVERAGE_LABELS), title="Qamrov"
         ),
         BooleanFilter(Scholarship.citizenship_eligible, title="O'zbekiston fuqarolari uchun"),
+        BooleanFilter(Scholarship.home_featured, title="Bosh sahifada"),
     ]
     form_columns = [
         Scholarship.name,
@@ -556,6 +559,7 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
     column_labels = _labels(
         name="Grant nomi",
         sort_order="Tartib",
+        home_featured="Bosh sahifada",
         countries="Davlat",
         description="Tavsif",
         coverage_type="Qamrov turi",
@@ -595,9 +599,33 @@ class ScholarshipAdmin(ModelView, model=Scholarship):
         Scholarship.verified_at: format_verified_at,
         Scholarship.coverage_type: enum_label(_COVERAGE_LABELS),
         Scholarship.citizenship_eligible: format_bool,
+        Scholarship.home_featured: format_bool,
     }
     column_formatters = _scholarship_formatters
     column_formatters_detail = _scholarship_formatters
+
+    # Ro'yxatda belgilab, "Actions" orqali bir nechtasini birdan karuselga
+    # qo'shish/olib tashlash — har birining formasini ochib o'tirmasdan.
+    async def _set_home_featured(self, request: Request, value: bool) -> RedirectResponse:
+        ids = [int(pk) for pk in request.query_params.get("pks", "").split(",") if pk.isdigit()]
+        if ids:
+            async with self.session_maker() as session:
+                await session.execute(
+                    update(Scholarship).where(Scholarship.id.in_(ids)).values(home_featured=value)
+                )
+                await session.commit()
+        back = request.headers.get("referer") or str(
+            request.url_for("admin:list", identity=self.identity)
+        )
+        return RedirectResponse(back, status_code=303)
+
+    @action(name="home_on", label="Bosh sahifaga qo'shish", add_in_detail=False)
+    async def home_on(self, request: Request) -> RedirectResponse:
+        return await self._set_home_featured(request, True)
+
+    @action(name="home_off", label="Bosh sahifadan olib tashlash", add_in_detail=False)
+    async def home_off(self, request: Request) -> RedirectResponse:
+        return await self._set_home_featured(request, False)
 
 
 class HomeUpdateAdmin(ModelView, model=HomeUpdate):

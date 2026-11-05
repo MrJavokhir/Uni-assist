@@ -813,6 +813,7 @@ async def list_scholarships(
                 cover_url=scholarship.cover_url,
                 id=scholarship.id,
                 view_count=view_counts.get(scholarship.id, 0),
+                home_featured=scholarship.home_featured,
                 name=scholarship.name,
                 description=_localized_description(scholarship, user.ui_language.value),
                 coverage_type=scholarship.coverage_type.value,

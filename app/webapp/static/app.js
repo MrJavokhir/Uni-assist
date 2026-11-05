@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 111;
+const ASSET_V = 112;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1808,6 +1808,7 @@ function grantDaysLeft(days) {
 
 function grantSlide(s) {
   const days = s.nearest_deadline_days_left;
+  const hasDays = days !== null && days !== undefined && days >= 0;
   const tone = days <= 7 ? "red" : days <= 30 ? "amber" : "blue";
   const first = s.countries[0];
   const place = !first
@@ -1844,7 +1845,7 @@ function grantSlide(s) {
       <div class="gs-body">
         <div class="gs-title">${escapeHtml(s.name)}</div>
         <div class="gs-meta">
-          <span class="gs-left ${tone}">${grantDaysLeft(days)}</span>
+          ${hasDays ? `<span class="gs-left ${tone}">${grantDaysLeft(days)}</span>` : ""}
           <span class="gs-sub">${escapeHtml(sub)}</span>
         </div>
       </div>
@@ -1861,9 +1862,18 @@ async function renderHomeGrants() {
     items = [];
   }
   if (!box.isConnected) return;
-  const soon = items
-    .filter((s) => !s.closed && s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
-    .sort((a, b) => a.nearest_deadline_days_left - b.nearest_deadline_days_left)
+  // Admin tanlagan grantlar (muddati o'tmaganlari). Hech biri tanlanmagan
+  // bo'lsa — muddati eng yaqinlari avtomatik.
+  const open = items.filter((s) => !s.closed);
+  const picked = open.filter((s) => s.home_featured);
+  const byDeadline = (a, b) =>
+    (a.nearest_deadline_days_left ?? Infinity) - (b.nearest_deadline_days_left ?? Infinity);
+  const soon = (
+    picked.length
+      ? picked
+      : open.filter((s) => s.nearest_deadline_days_left !== null && s.nearest_deadline_days_left >= 0)
+  )
+    .sort(byDeadline)
     .slice(0, HOME_GRANTS_LIMIT);
   if (!soon.length) {
     box.remove();

@@ -6,7 +6,8 @@ oldindan tayyorlaydi (`savePreparedInlineMessage`). Xabar uch qismdan iborat:
 * **rasm** — Mini App'dagi kartaga o'xshash: surat, chap tepada davlat
   (bayroq bilan), o'ng tepada ariza muddati, pastda logotip, nom va qisqa
   izoh (universitet yoki grant qoplami). Server Pillow bilan chizadi;
-* **matn** — asosiy faktlar (daraja, muddat, kontrakt/stipendiya) va talablar;
+* **matn** — asosiy faktlar: daraja, davomiylik, muddat, kontrakt/stipendiya
+  (talablar va uzun izoh ataylab yozilmaydi — xabar qisqa bo'lsin);
 * **tugma** — "Dastur/Grant bilan tanishish": sahifani to'g'ridan-to'g'ri
   ochadigan havola (`p_<id>_r_<telegram_id>`, `g_<id>_r_<telegram_id>` —
   taklif ham hisoblanadi).
@@ -41,8 +42,6 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 CARD_W, CARD_H = 1200, 600
 MARGIN = 40
 CAPTION_LIMIT = 1024  # Telegram rasm izohi chegarasi
-MAX_REQUIREMENTS = 6  # matndagi talablar ro'yxati — qisqa bo'lsin
-REQUIREMENT_LINE_LIMIT = 150
 
 LANGS = ("uz", "ru", "en")
 
@@ -86,10 +85,6 @@ _TEXT = {
         "tuition": "Kontrakt (yiliga)",
         "free": "Kontrakt: bepul",
         "scholarship": "Dasturning o'z stipendiyasi bor",
-        "requirements": "Talablar",
-        "gre": "GRE talab qilinadi",
-        "gre_score": "GRE: kamida {score}",
-        "prereq": "Oldingi ta'lim: {major}",
         "countries": "{n} ta davlat",
         "coverage": {
             "full": "To'liq qoplaydi",
@@ -99,10 +94,6 @@ _TEXT = {
         "stipend": "Stipendiya",
         "per": {"month": "oyiga", "year": "yiliga"},
         "extras": ("Aviachipta", "Sug'urta", "Yotoqxona", "Til kursi"),
-        "req_language": "Til sertifikati: {score}",
-        "req_work": "Kamida {years} yil ish tajribasi",
-        "req_no_work": "Ish tajribasi talab qilinmaydi",
-        "req_age": "Yosh chegarasi: {age} yosh",
         "button_program": "📖 Dastur bilan tanishish",
         "button_grant": "📖 Grant bilan tanishish",
     },
@@ -113,10 +104,6 @@ _TEXT = {
         "tuition": "Контракт (в год)",
         "free": "Обучение бесплатное",
         "scholarship": "Есть собственная стипендия",
-        "requirements": "Требования",
-        "gre": "Требуется GRE",
-        "gre_score": "GRE: от {score}",
-        "prereq": "Предыдущее образование: {major}",
         "countries": "Стран: {n}",
         "coverage": {
             "full": "Полное покрытие",
@@ -126,10 +113,6 @@ _TEXT = {
         "stipend": "Стипендия",
         "per": {"month": "в месяц", "year": "в год"},
         "extras": ("Авиабилет", "Страховка", "Общежитие", "Языковой курс"),
-        "req_language": "Языковой сертификат: {score}",
-        "req_work": "Не менее {years} лет опыта работы",
-        "req_no_work": "Опыт работы не требуется",
-        "req_age": "Возрастное ограничение: {age} лет",
         "button_program": "📖 Подробнее о программе",
         "button_grant": "📖 Подробнее о гранте",
     },
@@ -140,10 +123,6 @@ _TEXT = {
         "tuition": "Tuition (per year)",
         "free": "Tuition-free",
         "scholarship": "Has its own scholarship",
-        "requirements": "Requirements",
-        "gre": "GRE required",
-        "gre_score": "GRE: {score}+",
-        "prereq": "Prior degree: {major}",
         "countries": "{n} countries",
         "coverage": {
             "full": "Full coverage",
@@ -153,10 +132,6 @@ _TEXT = {
         "stipend": "Stipend",
         "per": {"month": "per month", "year": "per year"},
         "extras": ("Flight", "Insurance", "Dormitory", "Language course"),
-        "req_language": "Language certificate: {score}",
-        "req_work": "At least {years} years of work experience",
-        "req_no_work": "No work experience required",
-        "req_age": "Age limit: {age}",
         "button_program": "📖 View the program",
         "button_grant": "📖 View the grant",
     },
@@ -214,62 +189,12 @@ def _esc(value: object) -> str:
     return html.escape(str(value), quote=False)
 
 
-def _short(text: str, limit: int) -> str:
-    text = " ".join(text.split())
-    if len(text) <= limit:
-        return text
-    cut = text[:limit].rsplit(" ", 1)[0].rstrip(".,;:—-")
-    return f"{cut}…"
-
-
 def _amount(value: float) -> str:
     return f"{round(value):,}".replace(",", " ")
 
 
-def _text_lines(text: str | None) -> list[str]:
-    return [line.strip(" •-–—\t") for line in (text or "").splitlines() if line.strip(" •-–—\t")]
-
-
-def _finish(head: list[str], requirements: list[str], lang: str) -> str:
-    """Faktlar + talablar ro'yxati; Telegram chegarasidan oshsa talablar qisqaradi."""
-    caption = "\n".join(head)
-    items = [_short(r, REQUIREMENT_LINE_LIMIT) for r in requirements if r][:MAX_REQUIREMENTS]
-    while items:
-        block = f"\n\n📋 <b>{_esc(_TEXT[lang]['requirements'])}:</b>\n" + "\n".join(
-            f"• {_esc(item)}" for item in items
-        )
-        if len(caption) + len(block) <= CAPTION_LIMIT:
-            return caption + block
-        items.pop()
-    return caption[:CAPTION_LIMIT]
-
-
-def program_requirements(program: Program, lang: str) -> list[str]:
-    words = _TEXT[lang]
-    items: list[str] = []
-    req = program.requirement
-    if req is not None:
-        scores = [
-            f"IELTS {float(req.ielts_min):g}" if req.ielts_min is not None else "",
-            f"TOEFL {req.toefl_min}" if req.toefl_min is not None else "",
-        ]
-        score = " / ".join(s for s in scores if s)
-        if score:
-            items.append(words["req_language"].format(score=score))
-        if req.gre_required:
-            items.append(
-                words["gre_score"].format(score=req.gre_min)
-                if req.gre_min is not None
-                else words["gre"]
-            )
-        if req.prereq_major:
-            items.append(words["prereq"].format(major=req.prereq_major))
-    items.extend(_text_lines(program.requirements_text))
-    return items
-
-
 def build_caption(program: Program, lang: str | None, today: date | None = None) -> str:
-    """Dastur rasmi ostidagi qisqa matn (HTML): faktlar va talablar."""
+    """Dastur rasmi ostidagi qisqa matn (HTML): asosiy faktlar."""
     lang = _lang(lang)
     today = today or datetime.now(UTC).date()
     words = _TEXT[lang]
@@ -299,18 +224,10 @@ def build_caption(program: Program, lang: str | None, today: date | None = None)
             head.append(f"💰 {_esc(words['tuition'])}: {_esc(amount)}")
     if program.has_scholarship:
         head.append(f"🏅 {_esc(words['scholarship'])}")
-    return _finish(head, program_requirements(program, lang), lang)
+    return "\n".join(head)[:CAPTION_LIMIT]
 
 
 # ---- Grant ----
-
-
-def _grant_localized(scholarship: Scholarship, field: str, lang: str) -> str | None:
-    if lang in ("ru", "en"):
-        translated = getattr(scholarship, f"{field}_{lang}", None)
-        if translated:
-            return translated
-    return getattr(scholarship, field)
 
 
 def grant_countries(scholarship: Scholarship, lang: str) -> str | None:
@@ -340,32 +257,10 @@ def grant_coverage(scholarship: Scholarship, lang: str) -> str:
     return _TEXT[lang]["coverage"].get(value, str(value))
 
 
-def grant_requirements(scholarship: Scholarship, lang: str) -> list[str]:
-    words = _TEXT[lang]
-    items: list[str] = []
-    scores = [
-        f"IELTS {float(scholarship.ielts_min):g}" if scholarship.ielts_min is not None else "",
-        f"TOEFL {scholarship.toefl_min}" if scholarship.toefl_min is not None else "",
-    ]
-    score = " / ".join(s for s in scores if s)
-    if score:
-        items.append(words["req_language"].format(score=score))
-    if scholarship.work_experience_years is not None:
-        items.append(
-            words["req_no_work"]
-            if scholarship.work_experience_years == 0
-            else words["req_work"].format(years=scholarship.work_experience_years)
-        )
-    if scholarship.age_limit is not None:
-        items.append(words["req_age"].format(age=scholarship.age_limit))
-    items.extend(_text_lines(_grant_localized(scholarship, "requirements_text", lang)))
-    return items
-
-
 def build_grant_caption(
     scholarship: Scholarship, lang: str | None, today: date | None = None
 ) -> str:
-    """Grant rasmi ostidagi qisqa matn (HTML): faktlar va talablar."""
+    """Grant rasmi ostidagi qisqa matn (HTML): asosiy faktlar."""
     lang = _lang(lang)
     today = today or datetime.now(UTC).date()
     words = _TEXT[lang]
@@ -396,7 +291,7 @@ def build_grant_caption(
     extras = [name for on, name in zip(flags, words["extras"]) if on]
     if extras:
         head.append(f"🎁 {_esc(' · '.join(extras))}")
-    return _finish(head, grant_requirements(scholarship, lang), lang)
+    return "\n".join(head)[:CAPTION_LIMIT]
 
 
 # ---- Rasm ----

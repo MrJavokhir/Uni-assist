@@ -939,7 +939,6 @@ async def _load_share_program(session: AsyncSession, program_id: int) -> Program
                 selectinload(Program.university).selectinload(University.country),
                 selectinload(Program.cost),
                 selectinload(Program.deadlines),
-                selectinload(Program.requirement),
             )
             .where(Program.id == program_id)
         )

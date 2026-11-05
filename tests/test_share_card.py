@@ -107,12 +107,11 @@ async def test_caption_is_short_escaped_and_localized(session) -> None:
     assert "Muddat: 15-may" in caption
     assert "Kontrakt (yiliga): 3 000 EUR" in caption
     assert "o'z stipendiyasi" in caption
-    # Uzun izoh o'rniga — talablar ro'yxati.
+    # Faqat asosiy faktlar: uzun izoh ham, talablar ham yozilmaydi.
     assert "Uzun izoh" not in caption
-    assert "📋 <b>Talablar:</b>\n• Til sertifikati: IELTS 6.5 / TOEFL 90" in caption
-    assert "• Bakalavr diplomi (240 ECTS)\n• Motivatsiya xati\n• Juda uzun talab" in caption
-    assert caption.endswith("…")
-    assert len(caption) <= share_card.CAPTION_LIMIT
+    assert "Talablar" not in caption
+    assert "Bakalavr diplomi" not in caption
+    assert caption.endswith("🏅 Dasturning o'z stipendiyasi bor")
 
     english = share_card.build_caption(program, "en", TODAY)
     assert "Closes May 15" in english
@@ -252,8 +251,8 @@ async def test_grant_caption_and_card(session) -> None:
     assert "📅 Muddat: 1-mart" in caption
     assert "💰 Stipendiya: 900 000 KRW oyiga" in caption
     assert "🎁 Aviachipta · Sug'urta" in caption
-    assert "• Til sertifikati: IELTS 5.5\n• Yosh chegarasi: 40 yosh\n• GPA 80%+" in caption
-    assert "GPA 80% or higher" in share_card.build_grant_caption(grant, "en", TODAY)
+    assert caption.endswith("🎁 Aviachipta · Sug'urta")  # talablar yozilmaydi
+    assert "Full coverage" in share_card.build_grant_caption(grant, "en", TODAY)
 
     data = share_card.grant_card_data(grant, "uz", TODAY)
     assert data.country == "2 ta davlat"

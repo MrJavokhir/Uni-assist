@@ -20,6 +20,7 @@ dependencies = [
     # Windows'da va ba'zi minimal Linux image'larda tizim IANA tz bazasi
     # bo'lmasligi mumkin — zoneinfo shu paket orqali ishlaydi (Asia/Tashkent va h.k.).
     "tzdata>=2024.2",
+    "pillow>=11.0",
 ]
 
 [dependency-groups]

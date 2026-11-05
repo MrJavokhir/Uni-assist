@@ -430,6 +430,12 @@ class EntryOut(BaseModel):
     needs_gate: bool = False
 
 
+class ShareMessageOut(BaseModel):
+    """`Telegram.WebApp.shareMessage()` ga beriladigan tayyor xabar id'si."""
+
+    id: str
+
+
 class EventIn(BaseModel):
     name: str = Field(max_length=40)
     props: dict[str, Any] | None = None

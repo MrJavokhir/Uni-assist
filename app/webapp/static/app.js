@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 113;
+const ASSET_V = 114;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -1618,7 +1618,26 @@ function shareLink(kind, id) {
     : `https://t.me/${bot}?start=${param}`;
 }
 
-function shareItem(kind, id, title) {
+// Dastur: bot tayyorlagan chiroyli xabar (karta rasmi + qisqa matn +
+// "Dastur bilan tanishish" tugmasi) `shareMessage` orqali yuboriladi.
+// Eski Telegram (Bot API < 8.0) yoki server xatosida — oddiy havola.
+async function shareProgramMessage(id) {
+  if (!tg || typeof tg.shareMessage !== "function") return false;
+  if (typeof tg.isVersionAtLeast === "function" && !tg.isVersionAtLeast("8.0")) return false;
+  try {
+    const res = await api(`/share/program/${Number(id)}`, { method: "POST" });
+    if (!res || !res.id) return false;
+    tg.shareMessage(res.id);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+let sharing = false;
+
+async function shareItem(kind, id, title) {
+  if (sharing) return;
   haptic("light");
   const link = shareLink(kind, id);
   if (!link) {
@@ -1626,6 +1645,14 @@ function shareItem(kind, id, title) {
     return;
   }
   track("share_clicked", { type: kind === "p" ? "program" : "grant", id: Number(id) });
+  if (kind === "p") {
+    sharing = true;
+    try {
+      if (await shareProgramMessage(id)) return;
+    } finally {
+      sharing = false;
+    }
+  }
   const text = `${title} — ${t("share.text")}`;
   const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
   try {

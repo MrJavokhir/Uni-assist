@@ -2,10 +2,13 @@ import logging
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from html import escape
+from urllib.parse import urlsplit
+from uuid import uuid4
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultPhoto
 from fastapi import APIRouter, Depends, Header, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,6 +48,7 @@ from app.services import (
     kit_service,
     payment_service,
     referral_service,
+    share_card,
     view_service,
 )
 from app.services.deeplink import SCREEN_PROGRAMS, parse_start_param
@@ -92,6 +96,7 @@ from app.webapp.schemas import (
     ServiceOut,
     ServiceRequestIn,
     ServiceRequestResult,
+    ShareMessageOut,
     SlotOut,
     SubscriptionChannelOut,
     SubscriptionStatusOut,
@@ -882,6 +887,142 @@ async def get_program(
         verified_at=program.verified_at.date().isoformat(),
         saved=any(sp.program_id == program.id for sp in user.saved_programs),
     )
+
+
+# ---- Dasturni ulashish: karta rasmi + qisqa matn + tugma ----
+# Mini App `shareMessage()` uchun bot xabarni oldindan tayyorlaydi
+# (app/services/share_card.py). Rasmni Telegram o'zi yuklab oladi, shuning
+# uchun rasm manzili ochiq (dastur ma'lumoti baribir ochiq).
+
+
+def _public_origin() -> str:
+    parts = urlsplit(settings.webapp_url)
+    return f"{parts.scheme}://{parts.netloc}"
+
+
+async def _load_share_program(session: AsyncSession, program_id: int) -> Program:
+    program = (
+        await session.execute(
+            select(Program)
+            .options(
+                selectinload(Program.university).selectinload(University.country),
+                selectinload(Program.cost),
+                selectinload(Program.deadlines),
+            )
+            .where(Program.id == program_id)
+        )
+    ).scalar_one_or_none()
+    if program is None:
+        raise HTTPException(status_code=404, detail="Dastur topilmadi")
+    return program
+
+
+def _share_version(program: Program, today: date) -> str:
+    """Rasm manzilidagi versiya: dastur o'zgarsa yoki kun almashsa (muddat
+    yorlig'i) yangi rasm chiziladi."""
+    stamps = [s for s in (program.updated_at, program.university.updated_at) if s]
+    stamp = int(max(stamps).timestamp()) if stamps else 0
+    return f"{stamp}-{today.isoformat()}"
+
+
+async def _program_card(
+    session: AsyncSession, program: Program, lang: str, today: date
+) -> bytes:
+    university = program.university
+    cover_url = university.cover_url
+
+    async def load_cover() -> bytes | None:
+        if not cover_url:
+            return None
+        if cover_url.startswith("/api/webapp/images/university/"):
+            return (
+                await session.execute(
+                    select(University.cover_data).where(University.id == university.id)
+                )
+            ).scalar_one_or_none()
+        if cover_url.startswith("/"):
+            return await share_card.fetch_image(_public_origin() + cover_url)
+        return await share_card.fetch_image(cover_url)
+
+    key = (program.id, lang, _share_version(program, today))
+    return await share_card.card_jpeg(
+        key, share_card.card_data(program, lang, today), load_cover, _logo_url(university)
+    )
+
+
+def _share_lang(lang: str | None) -> str:
+    return lang if lang in share_card.LANGS else "uz"
+
+
+@router.get("/share/program/{program_id}.jpg", include_in_schema=False)
+async def share_program_image(
+    program_id: int, lang: str = "uz", session: AsyncSession = Depends(get_session)
+) -> Response:
+    program = await _load_share_program(session, program_id)
+    jpeg = await _program_card(session, program, _share_lang(lang), datetime.now(UTC).date())
+    return Response(
+        content=jpeg, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    )
+
+
+@router.post("/share/program/{program_id}", response_model=ShareMessageOut)
+async def prepare_program_share(
+    program_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ShareMessageOut:
+    """`Telegram.WebApp.shareMessage()` uchun tayyor xabar id'si.
+
+    Xato bo'lsa (bot sozlanmagan, Telegram rad etdi) 503 — Mini App oddiy
+    havola bilan ulashishga qaytadi."""
+    if not settings.bot_token:
+        raise HTTPException(status_code=503, detail="Bot sozlanmagan")
+    program = await _load_share_program(session, program_id)
+    lang = _share_lang(user.ui_language.value)
+    today = datetime.now(UTC).date()
+    # Rasm oldindan chiziladi: Telegram so'raganda tayyor tursin.
+    await _program_card(session, program, lang, today)
+
+    username = await _get_bot_username()
+    if not username:
+        raise HTTPException(status_code=503, detail="Bot nomi aniqlanmadi")
+    param = f"p_{program.id}_r_{user.telegram_id}"
+    link = (
+        f"https://t.me/{username}/{settings.miniapp_short_name}?startapp={param}"
+        if settings.miniapp_short_name
+        else f"https://t.me/{username}?start={param}"
+    )
+    image_url = (
+        f"{_public_origin()}/api/webapp/share/program/{program.id}.jpg"
+        f"?lang={lang}&v={_share_version(program, today)}"
+    )
+    result = InlineQueryResultPhoto(
+        id=uuid4().hex,
+        photo_url=image_url,
+        thumbnail_url=image_url,
+        photo_width=share_card.CARD_W,
+        photo_height=share_card.CARD_H,
+        caption=share_card.build_caption(program, lang, today),
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=share_card.button_text(lang), url=link)]]
+        ),
+    )
+    bot = Bot(token=settings.bot_token)
+    try:
+        prepared = await bot.save_prepared_inline_message(
+            user_id=user.telegram_id,
+            result=result,
+            allow_user_chats=True,
+            allow_group_chats=True,
+            allow_channel_chats=True,
+        )
+    except Exception as exc:
+        logger.exception("Ulashish xabarini tayyorlab bo'lmadi (dastur %s)", program.id)
+        raise HTTPException(status_code=503, detail="Ulashish xabari tayyorlanmadi") from exc
+    finally:
+        await bot.session.close()
+    return ShareMessageOut(id=prepared.id)
 
 
 @router.post("/programs/{program_id}/view", response_model=ViewCountOut)

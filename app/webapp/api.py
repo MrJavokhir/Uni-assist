@@ -889,15 +889,46 @@ async def get_program(
     )
 
 
-# ---- Dasturni ulashish: karta rasmi + qisqa matn + tugma ----
+# ---- Dastur va grantni ulashish: karta rasmi + qisqa matn + tugma ----
 # Mini App `shareMessage()` uchun bot xabarni oldindan tayyorlaydi
 # (app/services/share_card.py). Rasmni Telegram o'zi yuklab oladi, shuning
-# uchun rasm manzili ochiq (dastur ma'lumoti baribir ochiq).
+# uchun rasm manzili ochiq (dastur va grant ma'lumoti baribir ochiq).
 
 
 def _public_origin() -> str:
     parts = urlsplit(settings.webapp_url)
     return f"{parts.scheme}://{parts.netloc}"
+
+
+def _share_lang(lang: str | None) -> str:
+    return lang if lang in share_card.LANGS else "uz"
+
+
+def _share_version(today: date, *stamps: datetime | None) -> str:
+    """Rasm manzilidagi versiya: ma'lumot o'zgarsa yoki kun almashsa (muddat
+    yorlig'i) yangi rasm chiziladi."""
+    known = [s for s in stamps if s]
+    stamp = int(max(known).timestamp()) if known else 0
+    return f"{stamp}-{today.isoformat()}"
+
+
+def _cover_loader(session: AsyncSession, cover_url: str | None, model, item_id: int):
+    """Muqovani faqat kerak bo'lganda yuklaydigan funksiya (bazadagi rasm
+    to'g'ridan-to'g'ri o'qiladi, tashqisi yuklab olinadi)."""
+    local_prefix = f"/api/webapp/images/{'university' if model is University else 'scholarship'}/"
+
+    async def load() -> bytes | None:
+        if not cover_url:
+            return None
+        if cover_url.startswith(local_prefix):
+            return (
+                await session.execute(select(model.cover_data).where(model.id == item_id))
+            ).scalar_one_or_none()
+        if cover_url.startswith("/"):
+            return await share_card.fetch_image(_public_origin() + cover_url)
+        return await share_card.fetch_image(cover_url)
+
+    return load
 
 
 async def _load_share_program(session: AsyncSession, program_id: int) -> Program:
@@ -908,6 +939,7 @@ async def _load_share_program(session: AsyncSession, program_id: int) -> Program
                 selectinload(Program.university).selectinload(University.country),
                 selectinload(Program.cost),
                 selectinload(Program.deadlines),
+                selectinload(Program.requirement),
             )
             .where(Program.id == program_id)
         )
@@ -917,41 +949,52 @@ async def _load_share_program(session: AsyncSession, program_id: int) -> Program
     return program
 
 
-def _share_version(program: Program, today: date) -> str:
-    """Rasm manzilidagi versiya: dastur o'zgarsa yoki kun almashsa (muddat
-    yorlig'i) yangi rasm chiziladi."""
-    stamps = [s for s in (program.updated_at, program.university.updated_at) if s]
-    stamp = int(max(stamps).timestamp()) if stamps else 0
-    return f"{stamp}-{today.isoformat()}"
+async def _load_share_grant(session: AsyncSession, scholarship_id: int) -> Scholarship:
+    scholarship = (
+        await session.execute(
+            select(Scholarship)
+            .options(selectinload(Scholarship.countries), selectinload(Scholarship.deadlines))
+            .where(Scholarship.id == scholarship_id)
+        )
+    ).scalar_one_or_none()
+    if scholarship is None:
+        raise HTTPException(status_code=404, detail="Grant topilmadi")
+    return scholarship
 
 
-async def _program_card(
-    session: AsyncSession, program: Program, lang: str, today: date
-) -> bytes:
+def _program_version(program: Program, today: date) -> str:
+    return _share_version(today, program.updated_at, program.university.updated_at)
+
+
+def _grant_version(scholarship: Scholarship, today: date) -> str:
+    return _share_version(today, scholarship.updated_at)
+
+
+async def _program_card(session: AsyncSession, program: Program, lang: str, today: date) -> bytes:
     university = program.university
-    cover_url = university.cover_url
-
-    async def load_cover() -> bytes | None:
-        if not cover_url:
-            return None
-        if cover_url.startswith("/api/webapp/images/university/"):
-            return (
-                await session.execute(
-                    select(University.cover_data).where(University.id == university.id)
-                )
-            ).scalar_one_or_none()
-        if cover_url.startswith("/"):
-            return await share_card.fetch_image(_public_origin() + cover_url)
-        return await share_card.fetch_image(cover_url)
-
-    key = (program.id, lang, _share_version(program, today))
     return await share_card.card_jpeg(
-        key, share_card.card_data(program, lang, today), load_cover, _logo_url(university)
+        ("p", program.id, lang, _program_version(program, today)),
+        share_card.card_data(program, lang, today),
+        _cover_loader(session, university.cover_url, University, university.id),
+        _logo_url(university),
     )
 
 
-def _share_lang(lang: str | None) -> str:
-    return lang if lang in share_card.LANGS else "uz"
+async def _grant_card(
+    session: AsyncSession, scholarship: Scholarship, lang: str, today: date
+) -> bytes:
+    return await share_card.card_jpeg(
+        ("g", scholarship.id, lang, _grant_version(scholarship, today)),
+        share_card.grant_card_data(scholarship, lang, today),
+        _cover_loader(session, scholarship.cover_url, Scholarship, scholarship.id),
+        _scholarship_logo(scholarship),
+    )
+
+
+def _jpeg_response(jpeg: bytes) -> Response:
+    return Response(
+        content=jpeg, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    )
 
 
 @router.get("/share/program/{program_id}.jpg", include_in_schema=False)
@@ -959,42 +1002,35 @@ async def share_program_image(
     program_id: int, lang: str = "uz", session: AsyncSession = Depends(get_session)
 ) -> Response:
     program = await _load_share_program(session, program_id)
-    jpeg = await _program_card(session, program, _share_lang(lang), datetime.now(UTC).date())
-    return Response(
-        content=jpeg, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"}
+    return _jpeg_response(
+        await _program_card(session, program, _share_lang(lang), datetime.now(UTC).date())
     )
 
 
-@router.post("/share/program/{program_id}", response_model=ShareMessageOut)
-async def prepare_program_share(
-    program_id: int,
-    user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+@router.get("/share/grant/{scholarship_id}.jpg", include_in_schema=False)
+async def share_grant_image(
+    scholarship_id: int, lang: str = "uz", session: AsyncSession = Depends(get_session)
+) -> Response:
+    scholarship = await _load_share_grant(session, scholarship_id)
+    return _jpeg_response(
+        await _grant_card(session, scholarship, _share_lang(lang), datetime.now(UTC).date())
+    )
+
+
+async def _prepare_share(
+    user: User, *, param: str, image_url: str, caption: str, button: str, item: str
 ) -> ShareMessageOut:
-    """`Telegram.WebApp.shareMessage()` uchun tayyor xabar id'si.
+    """Bot xabarni tayyorlaydi va id'sini qaytaradi.
 
-    Xato bo'lsa (bot sozlanmagan, Telegram rad etdi) 503 — Mini App oddiy
-    havola bilan ulashishga qaytadi."""
-    if not settings.bot_token:
-        raise HTTPException(status_code=503, detail="Bot sozlanmagan")
-    program = await _load_share_program(session, program_id)
-    lang = _share_lang(user.ui_language.value)
-    today = datetime.now(UTC).date()
-    # Rasm oldindan chiziladi: Telegram so'raganda tayyor tursin.
-    await _program_card(session, program, lang, today)
-
+    Xato bo'lsa (bot nomi aniqlanmadi, Telegram rad etdi) 503 — Mini App
+    oddiy havola bilan ulashishga qaytadi."""
     username = await _get_bot_username()
     if not username:
         raise HTTPException(status_code=503, detail="Bot nomi aniqlanmadi")
-    param = f"p_{program.id}_r_{user.telegram_id}"
     link = (
         f"https://t.me/{username}/{settings.miniapp_short_name}?startapp={param}"
         if settings.miniapp_short_name
         else f"https://t.me/{username}?start={param}"
-    )
-    image_url = (
-        f"{_public_origin()}/api/webapp/share/program/{program.id}.jpg"
-        f"?lang={lang}&v={_share_version(program, today)}"
     )
     result = InlineQueryResultPhoto(
         id=uuid4().hex,
@@ -1002,10 +1038,10 @@ async def prepare_program_share(
         thumbnail_url=image_url,
         photo_width=share_card.CARD_W,
         photo_height=share_card.CARD_H,
-        caption=share_card.build_caption(program, lang, today),
+        caption=caption,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text=share_card.button_text(lang), url=link)]]
+            inline_keyboard=[[InlineKeyboardButton(text=button, url=link)]]
         ),
     )
     bot = Bot(token=settings.bot_token)
@@ -1018,11 +1054,64 @@ async def prepare_program_share(
             allow_channel_chats=True,
         )
     except Exception as exc:
-        logger.exception("Ulashish xabarini tayyorlab bo'lmadi (dastur %s)", program.id)
+        logger.exception("Ulashish xabarini tayyorlab bo'lmadi (%s)", item)
         raise HTTPException(status_code=503, detail="Ulashish xabari tayyorlanmadi") from exc
     finally:
         await bot.session.close()
     return ShareMessageOut(id=prepared.id)
+
+
+@router.post("/share/program/{program_id}", response_model=ShareMessageOut)
+async def prepare_program_share(
+    program_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ShareMessageOut:
+    """`Telegram.WebApp.shareMessage()` uchun dastur xabari."""
+    if not settings.bot_token:
+        raise HTTPException(status_code=503, detail="Bot sozlanmagan")
+    program = await _load_share_program(session, program_id)
+    lang = _share_lang(user.ui_language.value)
+    today = datetime.now(UTC).date()
+    # Rasm oldindan chiziladi: Telegram so'raganda tayyor tursin.
+    await _program_card(session, program, lang, today)
+    return await _prepare_share(
+        user,
+        param=f"p_{program.id}_r_{user.telegram_id}",
+        image_url=(
+            f"{_public_origin()}/api/webapp/share/program/{program.id}.jpg"
+            f"?lang={lang}&v={_program_version(program, today)}"
+        ),
+        caption=share_card.build_caption(program, lang, today),
+        button=share_card.button_text(lang, share_card.KIND_PROGRAM),
+        item=f"dastur {program.id}",
+    )
+
+
+@router.post("/share/grant/{scholarship_id}", response_model=ShareMessageOut)
+async def prepare_grant_share(
+    scholarship_id: int,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> ShareMessageOut:
+    """`Telegram.WebApp.shareMessage()` uchun grant xabari."""
+    if not settings.bot_token:
+        raise HTTPException(status_code=503, detail="Bot sozlanmagan")
+    scholarship = await _load_share_grant(session, scholarship_id)
+    lang = _share_lang(user.ui_language.value)
+    today = datetime.now(UTC).date()
+    await _grant_card(session, scholarship, lang, today)
+    return await _prepare_share(
+        user,
+        param=f"g_{scholarship.id}_r_{user.telegram_id}",
+        image_url=(
+            f"{_public_origin()}/api/webapp/share/grant/{scholarship.id}.jpg"
+            f"?lang={lang}&v={_grant_version(scholarship, today)}"
+        ),
+        caption=share_card.build_grant_caption(scholarship, lang, today),
+        button=share_card.button_text(lang, share_card.KIND_GRANT),
+        item=f"grant {scholarship.id}",
+    )
 
 
 @router.post("/programs/{program_id}/view", response_model=ViewCountOut)

@@ -1,14 +1,15 @@
-"""Dastur ulashilganda chatga boradigan xabar: karta rasmi, qisqa matn va tugma.
+"""Dastur va grant ulashilganda chatga boradigan xabar: karta rasmi, qisqa matn, tugma.
 
 Mini App `Telegram.WebApp.shareMessage()` ni chaqiradi; xabarni esa bot
 oldindan tayyorlaydi (`savePreparedInlineMessage`). Xabar uch qismdan iborat:
 
-* **rasm** — Mini App'dagi dastur kartasiga o'xshash: universitet surati,
-  chap tepada davlat (bayroq bilan), o'ng tepada ariza muddati, pastda
-  logotip, dastur nomi va universitet. Server Pillow bilan chizadi;
-* **matn** — daraja, davomiylik, til, muddat, kontrakt va qisqa izoh;
-* **tugma** — "Dastur bilan tanishish": dastur sahifasini to'g'ridan-to'g'ri
-  ochadigan havola (`p_<id>_r_<telegram_id>` — taklif ham hisoblanadi).
+* **rasm** — Mini App'dagi kartaga o'xshash: surat, chap tepada davlat
+  (bayroq bilan), o'ng tepada ariza muddati, pastda logotip, nom va qisqa
+  izoh (universitet yoki grant qoplami). Server Pillow bilan chizadi;
+* **matn** — asosiy faktlar (daraja, muddat, kontrakt/stipendiya) va talablar;
+* **tugma** — "Dastur/Grant bilan tanishish": sahifani to'g'ridan-to'g'ri
+  ochadigan havola (`p_<id>_r_<telegram_id>`, `g_<id>_r_<telegram_id>` —
+  taklif ham hisoblanadi).
 
 Rasm chizish tashqi rasmlarni yuklab oladi (muqova, logotip, bayroq). Biror
 rasm yuklanmasa karta usiz chiziladi — ulashish hech qachon shu sababli
@@ -23,7 +24,7 @@ import io
 import logging
 import time
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -32,6 +33,7 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from app.db.models.program import INSTRUCTION_LANGUAGES, DeadlineType, Program
+from app.db.models.scholarship import Scholarship
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,8 @@ FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 CARD_W, CARD_H = 1200, 600
 MARGIN = 40
 CAPTION_LIMIT = 1024  # Telegram rasm izohi chegarasi
+MAX_REQUIREMENTS = 6  # matndagi talablar ro'yxati — qisqa bo'lsin
+REQUIREMENT_LINE_LIMIT = 150
 
 LANGS = ("uz", "ru", "en")
 
@@ -82,7 +86,25 @@ _TEXT = {
         "tuition": "Kontrakt (yiliga)",
         "free": "Kontrakt: bepul",
         "scholarship": "Dasturning o'z stipendiyasi bor",
-        "button": "📖 Dastur bilan tanishish",
+        "requirements": "Talablar",
+        "gre": "GRE talab qilinadi",
+        "gre_score": "GRE: kamida {score}",
+        "prereq": "Oldingi ta'lim: {major}",
+        "countries": "{n} ta davlat",
+        "coverage": {
+            "full": "To'liq qoplaydi",
+            "partial": "Qisman qoplaydi",
+            "contract_only": "Faqat kontrakt",
+        },
+        "stipend": "Stipendiya",
+        "per": {"month": "oyiga", "year": "yiliga"},
+        "extras": ("Aviachipta", "Sug'urta", "Yotoqxona", "Til kursi"),
+        "req_language": "Til sertifikati: {score}",
+        "req_work": "Kamida {years} yil ish tajribasi",
+        "req_no_work": "Ish tajribasi talab qilinmaydi",
+        "req_age": "Yosh chegarasi: {age} yosh",
+        "button_program": "📖 Dastur bilan tanishish",
+        "button_grant": "📖 Grant bilan tanishish",
     },
     "ru": {
         "closes": "До {date}",
@@ -91,7 +113,25 @@ _TEXT = {
         "tuition": "Контракт (в год)",
         "free": "Обучение бесплатное",
         "scholarship": "Есть собственная стипендия",
-        "button": "📖 Подробнее о программе",
+        "requirements": "Требования",
+        "gre": "Требуется GRE",
+        "gre_score": "GRE: от {score}",
+        "prereq": "Предыдущее образование: {major}",
+        "countries": "Стран: {n}",
+        "coverage": {
+            "full": "Полное покрытие",
+            "partial": "Частичное покрытие",
+            "contract_only": "Только контракт",
+        },
+        "stipend": "Стипендия",
+        "per": {"month": "в месяц", "year": "в год"},
+        "extras": ("Авиабилет", "Страховка", "Общежитие", "Языковой курс"),
+        "req_language": "Языковой сертификат: {score}",
+        "req_work": "Не менее {years} лет опыта работы",
+        "req_no_work": "Опыт работы не требуется",
+        "req_age": "Возрастное ограничение: {age} лет",
+        "button_program": "📖 Подробнее о программе",
+        "button_grant": "📖 Подробнее о гранте",
     },
     "en": {
         "closes": "Closes {date}",
@@ -100,17 +140,38 @@ _TEXT = {
         "tuition": "Tuition (per year)",
         "free": "Tuition-free",
         "scholarship": "Has its own scholarship",
-        "button": "📖 View the program",
+        "requirements": "Requirements",
+        "gre": "GRE required",
+        "gre_score": "GRE: {score}+",
+        "prereq": "Prior degree: {major}",
+        "countries": "{n} countries",
+        "coverage": {
+            "full": "Full coverage",
+            "partial": "Partial coverage",
+            "contract_only": "Tuition only",
+        },
+        "stipend": "Stipend",
+        "per": {"month": "per month", "year": "per year"},
+        "extras": ("Flight", "Insurance", "Dormitory", "Language course"),
+        "req_language": "Language certificate: {score}",
+        "req_work": "At least {years} years of work experience",
+        "req_no_work": "No work experience required",
+        "req_age": "Age limit: {age}",
+        "button_program": "📖 View the program",
+        "button_grant": "📖 View the grant",
     },
 }
+
+KIND_PROGRAM = "program"
+KIND_GRANT = "grant"
 
 
 def _lang(lang: str | None) -> str:
     return lang if lang in LANGS else "uz"
 
 
-def button_text(lang: str | None) -> str:
-    return _TEXT[_lang(lang)]["button"]
+def button_text(lang: str | None, kind: str = KIND_PROGRAM) -> str:
+    return _TEXT[_lang(lang)]["button_grant" if kind == KIND_GRANT else "button_program"]
 
 
 def format_short_date(day: date, lang: str | None) -> str:
@@ -123,28 +184,37 @@ def format_short_date(day: date, lang: str | None) -> str:
     return f"{month} {day.day}"
 
 
-def next_close_date(program: Program, today: date) -> date | None:
+def _next_close(deadlines: Iterable, today: date) -> date | None:
     """Eng yaqin (bugun yoki keyin) ariza yopilish sanasi."""
     closes = sorted(
         d.date_utc.date()
-        for d in program.deadlines
+        for d in deadlines
         if d.type == DeadlineType.APPLICATION_CLOSE and d.date_utc.date() >= today
     )
     return closes[0] if closes else None
 
 
-def country_name(program: Program, lang: str | None) -> str:
-    country = program.university.country
-    lang = _lang(lang)
+def next_close_date(program: Program, today: date) -> date | None:
+    return _next_close(program.deadlines, today)
+
+
+def _closes_label(close: date | None, lang: str) -> str | None:
+    return _TEXT[lang]["closes"].format(date=format_short_date(close, lang)) if close else None
+
+
+def _country_label(country, lang: str) -> str:
     return getattr(country, f"name_{lang}", None) or country.name_uz
 
 
-def _notes(program: Program, lang: str) -> str | None:
-    by_lang = {"ru": program.notes_ru, "en": program.notes_en}
-    return by_lang.get(lang) or program.notes
+def country_name(program: Program, lang: str | None) -> str:
+    return _country_label(program.university.country, _lang(lang))
 
 
-def _snippet(text: str, limit: int) -> str:
+def _esc(value: object) -> str:
+    return html.escape(str(value), quote=False)
+
+
+def _short(text: str, limit: int) -> str:
     text = " ".join(text.split())
     if len(text) <= limit:
         return text
@@ -156,48 +226,177 @@ def _amount(value: float) -> str:
     return f"{round(value):,}".replace(",", " ")
 
 
+def _text_lines(text: str | None) -> list[str]:
+    return [line.strip(" •-–—\t") for line in (text or "").splitlines() if line.strip(" •-–—\t")]
+
+
+def _finish(head: list[str], requirements: list[str], lang: str) -> str:
+    """Faktlar + talablar ro'yxati; Telegram chegarasidan oshsa talablar qisqaradi."""
+    caption = "\n".join(head)
+    items = [_short(r, REQUIREMENT_LINE_LIMIT) for r in requirements if r][:MAX_REQUIREMENTS]
+    while items:
+        block = f"\n\n📋 <b>{_esc(_TEXT[lang]['requirements'])}:</b>\n" + "\n".join(
+            f"• {_esc(item)}" for item in items
+        )
+        if len(caption) + len(block) <= CAPTION_LIMIT:
+            return caption + block
+        items.pop()
+    return caption[:CAPTION_LIMIT]
+
+
+def program_requirements(program: Program, lang: str) -> list[str]:
+    words = _TEXT[lang]
+    items: list[str] = []
+    req = program.requirement
+    if req is not None:
+        scores = [
+            f"IELTS {float(req.ielts_min):g}" if req.ielts_min is not None else "",
+            f"TOEFL {req.toefl_min}" if req.toefl_min is not None else "",
+        ]
+        score = " / ".join(s for s in scores if s)
+        if score:
+            items.append(words["req_language"].format(score=score))
+        if req.gre_required:
+            items.append(
+                words["gre_score"].format(score=req.gre_min)
+                if req.gre_min is not None
+                else words["gre"]
+            )
+        if req.prereq_major:
+            items.append(words["prereq"].format(major=req.prereq_major))
+    items.extend(_text_lines(program.requirements_text))
+    return items
+
+
 def build_caption(program: Program, lang: str | None, today: date | None = None) -> str:
-    """Rasm ostidagi qisqa matn (HTML)."""
+    """Dastur rasmi ostidagi qisqa matn (HTML): faktlar va talablar."""
     lang = _lang(lang)
     today = today or datetime.now(UTC).date()
     words = _TEXT[lang]
-    def esc(value: str) -> str:
-        return html.escape(value, quote=False)
     university = program.university
 
-    duration = float(program.duration_years)
-    duration_text = f"{duration:g} {words['years']}"
+    duration = f"{float(program.duration_years):g} {words['years']}"
     language = program.language_of_instruction
     if lang == "uz":
         language = INSTRUCTION_LANGUAGES.get(language, language)
     degree = words["degree"].get(program.degree_level.value, program.degree_level.value)
 
-    lines = [
-        f"<b>{esc(program.name)}</b>",
-        f"🏛 {esc(university.name)} · {esc(university.city)}, {esc(country_name(program, lang))}",
+    head = [
+        f"<b>{_esc(program.name)}</b>",
+        f"🏛 {_esc(university.name)} · {_esc(university.city)}, {_esc(country_name(program, lang))}",
         "",
-        f"🎓 {esc(degree)} · {esc(duration_text)} · {esc(language)}",
+        f"🎓 {_esc(degree)} · {_esc(duration)} · {_esc(language)}",
     ]
-    close = next_close_date(program, today)
-    if close:
-        lines.append(f"📅 {esc(words['closes'].format(date=format_short_date(close, lang)))}")
+    closes = _closes_label(next_close_date(program, today), lang)
+    if closes:
+        head.append(f"📅 {_esc(closes)}")
     cost = program.cost
     if cost is not None:
         if float(cost.tuition_amount) == 0:
-            lines.append(f"💰 {esc(words['free'])}")
+            head.append(f"💰 {_esc(words['free'])}")
         else:
             amount = f"{_amount(float(cost.tuition_amount))} {cost.currency}"
-            lines.append(f"💰 {esc(words['tuition'])}: {esc(amount)}")
+            head.append(f"💰 {_esc(words['tuition'])}: {_esc(amount)}")
     if program.has_scholarship:
-        lines.append(f"🏅 {esc(words['scholarship'])}")
+        head.append(f"🏅 {_esc(words['scholarship'])}")
+    return _finish(head, program_requirements(program, lang), lang)
 
-    caption = "\n".join(lines)
-    notes = _notes(program, lang)
-    room = CAPTION_LIMIT - len(caption) - 2
-    if notes and room > 60:
-        # HTML belgilari (&amp; va h.k.) uzunlikni oshiradi — zaxira qoldiriladi.
-        caption += "\n\n" + esc(_snippet(notes, min(260, room - 40)))
-    return caption
+
+# ---- Grant ----
+
+
+def _grant_localized(scholarship: Scholarship, field: str, lang: str) -> str | None:
+    if lang in ("ru", "en"):
+        translated = getattr(scholarship, f"{field}_{lang}", None)
+        if translated:
+            return translated
+    return getattr(scholarship, field)
+
+
+def grant_countries(scholarship: Scholarship, lang: str) -> str | None:
+    countries = list(scholarship.countries)
+    if not countries:
+        return None
+    if len(countries) > 1:
+        return _TEXT[lang]["countries"].format(n=len(countries))
+    return _country_label(countries[0], lang)
+
+
+def grant_stipend(scholarship: Scholarship, lang: str) -> str | None:
+    if not scholarship.stipend_amount:
+        return None
+    amount = _amount(float(scholarship.stipend_amount))
+    if scholarship.stipend_max and float(scholarship.stipend_max) > float(
+        scholarship.stipend_amount
+    ):
+        amount = f"{amount}–{_amount(float(scholarship.stipend_max))}"
+    text = f"{amount} {scholarship.currency}"
+    period = _TEXT[lang]["per"].get(scholarship.stipend_period or "")
+    return f"{text} {period}" if period else text
+
+
+def grant_coverage(scholarship: Scholarship, lang: str) -> str:
+    value = getattr(scholarship.coverage_type, "value", scholarship.coverage_type)
+    return _TEXT[lang]["coverage"].get(value, str(value))
+
+
+def grant_requirements(scholarship: Scholarship, lang: str) -> list[str]:
+    words = _TEXT[lang]
+    items: list[str] = []
+    scores = [
+        f"IELTS {float(scholarship.ielts_min):g}" if scholarship.ielts_min is not None else "",
+        f"TOEFL {scholarship.toefl_min}" if scholarship.toefl_min is not None else "",
+    ]
+    score = " / ".join(s for s in scores if s)
+    if score:
+        items.append(words["req_language"].format(score=score))
+    if scholarship.work_experience_years is not None:
+        items.append(
+            words["req_no_work"]
+            if scholarship.work_experience_years == 0
+            else words["req_work"].format(years=scholarship.work_experience_years)
+        )
+    if scholarship.age_limit is not None:
+        items.append(words["req_age"].format(age=scholarship.age_limit))
+    items.extend(_text_lines(_grant_localized(scholarship, "requirements_text", lang)))
+    return items
+
+
+def build_grant_caption(
+    scholarship: Scholarship, lang: str | None, today: date | None = None
+) -> str:
+    """Grant rasmi ostidagi qisqa matn (HTML): faktlar va talablar."""
+    lang = _lang(lang)
+    today = today or datetime.now(UTC).date()
+    words = _TEXT[lang]
+    head = [f"<b>{_esc(scholarship.name)}</b>"]
+    countries = list(scholarship.countries)
+    if countries:
+        names = ", ".join(_country_label(c, lang) for c in countries[:4])
+        if len(countries) > 4:
+            names += f" +{len(countries) - 4}"
+        head.append(f"🌍 {_esc(names)}")
+    head.append("")
+    degrees = [words["degree"].get(d, d) for d in (scholarship.degree_levels or [])]
+    facts = [", ".join(degrees)] if degrees else []
+    facts.append(grant_coverage(scholarship, lang))
+    head.append(f"🎓 {_esc(' · '.join(facts))}")
+    closes = _closes_label(_next_close(scholarship.deadlines, today), lang)
+    if closes:
+        head.append(f"📅 {_esc(closes)}")
+    stipend = grant_stipend(scholarship, lang)
+    if stipend:
+        head.append(f"💰 {_esc(words['stipend'])}: {_esc(stipend)}")
+    flags = (
+        scholarship.extras_flight,
+        scholarship.extras_insurance,
+        scholarship.extras_dormitory,
+        scholarship.extras_language_course,
+    )
+    extras = [name for on, name in zip(flags, words["extras"]) if on]
+    if extras:
+        head.append(f"🎁 {_esc(' · '.join(extras))}")
+    return _finish(head, grant_requirements(scholarship, lang), lang)
 
 
 # ---- Rasm ----
@@ -206,24 +405,45 @@ def build_caption(program: Program, lang: str | None, today: date | None = None)
 @dataclass
 class CardData:
     title: str
-    university: str
-    country: str
+    subtitle: str
+    country: str | None
     iso_code: str
     deadline: str | None
+    # Logotip yo'q bo'lsa bosh harflar shu nomdan olinadi.
+    initials_of: str = ""
 
 
 def card_data(program: Program, lang: str | None, today: date | None = None) -> CardData:
     lang = _lang(lang)
     today = today or datetime.now(UTC).date()
-    close = next_close_date(program, today)
     return CardData(
         title=program.name,
-        university=program.university.name,
+        subtitle=program.university.name,
         country=country_name(program, lang),
         iso_code=(program.university.country.iso_code or "").lower(),
-        deadline=(
-            _TEXT[lang]["closes"].format(date=format_short_date(close, lang)) if close else None
-        ),
+        deadline=_closes_label(next_close_date(program, today), lang),
+        initials_of=program.university.name,
+    )
+
+
+def grant_card_data(
+    scholarship: Scholarship, lang: str | None, today: date | None = None
+) -> CardData:
+    lang = _lang(lang)
+    today = today or datetime.now(UTC).date()
+    countries = list(scholarship.countries)
+    subtitle = grant_coverage(scholarship, lang)
+    stipend = grant_stipend(scholarship, lang)
+    if stipend:
+        subtitle = f"{subtitle} · {stipend}"
+    return CardData(
+        title=scholarship.name,
+        subtitle=subtitle,
+        country=grant_countries(scholarship, lang),
+        # Bir nechta davlat bo'lsa bayroq qo'yilmaydi.
+        iso_code=(countries[0].iso_code or "").lower() if len(countries) == 1 else "",
+        deadline=_closes_label(_next_close(scholarship.deadlines, today), lang),
+        initials_of=scholarship.name,
     )
 
 
@@ -375,24 +595,25 @@ def render_card(
     _shade(canvas)
     draw = ImageDraw.Draw(canvas)
 
-    _pill(draw, canvas, MARGIN, MARGIN, data.country, (17, 24, 39), flag=_open(flag))
+    if data.country:
+        _pill(draw, canvas, MARGIN, MARGIN, data.country, (17, 24, 39), flag=_open(flag))
     if data.deadline:
         _pill(draw, canvas, CARD_W - MARGIN, MARGIN, data.deadline, (37, 99, 235), align_right=True)
 
     logo_size = 132
     logo_y = CARD_H - MARGIN - logo_size
-    _logo_box(canvas, _open(logo), data.university, MARGIN, logo_y)
+    _logo_box(canvas, _open(logo), data.initials_of or data.title, MARGIN, logo_y)
     draw = ImageDraw.Draw(canvas)
 
     text_x = MARGIN + logo_size + 30
     text_w = CARD_W - text_x - MARGIN
     title_font, title_lines = _fit_title(draw, data.title, text_w)
     uni_font = _font("Medium", 34)
-    university = _ellipsize(draw, data.university, uni_font, text_w)
+    subtitle = _ellipsize(draw, data.subtitle, uni_font, text_w)
 
     line_h = round(title_font.size * 1.14)
     bottom = CARD_H - MARGIN - 6
-    draw.text((text_x, bottom), university, font=uni_font, fill=(214, 220, 230), anchor="ls")
+    draw.text((text_x, bottom), subtitle, font=uni_font, fill=(214, 220, 230), anchor="ls")
     y = bottom - uni_font.size - 18
     for line in reversed(title_lines):
         draw.text((text_x, y), line, font=title_font, fill="white", anchor="ls")
@@ -459,7 +680,7 @@ async def card_jpeg(
     load_cover: Callable[[], Awaitable[bytes | None]],
     logo_url: str | None,
 ) -> bytes:
-    """Tayyor karta (jarayon ichida keshlanadi: bir dastur ko'p ulashiladi).
+    """Tayyor karta (jarayon ichida keshlanadi: bir sahifa ko'p ulashiladi).
 
     Muqova faqat keshda yo'q bo'lsa yuklanadi (`load_cover`)."""
     cached = _card_cache.get(key)

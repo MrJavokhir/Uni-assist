@@ -1,0 +1,160 @@
+{% extends "sqladmin/layout.html" %}
+
+{% macro pct(value) %}{% if value is none %}<span class="text-muted">—</span>{% else %}{{ value }}%{% endif %}{% endmacro %}
+{% macro money(value) %}{% if value is none %}<span class="text-muted">—</span>{% else %}${{ "{:,.2f}".format(value) }}{% endif %}{% endmacro %}
+{% macro num(value) %}{{ "" if value is none else value }}{% endmacro %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  {# ---------- Filtr ---------- #}
+  <div class="card mb-3">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-6 col-md-auto">
+          <label class="form-label">Dan</label>
+          <input type="date" name="from" class="form-control" value="{{ report.date_from.isoformat() }}">
+        </div>
+        <div class="col-6 col-md-auto">
+          <label class="form-label">Gacha</label>
+          <input type="date" name="to" class="form-control" value="{{ report.date_to.isoformat() }}">
+        </div>
+        <div class="col-12 col-md-auto">
+          <label class="form-label">Guruhlash</label>
+          <select name="group" class="form-select">
+            {% for key, label in group_labels.items() %}
+            <option value="{{ key }}" {% if report.group == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-auto d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Ko'rsatish</button>
+          <a class="btn btn-outline-secondary" href="?{{ csv_query }}"><i class="fa-solid fa-download me-1"></i>CSV</a>
+        </div>
+        <div class="col-12 col-md text-md-end d-flex gap-2 justify-content-md-end flex-wrap">
+          <a class="btn btn-outline-primary" href="/admin/links"><i class="fa-solid fa-link me-1"></i>Havola generatori</a>
+          <a class="btn btn-outline-primary" href="/admin/campaign-cost/list"><i class="fa-solid fa-coins me-1"></i>Xarajatlar</a>
+        </div>
+      </form>
+      <div class="text-muted small mt-2">
+        Kohort — foydalanuvchi birinchi marta kelgan sana (Toshkent vaqti). Bu tizimdan oldingi
+        ("legacy") foydalanuvchilar kirmaydi. Xarajatlar USD'da, har yozuvning o'z kursi bilan.
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Voronka ---------- #}
+  <div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">Voronka</h3></div>
+    <div class="card-body">
+      <div class="ua-funnel">
+        {% for step in report.funnel %}
+        <div class="ua-funnel-step">
+          <div class="ua-funnel-label">{{ step.label }}</div>
+          <div class="ua-funnel-value">{{ step.count }}</div>
+          <div class="ua-funnel-bar"><span style="width: {{ ((step.count * 100 / report.funnel[0].count) if report.funnel[0].count else 0) | round | int }}%"></span></div>
+          <div class="text-muted small">
+            {% if loop.first %}&nbsp;{% elif step.step_pct is none %}—{% else %}oldingidan {{ step.step_pct }}%{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {# ---------- Jadval ---------- #}
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Manbalar bo'yicha</h3>
+      <div class="card-actions text-muted small">Ustun nomini bosib saralang</div>
+    </div>
+    {% if report.rows %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table ua-sortable" id="sources-table">
+        <thead>
+          <tr>
+            <th data-type="text">{{ group_labels[report.group] }}</th>
+            <th class="text-end" data-type="num">Yangi userlar</th>
+            <th class="text-end" data-type="num">Kanaldan o'tdi</th>
+            <th class="text-end" data-type="num">Mini app ochdi</th>
+            <th class="text-end" data-type="num">Filtr to'ldirdi</th>
+            <th class="text-end" data-type="num">Saqladi</th>
+            <th class="text-end" data-type="num" title="Keyingi kalendar kunida faol bo'lganlar (yetilgan kohort)">D1</th>
+            <th class="text-end" data-type="num" title="7–13-kunlarda faol bo'lganlar (kamida 14 kun o'tgan kohort)">D7</th>
+            <th class="text-end" data-type="num">Xarajat</th>
+            <th class="text-end" data-type="num" title="Xarajat / filtr to'ldirganlar">1 faol user narxi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in report.rows %}
+          <tr>
+            <td data-sort="{{ row.key }}"><strong>{{ row.key }}</strong>{% if row.key != row.source and row.source %}<div class="text-muted small">{{ row.source }}</div>{% endif %}</td>
+            <td class="text-end" data-sort="{{ row.users }}">{{ row.users }}</td>
+            <td class="text-end" data-sort="{{ num(row.gate_pct) }}">{{ pct(row.gate_pct) }}</td>
+            <td class="text-end" data-sort="{{ num(row.app_pct) }}">{{ pct(row.app_pct) }}</td>
+            <td class="text-end" data-sort="{{ num(row.filter_pct) }}">{{ pct(row.filter_pct) }} <span class="text-muted small">({{ row.filter }})</span></td>
+            <td class="text-end" data-sort="{{ num(row.save_pct) }}">{{ pct(row.save_pct) }}</td>
+            <td class="text-end" data-sort="{{ num(row.d1_pct) }}">{{ pct(row.d1_pct) }}</td>
+            <td class="text-end" data-sort="{{ num(row.d7_pct) }}">{{ pct(row.d7_pct) }}</td>
+            <td class="text-end" data-sort="{{ num(row.cost) }}">{{ money(row.cost) }}</td>
+            <td class="text-end" data-sort="{{ num(row.cost_per_active) }}">{{ money(row.cost_per_active) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        {% set t = report.total %}
+        <tfoot>
+          <tr class="fw-bold">
+            <td>Jami</td>
+            <td class="text-end">{{ t.users }}</td>
+            <td class="text-end">{{ pct(t.gate_pct) }}</td>
+            <td class="text-end">{{ pct(t.app_pct) }}</td>
+            <td class="text-end">{{ pct(t.filter_pct) }} <span class="text-muted small">({{ t.filter }})</span></td>
+            <td class="text-end">{{ pct(t.save_pct) }}</td>
+            <td class="text-end">{{ pct(t.d1_pct) }}</td>
+            <td class="text-end">{{ pct(t.d7_pct) }}</td>
+            <td class="text-end">{{ money(t.cost) }}</td>
+            <td class="text-end">{{ money(t.cost_per_active) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="ua-empty">Bu oraliqda yangi foydalanuvchi yo'q.</div>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+
+<script>
+  // Ustun bo'yicha saralash: bir bosish — kamayish, ikkinchisi — o'sish.
+  (function () {
+    var table = document.getElementById("sources-table");
+    if (!table) return;
+    var body = table.tBodies[0];
+    table.querySelectorAll("thead th").forEach(function (th, index) {
+      th.style.cursor = "pointer";
+      th.addEventListener("click", function () {
+        var desc = th.dataset.dir !== "desc";
+        table.querySelectorAll("thead th").forEach(function (o) { delete o.dataset.dir; });
+        th.dataset.dir = desc ? "desc" : "asc";
+        var numeric = th.dataset.type === "num";
+        var rows = Array.prototype.slice.call(body.rows);
+        rows.sort(function (a, b) {
+          var x = a.cells[index].dataset.sort, y = b.cells[index].dataset.sort;
+          if (numeric) {
+            // Bo'sh qiymat ("—") har doim pastda.
+            var xn = x === "" ? null : parseFloat(x), yn = y === "" ? null : parseFloat(y);
+            if (xn === null) return 1;
+            if (yn === null) return -1;
+            return desc ? yn - xn : xn - yn;
+          }
+          return desc ? y.localeCompare(x) : x.localeCompare(y);
+        });
+        rows.forEach(function (r) { body.appendChild(r); });
+      });
+    });
+  })();
+</script>
+{% endblock %}

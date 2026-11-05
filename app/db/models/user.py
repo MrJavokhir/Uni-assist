@@ -14,6 +14,7 @@ from sqlalchemy import (
     Table,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, str_enum
@@ -180,6 +181,23 @@ class User(TimestampMixin, Base):
     # bir marta ishlaydi.
     referral_confirmed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
+    )
+
+    # ---- Atributsiya (app/services/attribution_service.py) ----
+    # `first_*` faqat BIRINCHI kirishda yoziladi va keyin hech qachon
+    # o'zgarmaydi. Mavjud foydalanuvchilar migratsiyada "legacy" oldi.
+    first_source: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    first_param_raw: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    first_seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    # Har kirishda yangilanadi (oxirgi kirish vaqti — `last_seen_at`).
+    last_source: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    # Deep link ochishi kerak bo'lgan ekran: /start da yoziladi, Mini App
+    # o'sha ekranga yetganda (kanal kerak bo'lsa — undan o'tgach) tozalanadi.
+    pending_target: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    pending_target_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )
 
     field: Mapped["Field | None"] = relationship()

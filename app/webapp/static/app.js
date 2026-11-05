@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 112;
+const ASSET_V = 113;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -229,6 +229,10 @@ const I18N = {
     "filter.apply": "Qo'llash",
     "home.section_shortcuts": "Tezkor amallar",
     "page.views": "Ko'rishlar",
+    "share.button": "Do'stga yuborish",
+    "share.text": "Uni Assist'da ko'r",
+    "tempfilter.caption": "Havoladagi filtr",
+    "tempfilter.clear": "Filtrni olib tashlash",
     "home.quick_mentor": "Mentor bilan 1:1 maslahat",
     "home.quick_full": "Arizada to'liq yordam",
     "nav.kit": "Admission Kit",
@@ -677,6 +681,10 @@ const I18N = {
     "filter.apply": "Применить",
     "home.section_shortcuts": "Быстрые действия",
     "page.views": "Просмотры",
+    "share.button": "Отправить другу",
+    "share.text": "Посмотри в Uni Assist",
+    "tempfilter.caption": "Фильтр из ссылки",
+    "tempfilter.clear": "Убрать фильтр",
     "home.quick_mentor": "Консультация с ментором 1:1",
     "home.quick_full": "Полное сопровождение заявки",
     "nav.kit": "Admission Kit",
@@ -1125,6 +1133,10 @@ const I18N = {
     "filter.apply": "Apply",
     "home.section_shortcuts": "Quick actions",
     "page.views": "Views",
+    "share.button": "Send to a friend",
+    "share.text": "Check it out in Uni Assist",
+    "tempfilter.caption": "Filter from the link",
+    "tempfilter.clear": "Remove filter",
     "home.quick_mentor": "1-on-1 mentor session",
     "home.quick_full": "Full application support",
     "nav.kit": "Admission Kit",
@@ -1577,6 +1589,133 @@ async function api(path, opts) {
   }
   if (res.status === 204) return null;
   return res.json();
+}
+
+// ---- Hodisalar (analitika) ----
+// Faqat serverdagi oq ro'yxatdagilar: dastur/grant ochildi, ulashildi.
+// Javob kutilmaydi va xato e'tiborsiz qoldiriladi — analitika ilovani
+// hech qachon sekinlashtirmasin yoki buzmasin.
+function track(name, props) {
+  try {
+    api("/events", { method: "POST", body: JSON.stringify({ name: name, props: props || null }) }).catch(
+      () => {}
+    );
+  } catch (e) {
+    /* e'tiborsiz */
+  }
+}
+
+// "Do'stga yuborish": `p_<id>_r_<telegram_id>` / `g_<id>_r_<telegram_id>`.
+// Mini App qisqa nomi sozlangan bo'lsa havola ilovani to'g'ridan-to'g'ri
+// o'sha sahifada ochadi (`startapp`), aks holda bot chati orqali (`start`).
+function shareLink(kind, id) {
+  const username = profile && profile.bot_username;
+  if (!username) return null;
+  const param = `${kind}_${Number(id)}${profile.share_ref ? `_r_${profile.share_ref}` : ""}`;
+  const bot = encodeURIComponent(username);
+  return profile.app_short_name
+    ? `https://t.me/${bot}/${encodeURIComponent(profile.app_short_name)}?startapp=${param}`
+    : `https://t.me/${bot}?start=${param}`;
+}
+
+function shareItem(kind, id, title) {
+  haptic("light");
+  const link = shareLink(kind, id);
+  if (!link) {
+    showToast(t("account.invite_unavailable"));
+    return;
+  }
+  track("share_clicked", { type: kind === "p" ? "program" : "grant", id: Number(id) });
+  const text = `${title} — ${t("share.text")}`;
+  const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  try {
+    tg.openTelegramLink(url);
+  } catch (e) {
+    window.open(url, "_blank");
+  }
+}
+
+// ---- Havoladan kelgan vaqtinchalik filtr ----
+// Reklama havolasi dasturlarni masalan "Germaniya + Huquq" bilan ochadi.
+// Bu faqat KO'RINISH: profildagi filtr o'zgarmaydi, chipdagi ✕ yoki pastki
+// menyudan boshqa bo'limga o'tish uni olib tashlaydi.
+let tempMatchFilter = null;
+
+function matchPath() {
+  if (!tempMatchFilter) return "/match";
+  const params = new URLSearchParams();
+  if (tempMatchFilter.country_id) params.set("country_id", tempMatchFilter.country_id);
+  if (tempMatchFilter.field_id) params.set("field_id", tempMatchFilter.field_id);
+  const query = params.toString();
+  return query ? `/match?${query}` : "/match";
+}
+
+function tempFilterChip() {
+  if (!tempMatchFilter) return "";
+  const country = countries.find((c) => String(c.id) === String(tempMatchFilter.country_id));
+  const major = majors.find((m) => String(m.id) === String(tempMatchFilter.field_id));
+  const parts = [country ? countryName(country) : "", major ? fieldName(major) : ""].filter(Boolean);
+  return `
+    <div class="tf-bar">
+      <span class="tf-caption">${t("tempfilter.caption")}</span>
+      <button type="button" class="tf-chip" id="tf-clear" aria-label="${escapeHtml(t("tempfilter.clear"))}">
+        ${country ? `<span class="chip-flag">${flag(country.iso_code)}</span>` : ""}
+        <span>${escapeHtml(parts.join(" · "))}</span>
+        ${icon("close")}
+      </button>
+    </div>`;
+}
+
+function bindTempFilter(el) {
+  el.querySelector("#tf-clear")?.addEventListener("click", () => {
+    haptic("light");
+    tempMatchFilter = null;
+    renderMatch().catch((err) => showToast(err.message));
+  });
+}
+
+// ---- Deep link: /entry (server `pending_target` / `startapp`) ----
+async function loadEntry() {
+  try {
+    return await api("/entry", { method: "POST" });
+  } catch (e) {
+    // Yo'naltirish ishlamasa ham ilova oddiy ochiladi.
+    console.error(e);
+    return null;
+  }
+}
+
+async function applyEntryTarget(entry) {
+  const target = entry && entry.target;
+  if (!target) return false;
+  if (target.screen === "programs") {
+    // Natijalar — "Find my programs" kabi avval majburiy kanal. Server
+    // `pending_target`ni kanaldan o'tilgandagina tozalaydi: dialog yopib
+    // ketilsa, keyingi ochilishda shu yerga qaytiladi.
+    if (entry.needs_gate && !(await ensureSubscribed())) return false;
+    setPendingResults(false);
+    tempMatchFilter =
+      target.country_id || target.field_id
+        ? { country_id: target.country_id || null, field_id: target.field_id || null }
+        : null;
+    await switchTab("match");
+    return true;
+  }
+  if (target.screen === "grants") {
+    await switchTab("scholarships");
+    return true;
+  }
+  if (target.screen === "program" && target.id) {
+    await switchTab("home");
+    openProgramPage(Number(target.id));
+    return true;
+  }
+  if (target.screen === "grant" && target.id) {
+    await switchTab("scholarships");
+    await openGrantById(Number(target.id));
+    return true;
+  }
+  return false;
 }
 
 function showToast(message) {
@@ -2304,7 +2443,18 @@ async function renderMatch() {
   const el = document.getElementById("view-match");
   el.innerHTML = skeletons(4);
 
-  const matches = await api("/match");
+  const matches = await api(matchPath());
+  if (!matches.length && tempMatchFilter) {
+    el.innerHTML =
+      tempFilterChip() +
+      `
+      <div class="empty">
+        <div class="empty-ico">${icon("search")}</div>
+        <div class="empty-title">${t("match.empty_title")}</div>
+      </div>`;
+    bindTempFilter(el);
+    return;
+  }
   if (!matches.length) {
     // Ixcham filtr bu yerda AYNIQSA kerak: ro'yxat bo'sh bo'lsa, demak
     // tanlov juda tor va uni o'zgartirish kerak. Ilgari buning uchun
@@ -2322,8 +2472,7 @@ async function renderMatch() {
   }
 
   el.innerHTML =
-    noFilterNote(matches.length) +
-    miniFilterBar() +
+    (tempMatchFilter ? tempFilterChip() : noFilterNote(matches.length) + miniFilterBar()) +
     `<div class="pr-tools">
        <div class="pr-search">${icon("search")}<input type="search" id="match-search" placeholder="${t(
          "match.search_placeholder"
@@ -2364,6 +2513,7 @@ async function renderMatch() {
 
   bindFilterCta(el);
   bindMiniFilter(el);
+  bindTempFilter(el);
 }
 
 // Qidiruv va saralash tab almashganda saqlanib qoladi.
@@ -2942,6 +3092,7 @@ function openProgramPage(programId) {
   // Mentor formasidan qaytilganda qaytish manzili o'zgarmaydi.
   if (currentTab !== "program" && currentTab !== "mentor") programReturnTab = currentTab;
   programPageId = Number(programId);
+  track("program_viewed", { id: programPageId });
   closeSheet();
   return switchTab("program");
 }
@@ -3251,6 +3402,9 @@ async function renderProgramPage() {
       <button type="button" class="pg-save${p.saved ? " is-saved" : ""}" id="sheet-save" ${
         p.saved ? "disabled" : ""
       } aria-label="${escapeHtml(t(p.saved ? "match.saved" : "match.save"))}">${icon("bookmark")}</button>
+      <button type="button" class="pg-save pg-share" id="pg-share" aria-label="${escapeHtml(
+        t("share.button")
+      )}">${icon("send")}</button>
       <button type="button" class="btn btn-accent pg-open" id="sheet-open-site">
         ${t("program.official_page")}
       </button>
@@ -3258,6 +3412,7 @@ async function renderProgramPage() {
   `;
 
   document.getElementById("pg-back").addEventListener("click", leaveProgramPage);
+  document.getElementById("pg-share").addEventListener("click", () => shareItem("p", p.id, p.name));
   document.getElementById("pg-mentor")?.addEventListener("click", () => {
     haptic("light");
     openMentor(mentorCountry ? "form" : "countries", {
@@ -3320,6 +3475,7 @@ function openScholarshipPage(s) {
   haptic("light");
   if (currentTab !== "grant" && currentTab !== "mentor") grantReturnTab = currentTab;
   grantPageData = s;
+  track("grant_viewed", { id: s.id });
   closeSheet();
   return switchTab("grant");
 }
@@ -3533,6 +3689,9 @@ function renderGrantPage() {
     </div>
 
     <div class="pg-bar">
+      <button type="button" class="pg-save pg-share" id="pg-share" aria-label="${escapeHtml(
+        t("share.button")
+      )}">${icon("send")}</button>
       <button type="button" class="btn btn-accent pg-open" id="grant-open-site">
         ${t("scholarships.official_site")}
       </button>
@@ -3540,6 +3699,7 @@ function renderGrantPage() {
   `;
 
   document.getElementById("pg-back").addEventListener("click", leaveGrantPage);
+  document.getElementById("pg-share").addEventListener("click", () => shareItem("g", s.id, s.name));
   document.getElementById("grant-open-site").addEventListener("click", () => {
     haptic("light");
     // Telegram ichida tashqi havolani to'g'ri ochish usuli.
@@ -6181,7 +6341,10 @@ async function switchTab(tabName) {
 
 function bindTabs() {
   document.querySelectorAll(".tab").forEach((btn) => {
-    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    btn.addEventListener("click", () => {
+      tempMatchFilter = null;
+      switchTab(btn.dataset.tab);
+    });
   });
 }
 
@@ -6293,6 +6456,11 @@ async function init() {
   tabbar.setAttribute("aria-busy", "true");
 
   await loadProfile();
+  // Deep link maqsadi (reklama/ulashish havolasi). Profil yuklangandan
+  // KEYIN: ikkalasi parallel ketsa yangi foydalanuvchi ikki marta
+  // yaratilishga urinardi.
+  const entry = await loadEntry();
+  const linked = Boolean(deepLinkTarget() || (entry && entry.target));
   // Katalog so'rovlari bir-biriga bog'liq emas — parallel yuklanadi.
   // Ilgari beshta so'rov ketma-ket kutilardi.
   catalogReady = Promise.all([loadCountries(), loadMajors(), loadStudyLanguages(), loadMentorConfig()]);
@@ -6302,8 +6470,8 @@ async function init() {
   // chiqib, 2-3 soniyadan keyin onboarding'ga "sakrab" o'tardi.
   // Bot xabaridan kelingan bo'lsa — darhol o'sha joyga: odam aniq maqsad bilan kelgan.
   // Kanalga o'tib ilova yopilgan bo'lsa — o'sha joyga: natijalar + obuna dialogi.
-  const resume = !deepLinkTarget() && hasPendingResults() && hasFilter();
-  const onboarding = !deepLinkTarget() && !resume && needsOnboarding();
+  const resume = !linked && hasPendingResults() && hasFilter();
+  const onboarding = !linked && !resume && needsOnboarding();
   if (onboarding) await switchTab("filter");
   document.body.classList.remove("booting");
   startBrandRotation();
@@ -6313,7 +6481,8 @@ async function init() {
   bindTabs();
 
   if (!onboarding) {
-    const routed = await applyDeepLink();
+    let routed = await applyDeepLink();
+    if (!routed) routed = await applyEntryTarget(entry);
     if (!routed) await renderHome();
   }
   if (resume) resumeFirstMatches().catch((err) => showToast(err.message));

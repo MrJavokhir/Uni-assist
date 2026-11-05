@@ -1,4 +1,5 @@
 from app.db.base import Base
+from app.db.models.analytics import CampaignCost, CampaignLink, Event
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.content_view import ContentView
 from app.db.models.country import Country
@@ -80,6 +81,8 @@ __all__ = [
     "BalanceTransaction",
     "Base",
     "BotAdmin",
+    "CampaignCost",
+    "CampaignLink",
     "ComplaintReason",
     "ComplaintStatus",
     "ContentView",
@@ -90,6 +93,7 @@ __all__ = [
     "DeadlineSuggestion",
     "DeadlineType",
     "DegreeLevel",
+    "Event",
     "Field",
     "GpaScale",
     "HomeUpdate",

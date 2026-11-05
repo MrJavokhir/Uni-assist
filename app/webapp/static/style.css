@@ -2700,6 +2700,28 @@ body.tg-back .pg-back { display: none; }
 }
 .pg-save .ico { width: 22px; height: 22px; }
 .pg-save.is-saved { background: var(--accent); color: var(--on-accent); }
+.pg-share .ico { width: 21px; height: 21px; }
+
+/* Havoladan kelgan vaqtinchalik filtr (profil filtriga tegmaydi). */
+.tf-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 2px 0 12px; }
+.tf-caption { font-size: 12.5px; color: var(--hint); }
+.tf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 10px 6px 12px;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tf-chip .ico { width: 16px; height: 16px; opacity: 0.8; }
+.tf-chip .chip-flag { display: inline-flex; }
 .pg-save.is-saved .ico { fill: currentColor; }
 .pg-open { flex: 1; padding: 15px; font-size: 16px; border-radius: var(--r-md); }
 

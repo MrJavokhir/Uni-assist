@@ -706,3 +706,26 @@ body {
   .card-body > .btn-group > .btn { flex: none; white-space: nowrap; }
   .ua-kit-status { min-width: 120px; }
 }
+
+/* ---------- Manbalar: voronka ---------- */
+.ua-funnel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.ua-funnel-label { font-size: 13px; color: var(--tblr-secondary, #667382); }
+.ua-funnel-value { font-size: 24px; font-weight: 700; line-height: 1.2; }
+.ua-funnel-bar {
+  height: 6px;
+  margin: 6px 0 4px;
+  border-radius: 3px;
+  background: var(--tblr-border-color, #e6e7e9);
+  overflow: hidden;
+}
+.ua-funnel-bar span { display: block; height: 100%; background: var(--tblr-primary, #206bc4); }
+.ua-sortable th[data-dir="desc"]::after { content: " \25BE"; }
+.ua-sortable th[data-dir="asc"]::after { content: " \25B4"; }
+#param-preview.is-invalid { border-color: var(--tblr-danger, #d63939); color: var(--tblr-danger, #d63939); }
+@media (max-width: 767.98px) {
+  .ua-funnel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

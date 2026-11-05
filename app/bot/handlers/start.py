@@ -12,7 +12,8 @@ from app.bot.handlers.payment import cmd_topup
 from app.config import settings
 from app.db.models import User
 from app.i18n import t
-from app.services import referral_service
+from app.services import attribution_service, event_service
+from app.services.deeplink import parse_start_param
 from app.services.user_service import get_or_create_user
 
 router = Router(name="start")
@@ -89,11 +90,18 @@ async def cmd_start(
         language_code=message.from_user.language_code,
     )
 
-    if is_new:
-        referrer_id = referral_service.parse_payload(command.args)
-        if referrer_id is not None:
-            await referral_service.attach(session, user, referrer_id)
-            await session.commit()
+    # Deep link: manba (atributsiya), taklif qilgan odam va ochiladigan
+    # ekran (`pending_target`). Mini App ochilganda o'sha ekranga olib
+    # boradi — kanal tekshiruvidan keyin ham (app/services/attribution_service.py).
+    parsed = parse_start_param(command.args)
+    await attribution_service.record_entry(session, user, parsed, is_new=is_new)
+    await event_service.log(
+        session,
+        user,
+        event_service.START,
+        {"param": parsed.raw} if parsed.raw else None,
+        source=parsed.source,
+    )
 
     if state is not None and (command.args or "").strip() == TOPUP_PAYLOAD:
         await cmd_topup(message, session, state)

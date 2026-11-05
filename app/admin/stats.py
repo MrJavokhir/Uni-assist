@@ -24,7 +24,7 @@ from app.db.models import (
     user_target_country,
 )
 from app.db.session import async_session_factory
-from app.services import view_service
+from app.services import source_report, view_service
 from app.services.timezone_utils import TASHKENT_TZ
 
 USER_CHART_DAYS = 14
@@ -109,6 +109,7 @@ class StatsView(BaseView):
             total_programs = await count(Program)
             total_scholarships = await count(Scholarship)
             total_saved = await count(SavedProgram)
+            filter_today = await source_report.filter_completed_today(session)
 
             # --- Deadline eslatmalari ---
             # "Bugun" Toshkent kuni bo'yicha: eslatmalar ham o'sha vaqtda
@@ -307,6 +308,7 @@ class StatsView(BaseView):
                 "total_programs": total_programs,
                 "total_scholarships": total_scholarships,
                 "total_saved": total_saved,
+                "filter_today": filter_today,
                 "notif_today": notif_today,
                 "notif_today_clicked": notif_today_clicked,
                 "notif_week": notif_week,

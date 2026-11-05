@@ -39,12 +39,15 @@ from app.db.models import (
 )
 from app.db.session import get_session
 from app.services import (
+    attribution_service,
     booking_service,
+    event_service,
     kit_service,
     payment_service,
     referral_service,
     view_service,
 )
+from app.services.deeplink import SCREEN_PROGRAMS, parse_start_param
 from app.services.gpa_converter import convert as convert_gpa
 from app.services.gpa_requirement import gpa_requirement_for
 from app.services.matching_service import MatchLevel, find_matches
@@ -66,6 +69,8 @@ from app.webapp.auth import InitDataError, validate_init_data
 from app.webapp.schemas import (
     CountryOut,
     DeadlineSuggestionIn,
+    EntryOut,
+    EventIn,
     FeedbackIn,
     FieldOut,
     GpaConvertOut,
@@ -208,6 +213,16 @@ async def get_current_user(
     )
 
 
+async def get_init_payload(
+    x_telegram_init_data: str = Header(..., alias="X-Telegram-Init-Data"),
+) -> dict:
+    """Tekshirilgan initData (imzo noto'g'ri bo'lsa 401)."""
+    try:
+        return validate_init_data(x_telegram_init_data)
+    except InitDataError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+
 # Bot foydalanuvchi nomi Telegram'ning `initDataUnsafe` da YO'Q, shuning
 # uchun serverdan aniqlanadi. Jarayon davomida o'zgarmaydi — bir marta
 # so'ralib keshlanadi, aks holda har bir /me so'rovida Telegram'ga
@@ -302,6 +317,8 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
         referral_link=referral_service.build_link(bot_username, user.telegram_id),
         referral_bonus=float(settings_row.referral_bonus or 0),
         referral_count=await referral_service.count_invited(session, user),
+        share_ref=user.telegram_id,
+        app_short_name=settings.miniapp_short_name.strip() or None,
         ui_language=user.ui_language.value,
         degree_level=user.degree_level.value if user.degree_level else None,
         field_id=user.field_id,
@@ -332,6 +349,9 @@ async def update_me(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> ProfileOut:
+    # Filtr shu so'rovda BIRINCHI marta to'ldirildimi — hodisa uchun.
+    # Avvaldan to'liq bo'lgan profil (eski foydalanuvchi) hodisa bermaydi.
+    filter_was_complete = event_service.filter_is_complete(user)
     if payload.notifications_enabled is not None:
         _set_notifications(user, payload.notifications_enabled)
     if payload.onboarding_done is not None:
@@ -407,6 +427,8 @@ async def update_me(
     # yuklangan relationship'lar (target_countries/language_certificates)
     # commit'lardan keyin o'zi yangilanmaydi — javobdan oldin qo'lda yangilaymiz.
     await session.refresh(user, attribute_names=["target_countries", "language_certificates"])
+    if not filter_was_complete and event_service.filter_is_complete(user):
+        await event_service.log(session, user, event_service.FILTER_COMPLETED)
     return await _profile_out(session, user)
 
 
@@ -455,6 +477,121 @@ async def get_cover_image(
     )
 
 
+# Mini App sessiyasini shu muddatdan keyin yaratilgan foydalanuvchi
+# "yangi" hisoblanmaydi (taklif faqat yangi odamga bog'lanadi).
+NEW_USER_WINDOW = timedelta(hours=1)
+
+
+async def _expand_target(session: AsyncSession, target: dict) -> dict:
+    """Mini App uchun: dasturlar filtri kodlarini ID'larga aylantiradi."""
+    out = dict(target)
+    if target.get("screen") == SCREEN_PROGRAMS:
+        if target.get("country"):
+            out["country_id"] = (
+                await session.execute(
+                    select(Country.id).where(
+                        Country.iso_code == target["country"], Country.hidden.is_(False)
+                    )
+                )
+            ).scalar_one_or_none()
+        if target.get("field"):
+            out["field_id"] = (
+                await session.execute(select(Field.id).where(Field.code == target["field"]))
+            ).scalar_one_or_none()
+    return out
+
+
+@router.post("/entry", response_model=EntryOut)
+async def app_entry(
+    init: dict = Depends(get_init_payload),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> EntryOut:
+    """Mini App ochildi: atributsiya (`startapp`), `app_opened` va maqsad ekran.
+
+    `start_param` faqat IMZOLANGAN initData'dan olinadi. Parametrsiz ochilish
+    (bot tugmasi, menyu) — davomi, `last_source`ni o'zgartirmaydi; maqsad
+    bo'lsa u /start da saqlangan `pending_target`dan keladi.
+    """
+    now = datetime.now(UTC)
+    start_param = init.get("start_param")
+    if start_param:
+        parsed = parse_start_param(start_param)
+        is_new = user.first_seen_at is None and now - user.created_at < NEW_USER_WINDOW
+        await attribution_service.record_entry(session, user, parsed, is_new=is_new, now=now)
+        # Voronkaning birinchi qadami: `startapp` bilan kelgan odam /start
+        # bosmaydi, lekin u ham "kirdi".
+        await event_service.log(
+            session,
+            user,
+            event_service.START,
+            {"via": "startapp", "param": parsed.raw},
+            source=parsed.source,
+        )
+    elif user.first_seen_at is None:
+        await attribution_service.record_entry(
+            session, user, parse_start_param(None), is_new=False, now=now
+        )
+    await event_service.log_daily(session, user, event_service.APP_OPENED, now=now)
+
+    target = attribution_service.pending_target(user, now)
+    if target is None:
+        return EntryOut()
+    gate = attribution_service.needs_gate(target)
+    expanded = await _expand_target(session, target)
+    if not gate:
+        await attribution_service.clear_pending(session, user)
+    return EntryOut(target=expanded, needs_gate=gate)
+
+
+EVENTS_PER_MINUTE = 60
+
+
+async def _events_rate_limited(user_id: int) -> bool:
+    if redis_client is None:
+        return False
+    try:
+        key = f"events_rl:{user_id}:{int(datetime.now(UTC).timestamp() // 60)}"
+        count = await redis_client.incr(key)
+        if count == 1:
+            await redis_client.expire(key, 120)
+        return count > EVENTS_PER_MINUTE
+    except Exception:
+        # Redis ishlamasa hodisa baribir qabul qilinadi — cheklov ikkinchi darajali.
+        logger.exception("Hodisa limiti tekshirilmadi")
+        return False
+
+
+def _clean_event_props(props: dict | None) -> dict | None:
+    """Faqat kerakli, shaxsiy bo'lmagan maydonlar: `id` va `type`."""
+    if not props:
+        return None
+    out = {}
+    try:
+        if props.get("id") is not None:
+            out["id"] = int(props["id"])
+    except (TypeError, ValueError):
+        pass
+    if props.get("type") in ("program", "grant"):
+        out["type"] = props["type"]
+    return out or None
+
+
+@router.post("/events", status_code=202)
+async def post_event(
+    payload: EventIn,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    """Mini App hodisasi. `user_id` faqat tekshirilgan initData'dan olinadi."""
+    if payload.name not in event_service.CLIENT_EVENTS:
+        raise HTTPException(status_code=422, detail="Noma'lum hodisa")
+    if await _events_rate_limited(user.id):
+        raise HTTPException(status_code=429, detail="Juda ko'p so'rov")
+    await event_service.log(session, user, payload.name, _clean_event_props(payload.props))
+    return {"ok": True}
+
+
 @router.get("/subscription", response_model=SubscriptionStatusOut)
 async def get_subscription(
     fresh: bool = False,
@@ -473,22 +610,38 @@ async def get_subscription(
     yerda beriladi (qarang: app/services/referral_service.py). U bir
     martalik, ya'ni har qidiruvda chaqirilishi xavfsiz.
     """
-    if not settings.bot_token:
-        return SubscriptionStatusOut(subscribed=True)
-
-    bot = Bot(token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    try:
-        missing = await missing_channels(
-            bot, session, redis_client, user.telegram_id, use_cache=not fresh
+    missing = []
+    if settings.bot_token:
+        bot = Bot(
+            token=settings.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
-        if not missing:
-            await referral_service.reward_and_notify(session, bot, user)
-            await session.commit()
-    finally:
-        await bot.session.close()
+        try:
+            missing = await missing_channels(
+                bot, session, redis_client, user.telegram_id, use_cache=not fresh
+            )
+            if not missing:
+                await referral_service.reward_and_notify(session, bot, user)
+                await session.commit()
+        finally:
+            await bot.session.close()
+
+    target = None
+    if missing:
+        # "A'zo bo'ldim" tekshiruvi (`fresh=1`, har 4 soniyada) hodisa
+        # yozmaydi — aks holda bitta oyna o'nlab "ko'rsatildi" bo'lardi.
+        if not fresh:
+            await event_service.log(session, user, event_service.GATE_SHOWN)
+    else:
+        await event_service.log(session, user, event_service.GATE_PASSED)
+        # Kanal tekshiruvidan keyin deep link kutib turgan ekran.
+        pending = attribution_service.pending_target(user)
+        if pending is not None:
+            target = await _expand_target(session, pending)
+            await attribution_service.clear_pending(session, user)
 
     return SubscriptionStatusOut(
         subscribed=not missing,
+        target=target,
         channels=[
             SubscriptionChannelOut(title=c.title, invite_url=c.invite_url, logo_url=c.logo_url)
             for c in missing
@@ -890,9 +1043,19 @@ async def list_scholarships(
 
 @router.get("/match", response_model=list[MatchProgramOut])
 async def get_matches(
-    user: User = Depends(get_current_user), session: AsyncSession = Depends(get_session)
+    country_id: int | None = None,
+    field_id: int | None = None,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
 ) -> list[MatchProgramOut]:
-    results = await find_matches(session, user)
+    # `country_id` / `field_id` — reklama havolasidan kelgan VAQTINCHALIK
+    # filtr: shu so'rov uchun profil o'rniga ishlatiladi, saqlanmaydi.
+    results = await find_matches(
+        session,
+        user,
+        country_ids=[country_id] if country_id is not None else None,
+        field_id=field_id,
+    )
     saved_ids = {sp.program_id for sp in user.saved_programs}
     now = datetime.now(UTC)
 
@@ -946,6 +1109,8 @@ async def save_program(
         program_exists = await session.get(Program, program_id)
         if program_exists is None:
             raise HTTPException(status_code=404, detail="Dastur topilmadi")
+        # Ilgari hech narsa saqlamagan bo'lsa — bu birinchi saqlash.
+        first_save = not user.saved_programs
         saved = SavedProgram(
             user_id=user.id,
             program_id=program_id,
@@ -954,6 +1119,11 @@ async def save_program(
         )
         session.add(saved)
         await session.commit()
+        await event_service.log(session, user, event_service.SAVE, {"program_id": program_id})
+        if first_save:
+            await event_service.log(
+                session, user, event_service.FIRST_SAVE, {"program_id": program_id}
+            )
 
         # Deadline yaqin bo'lsa, rejalashtirilgan 14 kunlik eslatma allaqachon
         # kechikkan bo'ladi — shuning uchun saqlagan zahoti tekshiramiz.

@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # docker-compose'da False — u yerda bot alohida servis.
     run_bot_in_process: bool = False
     webapp_url: str = "https://example.com/webapp/"
+    # BotFather /newapp da berilgan Mini App qisqa nomi: havola
+    # `t.me/<bot>/<short_name>?startapp=PARAM`. Bo'sh bo'lsa `startapp`
+    # havolalari yasalmaydi — faqat `?start=PARAM` (bot chati orqali).
+    miniapp_short_name: str = ""
 
     admin_username: str = "admin"
     admin_password: str = "change-me"

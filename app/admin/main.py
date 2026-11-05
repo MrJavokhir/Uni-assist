@@ -14,6 +14,7 @@ from app.admin.auth import AdminAuth
 from app.admin.csv_views import CatalogImportView
 from app.admin.kit_views import AdmissionKitView
 from app.admin.mentor_views import MentorComplaintsView, MentorQuestionsView
+from app.admin.source_views import CampaignCostAdmin, LinksView, SourcesView
 from app.admin.stats import StatsView
 from app.admin.suggestions import SuggestionView
 from app.admin.views import (
@@ -146,6 +147,11 @@ admin = UniAssistAdmin(
 # tekis (bo'limlarsiz): katalog -> grantlar -> qolgani. Sehrgarlar menyuda
 # ko'rinmaydi — ularga tegishli ro'yxat orqali kelinadi.
 admin.add_base_view(StatsView)
+# Reklama manbalari: hisobot, havola generatori va xarajatlar — doim birga
+# ishlatiladi, shuning uchun bitta ochiladigan bo'lim.
+admin.add_base_view(SourcesView)
+admin.add_base_view(LinksView)
+admin.add_view(CampaignCostAdmin)
 # Universitetni dasturlari, talablari, xarajatlari va muddatlari bilan
 # kiritish/tahrirlashning yagona joyi. "Universitetlar" ro'yxatidan ochiladi.
 admin.add_base_view(UniversityWizard)

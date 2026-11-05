@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 # `/start` payload'i: "ref" + taklif qilgan odamning telegram_id'si.
 # Telegram payload'ga faqat harf, raqam, "_" va "-" ruxsat beradi.
-_PAYLOAD = re.compile(r"^ref(\d{3,20})$")
+_PAYLOAD = re.compile(r"^ref_?(\d{3,20})$")
 PREFIX = "ref"
 
 

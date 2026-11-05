@@ -52,4 +52,6 @@ def validate_init_data(init_data: str, *, max_age_seconds: int = MAX_INIT_DATA_A
     if "id" not in user:
         raise InitDataError("foydalanuvchi id'si yo'q")
 
-    return {"user": user, "auth_date": auth_date}
+    # `start_param` — `t.me/<bot>/<app>?startapp=PARAM` havolasidan. U
+    # imzolangan ma'lumot ichida, ya'ni mijoz uni soxtalashtira olmaydi.
+    return {"user": user, "auth_date": auth_date, "start_param": parsed.get("start_param")}

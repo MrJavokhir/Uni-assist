@@ -77,7 +77,19 @@ RANK_BOUNDS: dict[UniversityRankRange, tuple[int, int | None]] = {
 }
 
 
-async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
+async def find_matches(
+    session: AsyncSession,
+    user: User,
+    *,
+    country_ids: list[int] | None = None,
+    field_id: int | None = None,
+) -> list[MatchResult]:
+    """Profilga mos dasturlar.
+
+    `country_ids` / `field_id` berilsa, profildagi davlatlar / yo'nalish
+    o'rniga SHU qidiruv uchun ishlatiladi (reklamadan kelgan vaqtinchalik
+    filtr). Profilning o'zi o'zgarmaydi.
+    """
     stmt = select(Program).join(Program.university).options(
         selectinload(Program.university).selectinload(University.country),
         selectinload(Program.requirement),
@@ -89,8 +101,9 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
 
     # Yashirin davlat universitetlari tavsiya qilinmaydi.
     stmt = stmt.where(University.country.has(Country.hidden.is_(False)))
-    if user.target_countries:
+    if country_ids is None and user.target_countries:
         country_ids = [c.id for c in user.target_countries]
+    if country_ids:
         stmt = stmt.where(University.country_id.in_(country_ids))
 
     if user.degree_level is not None:
@@ -98,8 +111,10 @@ async def find_matches(session: AsyncSession, user: User) -> list[MatchResult]:
 
     # Yo'nalish ma'lumotnomadan tanlanadi — ID bo'yicha tenglik. Yo'nalishi
     # biriktirilmagan (field_id NULL) dasturlar bu filtrga tushmaydi.
-    if user.field_id is not None:
-        stmt = stmt.where(Program.field_id == user.field_id)
+    if field_id is None:
+        field_id = user.field_id
+    if field_id is not None:
+        stmt = stmt.where(Program.field_id == field_id)
 
     # Reytingi kiritilmagan universitetlar chiqarib tashlanmaydi: ma'lumot
     # yo'qligi "mos emas" degani emas — aks holda admin reytinglarni to'ldirib

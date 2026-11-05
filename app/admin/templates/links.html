@@ -1,0 +1,192 @@
+{% extends "sqladmin/layout.html" %}
+
+{% macro copy_field(id, value) %}
+<div class="input-group">
+  <input type="text" class="form-control font-monospace" id="{{ id }}" value="{{ value }}" readonly>
+  <button type="button" class="btn btn-outline-primary ua-copy" data-copy="{{ id }}"><i class="fa-regular fa-copy me-1"></i>Nusxa</button>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  {% if created %}
+  <div class="card mb-3 border-success">
+    <div class="card-header"><h3 class="card-title text-success"><i class="fa-solid fa-check me-1"></i>Havola tayyor: <code>{{ created }}</code></h3></div>
+    <div class="card-body">
+      <label class="form-label">Bot chati orqali (<code>?start=</code>)</label>
+      {{ copy_field("created-start", created_urls.start) }}
+      <label class="form-label mt-3">Mini App'ni darhol ochadi (<code>?startapp=</code>)</label>
+      {% if created_urls.startapp %}
+        {{ copy_field("created-startapp", created_urls.startapp) }}
+      {% else %}
+        <div class="text-muted">Mini App qisqa nomi sozlanmagan (<code>MINIAPP_SHORT_NAME</code>) — bu format hozircha yo'q.</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">Yangi havola</h3></div>
+    <div class="card-body">
+      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+      <form method="post" class="row g-3" id="link-form">
+        <div class="col-12 col-md-3">
+          <label class="form-label">Manba turi</label>
+          <select name="prefix" class="form-select" required>
+            {% for key, label in source_labels.items() %}
+            <option value="{{ key }}" {% if form.prefix == key %}selected{% endif %}>{{ label }} ({{ key }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-8 col-md-4">
+          <label class="form-label">Kampaniya nomi</label>
+          <input type="text" name="campaign" class="form-control" required maxlength="56"
+                 pattern="[A-Za-z0-9_-]+" placeholder="de_law" value="{{ form.campaign or '' }}">
+          <div class="form-text">Lotin harflari, raqamlar, "_" va "-".</div>
+        </div>
+        <div class="col-4 col-md-2">
+          <label class="form-label">Variant</label>
+          <input type="text" name="variant" class="form-control" maxlength="1" pattern="[A-Za-z0-9]"
+                 placeholder="a" value="{{ form.variant or '' }}">
+          <div class="form-text">Ixtiyoriy, 1 belgi.</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Ochiladigan ekran</label>
+          <select name="screen" class="form-select" id="screen-select">
+            {% for key, label in screen_labels.items() %}
+            <option value="{{ key }}" {% if (form.screen or 'home') == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4" data-show="programs">
+          <label class="form-label">Davlat (filtr)</label>
+          <select name="country" class="form-select">
+            <option value="">— hammasi —</option>
+            {% for code, name in countries %}
+            <option value="{{ code }}" {% if form.country == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4" data-show="programs">
+          <label class="form-label">Yo'nalish (filtr)</label>
+          <select name="field" class="form-select">
+            <option value="">— hammasi —</option>
+            {% for code, name in fields %}
+            <option value="{{ code }}" {% if form.field == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4" data-show="program grant">
+          <label class="form-label">Dastur / grant ID</label>
+          <input type="number" name="item_id" class="form-control" min="1" value="{{ form.item_id or '' }}">
+          <div class="form-text">Adminkadagi ro'yxatdagi ID raqami.</div>
+        </div>
+
+        <div class="col-12 col-md-8">
+          <label class="form-label">Izoh</label>
+          <input type="text" name="note" class="form-control" maxlength="255" value="{{ form.note or '' }}"
+                 placeholder="Masalan: noyabr, huquq bo'yicha reklama">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label">Parametr</label>
+          <div class="form-control font-monospace" id="param-preview">—</div>
+          <div class="form-text" id="param-hint">Ko'pi bilan 64 belgi.</div>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-link me-1"></i>Havola yaratish</button>
+          <span class="text-muted small ms-2">Bir kampaniyaning barcha variantlari bitta ekranni ochadi — ekran o'zgartirilsa, kampaniyaning barcha havolalari yangilanadi.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Yaratilgan havolalar</h3></div>
+    {% if links %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr>
+            <th>Parametr</th>
+            <th>Ekran</th>
+            <th>Havolalar</th>
+            <th class="w-1">Sana</th>
+            <th class="w-1"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in links %}
+          {% set link = item.row %}
+          <tr>
+            <td>
+              <code>{{ link.param }}</code>
+              {% if link.note %}<div class="text-muted small">{{ link.note }}</div>{% endif %}
+            </td>
+            <td>{{ item.target }}</td>
+            <td style="min-width: 280px">
+              {{ copy_field("l-start-" ~ link.id, item.urls.start) }}
+              {% if item.urls.startapp %}<div class="mt-1">{{ copy_field("l-app-" ~ link.id, item.urls.startapp) }}</div>{% endif %}
+            </td>
+            <td class="text-muted text-nowrap">{{ link.created_at.strftime("%d.%m.%Y") }}</td>
+            <td>
+              <form method="post" action="/admin/links/delete" onsubmit="return confirm('Havola ro\'yxatdan o\'chirilsinmi? Tarqatilgan havola ishlashda davom etadi, lekin kampaniya ekrani bosh sahifaga tushadi.')">
+                <input type="hidden" name="id" value="{{ link.id }}">
+                <button type="submit" class="btn btn-sm btn-ghost-danger" title="O'chirish"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="ua-empty">Hali havola yaratilmagan.</div>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+
+<script>
+  (function () {
+    document.querySelectorAll(".ua-copy").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var input = document.getElementById(btn.dataset.copy);
+        var done = function () {
+          var old = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Nusxalandi';
+          setTimeout(function () { btn.innerHTML = old; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(input.value).then(done, function () { input.select(); document.execCommand("copy"); done(); });
+        } else {
+          input.select(); document.execCommand("copy"); done();
+        }
+      });
+    });
+
+    var form = document.getElementById("link-form");
+    var screen = document.getElementById("screen-select");
+    var preview = document.getElementById("param-preview");
+    var hint = document.getElementById("param-hint");
+    function sync() {
+      form.querySelectorAll("[data-show]").forEach(function (el) {
+        el.hidden = el.dataset.show.split(" ").indexOf(screen.value) === -1;
+      });
+      var parts = [form.prefix.value, form.campaign.value.trim().toLowerCase()];
+      if (form.variant.value.trim()) parts.push(form.variant.value.trim().toLowerCase());
+      var param = parts[1] ? parts.join("_") : "";
+      preview.textContent = param || "—";
+      var bad = param && (param.length > 64 || !/^[A-Za-z0-9_-]+$/.test(param));
+      preview.classList.toggle("is-invalid", !!bad);
+      hint.textContent = param ? param.length + " / 64 belgi" + (bad ? " — ruxsat etilmagan belgi yoki juda uzun" : "") : "Ko'pi bilan 64 belgi.";
+    }
+    form.addEventListener("input", sync);
+    screen.addEventListener("change", sync);
+    sync();
+  })();
+</script>
+{% endblock %}

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bot.handlers.start import start_keyboard
 from app.bot.keyboards import SUBSCRIPTION_CHECK_CALLBACK, subscription_keyboard
 from app.i18n import t
-from app.services import referral_service
+from app.services import event_service, referral_service
 from app.services.redis_client import redis_client
 from app.services.subscription_service import clear_cache, missing_channels
 from app.services.user_service import get_or_create_user
@@ -53,6 +53,7 @@ async def check_subscription(callback: CallbackQuery, session: AsyncSession) -> 
     # (qarang: app/services/referral_service.py).
     await referral_service.reward_and_notify(session, callback.bot, user)
     await session.commit()
+    await event_service.log(session, user, event_service.GATE_PASSED)
 
     await callback.answer(t("subscription.thanks", lang))
     await callback.message.edit_text(

@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LanguageCertOut(BaseModel):
@@ -10,6 +11,10 @@ class LanguageCertOut(BaseModel):
 
 class ProfileOut(BaseModel):
     ui_language: str
+    # "Do'stga yuborish" havolasi uchun: `p_<id>_r_<telegram_id>` va
+    # `t.me/<bot>/<short_name>?startapp=...` (qisqa nom sozlangan bo'lsa).
+    share_ref: int | None = None
+    app_short_name: str | None = None
     degree_level: str | None
     field_id: int | None
     gpa_raw: float | None
@@ -410,6 +415,24 @@ class SubscriptionStatusOut(BaseModel):
 
     subscribed: bool
     channels: list[SubscriptionChannelOut] = []
+    # Obuna tasdiqlangan paytda deep link kutib turgan ekran (bo'lsa).
+    target: dict[str, Any] | None = None
+
+
+class EntryOut(BaseModel):
+    """Mini App ochilganda: deep link ochishi kerak bo'lgan ekran.
+
+    `needs_gate` — avval majburiy kanal so'raladi; ekran `/subscription`
+    tasdiqlagach (u `target`ni qaytaradi) ochiladi.
+    """
+
+    target: dict[str, Any] | None = None
+    needs_gate: bool = False
+
+
+class EventIn(BaseModel):
+    name: str = Field(max_length=40)
+    props: dict[str, Any] | None = None
 
 
 class MentorCountryOut(BaseModel):

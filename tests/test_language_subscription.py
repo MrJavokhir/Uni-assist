@@ -15,7 +15,7 @@ import pytest
 from sqlalchemy import select
 
 from app.bot.handlers import language, start
-from app.db.models import RequiredChannel, SubscriptionExemption, User
+from app.db.models import RequiredChannel, SubscriptionExemption, UiLanguage, User
 from app.services import payment_service
 from app.webapp import api
 
@@ -213,8 +213,8 @@ class _NoArgs:
 
 
 @pytest.mark.asyncio
-async def test_start_skips_language_and_opens_in_english(session) -> None:
-    """/start til so'ramaydi: yangi foydalanuvchi ingliz tilida, darhol xush kelibsiz.
+async def test_start_skips_language_and_opens_in_uzbek(session) -> None:
+    """/start til so'ramaydi: yangi foydalanuvchi o'zbek tilida, darhol xush kelibsiz.
 
     Telegram tili ruscha bo'lsa ham — til Mini App Profil'idan almashtiriladi.
     """
@@ -226,20 +226,20 @@ async def test_start_skips_language_and_opens_in_english(session) -> None:
     assert "Tilni tanlang" not in text
     assert any(b.web_app for b in _buttons(markup)), "darhol Mini App tugmasi"
     user = (await session.execute(select(User).where(User.telegram_id == TG_ID))).scalar_one()
-    assert user.ui_language.value == "en"
-
-
-@pytest.mark.asyncio
-async def test_new_user_welcome_is_uzbek_then_own_language(session) -> None:
-    """Birinchi /start doim o'zbekcha (Telegram tili ruscha bo'lsa ham), keyingilari o'z tilida."""
-    msg = _FakeStartMessage()
-
-    await start.cmd_start(msg, session, _NoArgs())
-    text, markup = msg.answers[-1]
+    assert user.ui_language.value == "uz"
     assert text.startswith("Salom,")
     assert _buttons(markup)[0].text == "🌐 Uni Assist'ni ochish"
 
+
+@pytest.mark.asyncio
+async def test_existing_user_keeps_chosen_language(session) -> None:
+    """Tilini tanlagan (yoki avval inglizcha boshlagan) odamning tili o'zgarmaydi."""
+    session.add(User(telegram_id=TG_ID, ui_language=UiLanguage.EN))
+    await session.commit()
+    msg = _FakeStartMessage()
+
     await start.cmd_start(msg, session, _NoArgs())
+
     text, markup = msg.answers[-1]
     assert text.startswith("Hi,")
     assert _buttons(markup)[0].text == "🌐 Open Uni Assist"

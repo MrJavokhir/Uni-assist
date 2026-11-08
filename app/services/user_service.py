@@ -10,9 +10,9 @@ from app.services.activity_service import touch
 _PROFILE_RELATIONSHIPS = ("target_countries", "language_certificates", "other_tests", "saved_programs")
 
 
-# Yangi foydalanuvchi har doim ingliz tilida boshlaydi: botda til so'ralmaydi,
-# u Mini App'dagi Profil -> Til orqali almashtiriladi.
-DEFAULT_UI_LANGUAGE = UiLanguage.EN
+# Yangi foydalanuvchi har doim o'zbek tilida boshlaydi (bot xabari ham, Mini App
+# ham): botda til so'ralmaydi, u Mini App'dagi Profil -> Til orqali almashtiriladi.
+DEFAULT_UI_LANGUAGE = UiLanguage.UZ
 
 
 async def get_or_create_user(

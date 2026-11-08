@@ -45,20 +45,27 @@ def start_keyboard(lang: str) -> InlineKeyboardMarkup:
     )
 
 
-async def entry_screen(bot, session: AsyncSession, user: User, full_name: str):
+async def entry_screen(
+    bot, session: AsyncSession, user: User, full_name: str, lang: str | None = None
+):
     """/start dan keyingi ekran: xush kelibsiz va Mini App tugmasi.
 
     (matn, klaviatura) qaytaradi. Majburiy kanal obunasi bu yerda EMAS —
     Mini App'da, onboarding oxirida "Find my programs" bosilganda so'raladi
     (app/webapp/api.py, `/subscription`); taklif mukofoti ham o'sha yerda.
+
+    `lang` berilmasa foydalanuvchining o'z tili ishlatiladi.
     """
-    lang = user.ui_language.value
+    lang = lang or user.ui_language.value
     return t("start.welcome", lang, name=full_name), start_keyboard(lang)
 
 
 # Mini App'dagi "Top up" tugmasi botni `?start=topup` bilan ochadi — to'ldirish
 # darhol boshlanadi (foydalanuvchi /topup yozishi shart emas).
 TOPUP_PAYLOAD = "topup"
+
+# Yangi foydalanuvchiga birinchi xabar Telegram tilidan qat'i nazar shu tilda.
+NEW_USER_WELCOME_LANGUAGE = "uz"
 
 
 @router.message(CommandStart())
@@ -70,9 +77,9 @@ async def cmd_start(
 ) -> None:
     """/start -> xush kelibsiz (Mini App tugmasi). Obuna Mini App'da so'raladi.
 
-    Til so'ralmaydi: yangi foydalanuvchi ingliz tilida boshlaydi va tilni
-    Mini App'dagi Profil -> Til orqali almashtiradi. Ilgari birinchi qadam
-    uch tilli til tanlash edi.
+    Til so'ralmaydi: yangi foydalanuvchi xush kelibsiz xabarini o'zbekcha
+    oladi, Mini App esa ingliz tilida boshlanadi va til Profil -> Til orqali
+    almashtiriladi. Keyingi /start lar foydalanuvchining o'z tilida.
 
     Taklif havolasi (`/start ref123`) FAQAT birinchi kirishda hisobga
     olinadi, shuning uchun foydalanuvchi bor-yo'qligi yaratishdan OLDIN
@@ -107,5 +114,11 @@ async def cmd_start(
         await cmd_topup(message, session, state)
         return
 
-    text, markup = await entry_screen(message.bot, session, user, message.from_user.full_name)
+    text, markup = await entry_screen(
+        message.bot,
+        session,
+        user,
+        message.from_user.full_name,
+        lang=NEW_USER_WELCOME_LANGUAGE if is_new else None,
+    )
     await message.answer(text, reply_markup=markup)

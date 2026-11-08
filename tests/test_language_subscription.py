@@ -230,6 +230,22 @@ async def test_start_skips_language_and_opens_in_english(session) -> None:
 
 
 @pytest.mark.asyncio
+async def test_new_user_welcome_is_uzbek_then_own_language(session) -> None:
+    """Birinchi /start doim o'zbekcha (Telegram tili ruscha bo'lsa ham), keyingilari o'z tilida."""
+    msg = _FakeStartMessage()
+
+    await start.cmd_start(msg, session, _NoArgs())
+    text, markup = msg.answers[-1]
+    assert text.startswith("Salom,")
+    assert _buttons(markup)[0].text == "🌐 Uni Assist'ni ochish"
+
+    await start.cmd_start(msg, session, _NoArgs())
+    text, markup = msg.answers[-1]
+    assert text.startswith("Hi,")
+    assert _buttons(markup)[0].text == "🌐 Open Uni Assist"
+
+
+@pytest.mark.asyncio
 async def test_start_does_not_ask_to_subscribe(session) -> None:
     """Kanal bo'lsa ham /start darhol Mini App tugmasini beradi."""
     await _channel(session)

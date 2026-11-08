@@ -4,6 +4,16 @@ Telegram bot (@assistuni_bot) va Mini App: chet eldagi universitet dasturlari va
 topishga yordam beradi. Stack: aiogram 3, FastAPI + SQLAdmin, PostgreSQL (SQLAlchemy 2, Alembic),
 Redis. Deploy tafsilotlari — [DEPLOY.md](DEPLOY.md).
 
+## Bot tavsifi
+
+Bot nomi, tavsifi va rasmi faqat @BotFather orqali o'zgartiriladi, kod ularga tegmaydi:
+
+| Nima | Qayerda ko'rinadi | BotFather buyrug'i |
+|---|---|---|
+| Tavsif ("What can this bot do?") | bo'sh suhbatda, Start tugmasi ustida | `/setdescription` |
+| Qisqa tavsif | bot profilida, nom ostida | `/setabouttext` |
+| Tavsif rasmi | tavsif tepasida | `/setdescriptionpic` |
+
 ## Deep link qoidalari
 
 Har bir reklama, post yoki hamkor havolasi o'z **parametriga** ega. Parametr foydalanuvchi qayerdan

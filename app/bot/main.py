@@ -9,7 +9,6 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from app.bot.handlers import language, mentor, payment, reminders, start, subscription
 from app.bot.middlewares import DbSessionMiddleware
-from app.bot.profile_setup import apply_bot_profile
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services import mentor_service
@@ -144,9 +143,6 @@ async def run_bot(*, handle_signals: bool = True) -> None:
     dispatcher = create_dispatcher()
 
     await bot.delete_webhook(drop_pending_updates=True)
-    # Bo'sh suhbatda ko'rinadigan tavsif. Pollingdan OLDIN: bu bir martalik
-    # qisqa amal va u tugamasdan xabar qabul qilishning ma'nosi yo'q.
-    await apply_bot_profile(bot)
     await asyncio.gather(
         # `chat_member` Telegram'da standart holatda YUBORILMAYDI — ro'yxat
         # aniq beriladi (mentor guruhdan chiqqanini bilish uchun kerak).

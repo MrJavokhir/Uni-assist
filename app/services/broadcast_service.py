@@ -20,6 +20,7 @@ import logging
 import re
 from datetime import UTC, datetime
 from html.parser import HTMLParser
+from urllib.parse import parse_qsl, urlencode, urlsplit
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
@@ -158,24 +159,57 @@ def validate(text: str, has_image: bool, button_text: str, button_kind: str, but
         return "Tugma havolasi https:// bilan boshlanishi kerak."
     if button_url and not button_text:
         return "Tugma matnini yozing (yoki havolani o'chiring)."
-    if (
-        button_text
-        and button_kind == "webapp"
-        and button_url
-        and not button_url.startswith("https://")
-    ):
-        return "Mini App havolasi https:// bilan boshlanishi kerak (yoki bo'sh qoldiring)."
+    if button_text and button_kind == "webapp" and button_url:
+        host = urlsplit(button_url).netloc.lower()
+        if not button_url.startswith("https://"):
+            return "Mini App havolasi https:// bilan boshlanishi kerak (yoki bo'sh qoldiring)."
+        if host not in TELEGRAM_HOSTS and host != _webapp_host():
+            return (
+                "«Mini App» tugmasi faqat ilovaning o'z havolasini yoki t.me havolasini "
+                "ochadi. Boshqa saytga olib boradigan tugma uchun «Havola» turini tanlang."
+            )
     return html_problem(text)
 
 
+TELEGRAM_HOSTS = ("t.me", "telegram.me", "www.t.me")
+
+
+def _webapp_host() -> str:
+    return urlsplit(settings.webapp_url).netloc.lower()
+
+
+def telegram_link(url: str) -> str:
+    """`t.me/<bot>?start=X` -> Mini App'ni to'g'ridan-to'g'ri ochadigan
+    `t.me/<bot>/<qisqa_nom>?startapp=X` (qisqa nom sozlangan bo'lsa).
+
+    Parametr (kampaniya belgisi) saqlanadi — "Manbalar" hisobotida ko'rinadi.
+    Boshqa t.me havolalari o'zgarmaydi.
+    """
+    parts = urlsplit(url)
+    short_name = settings.miniapp_short_name.strip()
+    segments = [s for s in parts.path.split("/") if s]
+    start = dict(parse_qsl(parts.query)).get("start")
+    if short_name and len(segments) == 1 and start:
+        query = urlencode({"startapp": start})
+        return f"https://t.me/{segments[0]}/{short_name}?{query}"
+    return url
+
+
 def build_markup(broadcast: Broadcast) -> InlineKeyboardMarkup | None:
+    """Tugma. "Mini App" turida t.me havolasi kiritilgan bo'lsa, u oddiy havola
+    tugmasi bo'ladi: Telegram `web_app` tugmasiga faqat ilovaning o'z manzilini
+    qabul qiladi (aks holda BUTTON_URL_INVALID)."""
     if not broadcast.button_text:
         return None
-    if broadcast.button_kind == "url" and broadcast.button_url:
-        button = InlineKeyboardButton(text=broadcast.button_text, url=broadcast.button_url)
+    url = (broadcast.button_url or "").strip()
+    if broadcast.button_kind == "url" and url:
+        button = InlineKeyboardButton(text=broadcast.button_text, url=url)
+    elif url and urlsplit(url).netloc.lower() in TELEGRAM_HOSTS:
+        button = InlineKeyboardButton(text=broadcast.button_text, url=telegram_link(url))
     else:
-        url = broadcast.button_url or settings.webapp_url
-        button = InlineKeyboardButton(text=broadcast.button_text, web_app=WebAppInfo(url=url))
+        button = InlineKeyboardButton(
+            text=broadcast.button_text, web_app=WebAppInfo(url=url or settings.webapp_url)
+        )
     return InlineKeyboardMarkup(inline_keyboard=[[button]])
 
 

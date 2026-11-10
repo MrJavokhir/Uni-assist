@@ -302,3 +302,21 @@ async def test_broadcast_stops_when_every_message_fails(session, monkeypatch) ->
     assert broadcast.status == bs.STATUS_FAILED
     assert (broadcast.sent, broadcast.failed, broadcast.total) == (0, 10, 15)
     assert "can't parse entities" in broadcast.last_error
+
+
+def test_telegram_link_in_mini_app_button_becomes_url_button(monkeypatch) -> None:
+    """t.me havolasini `web_app` tugmasiga qo'yib bo'lmaydi (BUTTON_URL_INVALID)."""
+    monkeypatch.setattr(bs.settings, "miniapp_short_name", "app")
+    monkeypatch.setattr(bs.settings, "webapp_url", "https://uniassist.uz/webapp/")
+
+    def button(kind, url):
+        b = Broadcast(text="x", button_text="Ochish", button_kind=kind, button_url=url)
+        return bs.build_markup(b).inline_keyboard[0][0]
+
+    tme = button("webapp", "https://t.me/assistuni_bot?start=ch_gift_box_a")
+    assert tme.web_app is None
+    assert tme.url == "https://t.me/assistuni_bot/app?startapp=ch_gift_box_a"
+    assert button("webapp", "").web_app.url == "https://uniassist.uz/webapp/"
+    assert button("url", "https://example.com").url == "https://example.com"
+    assert "Havola" in bs.validate("x", False, "Ochish", "webapp", "https://example.com/a")
+    assert bs.validate("x", False, "Ochish", "webapp", "https://t.me/assistuni_bot?start=a") is None

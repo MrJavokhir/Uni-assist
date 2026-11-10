@@ -59,6 +59,9 @@
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i>Hammaga yuborish</button>
           </form>
           {% endif %}
+          <form method="post" action="{{ url_for('admin:view-broadcast-retest', broadcast_id=draft.id) }}" class="mb-2">
+            <button type="submit" class="btn btn-outline-primary btn-sm">Sinovni qayta yuborish</button>
+          </form>
           <form method="post" action="{{ url_for('admin:view-broadcast-discard', broadcast_id=draft.id) }}">
             <button type="submit" class="btn btn-outline-secondary btn-sm">Bekor qilish</button>
           </form>
@@ -100,7 +103,11 @@
           <div class="col-md-5">
             <label class="form-label" for="bc-btn-url">Havola</label>
             <input class="form-control" id="bc-btn-url" name="button_url" maxlength="500" placeholder="https://...">
-            <div class="form-hint">Mini App uchun bo'sh qoldiring — bosh sahifa ochiladi.</div>
+            <div class="form-hint">
+              Mini App: bo'sh qoldirsangiz bosh sahifa ochiladi. Havola generatoridagi
+              <code>t.me/assistuni_bot?start=...</code> havolasini qo'ysangiz, Mini App shu
+              kampaniya belgisi bilan ochiladi.
+            </div>
           </div>
         </div>
         <div class="mb-3">

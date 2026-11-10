@@ -173,6 +173,30 @@ class BroadcastView(BaseView):
         Flash.success(request, "Yuborish boshlandi. Natija quyidagi ro'yxatda yangilanib boradi.")
         return self._back(request)
 
+    @expose("/broadcast/{broadcast_id:int}/retest", methods=["POST"], identity="broadcast-retest")
+    async def retest(self, request: Request):
+        """Qoralamani qaytadan sinash (rasm qayta yuklanmaydi)."""
+        broadcast_id = request.path_params["broadcast_id"]
+        async with async_session_factory() as session:
+            broadcast = await session.get(Broadcast, broadcast_id)
+            if broadcast is None or broadcast.status != bs.STATUS_DRAFT:
+                Flash.error(request, "Qoralama topilmadi.")
+                return self._back(request)
+            await session.refresh(broadcast, attribute_names=["image_data"])
+            admins = await payment_service.active_admin_ids(session)
+            if not admins:
+                broadcast.test_error = "Bot adminlari ro'yxati bo'sh — sinov yuborilmadi."
+            else:
+                errors = await bs.send_test(broadcast, admins)
+                broadcast.test_error = "; ".join(errors)[:1000] if errors else None
+            await session.commit()
+            ok = broadcast.test_error is None
+        if ok:
+            Flash.success(request, f"Sinov xabari {len(admins)} ta bot adminiga yuborildi.")
+        else:
+            Flash.error(request, "Sinov yana yiqildi — xabarni tuzating.")
+        return self._back(request, broadcast_id)
+
     @expose("/broadcast/{broadcast_id:int}/discard", methods=["POST"], identity="broadcast-discard")
     async def discard(self, request: Request):
         broadcast_id = request.path_params["broadcast_id"]

@@ -303,14 +303,12 @@ async def _notify_if_deadline_near(session: AsyncSession, saved: SavedProgram) -
         await bot.session.close()
 
 
-# Onboarding shuncha vaqt amal qiladi — keyin Mini App uni yana ochadi
-# (javoblar profildan oldindan tanlangan holda).
-ONBOARDING_VALID_FOR = timedelta(days=3)
-
-
+# Onboarding bir marta tugatilsa, boshqa ochilmaydi: keyingi o'zgarishlar
+# Profil -> filtr orqali qilinadi va saqlanib qoladi. (Ilgari u 3 kundan
+# keyin qayta ochilardi va javoblarni qaytadan so'rardi.) Filtr butunlay
+# bo'sh bo'lsa (masalan, profil tozalangan) Mini App onboarding'ni o'zi ochadi.
 def _onboarding_valid(user: User) -> bool:
-    done_at = user.onboarding_done_at
-    return done_at is not None and datetime.now(UTC) - done_at < ONBOARDING_VALID_FOR
+    return user.onboarding_done_at is not None
 
 
 async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:

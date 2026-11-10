@@ -4415,8 +4415,8 @@ function needsOnboarding() {
   return !hasFilter() || !profile.onboarding_done;
 }
 
-// Onboarding tugatildi yoki o'tkazib yuborildi — 3 kun davomida qayta chiqmaydi
-// (muddatni server hisoblaydi: `profile.onboarding_done`).
+// Onboarding tugatildi yoki o'tkazib yuborildi — boshqa chiqmaydi
+// (`profile.onboarding_done`). Keyin filtr Profil sahifasidan tahrirlanadi.
 function markOnboardingDone() {
   if (profile.onboarding_done) return;
   profile.onboarding_done = true;

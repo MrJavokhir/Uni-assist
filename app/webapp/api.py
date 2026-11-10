@@ -2,7 +2,6 @@ import logging
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from html import escape
-from urllib.parse import urlsplit
 from uuid import uuid4
 
 from aiogram import Bot
@@ -26,10 +25,13 @@ from app.db.models import (
     GpaScale,
     HomeUpdate,
     LanguageCertType,
+    MatchNotification,
+    NotificationLog,
     Program,
     SavedProgram,
     SavedProgramStatus,
     Scholarship,
+    ScholarshipNotificationLog,
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
@@ -79,6 +81,8 @@ from app.webapp.schemas import (
     FieldOut,
     GpaConvertOut,
     HomeUpdateOut,
+    InboxItemOut,
+    InboxOut,
     LanguageCertOut,
     MatchProgramOut,
     ProfileIn,
@@ -732,6 +736,141 @@ async def list_updates(
     ]
 
 
+# ---- Qo'ng'iroqcha: bot yuborgan xabarlar va admin yangiliklari ----
+# Alohida "bildirishnomalar" jadvali yo'q: ro'yxat mavjud jurnallardan
+# yig'iladi (mos dastur, dastur va grant eslatmalari, yangiliklar). O'qilgan
+# holati bitta ustunda — `users.inbox_seen_at`: undan keyingilari yangi.
+
+INBOX_LIMIT = 40
+
+
+def _tashkent_day(moment: datetime) -> str:
+    return moment.astimezone(TASHKENT_TZ).date().isoformat()
+
+
+@router.get("/inbox", response_model=InboxOut)
+async def get_inbox(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> InboxOut:
+    rows: list[tuple[datetime, InboxItemOut]] = []
+
+    matches = (
+        await session.execute(
+            select(MatchNotification)
+            .options(selectinload(MatchNotification.program).selectinload(Program.university))
+            .where(MatchNotification.user_id == user.id)
+            .order_by(MatchNotification.sent_at.desc())
+            .limit(INBOX_LIMIT)
+        )
+    ).scalars()
+    for m in matches:
+        rows.append(
+            (
+                m.sent_at,
+                InboxItemOut(
+                    key=f"m{m.id}",
+                    kind="match",
+                    title=m.program.name,
+                    subtitle=m.program.university.name,
+                    date=_tashkent_day(m.sent_at),
+                    program_id=m.program_id,
+                ),
+            )
+        )
+
+    reminders = (
+        await session.execute(
+            select(NotificationLog)
+            .options(selectinload(NotificationLog.program).selectinload(Program.university))
+            .where(NotificationLog.user_id == user.id)
+            .order_by(NotificationLog.sent_at.desc())
+            .limit(INBOX_LIMIT)
+        )
+    ).scalars()
+    for r in reminders:
+        rows.append(
+            (
+                r.sent_at,
+                InboxItemOut(
+                    key=f"r{r.id}",
+                    kind="reminder",
+                    title=r.program.name,
+                    subtitle=r.program.university.name,
+                    date=_tashkent_day(r.sent_at),
+                    program_id=r.program_id,
+                ),
+            )
+        )
+
+    grant_reminders = (
+        await session.execute(
+            select(ScholarshipNotificationLog)
+            .options(selectinload(ScholarshipNotificationLog.scholarship))
+            .where(ScholarshipNotificationLog.user_id == user.id)
+            .order_by(ScholarshipNotificationLog.sent_at.desc())
+            .limit(INBOX_LIMIT)
+        )
+    ).scalars()
+    for g in grant_reminders:
+        rows.append(
+            (
+                g.sent_at,
+                InboxItemOut(
+                    key=f"g{g.id}",
+                    kind="grant_reminder",
+                    title=g.scholarship.name,
+                    date=_tashkent_day(g.sent_at),
+                    scholarship_id=g.scholarship_id,
+                ),
+            )
+        )
+
+    updates = (
+        await session.execute(
+            select(HomeUpdate)
+            .where(HomeUpdate.is_active.is_(True))
+            .order_by(HomeUpdate.published_on.desc(), HomeUpdate.id.desc())
+            .limit(INBOX_LIMIT)
+        )
+    ).scalars()
+    for u in updates:
+        rows.append(
+            (
+                u.created_at,
+                InboxItemOut(
+                    key=f"u{u.id}",
+                    kind=u.kind.value,
+                    title=u.title,
+                    title_ru=u.title_ru,
+                    title_en=u.title_en,
+                    date=u.published_on.isoformat(),
+                    scholarship_id=u.scholarship_id,
+                ),
+            )
+        )
+
+    rows.sort(key=lambda row: row[0], reverse=True)
+    rows = rows[:INBOX_LIMIT]
+    seen = user.inbox_seen_at or user.created_at
+    for moment, item in rows:
+        item.unread = seen is None or moment > seen
+    return InboxOut(
+        items=[item for _, item in rows], unread=sum(item.unread for _, item in rows)
+    )
+
+
+@router.post("/inbox/seen", status_code=204)
+async def mark_inbox_seen(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    """Qo'ng'iroqcha ochildi: hozirgacha kelganlarning hammasi o'qilgan."""
+    user.inbox_seen_at = datetime.now(UTC)
+    await session.commit()
+    return Response(status_code=204)
+
+
 @router.get("/countries", response_model=list[CountryOut])
 async def list_countries(session: AsyncSession = Depends(get_session)) -> list[CountryOut]:
     countries = (await session.execute(select(Country).order_by(Country.name_uz))).scalars().all()
@@ -895,21 +1034,13 @@ async def get_program(
 # uchun rasm manzili ochiq (dastur va grant ma'lumoti baribir ochiq).
 
 
-def _public_origin() -> str:
-    parts = urlsplit(settings.webapp_url)
-    return f"{parts.scheme}://{parts.netloc}"
+_public_origin = share_card.public_origin
+_program_version = share_card.program_version
+_grant_version = share_card.grant_version
 
 
 def _share_lang(lang: str | None) -> str:
     return lang if lang in share_card.LANGS else "uz"
-
-
-def _share_version(today: date, *stamps: datetime | None) -> str:
-    """Rasm manzilidagi versiya: ma'lumot o'zgarsa yoki kun almashsa (muddat
-    yorlig'i) yangi rasm chiziladi."""
-    known = [s for s in stamps if s]
-    stamp = int(max(known).timestamp()) if known else 0
-    return f"{stamp}-{today.isoformat()}"
 
 
 def _cover_loader(session: AsyncSession, cover_url: str | None, model, item_id: int):
@@ -959,14 +1090,6 @@ async def _load_share_grant(session: AsyncSession, scholarship_id: int) -> Schol
     if scholarship is None:
         raise HTTPException(status_code=404, detail="Grant topilmadi")
     return scholarship
-
-
-def _program_version(program: Program, today: date) -> str:
-    return _share_version(today, program.updated_at, program.university.updated_at)
-
-
-def _grant_version(scholarship: Scholarship, today: date) -> str:
-    return _share_version(today, scholarship.updated_at)
 
 
 async def _program_card(session: AsyncSession, program: Program, lang: str, today: date) -> bytes:
@@ -1077,10 +1200,7 @@ async def prepare_program_share(
     return await _prepare_share(
         user,
         param=f"p_{program.id}_r_{user.telegram_id}",
-        image_url=(
-            f"{_public_origin()}/api/webapp/share/program/{program.id}.jpg"
-            f"?lang={lang}&v={_program_version(program, today)}"
-        ),
+        image_url=share_card.program_image_url(program, lang, today),
         caption=share_card.build_caption(program, lang, today),
         button=share_card.button_text(lang, share_card.KIND_PROGRAM),
         item=f"dastur {program.id}",

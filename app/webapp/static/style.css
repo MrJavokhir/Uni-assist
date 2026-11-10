@@ -3453,3 +3453,55 @@ body.no-tabbar::after { display: none; }
   cursor: pointer;
 }
 .svc-invite-btn:active { transform: scale(0.96); }
+
+/* ============ Qo'ng'iroqcha (bildirishnomalar) ============ */
+
+.topbar-bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  flex: none;
+}
+.topbar-bell .ico { width: 21px; height: 21px; }
+.topbar-bell:active { transform: scale(0.94); }
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.bell-badge[hidden] { display: none; }
+
+.inbox-list { margin-top: 4px; max-height: 70vh; overflow-y: auto; }
+.up-row.is-unread { background: var(--accent-soft); }
+.up-row.is-unread .up-title::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  vertical-align: middle;
+}
+.up-dot.up-match { background: var(--accent); }
+.up-dot.up-reminder { background: var(--amber); }
+.up-dot.up-grant_reminder { background: var(--green); }

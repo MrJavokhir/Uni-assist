@@ -19,6 +19,7 @@ from app.db.models.mentor import (
 )
 from app.db.models.notification import (
     DeadlineSuggestion,
+    MatchNotification,
     NotificationLog,
     NotificationType,
     ScholarshipNotificationLog,
@@ -98,6 +99,7 @@ __all__ = [
     "GpaScale",
     "HomeUpdate",
     "LanguageCertType",
+    "MatchNotification",
     "MentorComplaint",
     "MentorLevel",
     "MentorMessage",

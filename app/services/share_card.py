@@ -29,10 +29,12 @@ from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import aiohttp
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+from app.config import settings
 from app.db.models.program import INSTRUCTION_LANGUAGES, DeadlineType, Program
 from app.db.models.scholarship import Scholarship
 
@@ -292,6 +294,39 @@ def build_grant_caption(
     if extras:
         head.append(f"🎁 {_esc(' · '.join(extras))}")
     return "\n".join(head)[:CAPTION_LIMIT]
+
+
+# ---- Rasm manzili ----
+# Rasmni Telegram o'zi yuklab oladi (ulashish xabari ham, haftalik "mos
+# dastur" xabari ham), shuning uchun manzil ochiq va to'liq bo'lishi kerak.
+
+
+def public_origin() -> str:
+    parts = urlsplit(settings.webapp_url)
+    return f"{parts.scheme}://{parts.netloc}"
+
+
+def share_version(today: date, *stamps: datetime | None) -> str:
+    """Rasm manzilidagi versiya: ma'lumot o'zgarsa yoki kun almashsa (muddat
+    yorlig'i) yangi rasm chiziladi."""
+    known = [s for s in stamps if s]
+    stamp = int(max(known).timestamp()) if known else 0
+    return f"{stamp}-{today.isoformat()}"
+
+
+def program_version(program: Program, today: date) -> str:
+    return share_version(today, program.updated_at, program.university.updated_at)
+
+
+def grant_version(scholarship: Scholarship, today: date) -> str:
+    return share_version(today, scholarship.updated_at)
+
+
+def program_image_url(program: Program, lang: str, today: date) -> str:
+    return (
+        f"{public_origin()}/api/webapp/share/program/{program.id}.jpg"
+        f"?lang={_lang(lang)}&v={program_version(program, today)}"
+    )
 
 
 # ---- Rasm ----

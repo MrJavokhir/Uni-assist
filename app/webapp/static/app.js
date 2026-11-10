@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 115;
+const ASSET_V = 116;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -226,6 +226,11 @@ const I18N = {
     "update.kind.open": "Ariza ochildi",
     "update.kind.deadline": "Muddat o'zgardi",
     "update.kind.info": "Yangilik",
+    "inbox.title": "Bildirishnomalar",
+    "inbox.empty": "Hozircha bildirishnoma yo'q. Sizga mos dasturlar va muddat eslatmalari shu yerda paydo bo'ladi.",
+    "inbox.kind.match": "Sizga mos dastur",
+    "inbox.kind.reminder": "Muddat eslatmasi",
+    "inbox.kind.grant_reminder": "Grant muddati",
     "filter.apply": "Qo'llash",
     "home.section_shortcuts": "Tezkor amallar",
     "page.views": "Ko'rishlar",
@@ -678,6 +683,11 @@ const I18N = {
     "update.kind.open": "Приём открыт",
     "update.kind.deadline": "Дедлайн изменён",
     "update.kind.info": "Новость",
+    "inbox.title": "Уведомления",
+    "inbox.empty": "Пока уведомлений нет. Здесь появятся подходящие программы и напоминания о сроках.",
+    "inbox.kind.match": "Подходящая программа",
+    "inbox.kind.reminder": "Напоминание о сроке",
+    "inbox.kind.grant_reminder": "Срок гранта",
     "filter.apply": "Применить",
     "home.section_shortcuts": "Быстрые действия",
     "page.views": "Просмотры",
@@ -1130,6 +1140,11 @@ const I18N = {
     "update.kind.open": "Open",
     "update.kind.deadline": "Deadline changed",
     "update.kind.info": "Update",
+    "inbox.title": "Notifications",
+    "inbox.empty": "No notifications yet. Matching programs and deadline reminders will appear here.",
+    "inbox.kind.match": "Matching program",
+    "inbox.kind.reminder": "Deadline reminder",
+    "inbox.kind.grant_reminder": "Grant deadline",
     "filter.apply": "Apply",
     "home.section_shortcuts": "Quick actions",
     "page.views": "Views",
@@ -1926,11 +1941,9 @@ async function renderHome() {
       </button>
     </div>
 
-    <div id="home-updates"></div>
   `;
 
   renderHomeGrants();
-  renderHomeUpdates();
   document.getElementById("home-buddy")?.addEventListener("click", openBuddy);
   document.getElementById("home-gpa").addEventListener("click", openGpaPage);
 
@@ -2103,39 +2116,88 @@ function startGrantCarousel(box) {
   }, GRANT_ROTATE_MS);
 }
 
-// ---- Home: Yangiliklar (admin panelda yoziladi) ----
+// ---- Qo'ng'iroqcha: bildirishnomalar ----
+// Bot yuborgan xabarlar (sizga mos dastur, muddat eslatmalari) va admin
+// yangiliklari. Ilgari yangiliklar bosh sahifa pastida turardi.
+let inboxItems = null;
 
-async function renderHomeUpdates() {
-  const box = document.getElementById("home-updates");
-  let items = [];
+function setInboxBadge(count) {
+  const badge = document.getElementById("inbox-badge");
+  if (!badge) return;
+  badge.hidden = !count;
+  badge.textContent = count > 9 ? "9+" : String(count);
+}
+
+async function loadInbox() {
   try {
-    items = await api("/updates");
+    const data = await api("/inbox");
+    inboxItems = data.items || [];
+    setInboxBadge(data.unread || 0);
   } catch (e) {
-    items = [];
+    /* qo'ng'iroqcha — qo'shimcha; xato ilovani to'xtatmasin */
   }
-  if (!box || !box.isConnected || !items.length) return;
-  box.innerHTML = `
-    <div class="section-head"><span class="section-title">${t("home.updates_title")}</span></div>
-    <div class="up-card">
-      ${items
-        .map(
-          (u) => `
-        <button type="button" class="up-row${u.scholarship_id ? " is-link" : ""}" data-grant="${
-          u.scholarship_id || ""
-        }">
-          <span class="up-dot up-${escapeHtml(u.kind)}"></span>
-          <span class="up-text">
-            <span class="up-title">${escapeHtml(u["title_" + lang] || u.title)}</span>
-            <span class="up-meta">${t("update.kind." + u.kind)} · ${shortDate(u.published_on)}</span>
-          </span>
-          ${u.scholarship_id ? icon("chevron", "up-go") : ""}
-        </button>`
-        )
-        .join("")}
-    </div>`;
-  box.querySelectorAll(".up-row.is-link").forEach((row) => {
-    row.addEventListener("click", () => openGrantById(Number(row.dataset.grant)));
+}
+
+function inboxRow(item) {
+  const link = item.program_id || item.scholarship_id;
+  const title = item["title_" + lang] || item.title;
+  const kindKey = ["match", "reminder", "grant_reminder"].includes(item.kind)
+    ? "inbox.kind." + item.kind
+    : "update.kind." + item.kind;
+  const meta = [t(kindKey), item.subtitle ? escapeHtml(item.subtitle) : "", shortDate(item.date)]
+    .filter(Boolean)
+    .join(" · ");
+  return `
+    <button type="button" class="up-row${link ? " is-link" : ""}${item.unread ? " is-unread" : ""}"
+      data-program="${item.program_id || ""}" data-grant="${item.scholarship_id || ""}">
+      <span class="up-dot up-${escapeHtml(item.kind)}"></span>
+      <span class="up-text">
+        <span class="up-title">${escapeHtml(title)}</span>
+        <span class="up-meta">${meta}</span>
+      </span>
+      ${link ? icon("chevron", "up-go") : ""}
+    </button>`;
+}
+
+async function openInbox() {
+  haptic("light");
+  if (inboxItems === null) await loadInbox();
+  const items = inboxItems || [];
+  ensureSheet();
+  const sheet = document.querySelector(".sheet");
+  showSheet(
+    `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${t("inbox.title")}</div>
+    ${
+      items.length
+        ? `<div class="up-card inbox-list">${items.map(inboxRow).join("")}</div>`
+        : `<div class="sheet-empty">${t("inbox.empty")}</div>`
+    }`,
+    sheet
+  );
+  sheet.querySelectorAll(".up-row.is-link").forEach((row) => {
+    row.addEventListener("click", () => {
+      closeSheet();
+      if (row.dataset.program) openProgramPage(Number(row.dataset.program));
+      else if (row.dataset.grant) openGrantById(Number(row.dataset.grant));
+    });
   });
+  // Ochildi — hammasi o'qilgan. Belgi darhol o'chadi, ro'yxatdagi
+  // ajratib ko'rsatish esa keyingi ochilishgacha qoladi.
+  setInboxBadge(0);
+  if (items.some((i) => i.unread)) {
+    inboxItems = items.map((i) => ({ ...i, unread: false }));
+    api("/inbox/seen", { method: "POST" }).catch(() => {});
+  }
+}
+
+function bindInboxButton() {
+  const btn = document.getElementById("inbox-btn");
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = "1";
+  btn.setAttribute("aria-label", t("inbox.title"));
+  btn.addEventListener("click", openInbox);
 }
 
 // Grant sahifasini ID bo'yicha ochadi (bot havolasi va yangiliklar uchun).
@@ -6482,6 +6544,8 @@ async function init() {
   tabbar.setAttribute("aria-busy", "true");
 
   await loadProfile();
+  bindInboxButton();
+  loadInbox();
   // Deep link maqsadi (reklama/ulashish havolasi). Profil yuklangandan
   // KEYIN: ikkalasi parallel ketsa yangi foydalanuvchi ikki marta
   // yaratilishga urinardi.

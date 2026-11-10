@@ -98,6 +98,32 @@ class HomeUpdateOut(BaseModel):
     scholarship_id: int | None
 
 
+class InboxItemOut(BaseModel):
+    """Qo'ng'iroqchadagi bitta bildirishnoma.
+
+    `kind`: `match` (haftalik mos dastur), `reminder` (dastur muddati),
+    `grant_reminder` (grant muddati) yoki admin yangiligining turi
+    (`new`/`open`/`deadline`/`info`). Yorliqni Mini App o'zi tarjima qiladi.
+    """
+
+    key: str
+    kind: str
+    title: str
+    title_ru: str | None = None
+    title_en: str | None = None
+    subtitle: str | None = None
+    # Ko'rsatiladigan sana (YYYY-MM-DD, Toshkent kuni).
+    date: str
+    program_id: int | None = None
+    scholarship_id: int | None = None
+    unread: bool = False
+
+
+class InboxOut(BaseModel):
+    items: list[InboxItemOut]
+    unread: int
+
+
 class FieldOut(BaseModel):
     """Yo'nalish — Mini App nomini foydalanuvchi tilida o'zi tanlaydi."""
 

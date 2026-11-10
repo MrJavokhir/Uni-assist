@@ -12,6 +12,7 @@ from app.bot.middlewares import DbSessionMiddleware
 from app.config import settings
 from app.db.session import async_session_factory
 from app.services import mentor_service
+from app.services.match_notification_service import is_match_day, run_match_scan
 from app.services.mentor_scheduler import SCAN_INTERVAL_SECONDS, run_mentor_scan
 from app.services.redis_client import redis_client
 from app.services.reminder_service import is_send_time, run_reminder_scan
@@ -100,6 +101,21 @@ async def reminder_loop(bot: Bot) -> None:
                     )
                 except Exception:
                     logger.exception("Grant eslatmalarida xatolik")
+                # Haftada bir marta: "sizga mos dastur topildi".
+                if is_match_day(now.date()):
+                    try:
+                        async with async_session_factory() as session:
+                            matches = await run_match_scan(bot, session, today=now.date())
+                        logger.info(
+                            "Mos dastur xabarlari: %s/%s foydalanuvchiga "
+                            "(mos dastur yo'q: %s, bloklangan: %s)",
+                            matches.sent,
+                            matches.eligible_users,
+                            matches.no_match,
+                            matches.blocked,
+                        )
+                    except Exception:
+                        logger.exception("Mos dastur xabarlarida xatolik")
         except Exception:
             logger.exception("Eslatmalarni tekshirishda xatolik")
         await asyncio.sleep(REMINDER_TICK_SECONDS)

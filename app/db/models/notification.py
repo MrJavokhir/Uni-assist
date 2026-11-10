@@ -102,6 +102,27 @@ class ScholarshipNotificationLog(Base):
     scholarship: Mapped["Scholarship"] = relationship()
 
 
+class MatchNotification(Base):
+    """Haftalik "sizga mos dastur topildi" xabari.
+
+    Bitta foydalanuvchiga bitta dastur ko'pi bilan bir marta tavsiya qilinadi
+    (unique) — keyingi hafta navbatdagi mos dastur tanlanadi. Qo'ng'iroqcha
+    (Mini App bildirishnomalari) ham shu jadvaldan o'qiydi.
+    """
+
+    __tablename__ = "match_notifications"
+    __table_args__ = (UniqueConstraint("user_id", "program_id", name="uq_match_notification_once"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    program_id: Mapped[int] = mapped_column(ForeignKey("programs.id", ondelete="CASCADE"))
+    sent_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    program: Mapped["Program"] = relationship()
+
+
 class DeadlineSuggestion(TimestampMixin, Base):
     """Foydalanuvchi taklif qilgan deadline sanasi.
 

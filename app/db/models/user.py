@@ -199,6 +199,10 @@ class User(TimestampMixin, Base):
     pending_target_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Mini App'dagi qo'ng'iroqcha oxirgi marta ochilgan payt: undan keyingi
+    # bildirishnomalar "o'qilmagan" hisoblanadi. None — hali ochilmagan
+    # (u holda ro'yxatdan o'tgan paytdan keyingilari o'qilmagan).
+    inbox_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     field: Mapped["Field | None"] = relationship()
     # `remote_side` kerak: bog'lanish o'z jadvaliga ishora qiladi va

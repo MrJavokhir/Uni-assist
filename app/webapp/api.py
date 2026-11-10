@@ -47,6 +47,7 @@ from app.services import (
     attribution_service,
     booking_service,
     event_service,
+    gift_service,
     kit_service,
     payment_service,
     referral_service,
@@ -79,6 +80,7 @@ from app.webapp.schemas import (
     EventIn,
     FeedbackIn,
     FieldOut,
+    GiftOut,
     GpaConvertOut,
     HomeUpdateOut,
     InboxItemOut,
@@ -328,6 +330,7 @@ async def _profile_out(session: AsyncSession, user: User) -> ProfileOut:
         referral_count=await referral_service.count_invited(session, user),
         share_ref=user.telegram_id,
         app_short_name=settings.miniapp_short_name.strip() or None,
+        gift_available=await gift_service.gift_available(session, user),
         ui_language=user.ui_language.value,
         degree_level=user.degree_level.value if user.degree_level else None,
         field_id=user.field_id,
@@ -1709,6 +1712,8 @@ async def list_services(
                 session, user, since=referral_service.invites_start(service, last_unlock)
             )
 
+    gift = await gift_service.user_gift(session, user)
+    gift_service_id = gift.service_id if gift is not None and gift.used_at is None else None
     lang = user.ui_language.value
     return [
         ServiceOut(
@@ -1731,9 +1736,38 @@ async def list_services(
             unlock_invites=service.unlock_invites,
             invites_have=invite_counts.get(service.id, 0),
             image_url=kit_service.icon_url(service),
+            gift_discount=gift.discount_percent if service.id == gift_service_id else None,
         )
         for service in services
     ]
+
+
+@router.post("/gift/open", response_model=GiftOut)
+async def open_gift(
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> GiftOut:
+    """Sovg'a qutisini ochadi (bir marta). Qayta chaqirilsa — o'sha sovg'a."""
+    gift = await gift_service.open_gift(session, user)
+    if gift is None:
+        raise HTTPException(status_code=404, detail="Sovg'a yo'q")
+    service = gift.service
+    price = Decimal(str(service.price_amount)) if service.price_amount is not None else None
+    return GiftOut(
+        service_id=service.id,
+        service_code=service.code,
+        title=_localized_uz(service, "title", user.ui_language.value),
+        kind=service.kind.value,
+        discount_percent=gift.discount_percent,
+        price_amount=float(price) if price is not None else None,
+        new_price=(
+            float(gift_service.discounted(price, gift.discount_percent))
+            if price is not None
+            else None
+        ),
+        price_currency=service.price_currency,
+        used=gift.used_at is not None,
+    )
 
 
 @router.get("/services/{service_id}/slots", response_model=list[SlotOut])
@@ -1826,6 +1860,17 @@ async def request_service(
         invites = await referral_service.invites_for_service(session, user, service)
         unlocked_by_invites = invites >= service.unlock_invites
 
+    gift = (
+        None
+        if unlocked_by_invites
+        else await gift_service.unused_gift_for(session, user, service_id)
+    )
+    price_override = (
+        gift_service.discounted(Decimal(str(service.price_amount)), gift.discount_percent)
+        if gift is not None and service.price_amount is not None
+        else None
+    )
+
     if unlocked_by_invites:
         # Pul yechilmaydi va balans tarixiga yozuv tushmaydi — yechim
         # bo'lmagan joyda nol summali qator faqat chalkashtirardi.
@@ -1833,7 +1878,9 @@ async def request_service(
         new_balance = Decimal(str(user.balance or 0))
     else:
         try:
-            new_balance = await payment_service.charge_service(session, user, service)
+            new_balance = await payment_service.charge_service(
+                session, user, service, amount=price_override
+            )
         except payment_service.InsufficientBalance as exc:
             # 402 Payment Required — Mini App shu kod bo'yicha "balansni
             # to'ldiring" oynasini ko'rsatadi.
@@ -1854,8 +1901,11 @@ async def request_service(
         # qo'lda bajariladigan xizmatlar ko'rinadi.
         status=(ServiceRequestStatus.DONE if is_file_service else ServiceRequestStatus.NEW),
         unlocked_by_invites=unlocked_by_invites,
+        gift_discount=gift.discount_percent if gift is not None else None,
     )
     session.add(service_request)
+    if gift is not None:
+        gift_service.mark_used(gift)
     await session.flush()
 
     slot_label = None
@@ -1876,8 +1926,9 @@ async def request_service(
         charged=(
             None
             if unlocked_by_invites or service.price_amount is None
-            else float(service.price_amount)
+            else float(price_override if price_override is not None else service.price_amount)
         ),
+        gift_discount=gift.discount_percent if gift is not None else None,
         has_file=has_file,
         slot_label=slot_label,
         unlocked_by_invites=unlocked_by_invites,
@@ -2007,9 +2058,20 @@ async def send_service_inquiry(
         f"🌍 Davlat: {escape(country.name_uz) if country else 'Hali aniq emas'}",
         f"🧩 Yordam: {escape(', '.join(topics)) if topics else '—'}",
     ]
+    gift = await gift_service.unused_gift_for(session, user, service_id)
+    if gift is not None:
+        lines.append(
+            "🎁 Sovg'a: <b>bepul</b>"
+            if gift.discount_percent >= 100
+            else f"🎁 Sovg'a: <b>{gift.discount_percent}% chegirma</b>"
+        )
     if text:
         lines += ["", f"💬 {escape(text)}"]
-    return {"sent": await _notify_admins(session, "\n".join(lines))}
+    sent = await _notify_admins(session, "\n".join(lines))
+    if sent and gift is not None:
+        gift_service.mark_used(gift)
+        await session.commit()
+    return {"sent": sent}
 
 
 async def _notify_admins(session: AsyncSession, html: str) -> bool:

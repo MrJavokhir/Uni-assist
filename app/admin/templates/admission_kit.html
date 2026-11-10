@@ -239,6 +239,58 @@
     </div>
   </div>
 
+  {# ======================= Sovg'alar ======================= #}
+  <div class="card mb-3">
+    <div class="card-header">
+      <h3 class="card-title">Sovg'alar <span class="text-muted">(bosh sahifadagi quti)</span></h3>
+      <div class="card-actions">
+        <a href="{{ url_for('admin:create', identity='gift') }}" class="btn btn-primary btn-sm">Yangi</a>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="text-muted">
+        Faol sovg'a bo'lsa, bosh sahifada quti chiqadi. Har bir user uni bir marta ochadi va
+        faol sovg'alardan biri tasodifan tushadi: Kit xizmatiga chegirma (100% — bepul).
+        Qo'llanmada chegirma xarid paytida o'zi qo'llanadi; qo'lda bajariladigan xizmatda
+        so'rov sizga «🎁 Sovg'a» belgisi bilan keladi.
+      </p>
+      {% if not gifts %}
+      <div class="alert alert-info mb-0">Hali sovg'a yo'q — quti hech kimga chiqmaydi.</div>
+      {% else %}
+      <div class="table-responsive">
+        <table class="table table-vcenter">
+          <thead>
+            <tr>
+              <th>Xizmat</th>
+              <th>Chegirma</th>
+              <th>Ehtimol</th>
+              <th>Ochilgan / ishlatilgan</th>
+              <th class="w-1"><span class="visually-hidden">Amallar</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for g in gifts %}
+            <tr>
+              <td>
+                {{ g.title }}
+                {% if not g.is_active %}<span class="badge bg-secondary-lt ms-1">faol emas</span>{% endif %}
+                {% if not g.service_active %}<span class="badge bg-warning-lt ms-1">xizmat o'chiq</span>{% endif %}
+              </td>
+              <td>{% if g.discount >= 100 %}Bepul{% else %}{{ g.discount }}%{% endif %}</td>
+              <td>{{ g.weight }}{% if g.share is not none %} <span class="text-muted">(~{{ g.share }}%)</span>{% endif %}</td>
+              <td>{{ g.opened }} / {{ g.used }}</td>
+              <td class="text-nowrap">
+                <a href="{{ url_for('admin:edit', identity='gift', pk=g.id) }}" class="btn btn-sm">Tahrirlash</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
   {# ======================= 3. Uchrashuv vaqtlari ======================= #}
   {% if slot_groups %}
   <div class="card mb-3">

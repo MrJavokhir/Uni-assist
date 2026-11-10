@@ -188,7 +188,11 @@ class InsufficientBalance(Exception):
 
 
 async def charge_service(
-    session: AsyncSession, user: User, service: AdmissionService
+    session: AsyncSession,
+    user: User,
+    service: AdmissionService,
+    *,
+    amount: Decimal | None = None,
 ) -> Decimal:
     """Xizmat narxini balansdan yechadi.
 
@@ -198,8 +202,11 @@ async def charge_service(
     if service.price_amount is None:
         return Decimal(str(user.balance or 0))
 
-    price = Decimal(str(service.price_amount))
+    # `amount` — sovg'a chegirmasidan keyingi narx. 0 bo'lsa pul yechilmaydi.
+    price = amount if amount is not None else Decimal(str(service.price_amount))
     available = Decimal(str(user.balance or 0))
+    if price <= 0:
+        return available
     if price > available:
         raise InsufficientBalance(price, available)
 

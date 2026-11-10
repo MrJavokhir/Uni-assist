@@ -255,6 +255,8 @@ class ServiceRequest(TimestampMixin, Base):
     unlocked_by_invites: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
+    # Sovg'a qutisidan tushgan chegirma bilan olingan bo'lsa — uning foizi.
+    gift_discount: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Admin uchun ishchi izoh (kim bilan gaplashildi, nima kelishildi).
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)

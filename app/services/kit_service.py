@@ -133,6 +133,7 @@ async def owns(session: AsyncSession, user: User, service_id: int) -> bool:
 OBTAINED_PAID = "paid"
 OBTAINED_INVITES = "invites"
 OBTAINED_FREE = "free"
+OBTAINED_GIFT = "gift"
 
 
 @dataclass(frozen=True)
@@ -164,6 +165,7 @@ def _paid_amount():
 def _how_obtained():
     return case(
         (ServiceRequest.unlocked_by_invites.is_(True), OBTAINED_INVITES),
+        (ServiceRequest.gift_discount.is_not(None), OBTAINED_GIFT),
         (_paid_amount().is_not(None), OBTAINED_PAID),
         else_=OBTAINED_FREE,
     )

@@ -34,19 +34,22 @@ Fayl qayerda saqlanadi va nega — `app/db/models/service.py`.
 import logging
 from datetime import UTC, datetime
 
-from sqladmin import BaseView, expose
+from sqladmin import BaseView, ModelView, expose
 from sqladmin.flash import Flash
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
+from wtforms.validators import InputRequired, NumberRange
 
 from app.db.models import (
     AdmissionService,
+    Gift,
     ServiceKind,
     ServiceRequest,
     ServiceRequestStatus,
     ServiceSlot,
+    UserGift,
 )
 from app.db.session import async_session_factory
 from app.services import booking_service, kit_service
@@ -57,6 +60,7 @@ logger = logging.getLogger(__name__)
 _OBTAINED_LABELS = {
     kit_service.OBTAINED_PAID: ("Sotib olgan", "bg-blue-lt"),
     kit_service.OBTAINED_INVITES: ("Do'st taklifi", "bg-green-lt"),
+    kit_service.OBTAINED_GIFT: ("Sovg'a", "bg-pink-lt"),
     kit_service.OBTAINED_FREE: ("Bepul", "bg-secondary-lt"),
 }
 
@@ -139,8 +143,7 @@ class AdmissionKitView(BaseView):
             obtained = await kit_service.obtained_counts(session)
             bought = {service_id: sum(ways.values()) for service_id, ways in obtained.items()}
             obtained_totals = {
-                how: sum(ways.get(how, 0) for ways in obtained.values())
-                for how in _OBTAINED_LABELS
+                how: sum(ways.get(how, 0) for ways in obtained.values()) for how in _OBTAINED_LABELS
             }
 
             guides, manual = [], []
@@ -214,6 +217,48 @@ class AdmissionKitView(BaseView):
                     }
                 )
 
+            # Sovg'alar: necha marta tushgan va ishlatilgan.
+            gift_rows = (
+                (
+                    await session.execute(
+                        select(Gift).options(selectinload(Gift.service)).order_by(Gift.id)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            gift_stats = {
+                gift_id: (opened, used)
+                for gift_id, opened, used in (
+                    await session.execute(
+                        select(
+                            UserGift.gift_id,
+                            func.count(),
+                            func.count(UserGift.used_at),
+                        ).group_by(UserGift.gift_id)
+                    )
+                ).all()
+            }
+            active_weight = sum(g.weight for g in gift_rows if g.is_active and g.service.is_active)
+            gifts = [
+                {
+                    "id": g.id,
+                    "title": g.service.title_uz,
+                    "discount": g.discount_percent,
+                    "weight": g.weight,
+                    "is_active": g.is_active,
+                    "service_active": g.service.is_active,
+                    "share": (
+                        round(g.weight * 100 / active_weight)
+                        if g.is_active and g.service.is_active and active_weight
+                        else None
+                    ),
+                    "opened": gift_stats.get(g.id, (0, 0))[0],
+                    "used": gift_stats.get(g.id, (0, 0))[1],
+                }
+                for g in gift_rows
+            ]
+
             limit = None if show_all else RECENT_REQUESTS
             # Hamma olingan xizmatlar: pulga, do'st taklifi bilan yoki bepul.
             obtained_list = [
@@ -259,6 +304,7 @@ class AdmissionKitView(BaseView):
                 "show_all": show_all,
                 "statuses": [(s.value, _STATUS_LABELS[s.value][0]) for s in ServiceRequestStatus],
                 "max_mb": kit_service.MAX_PDF_BYTES // (1024 * 1024),
+                "gifts": gifts,
             },
         )
 
@@ -525,3 +571,47 @@ class AdmissionKitView(BaseView):
                 "bo'lsa, so'rov holatini o'zgartiring va odam bilan gaplashing.",
             )
         return back
+
+
+class GiftAdmin(ModelView, model=Gift):
+    """Sovg'a qutisidagi sovg'alar (Admission Kit sahifasidan ochiladi).
+
+    Har bir sovg'a — Kit xizmatiga chegirma. User qutini bir marta ochadi va
+    faol sovg'alardan biri «Ehtimol» bo'yicha tasodifan tushadi.
+    """
+
+    name = "Sovg'a"
+    name_plural = "Sovg'alar"
+    icon = "fa-solid fa-gift"
+
+    def is_visible(self, request: Request) -> bool:
+        return False
+
+    column_list = [Gift.id, Gift.service, Gift.discount_percent, Gift.weight, Gift.is_active]
+    form_columns = [Gift.service, Gift.discount_percent, Gift.weight, Gift.is_active]
+    column_labels = {
+        "service": "Kit xizmati",
+        "discount_percent": "Chegirma (%)",
+        "weight": "Ehtimol",
+        "is_active": "Faol",
+    }
+    form_args = {
+        "service": {"validators": [InputRequired()]},
+        "discount_percent": {
+            "validators": [InputRequired(), NumberRange(min=1, max=100)],
+            "description": "1–100. 100 — xizmat bepul beriladi.",
+            "default": 100,
+        },
+        "weight": {
+            "validators": [InputRequired(), NumberRange(min=1, max=1000)],
+            "description": (
+                "Boshqa faol sovg'alarga nisbatan tushish ehtimoli. Masalan, 3 va 1 bo'lsa, "
+                "birinchisi 3 marta ko'proq tushadi. Hammasi 1 bo'lsa — teng."
+            ),
+            "default": 1,
+        },
+        "is_active": {
+            "description": "O'chirilsa, yangi ochilgan qutilarga tushmaydi (olganlarda qoladi).",
+            "default": True,
+        },
+    }

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 116;
+const ASSET_V = 117;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -309,6 +309,18 @@ const I18N = {
     "kit.minutes": "{count} daqiqa",
     "home.recap_title": "Mos dasturlar",
     "home.full_match": "To'liq mos",
+    "home.gift": "Sizga sovg'a!",
+    "gift.opening": "Ochilmoqda…",
+    "gift.congrats": "Tabriklaymiz! 🎉",
+    "gift.free": "«{title}» — siz uchun bepul!",
+    "gift.discount": "«{title}» uchun {percent}% chegirma!",
+    "gift.price": "{old} o'rniga {new}",
+    "gift.where": "Sovg'a Admission Kit'da sizni kutmoqda.",
+    "gift.claim": "Olish",
+    "gift.later": "Keyinroq",
+    "gift.empty": "Hozircha sovg'a qolmadi.",
+    "kit.gift_free": "🎁 Sovg'a: bepul",
+    "kit.gift_off": "🎁 Sovg'a: -{percent}%",
     "home.recap_text": "Profilingizga mos keladigan barcha dasturlar — bir joyda.",
     "home.recap_cta": "Ko'rish",
     "home.gpa_tag": "4.0 · ECTS · UK",
@@ -766,6 +778,18 @@ const I18N = {
     "kit.minutes": "{count} мин",
     "home.recap_title": "Подходящие программы",
     "home.full_match": "Полное совпадение",
+    "home.gift": "Вам подарок!",
+    "gift.opening": "Открываем…",
+    "gift.congrats": "Поздравляем! 🎉",
+    "gift.free": "«{title}» — для вас бесплатно!",
+    "gift.discount": "Скидка {percent}% на «{title}»!",
+    "gift.price": "{new} вместо {old}",
+    "gift.where": "Подарок ждёт вас в Admission Kit.",
+    "gift.claim": "Получить",
+    "gift.later": "Позже",
+    "gift.empty": "Подарков пока нет.",
+    "kit.gift_free": "🎁 Подарок: бесплатно",
+    "kit.gift_off": "🎁 Подарок: -{percent}%",
     "home.recap_text": "Все программы, подходящие вашему профилю, — в одном месте.",
     "home.recap_cta": "Смотреть",
     "home.gpa_tag": "4.0 · ECTS · UK",
@@ -1223,6 +1247,18 @@ const I18N = {
     "kit.minutes": "{count} min",
     "home.recap_title": "Your matches",
     "home.full_match": "Full match",
+    "home.gift": "A gift for you!",
+    "gift.opening": "Opening…",
+    "gift.congrats": "Congratulations! 🎉",
+    "gift.free": "“{title}” is free for you!",
+    "gift.discount": "{percent}% off “{title}”!",
+    "gift.price": "{new} instead of {old}",
+    "gift.where": "Your gift is waiting in the Admission Kit.",
+    "gift.claim": "Claim",
+    "gift.later": "Later",
+    "gift.empty": "No gifts right now.",
+    "kit.gift_free": "🎁 Gift: free",
+    "kit.gift_off": "🎁 Gift: -{percent}%",
     "home.recap_text": "Every programme that fits your profile, in one place.",
     "home.recap_cta": "Explore",
     "home.gpa_tag": "4.0 · ECTS · UK",
@@ -1935,10 +1971,17 @@ async function renderHome() {
         <img class="quick-ico" src="icon-application.png?v=${ASSET_V}" alt="" aria-hidden="true">
         <span class="quick-label">${t("home.quick_full")}</span>
       </button>
-      <button type="button" class="quick green" data-goto="match">
+      ${
+        profile && profile.gift_available
+          ? `<button type="button" class="quick gift" data-gift="1">
+        <img class="quick-ico quick-gift" src="icon-gift.png?v=${ASSET_V}" alt="" aria-hidden="true">
+        <span class="quick-label">${t("home.gift")}</span>
+      </button>`
+          : `<button type="button" class="quick green" data-goto="match">
         <span class="quick-num" id="home-green-value">—</span>
         <span class="quick-label">${t("home.full_match")}</span>
-      </button>
+      </button>`
+      }
     </div>
 
   `;
@@ -1958,14 +2001,123 @@ async function renderHome() {
   el.querySelectorAll(".quick").forEach((card) => {
     card.addEventListener("click", () => {
       haptic("light");
-      if (card.dataset.service) openServiceByCode(card.dataset.service);
+      if (card.dataset.gift) openGiftBox();
+      else if (card.dataset.service) openServiceByCode(card.dataset.service);
       else switchTab(card.dataset.goto);
     });
   });
 
   const matches = await api("/match");
   const green = matches.filter((m) => m.level === "green").length;
-  document.getElementById("home-green-value").textContent = ready ? green : "—";
+  const greenValue = document.getElementById("home-green-value");
+  if (greenValue) greenValue.textContent = ready ? green : "—";
+}
+
+// ---- Sovg'a qutisi ----
+// Bosh sahifada "To'liq mos" o'rnida turadi, bir marta ochiladi. Ochilganda
+// quti silkinadi (telefon tebranadi), keyin "portlab" ochiladi va sovg'a
+// chiqadi. Sovg'ani admin Admission Kit bo'limida sozlaydi.
+function closeGiftOverlay() {
+  const overlay = document.getElementById("gift-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  setTimeout(() => overlay.remove(), 260);
+  document.body.style.overflow = "";
+  if (currentTab === "home") renderHome();
+}
+
+function giftText(gift) {
+  const title = escapeHtml(gift.title);
+  const head =
+    gift.discount_percent >= 100
+      ? t("gift.free", { title })
+      : t("gift.discount", { title, percent: gift.discount_percent });
+  const money = (v) => `${Number(v).toLocaleString()} ${escapeHtml(gift.price_currency)}`;
+  const price =
+    gift.price_amount && gift.discount_percent < 100 && gift.new_price !== null
+      ? `<div class="gift-price">${t("gift.price", { old: money(gift.price_amount), new: money(gift.new_price) })}</div>`
+      : "";
+  return `<div class="gift-title">${head}</div>${price}<div class="gift-where">${t("gift.where")}</div>`;
+}
+
+function confettiHtml() {
+  const colors = ["#315cdf", "#e5484d", "#22a565", "#e8912a", "#8b5cf6", "#f5c518"];
+  let html = "";
+  for (let i = 0; i < 26; i++) {
+    const angle = (360 / 26) * i + Math.random() * 10;
+    const dist = 110 + Math.random() * 90;
+    const dx = Math.round(Math.cos((angle * Math.PI) / 180) * dist);
+    const dy = Math.round(Math.sin((angle * Math.PI) / 180) * dist);
+    html += `<i style="--dx:${dx}px;--dy:${dy}px;--c:${colors[i % colors.length]};--r:${Math.round(
+      Math.random() * 360
+    )}deg"></i>`;
+  }
+  return html;
+}
+
+async function openGiftBox() {
+  if (document.getElementById("gift-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.id = "gift-overlay";
+  overlay.className = "gift-overlay";
+  overlay.innerHTML = `
+    <div class="gift-stage">
+      <div class="gift-glow"></div>
+      <div class="gift-confetti"></div>
+      <img class="gift-box is-shaking" src="icon-gift.png?v=${ASSET_V}" alt="">
+      <div class="gift-status">${t("gift.opening")}</div>
+      <div class="gift-card" hidden></div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => overlay.classList.add("open"));
+
+  // Silkinish paytida yengil tebranishlar.
+  haptic("light");
+  const taps = [260, 520, 780].map((ms) => setTimeout(() => haptic("medium"), ms));
+  const wait = new Promise((resolve) => setTimeout(resolve, 1100));
+  let gift = null;
+  try {
+    [gift] = await Promise.all([api("/gift/open", { method: "POST" }), wait]);
+  } catch (e) {
+    await wait;
+  }
+  taps.forEach(clearTimeout);
+  if (profile) profile.gift_available = false;
+
+  if (!gift) {
+    haptic("error");
+    showToast(t("gift.empty"));
+    closeGiftOverlay();
+    return;
+  }
+
+  // Quti ochiladi: "portlash", konfetti va tabrik kartasi.
+  const box = overlay.querySelector(".gift-box");
+  box.classList.remove("is-shaking");
+  box.classList.add("is-opening");
+  overlay.querySelector(".gift-status").remove();
+  overlay.querySelector(".gift-confetti").innerHTML = confettiHtml();
+  overlay.classList.add("is-open");
+  haptic("success");
+
+  const card = overlay.querySelector(".gift-card");
+  card.innerHTML = `
+    <div class="gift-congrats">${t("gift.congrats")}</div>
+    ${giftText(gift)}
+    <button type="button" class="btn btn-accent gift-claim">${t("gift.claim")}</button>
+    <button type="button" class="gift-later">${t("gift.later")}</button>`;
+  setTimeout(() => {
+    card.hidden = false;
+  }, 380);
+
+  card.querySelector(".gift-later").addEventListener("click", closeGiftOverlay);
+  card.querySelector(".gift-claim").addEventListener("click", async () => {
+    haptic("light");
+    closeGiftOverlay();
+    if (gift.kind === "request") await openServiceByCode(gift.service_code);
+    else await switchTab("kit");
+  });
 }
 
 // ---- Home: muddati yaqin grantlar karuseli ----
@@ -4974,12 +5126,20 @@ function bindKitBack(root) {
 // Narx bitta satr matn: gradientli kartada u sarlavha ustidagi "ko'z qoshi"
 // (eyebrow) bo'lib turadi, shuning uchun alohida teglar kerak emas.
 function servicePriceText(service) {
+  // Sovg'a qutisidan shu xizmatga chegirma tushgan (server narxni o'zi hisoblaydi).
+  const gift = service.gift_discount && !service.requested ? Number(service.gift_discount) : 0;
+  const giftBadge = gift
+    ? `<span class="svc-gift">${gift >= 100 ? t("kit.gift_free") : t("kit.gift_off", { percent: gift })}</span>`
+    : "";
   if (service.price_amount === null || service.price_amount === undefined) {
-    return escapeHtml(t("kit.price_ask"));
+    return escapeHtml(t("kit.price_ask")) + giftBadge;
   }
-  const amount = `${Number(service.price_amount).toLocaleString()} ${escapeHtml(
-    service.price_currency
-  )}`;
+  const money = (v) => `${Number(v).toLocaleString()} ${escapeHtml(service.price_currency)}`;
+  if (gift) {
+    const now = gift >= 100 ? "" : ` ${money(Math.round((service.price_amount * (100 - gift)) / 100))}`;
+    return `<s class="svc-old">${money(service.price_amount)}</s>${now}${giftBadge}`;
+  }
+  const amount = money(service.price_amount);
   // Pulsiz yo'l (do'st taklifi) narx ostida emas, kartadagi alohida
   // blokda (`inviteBlock`): mayda qatorda uni hech kim payqamasdi.
   return service.price_note ? `${amount} · ${escapeHtml(service.price_note)}` : amount;

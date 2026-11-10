@@ -15,6 +15,8 @@ class ProfileOut(BaseModel):
     # `t.me/<bot>/<short_name>?startapp=...` (qisqa nom sozlangan bo'lsa).
     share_ref: int | None = None
     app_short_name: str | None = None
+    # Bosh sahifada sovg'a qutisi ko'rsatilsinmi (bir marta ochiladi).
+    gift_available: bool = False
     degree_level: str | None
     field_id: int | None
     gpa_raw: float | None
@@ -371,6 +373,8 @@ class ServiceOut(BaseModel):
     invites_have: int = 0
     # Kartadagi rasm havolasi (bo'sh bo'lsa — ikonka).
     image_url: str | None = None
+    # Sovg'a qutisidan shu xizmatga tushgan, hali ishlatilmagan chegirma (%).
+    gift_discount: int | None = None
 
 
 class SlotOut(BaseModel):
@@ -407,6 +411,22 @@ class ServiceRequestResult(BaseModel):
     slot_label: str | None = None
     # Pulga emas, do'st taklif qilib ochildimi.
     unlocked_by_invites: bool = False
+    # Sovg'a chegirmasi bilan olindimi (%).
+    gift_discount: int | None = None
+
+
+class GiftOut(BaseModel):
+    """Qutidan tushgan sovg'a: Kit xizmati va chegirma."""
+
+    service_id: int
+    service_code: str
+    title: str
+    kind: str
+    discount_percent: int
+    price_amount: float | None = None
+    new_price: float | None = None
+    price_currency: str
+    used: bool = False
 
 
 class ServiceDeliveryResult(BaseModel):

@@ -1,0 +1,154 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  {% if draft %}
+  {# ---------- 2-qadam: sinov yuborildi, tasdiqlash ---------- #}
+  <div class="card mb-3 border-primary">
+    <div class="card-header">
+      <h3 class="card-title">2-qadam: tekshiring va yuboring</h3>
+    </div>
+    <div class="card-body">
+      <p class="text-muted mb-3">
+        Sinov xabari bot adminlariga yuborildi — Telegram'da qanday ko'rinishini tekshiring.
+        Hammasi to'g'ri bo'lsa, yuboring. Xato bo'lsa, «Bekor qilish» va qaytadan yozing.
+      </p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="ua-bc-preview">
+            {% if draft_has_image %}
+            <img src="{{ url_for('admin:view-broadcast-image', broadcast_id=draft.id) }}" alt="">
+            {% endif %}
+            <div class="ua-bc-text">{{ draft.text }}</div>
+            {% if draft.button_text %}
+            <div class="ua-bc-button">{{ draft.button_text }}</div>
+            {% endif %}
+          </div>
+          <div class="form-hint mt-2">Bu yerda matn teglari bilan ko'rinadi — formatlangan holini sinov xabarida ko'ring.</div>
+        </div>
+        <div class="col-md-6">
+          <dl class="mb-3">
+            <dt>Kimga</dt>
+            <dd>{{ audiences[draft.audience] }} — <b>{{ counts[draft.audience] }}</b> kishi</dd>
+            {% if draft.button_text %}
+            <dt>Tugma</dt>
+            <dd>
+              {{ draft.button_text }} →
+              {% if draft.button_kind == "url" %}{{ draft.button_url }}{% else %}Mini App{% if draft.button_url %} ({{ draft.button_url }}){% endif %}{% endif %}
+            </dd>
+            {% endif %}
+          </dl>
+          <form method="post" action="{{ url_for('admin:view-broadcast-send', broadcast_id=draft.id) }}" class="mb-2">
+            <label class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="confirm" value="yes" required>
+              <span class="form-check-label">Ha, {{ counts[draft.audience] }} kishiga yuboraman</span>
+            </label>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i>Hammaga yuborish</button>
+          </form>
+          <form method="post" action="{{ url_for('admin:view-broadcast-discard', broadcast_id=draft.id) }}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Bekor qilish</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  {# ---------- 1-qadam: xabar yozish ---------- #}
+  <div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">Yangi xabar</h3></div>
+    <div class="card-body">
+      <form method="post" action="{{ url_for('admin:view-broadcast-create') }}" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label required" for="bc-text">Matn</label>
+          <textarea class="form-control" id="bc-text" name="text" rows="7" maxlength="4096" required></textarea>
+          <div class="form-hint">
+            Formatlash: &lt;b&gt;qalin&lt;/b&gt;, &lt;i&gt;kursiv&lt;/i&gt;, &lt;u&gt;tagiga chizilgan&lt;/u&gt;,
+            &lt;a href="https://..."&gt;havola&lt;/a&gt;. Rasm bilan ko'pi bilan 1024 belgi, rasmsiz 4096.
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="bc-image">Rasm (ixtiyoriy)</label>
+          <input class="form-control" type="file" id="bc-image" name="image" accept="image/jpeg,image/png,image/webp">
+          <div class="form-hint">JPG, PNG yoki WEBP, 5 MB gacha.</div>
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label class="form-label" for="bc-btn-text">Tugma matni (ixtiyoriy)</label>
+            <input class="form-control" id="bc-btn-text" name="button_text" maxlength="64" placeholder="🌐 Uni Assist'ni ochish">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="bc-btn-kind">Tugma nima ochadi</label>
+            <select class="form-select" id="bc-btn-kind" name="button_kind">
+              <option value="webapp">Mini App</option>
+              <option value="url">Havola</option>
+            </select>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label" for="bc-btn-url">Havola</label>
+            <input class="form-control" id="bc-btn-url" name="button_url" maxlength="500" placeholder="https://...">
+            <div class="form-hint">Mini App uchun bo'sh qoldiring — bosh sahifa ochiladi.</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="bc-audience">Kimga</label>
+          <select class="form-select" id="bc-audience" name="audience">
+            {% for key, label in audiences.items() %}
+            <option value="{{ key }}">{{ label }} ({{ counts[key] }})</option>
+            {% endfor %}
+          </select>
+          <div class="form-hint">Hisobi bloklangan userlar sanalmaydi. Botni bloklaganlarga xabar yetmaydi.</div>
+        </div>
+        {% if not admins_count %}
+        <div class="alert alert-warning">
+          Bot adminlari ro'yxati bo'sh — sinov xabarini yuborib bo'lmaydi. Avval «Bot adminlari»ga
+          o'z Telegram ID'ingizni qo'shing.
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Sinov yuborish va ko'rib chiqish</button>
+        <div class="form-hint mt-2">Avval xabar bot adminlariga ({{ admins_count }}) sinov sifatida ketadi. Hammaga yuborish keyingi qadamda.</div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Yuborilganlar</h3>
+      {% if sending %}<div class="card-actions text-muted small">Yuborilmoqda — sahifa o'zi yangilanadi</div>{% endif %}
+    </div>
+    {% if not history %}
+    <div class="card-body text-muted">Hali xabar yuborilmagan.</div>
+    {% else %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead>
+          <tr><th>Sana</th><th>Matn</th><th>Kimga</th><th>Holat</th><th>Yetdi</th><th>Yetmadi</th></tr>
+        </thead>
+        <tbody>
+          {% for b in history %}
+          <tr>
+            <td class="text-nowrap">{{ b.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+            <td class="text-truncate ua-bc-snippet">{{ b.text[:120] }}</td>
+            <td>{{ audiences[b.audience] }}</td>
+            <td><span class="badge {{ statuses[b.status][1] }}">{{ statuses[b.status][0] }}</span></td>
+            <td>{{ b.sent }} / {{ b.total }}</td>
+            <td>
+              {{ b.blocked + b.failed }}
+              {% if b.blocked %}<span class="text-muted">(bloklagan: {{ b.blocked }})</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% if sending %}
+<script>setTimeout(function () { location.reload(); }, 5000);</script>
+{% endif %}
+{% endblock %}

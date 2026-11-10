@@ -1,9 +1,11 @@
 from app.db.base import Base
 from app.db.models.analytics import CampaignCost, CampaignLink, Event
+from app.db.models.broadcast import Broadcast
 from app.db.models.channel import RequiredChannel, SubscriptionExemption
 from app.db.models.content_view import ContentView
 from app.db.models.country import Country
 from app.db.models.field import Field
+from app.db.models.gift import Gift, UserGift
 from app.db.models.home_update import HomeUpdate, UpdateKind
 from app.db.models.mentor import (
     ComplaintReason,
@@ -82,6 +84,7 @@ __all__ = [
     "BalanceTransaction",
     "Base",
     "BotAdmin",
+    "Broadcast",
     "CampaignCost",
     "CampaignLink",
     "ComplaintReason",
@@ -96,6 +99,7 @@ __all__ = [
     "DegreeLevel",
     "Event",
     "Field",
+    "Gift",
     "GpaScale",
     "HomeUpdate",
     "LanguageCertType",
@@ -137,6 +141,7 @@ __all__ = [
     "UpdateKind",
     "User",
     "UserActivityDay",
+    "UserGift",
     "UserLanguageCertificate",
     "UserOtherTest",
     "program_scholarship",

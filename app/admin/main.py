@@ -11,8 +11,9 @@ from sqladmin import Admin
 from starlette.responses import RedirectResponse, Response
 
 from app.admin.auth import AdminAuth
+from app.admin.broadcast_views import BroadcastView
 from app.admin.csv_views import CatalogImportView
-from app.admin.kit_views import AdmissionKitView
+from app.admin.kit_views import AdmissionKitView, GiftAdmin
 from app.admin.mentor_views import MentorComplaintsView, MentorQuestionsView
 from app.admin.source_views import CampaignCostAdmin, LinksView, SourcesView
 from app.admin.stats import StatsView
@@ -39,6 +40,7 @@ from app.admin.views import (
 from app.admin.wizards import ScholarshipWizard, UniversityWizard
 from app.config import settings
 from app.db.session import engine
+from app.services import broadcast_service
 from app.webapp.api import router as webapp_api_router
 from app.webapp.mentor_api import router as mentor_api_router
 
@@ -91,6 +93,8 @@ async def _supervise_bot() -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     task = None
+    # Oldingi jarayonda yarmida qolgan ommaviy yuborishlar.
+    await broadcast_service.mark_interrupted()
     if settings.run_bot_in_process:
         task = asyncio.create_task(_supervise_bot(), name="telegram-bot")
     try:
@@ -123,7 +127,7 @@ class UniAssistAdmin(Admin):
     almashtiriladi (sqladmin shablonlari forklanmasligi uchun).
     """
 
-    KIT_IDENTITIES = ("admission-service", "service-request")
+    KIT_IDENTITIES = ("admission-service", "service-request", "gift")
 
     @staticmethod
     def get_save_redirect_url(request, form, model_view, obj):
@@ -175,6 +179,8 @@ for view in (
     UserAdmin,
 ):
     admin.add_view(view)
+# Bot orqali userlarga xabar (sinovdan keyin ommaviy yuborish).
+admin.add_base_view(BroadcastView)
 
 # Admission Kit — BITTA bo'lim. Xizmatlar, ularning PDF fayllari va sotib
 # olishlar bitta sahifada: ular doim birga ishlatiladi, uchta alohida qator
@@ -186,6 +192,7 @@ admin.add_base_view(AdmissionKitView)
 for view in (
     AdmissionServiceAdmin,
     ServiceRequestAdmin,
+    GiftAdmin,
     PaymentSettingsAdmin,
     PaymentAdmin,
     BalanceTransactionAdmin,

@@ -729,3 +729,23 @@ body {
 @media (max-width: 767.98px) {
   .ua-funnel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ============ Xabar yuborish: ko'rinishi ============ */
+.ua-bc-preview {
+  max-width: 380px;
+  border-radius: 14px;
+  background: var(--tblr-bg-surface-secondary, #f1f5f9);
+  padding: 8px;
+}
+.ua-bc-preview img { display: block; width: 100%; border-radius: 10px; margin-bottom: 8px; }
+.ua-bc-snippet { max-width: 320px; }
+.ua-bc-text { white-space: pre-wrap; padding: 4px 6px; font-size: 14px; }
+.ua-bc-button {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(49, 92, 223, 0.12);
+  color: #315cdf;
+  text-align: center;
+  font-weight: 600;
+}

@@ -88,7 +88,7 @@ document.addEventListener("focusin", (event) => {
 });
 // Telegram statik fayllarni qattiq keshlaydi. Rasm/CSS/JS o'zgarganda bu raqam
 // oshiriladi (index.html'dagi `?v=` bilan bir xil bo'lishi kerak).
-const ASSET_V = 117;
+const ASSET_V = 118;
 const TG_USER = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
 
 function haptic(style) {
@@ -311,6 +311,9 @@ const I18N = {
     "home.full_match": "To'liq mos",
     "home.gift": "Sizga sovg'a!",
     "gift.opening": "Ochilmoqda…",
+    "gift.tap": "Ochish uchun qutini bosing",
+    "gift.tap_more": "Yana bosing!",
+    "gift.tap_last": "Oxirgi marta!",
     "gift.congrats": "Tabriklaymiz! 🎉",
     "gift.free": "«{title}» — siz uchun bepul!",
     "gift.discount": "«{title}» uchun {percent}% chegirma!",
@@ -780,6 +783,9 @@ const I18N = {
     "home.full_match": "Полное совпадение",
     "home.gift": "Вам подарок!",
     "gift.opening": "Открываем…",
+    "gift.tap": "Нажмите на коробку, чтобы открыть",
+    "gift.tap_more": "Ещё раз!",
+    "gift.tap_last": "Последний раз!",
     "gift.congrats": "Поздравляем! 🎉",
     "gift.free": "«{title}» — для вас бесплатно!",
     "gift.discount": "Скидка {percent}% на «{title}»!",
@@ -1249,6 +1255,9 @@ const I18N = {
     "home.full_match": "Full match",
     "home.gift": "A gift for you!",
     "gift.opening": "Opening…",
+    "gift.tap": "Tap the box to open it",
+    "gift.tap_more": "Again!",
+    "gift.tap_last": "One more time!",
     "gift.congrats": "Congratulations! 🎉",
     "gift.free": "“{title}” is free for you!",
     "gift.discount": "{percent}% off “{title}”!",
@@ -2014,14 +2023,31 @@ async function renderHome() {
 }
 
 // ---- Sovg'a qutisi ----
-// Bosh sahifada "To'liq mos" o'rnida turadi, bir marta ochiladi. Ochilganda
-// quti silkinadi (telefon tebranadi), keyin "portlab" ochiladi va sovg'a
-// chiqadi. Sovg'ani admin Admission Kit bo'limida sozlaydi.
+// Bosh sahifada "To'liq mos" o'rnida turadi, bir marta ochiladi.
+// Ochilish 3 bosqichli: user qutini 3 marta bosadi — har safar kuchliroq
+// silkinadi va telefon kuchliroq tebranadi; 3-bosishda yorug'lik chaqnaydi,
+// quti ikkiga bo'linib otiladi, konfetti yog'iladi va sovg'a chiqadi.
+// Sovg'ani admin Admission Kit bo'limida sozlaydi.
+
+// Tebranish. Telegram'ning HapticFeedback'i iOS va Android'da ishlaydi
+// (Desktop/Web'da tebranish yo'q). Android'da u tizimdagi "tebranish"
+// sozlamasiga bog'liq — o'chiq bo'lsa sezilmaydi, shuning uchun sovg'a
+// lahzalarida qo'shimcha `navigator.vibrate` ham chaqiriladi.
+function giftBuzz(style, pattern) {
+  haptic(style);
+  try {
+    const android = tg && tg.platform === "android";
+    if (android && pattern && navigator.vibrate) navigator.vibrate(pattern);
+  } catch (e) {
+    /* qo'llab-quvvatlanmaydi */
+  }
+}
+
 function closeGiftOverlay() {
   const overlay = document.getElementById("gift-overlay");
   if (!overlay) return;
   overlay.classList.remove("open");
-  setTimeout(() => overlay.remove(), 260);
+  setTimeout(() => overlay.remove(), 300);
   document.body.style.overflow = "";
   if (currentTab === "home") renderHome();
 }
@@ -2040,83 +2066,152 @@ function giftText(gift) {
   return `<div class="gift-title">${head}</div>${price}<div class="gift-where">${t("gift.where")}</div>`;
 }
 
-function confettiHtml() {
-  const colors = ["#315cdf", "#e5484d", "#22a565", "#e8912a", "#8b5cf6", "#f5c518"];
+// Konfetti: bo'laklar otilib chiqadi, keyin og'irlik bilan pastga tushadi.
+function confettiHtml(count) {
+  const colors = ["#315cdf", "#e5484d", "#22a565", "#e8912a", "#8b5cf6", "#f5c518", "#ff6fb5", "#29c4e8"];
   let html = "";
-  for (let i = 0; i < 26; i++) {
-    const angle = (360 / 26) * i + Math.random() * 10;
-    const dist = 110 + Math.random() * 90;
-    const dx = Math.round(Math.cos((angle * Math.PI) / 180) * dist);
-    const dy = Math.round(Math.sin((angle * Math.PI) / 180) * dist);
-    html += `<i style="--dx:${dx}px;--dy:${dy}px;--c:${colors[i % colors.length]};--r:${Math.round(
-      Math.random() * 360
-    )}deg"></i>`;
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const power = 120 + Math.random() * 190;
+    const dx = Math.round(Math.cos(angle) * power);
+    const dy = Math.round(Math.sin(angle) * power * 0.8 - 90);
+    const fall = Math.round(260 + Math.random() * 260);
+    const size = 6 + Math.round(Math.random() * 7);
+    const round = Math.random() < 0.3 ? "50%" : "2px";
+    const delay = Math.round(Math.random() * 120);
+    html += `<i style="--dx:${dx}px;--dy:${dy}px;--fall:${fall}px;--c:${colors[i % colors.length]};--r:${Math.round(
+      Math.random() * 720 - 360
+    )}deg;--s:${size}px;--br:${round};--d:${delay}ms"></i>`;
   }
   return html;
 }
 
+function sparklesHtml(count) {
+  let html = "";
+  for (let i = 0; i < count; i++) {
+    const angle = (360 / count) * i;
+    const dist = 105 + (i % 3) * 22;
+    html += `<b style="--a:${angle}deg;--dist:${dist}px;--d:${(i * 170) % 1300}ms"></b>`;
+  }
+  return html;
+}
+
+// Chegirma soni 0 dan sanab chiqadi ("-0%" -> "-50%" yoki "BEPUL").
+function countUp(node, target) {
+  const start = Date.now();
+  const timer = setInterval(() => {
+    const k = Math.min(1, (Date.now() - start) / 700);
+    node.textContent = `-${Math.round(target * (1 - Math.pow(1 - k, 3)))}%`;
+    if (k >= 1) clearInterval(timer);
+  }, 30);
+}
+
 async function openGiftBox() {
   if (document.getElementById("gift-overlay")) return;
+  const src = `icon-gift.png?v=${ASSET_V}`;
   const overlay = document.createElement("div");
   overlay.id = "gift-overlay";
   overlay.className = "gift-overlay";
   overlay.innerHTML = `
+    <div class="gift-flash"></div>
+    <button type="button" class="gift-close" aria-label="${t("gift.later")}">${icon("close")}</button>
     <div class="gift-stage">
+      <div class="gift-rays"></div>
       <div class="gift-glow"></div>
+      <div class="gift-sparkles">${sparklesHtml(12)}</div>
+      <button type="button" class="gift-box-wrap is-dropping" aria-label="${escapeHtml(t("gift.tap"))}">
+        <img class="gift-box" src="${src}" alt="">
+        <img class="gift-half gift-top" src="${src}" alt="" aria-hidden="true">
+        <img class="gift-half gift-bottom" src="${src}" alt="" aria-hidden="true">
+      </button>
       <div class="gift-confetti"></div>
-      <img class="gift-box is-shaking" src="icon-gift.png?v=${ASSET_V}" alt="">
-      <div class="gift-status">${t("gift.opening")}</div>
+      <div class="gift-hint">${t("gift.tap")}</div>
+      <div class="gift-dots"><i></i><i></i><i></i></div>
       <div class="gift-card" hidden></div>
     </div>`;
   document.body.appendChild(overlay);
   document.body.style.overflow = "hidden";
-  requestAnimationFrame(() => overlay.classList.add("open"));
+  void overlay.offsetWidth; // boshlang'ich holat chizilsin — fon silliq ochiladi
+  overlay.classList.add("open");
+  giftBuzz("medium", 30);
 
-  // Silkinish paytida yengil tebranishlar.
-  haptic("light");
-  const taps = [260, 520, 780].map((ms) => setTimeout(() => haptic("medium"), ms));
-  const wait = new Promise((resolve) => setTimeout(resolve, 1100));
-  let gift = null;
-  try {
-    [gift] = await Promise.all([api("/gift/open", { method: "POST" }), wait]);
-  } catch (e) {
-    await wait;
-  }
-  taps.forEach(clearTimeout);
+  // Sovg'a serverdan darhol so'raladi — 3 marta bosilguncha tayyor bo'ladi.
+  const giftPromise = api("/gift/open", { method: "POST" }).catch(() => null);
   if (profile) profile.gift_available = false;
 
-  if (!gift) {
-    haptic("error");
-    showToast(t("gift.empty"));
-    closeGiftOverlay();
-    return;
-  }
+  const wrap = overlay.querySelector(".gift-box-wrap");
+  const hint = overlay.querySelector(".gift-hint");
+  const dots = overlay.querySelectorAll(".gift-dots i");
+  overlay.querySelector(".gift-close").addEventListener("click", closeGiftOverlay);
+  setTimeout(() => wrap.classList.remove("is-dropping"), 750);
 
-  // Quti ochiladi: "portlash", konfetti va tabrik kartasi.
-  const box = overlay.querySelector(".gift-box");
-  box.classList.remove("is-shaking");
-  box.classList.add("is-opening");
-  overlay.querySelector(".gift-status").remove();
-  overlay.querySelector(".gift-confetti").innerHTML = confettiHtml();
-  overlay.classList.add("is-open");
-  haptic("success");
+  let taps = 0;
+  let busy = false;
+  wrap.addEventListener("click", async () => {
+    if (busy || taps >= 3) return;
+    taps += 1;
+    dots.forEach((dot, i) => dot.classList.toggle("on", i < taps));
+    overlay.dataset.level = String(taps);
+    wrap.classList.remove("hit-1", "hit-2", "is-dropping");
+    void wrap.offsetWidth; // animatsiyani qayta boshlash uchun
+    if (taps === 1) {
+      wrap.classList.add("hit-1");
+      giftBuzz("medium", 40);
+      hint.textContent = t("gift.tap_more");
+      return;
+    }
+    if (taps === 2) {
+      wrap.classList.add("hit-2");
+      giftBuzz("heavy", [60, 40, 60]);
+      hint.textContent = t("gift.tap_last");
+      return;
+    }
 
-  const card = overlay.querySelector(".gift-card");
-  card.innerHTML = `
-    <div class="gift-congrats">${t("gift.congrats")}</div>
-    ${giftText(gift)}
-    <button type="button" class="btn btn-accent gift-claim">${t("gift.claim")}</button>
-    <button type="button" class="gift-later">${t("gift.later")}</button>`;
-  setTimeout(() => {
-    card.hidden = false;
-  }, 380);
+    // 3-bosish: zaryad -> portlash.
+    busy = true;
+    hint.textContent = t("gift.opening");
+    wrap.classList.add("is-charging");
+    const ticks = [0, 140, 280, 420, 540].map((ms) => setTimeout(() => giftBuzz("rigid", 25), ms));
+    const [gift] = await Promise.all([giftPromise, new Promise((r) => setTimeout(r, 650))]);
+    ticks.forEach(clearTimeout);
 
-  card.querySelector(".gift-later").addEventListener("click", closeGiftOverlay);
-  card.querySelector(".gift-claim").addEventListener("click", async () => {
-    haptic("light");
-    closeGiftOverlay();
-    if (gift.kind === "request") await openServiceByCode(gift.service_code);
-    else await switchTab("kit");
+    if (!gift) {
+      giftBuzz("error", [80, 60, 80]);
+      showToast(t("gift.empty"));
+      closeGiftOverlay();
+      return;
+    }
+
+    wrap.classList.remove("is-charging");
+    overlay.classList.add("is-open");
+    wrap.classList.add("is-exploding");
+    hint.remove();
+    overlay.querySelector(".gift-dots").remove();
+    overlay.querySelector(".gift-confetti").innerHTML = confettiHtml(70);
+    giftBuzz("heavy", [90, 50, 140]);
+    setTimeout(() => giftBuzz("success"), 160);
+    [420, 620, 820].forEach((ms) => setTimeout(() => haptic("light"), ms));
+
+    const free = gift.discount_percent >= 100;
+    const card = overlay.querySelector(".gift-card");
+    card.innerHTML = `
+      <div class="gift-badge">${free ? escapeHtml(t("kit.gift_free").replace(/^🎁\s*/, "")) : "-0%"}</div>
+      <div class="gift-congrats">${t("gift.congrats")}</div>
+      ${giftText(gift)}
+      <button type="button" class="btn btn-accent gift-claim">${t("gift.claim")}</button>
+      <button type="button" class="gift-later">${t("gift.later")}</button>`;
+    setTimeout(() => {
+      card.hidden = false;
+      if (!free) countUp(card.querySelector(".gift-badge"), gift.discount_percent);
+    }, 420);
+
+    card.querySelector(".gift-later").addEventListener("click", closeGiftOverlay);
+    card.querySelector(".gift-claim").addEventListener("click", async () => {
+      haptic("light");
+      closeGiftOverlay();
+      if (gift.kind === "request") await openServiceByCode(gift.service_code);
+      else await switchTab("kit");
+    });
   });
 }
 

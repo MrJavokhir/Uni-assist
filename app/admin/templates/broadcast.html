@@ -11,10 +11,20 @@
       <h3 class="card-title">2-qadam: tekshiring va yuboring</h3>
     </div>
     <div class="card-body">
+      {% if draft.test_error %}
+      <div class="alert alert-danger">
+        <div>
+          <b>Sinov xabari yetmadi — bu xabarni hammaga yuborib bo'lmaydi.</b><br>
+          Telegram javobi: <code>{{ draft.test_error }}</code><br>
+          «Bekor qilish»ni bosing va xabarni tuzatib qaytadan yozing.
+        </div>
+      </div>
+      {% else %}
       <p class="text-muted mb-3">
         Sinov xabari bot adminlariga yuborildi — Telegram'da qanday ko'rinishini tekshiring.
         Hammasi to'g'ri bo'lsa, yuboring. Xato bo'lsa, «Bekor qilish» va qaytadan yozing.
       </p>
+      {% endif %}
       <div class="row g-3">
         <div class="col-md-6">
           <div class="ua-bc-preview">
@@ -40,6 +50,7 @@
             </dd>
             {% endif %}
           </dl>
+          {% if not draft.test_error %}
           <form method="post" action="{{ url_for('admin:view-broadcast-send', broadcast_id=draft.id) }}" class="mb-2">
             <label class="form-check mb-3">
               <input class="form-check-input" type="checkbox" name="confirm" value="yes" required>
@@ -47,6 +58,7 @@
             </label>
             <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane me-1"></i>Hammaga yuborish</button>
           </form>
+          {% endif %}
           <form method="post" action="{{ url_for('admin:view-broadcast-discard', broadcast_id=draft.id) }}">
             <button type="submit" class="btn btn-outline-secondary btn-sm">Bekor qilish</button>
           </form>
@@ -139,6 +151,11 @@
               {% if b.blocked %}<span class="text-muted">(bloklagan: {{ b.blocked }})</span>{% endif %}
             </td>
           </tr>
+          {% if b.last_error %}
+          <tr class="ua-bc-error-row">
+            <td colspan="6" class="text-danger small">Xato sababi: <code>{{ b.last_error }}</code></td>
+          </tr>
+          {% endif %}
           {% endfor %}
         </tbody>
       </table>

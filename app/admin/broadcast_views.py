@@ -24,6 +24,7 @@ STATUS_LABELS = {
     bs.STATUS_SENDING: ("Yuborilmoqda", "bg-blue-lt"),
     bs.STATUS_DONE: ("Yuborildi", "bg-green-lt"),
     bs.STATUS_INTERRUPTED: ("To'xtatilgan", "bg-warning-lt"),
+    bs.STATUS_FAILED: ("Xato — to'xtatildi", "bg-red-lt"),
 }
 HISTORY_LIMIT = 20
 ALLOWED_IMAGE_TYPES = ("image/jpeg", "image/png", "image/webp")
@@ -132,15 +133,20 @@ class BroadcastView(BaseView):
             draft_id = broadcast.id
 
         if not admins:
-            Flash.error(
-                request,
+            test_error = (
                 "Bot adminlari ro'yxati bo'sh — sinov yuborilmadi. «Bot adminlari» bo'limiga "
-                "o'z Telegram ID'ingizni qo'shing.",
+                "o'z Telegram ID'ingizni qo'shing."
             )
-            return self._back(request, draft_id)
-        errors = await bs.send_test(broadcast, admins)
-        if errors:
-            Flash.error(request, "Sinov yuborilmadi: " + "; ".join(errors)[:500])
+        else:
+            errors = await bs.send_test(broadcast, admins)
+            test_error = "; ".join(errors)[:1000] if errors else None
+        # Sinov natijasi saqlanadi: yiqilgan bo'lsa, hammaga yuborib bo'lmaydi.
+        async with async_session_factory() as session:
+            row = await session.get(Broadcast, draft_id)
+            row.test_error = test_error
+            await session.commit()
+        if test_error:
+            Flash.error(request, "Sinov yuborilmadi — xabarni tuzating.")
         else:
             Flash.success(request, f"Sinov xabari {len(admins)} ta bot adminiga yuborildi.")
         return self._back(request, draft_id)
@@ -157,6 +163,9 @@ class BroadcastView(BaseView):
             if broadcast is None or broadcast.status != bs.STATUS_DRAFT:
                 Flash.error(request, "Qoralama topilmadi yoki allaqachon yuborilgan.")
                 return self._back(request)
+            if broadcast.test_error:
+                Flash.error(request, "Sinov yiqilgan xabarni hammaga yuborib bo'lmaydi.")
+                return self._back(request, broadcast_id)
             broadcast.status = bs.STATUS_SENDING
             broadcast.started_by = current_admin(request)
             await session.commit()

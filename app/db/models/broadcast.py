@@ -31,5 +31,10 @@ class Broadcast(TimestampMixin, Base):
     sent: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     blocked: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # Sinov xabari yiqilgan bo'lsa — Telegram xatosi. Bor bo'lsa, hammaga
+    # yuborishga ruxsat berilmaydi.
+    test_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Ommaviy yuborishdagi oxirgi xato (nega yetmagani admin sahifasida ko'rinadi).
+    last_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
     started_by: Mapped[str | None] = mapped_column(String(100), nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

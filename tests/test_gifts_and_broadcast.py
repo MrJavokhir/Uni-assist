@@ -4,7 +4,7 @@ import random
 from decimal import Decimal
 
 import pytest
-from aiogram.exceptions import TelegramForbiddenError
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.methods import SendMessage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -254,3 +254,51 @@ async def test_broadcast_reaches_audience_and_counts(session, monkeypatch) -> No
     )
     user3 = (await session.execute(select(User).where(User.telegram_id == 3))).scalar_one()
     assert user3.is_blocked is False, "403 hisobni bloklamaydi"
+
+
+def test_html_problems_are_caught_before_sending() -> None:
+    assert bs.html_problem('Salom <b>do\'st</b> &amp; <a href="https://x.uz">havola</a>') is None
+    assert "&" in bs.html_problem("Narx: 10 & 20")
+    assert "<" in bs.html_problem("x < 5")
+    assert "yopilmagan" in bs.html_problem("<b>ochiq qoldi")
+    assert "ishlamaydi" in bs.html_problem("<div>blok</div>")
+    assert "href" in bs.html_problem("<a>havola</a>")
+    assert bs.validate("<b>ochiq", False, "", "webapp", "") is not None
+
+
+class _BrokenBot:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def send_message(self, chat_id, text, reply_markup=None):
+        self.calls += 1
+        raise TelegramBadRequest(
+            method=SendMessage(chat_id=chat_id, text=text),
+            message="Bad Request: can't parse entities",
+        )
+
+    class session:
+        @staticmethod
+        async def close() -> None:
+            pass
+
+
+async def test_broadcast_stops_when_every_message_fails(session, monkeypatch) -> None:
+    session.add_all([User(telegram_id=1000 + i) for i in range(15)])
+    broadcast = Broadcast(text="Salom", audience="all", status=bs.STATUS_SENDING)
+    session.add(broadcast)
+    await session.commit()
+    bot = _BrokenBot()
+    monkeypatch.setattr(bs, "new_bot", lambda: bot)
+    monkeypatch.setattr(bs, "_SEND_INTERVAL", 0)
+    monkeypatch.setattr(
+        bs, "async_session_factory", async_sessionmaker(session.bind, expire_on_commit=False)
+    )
+
+    await bs.run_broadcast(broadcast.id)
+
+    assert bot.calls == bs.ABORT_AFTER_FAILURES, "15 kishiga emas, 10 tadan keyin to'xtaydi"
+    await session.refresh(broadcast)
+    assert broadcast.status == bs.STATUS_FAILED
+    assert (broadcast.sent, broadcast.failed, broadcast.total) == (0, 10, 15)
+    assert "can't parse entities" in broadcast.last_error

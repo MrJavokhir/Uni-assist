@@ -17,7 +17,9 @@ odamga ham Telegram xuddi shunday 403 qaytaradi.
 
 import asyncio
 import logging
+import re
 from datetime import UTC, datetime
+from html.parser import HTMLParser
 
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
@@ -50,6 +52,12 @@ STATUS_DRAFT = "draft"
 STATUS_SENDING = "sending"
 STATUS_DONE = "done"
 STATUS_INTERRUPTED = "interrupted"
+STATUS_FAILED = "failed"
+
+# Boshidanoq shuncha xabar ketma-ket yiqilsa (birortasi ham yetmasa), yuborish
+# to'xtatiladi: xato xabarning o'zida (HTML, rasm, tugma) — 800 kishiga
+# bekorga urinishning ma'nosi yo'q.
+ABORT_AFTER_FAILURES = 10
 
 # Fondagi vazifalar: havolasi saqlanmasa, asyncio ularni yig'ib tashlashi mumkin.
 _tasks: set[asyncio.Task] = set()
@@ -67,6 +75,76 @@ async def count_recipients(session: AsyncSession, audience: str) -> int:
     return (await session.execute(stmt)).scalar_one()
 
 
+# Telegram HTML'da ruxsat etilgan teglar.
+ALLOWED_TAGS = {
+    "b",
+    "strong",
+    "i",
+    "em",
+    "u",
+    "ins",
+    "s",
+    "strike",
+    "del",
+    "a",
+    "code",
+    "pre",
+    "tg-spoiler",
+    "span",
+    "blockquote",
+    "tg-emoji",
+}
+_ENTITY_OK = re.compile(r"&(?:lt|gt|amp|quot|#\d+|#x[0-9a-fA-F]+);")
+
+
+class _TagChecker(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=False)
+        self.stack: list[str] = []
+        self.problem: str | None = None
+
+    def handle_starttag(self, tag, attrs):
+        if self.problem:
+            return
+        if tag not in ALLOWED_TAGS:
+            self.problem = f"<{tag}> tegi Telegram'da ishlamaydi."
+            return
+        if tag == "a" and not dict(attrs).get("href"):
+            self.problem = '<a> tegida href="https://..." yo\'q.'
+            return
+        self.stack.append(tag)
+
+    def handle_endtag(self, tag):
+        if self.problem:
+            return
+        if not self.stack or self.stack[-1] != tag:
+            self.problem = f"</{tag}> yopuvchi tegi ortiqcha yoki tartibi noto'g'ri."
+            return
+        self.stack.pop()
+
+
+def html_problem(text: str) -> str | None:
+    """Telegram HTML sifatida o'qiy olmaydigan joy bo'lsa — tushuntirish."""
+    for match in re.finditer(r"&", text):
+        if not _ENTITY_OK.match(text, match.start()):
+            return "Matnda yolg'iz «&» belgisi bor — uni &amp; deb yozing."
+    for match in re.finditer(r"<", text):
+        rest = text[match.start() + 1 : match.start() + 40]
+        if not re.match(r"/?[a-zA-Z][\w-]*(\s[^<>]*)?>", rest):
+            return "Matnda teg bo'lmagan «<» belgisi bor — uni &lt; deb yozing."
+    checker = _TagChecker()
+    try:
+        checker.feed(text)
+        checker.close()
+    except Exception:  # noqa: BLE001 — har qanday tahlil xatosi = noto'g'ri HTML
+        return "Matndagi HTML teglarini o'qib bo'lmadi."
+    if checker.problem:
+        return checker.problem
+    if checker.stack:
+        return f"<{checker.stack[-1]}> tegi yopilmagan (</{checker.stack[-1]}> yo'q)."
+    return None
+
+
 def validate(text: str, has_image: bool, button_text: str, button_kind: str, button_url: str):
     """Xato matni yoki None."""
     if not text.strip():
@@ -80,7 +158,14 @@ def validate(text: str, has_image: bool, button_text: str, button_kind: str, but
         return "Tugma havolasi https:// bilan boshlanishi kerak."
     if button_url and not button_text:
         return "Tugma matnini yozing (yoki havolani o'chiring)."
-    return None
+    if (
+        button_text
+        and button_kind == "webapp"
+        and button_url
+        and not button_url.startswith("https://")
+    ):
+        return "Mini App havolasi https:// bilan boshlanishi kerak (yoki bo'sh qoldiring)."
+    return html_problem(text)
 
 
 def build_markup(broadcast: Broadcast) -> InlineKeyboardMarkup | None:
@@ -163,6 +248,7 @@ async def run_broadcast(broadcast_id: int) -> None:
         session.expunge(broadcast)
 
     sent = failed = blocked = 0
+    last_error: str | None = None
     await _save_progress(broadcast_id, total=len(chat_ids))
     bot = new_bot()
     photo = first_photo(broadcast)
@@ -179,17 +265,35 @@ async def run_broadcast(broadcast_id: int) -> None:
                 sent += 1
             except TelegramForbiddenError:
                 blocked += 1
-            except Exception:  # noqa: BLE001 — bitta xato ommaviy yuborishni to'xtatmasin
+            except Exception as exc:  # noqa: BLE001 — bitta xato ommaviy yuborishni to'xtatmasin
                 failed += 1
-                logger.warning("Xabar yuborilmadi: broadcast=%s chat=%s", broadcast_id, chat_id)
+                last_error = str(exc)[:500]
+                logger.warning(
+                    "Xabar yuborilmadi: broadcast=%s chat=%s: %s", broadcast_id, chat_id, exc
+                )
+                if sent == 0 and failed >= ABORT_AFTER_FAILURES:
+                    # Birortasi ham yetmadi — xato xabarning o'zida.
+                    await _save_progress(
+                        broadcast_id,
+                        sent=sent,
+                        failed=failed,
+                        blocked=blocked,
+                        last_error=last_error,
+                        status=STATUS_FAILED,
+                        finished_at=datetime.now(UTC),
+                    )
+                    return
             if index % PROGRESS_EVERY == 0:
-                await _save_progress(broadcast_id, sent=sent, failed=failed, blocked=blocked)
+                await _save_progress(
+                    broadcast_id, sent=sent, failed=failed, blocked=blocked, last_error=last_error
+                )
             await asyncio.sleep(_SEND_INTERVAL)
         await _save_progress(
             broadcast_id,
             sent=sent,
             failed=failed,
             blocked=blocked,
+            last_error=last_error,
             status=STATUS_DONE,
             finished_at=datetime.now(UTC),
         )

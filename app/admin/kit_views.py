@@ -305,6 +305,7 @@ class AdmissionKitView(BaseView):
                 "statuses": [(s.value, _STATUS_LABELS[s.value][0]) for s in ServiceRequestStatus],
                 "max_mb": kit_service.MAX_PDF_BYTES // (1024 * 1024),
                 "gifts": gifts,
+                "gift_total": active_weight,
             },
         )
 
@@ -577,7 +578,10 @@ class GiftAdmin(ModelView, model=Gift):
     """Sovg'a qutisidagi sovg'alar (Admission Kit sahifasidan ochiladi).
 
     Har bir sovg'a — Kit xizmatiga chegirma. User qutini bir marta ochadi va
-    faol sovg'alardan biri «Ehtimol» bo'yicha tasodifan tushadi.
+    faol sovg'alardan biri «Tushish ehtimoli (%)» bo'yicha tasodifan tushadi.
+    Foizlar yig'indisi 100 bo'lmasa, ular mutanosib hisoblanadi (masalan,
+    yolg'iz sovg'a 30% bo'lsa ham hammaga tushadi) — Kit sahifasi buni
+    ogohlantiradi va haqiqiy ulushni ko'rsatadi.
     """
 
     name = "Sovg'a"
@@ -592,7 +596,7 @@ class GiftAdmin(ModelView, model=Gift):
     column_labels = {
         "service": "Kit xizmati",
         "discount_percent": "Chegirma (%)",
-        "weight": "Ehtimol",
+        "weight": "Tushish ehtimoli (%)",
         "is_active": "Faol",
     }
     form_args = {
@@ -603,12 +607,13 @@ class GiftAdmin(ModelView, model=Gift):
             "default": 100,
         },
         "weight": {
-            "validators": [InputRequired(), NumberRange(min=1, max=1000)],
+            "validators": [InputRequired(), NumberRange(min=1, max=100)],
             "description": (
-                "Boshqa faol sovg'alarga nisbatan tushish ehtimoli. Masalan, 3 va 1 bo'lsa, "
-                "birinchisi 3 marta ko'proq tushadi. Hammasi 1 bo'lsa — teng."
+                "Qutini ochgan 100 kishidan nechtasiga shu sovg'a tushadi. Bitta sovg'a bo'lsa — "
+                "100. Bir nechta bo'lsa, foizlar yig'indisi 100 bo'lsin: masalan, CV tekshiruvi "
+                "70, mentor konsultatsiyasi 30."
             ),
-            "default": 1,
+            "default": 100,
         },
         "is_active": {
             "description": "O'chirilsa, yangi ochilgan qutilarga tushmaydi (olganlarda qoladi).",

@@ -257,13 +257,21 @@
       {% if not gifts %}
       <div class="alert alert-info mb-0">Hali sovg'a yo'q — quti hech kimga chiqmaydi.</div>
       {% else %}
+      {% if gift_total and gift_total != 100 %}
+      <div class="alert alert-warning">
+        <div>
+          Faol sovg'alar foizlari yig'indisi <b>{{ gift_total }}%</b>, 100% emas. Hozir ular mutanosib
+          hisoblanmoqda — haqiqiy ulush qavs ichida. Aniq bo'lishi uchun foizlarni 100 ga yetkazing.
+        </div>
+      </div>
+      {% endif %}
       <div class="table-responsive">
         <table class="table table-vcenter">
           <thead>
             <tr>
               <th>Xizmat</th>
               <th>Chegirma</th>
-              <th>Ehtimol</th>
+              <th>Tushish ehtimoli</th>
               <th>Ochilgan / ishlatilgan</th>
               <th class="w-1"><span class="visually-hidden">Amallar</span></th>
             </tr>
@@ -277,7 +285,11 @@
                 {% if not g.service_active %}<span class="badge bg-warning-lt ms-1">xizmat o'chiq</span>{% endif %}
               </td>
               <td>{% if g.discount >= 100 %}Bepul{% else %}{{ g.discount }}%{% endif %}</td>
-              <td>{{ g.weight }}{% if g.share is not none %} <span class="text-muted">(~{{ g.share }}%)</span>{% endif %}</td>
+              <td>
+                {{ g.weight }}%
+                {% if g.share is not none and g.share != g.weight %}<span class="text-muted">(haqiqatda ~{{ g.share }}%)</span>{% endif %}
+                {% if g.share is none %}<span class="text-muted">(tushmaydi)</span>{% endif %}
+              </td>
               <td>{{ g.opened }} / {{ g.used }}</td>
               <td class="text-nowrap">
                 <a href="{{ url_for('admin:edit', identity='gift', pk=g.id) }}" class="btn btn-sm">Tahrirlash</a>

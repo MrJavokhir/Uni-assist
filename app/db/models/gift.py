@@ -1,7 +1,7 @@
 """Bosh sahifadagi sovg'a qutisi.
 
 Admin Admission Kit bo'limida sovg'alar ro'yxatini tuzadi: har biri — Kit
-xizmatiga chegirma (100% = bepul) va tushish ehtimoli (`weight`). User qutini
+xizmatiga chegirma (100% = bepul) va tushish ehtimoli foizda (`weight`). User qutini
 bir marta ochadi va faol sovg'alardan biri tasodifan tushadi (`UserGift`).
 Sovg'a o'sha xizmatni olganda (yoki so'rov yuborganda) ishlatiladi.
 """
@@ -28,8 +28,9 @@ class Gift(TimestampMixin, Base):
     )
     # Chegirma foizi: 1–100. 100 — xizmat bepul.
     discount_percent: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
-    # Tushish ehtimoli boshqa faol sovg'alarga nisbatan (1 = oddiy).
-    weight: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Tushish ehtimoli foizda (1–100). Faol sovg'alar yig'indisi 100 bo'lmasa,
+    # foizlar mutanosib hisoblanadi.
+    weight: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     service: Mapped["AdmissionService"] = relationship()

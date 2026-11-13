@@ -119,12 +119,15 @@ async def test_weekly_match_sends_newest_unsent_program_once(session) -> None:
     assert button.text == "📖 Dastur bilan tanishish"
     assert button.web_app.url == f"https://uniassist.uz/webapp/#program_{new.id}"
 
-    second = await mns.run_match_scan(bot, session, today=TODAY + timedelta(days=7))
+    later = datetime.now(UTC) + timedelta(days=7)
+    second = await mns.run_match_scan(bot, session, today=TODAY + timedelta(days=7), now=later)
     assert second.sent == 1
     assert f"/share/program/{old.id}.jpg" in bot.photos[1][1]
 
     # Saqlangani va boshqa darajadagisi tavsiya qilinmaydi — mos dastur qolmadi.
-    third = await mns.run_match_scan(bot, session, today=TODAY + timedelta(days=14))
+    third = await mns.run_match_scan(
+        bot, session, today=TODAY + timedelta(days=14), now=later + timedelta(days=7)
+    )
     assert (third.sent, third.no_match) == (0, 1)
     sent_ids = (
         (await session.execute(select(MatchNotification.program_id).order_by(MatchNotification.id)))
@@ -224,3 +227,24 @@ async def test_inbox_merges_sources_and_tracks_unread(session) -> None:
 
     await api.mark_inbox_seen(user, session)
     assert (await api.get_inbox(user, session)).unread == 0
+
+
+async def test_recently_notified_user_is_skipped(session) -> None:
+    """Qo'lda yuborilgandan keyin seshanba kuni ikkinchi xabar ketmaydi."""
+    country, field, uni = await _catalog(session)
+    session.add_all([_program(uni, field, "A", T0), _program(uni, field, "B", T0)])
+    await _user(session, country, field)
+    await session.commit()
+    bot = _Bot()
+
+    first = await mns.run_match_scan(bot, session, today=TODAY)
+    again = await mns.run_match_scan(bot, session, today=TODAY + timedelta(days=4))
+
+    assert first.sent == 1
+    assert (again.sent, again.recent) == (0, 1)
+    assert len(bot.photos) == 1
+
+
+def test_next_match_day() -> None:
+    assert mns.next_match_day(TODAY) == TODAY  # seshanba
+    assert mns.next_match_day(TODAY + timedelta(days=1)) == TODAY + timedelta(days=7)

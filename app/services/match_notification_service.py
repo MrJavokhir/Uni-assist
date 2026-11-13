@@ -21,7 +21,7 @@ qayta ishga tushganda allaqachon yuborilganlarga takror ketmaydi.
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
@@ -49,6 +49,10 @@ logger = logging.getLogger(__name__)
 # Haftaning qaysi kuni yuboriladi (0 = dushanba, 1 = seshanba).
 MATCH_WEEKDAY = 1
 
+# Shuncha kun ichida tavsiya olgan userga yana yuborilmaydi: admin
+# seshanbadan oldin qo'lda yuborsa, seshanba kuni ikkinchi xabar ketmasin.
+RECENT_DAYS = 6
+
 _LEVEL_ORDER = {MatchLevel.GREEN: 0, MatchLevel.YELLOW: 1}
 
 
@@ -58,10 +62,30 @@ class MatchScanResult:
     sent: int = 0
     no_match: int = 0
     blocked: int = 0
+    recent: int = 0  # so'nggi RECENT_DAYS kun ichida olgan — o'tkazib yuborildi
 
 
 def is_match_day(today: date) -> bool:
     return today.weekday() == MATCH_WEEKDAY
+
+
+def next_match_day(today: date) -> date:
+    """Keyingi avtomatik yuborish kuni (bugun seshanba bo'lsa — bugun)."""
+    return today + timedelta(days=(MATCH_WEEKDAY - today.weekday()) % 7)
+
+
+async def recently_notified(session: AsyncSession, now: datetime) -> set[int]:
+    """So'nggi RECENT_DAYS kun ichida tavsiya olgan userlar."""
+    since = now - timedelta(days=RECENT_DAYS)
+    return set(
+        (
+            await session.execute(
+                select(MatchNotification.user_id).where(MatchNotification.sent_at >= since)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
 
 async def eligible_users(session: AsyncSession) -> list[User]:
@@ -137,31 +161,28 @@ def build_message(program: Program, lang: str, today: date) -> tuple[str, Inline
     return caption[: share_card.CAPTION_LIMIT], InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-async def _send(bot: Bot, user: User, program: Program, today: date) -> bool:
+async def send_program(bot: Bot, chat_id: int, lang: str, program: Program, today: date) -> None:
     """Karta rasmi bilan yuboradi; rasm yuborilmasa — oddiy matn bilan.
 
-    403 (bot bloklangan) da `is_blocked` qo'yiladi va False qaytadi.
-    """
-    lang = user.ui_language.value
+    Telegram xatolari (403, 429...) chaqiruvchiga o'tadi."""
     caption, markup = build_message(program, lang, today)
     photo = share_card.program_image_url(program, lang, today)
+    try:
+        await bot.send_photo(
+            chat_id, photo, caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup
+        )
+    except TelegramBadRequest:
+        # Telegram rasmni yuklay olmadi (server band, rasm xatosi) —
+        # xabar baribir yetib borsin.
+        logger.warning("Mos dastur rasmi yuborilmadi, matn bilan: chat=%s", chat_id)
+        await bot.send_message(chat_id, caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+
+
+async def _send(bot: Bot, user: User, program: Program, today: date) -> bool:
+    """403 (bot bloklangan) da `is_blocked` qo'yiladi va False qaytadi."""
 
     async def attempt() -> None:
-        try:
-            await bot.send_photo(
-                user.telegram_id,
-                photo,
-                caption=caption,
-                parse_mode=ParseMode.HTML,
-                reply_markup=markup,
-            )
-        except TelegramBadRequest:
-            # Telegram rasmni yuklay olmadi (server band, rasm xatosi) —
-            # xabar baribir yetib borsin.
-            logger.warning("Mos dastur rasmi yuborilmadi, matn bilan: user_id=%s", user.id)
-            await bot.send_message(
-                user.telegram_id, caption, parse_mode=ParseMode.HTML, reply_markup=markup
-            )
+        await send_program(bot, user.telegram_id, user.ui_language.value, program, today)
 
     try:
         await attempt()
@@ -188,14 +209,20 @@ async def run_match_scan(
     *,
     today: date | None = None,
     dry_run: bool = False,
+    now: datetime | None = None,
 ) -> MatchScanResult:
     """Bir marta to'liq aylanish: har bir userga eng mos dastur yuboriladi."""
-    today = today or datetime.now(TASHKENT_TZ).date()
+    now = now or datetime.now(UTC)
+    today = today or now.astimezone(TASHKENT_TZ).date()
     result = MatchScanResult()
     users = await eligible_users(session)
     result.eligible_users = len(users)
+    recent = await recently_notified(session, now)
 
     for user in users:
+        if user.id in recent:
+            result.recent += 1
+            continue
         program = await pick_program(session, user)
         if program is None:
             result.no_match += 1

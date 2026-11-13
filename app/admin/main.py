@@ -14,6 +14,7 @@ from app.admin.auth import AdminAuth
 from app.admin.broadcast_views import BroadcastView
 from app.admin.csv_views import CatalogImportView
 from app.admin.kit_views import AdmissionKitView, GiftAdmin
+from app.admin.match_views import MatchNotifyView
 from app.admin.mentor_views import MentorComplaintsView, MentorQuestionsView
 from app.admin.source_views import CampaignCostAdmin, LinksView, SourcesView
 from app.admin.stats import StatsView
@@ -181,6 +182,8 @@ for view in (
     admin.add_view(view)
 # Bot orqali userlarga xabar (sinovdan keyin ommaviy yuborish).
 admin.add_base_view(BroadcastView)
+# Haftalik "sizga mos dastur" xabarlari: holat, namuna, hozir yuborish.
+admin.add_base_view(MatchNotifyView)
 
 # Admission Kit — BITTA bo'lim. Xizmatlar, ularning PDF fayllari va sotib
 # olishlar bitta sahifada: ular doim birga ishlatiladi, uchta alohida qator

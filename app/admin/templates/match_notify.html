@@ -1,0 +1,135 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="col-12">
+<div class="ua-page">
+
+  <div class="row row-cards mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="card"><div class="card-body">
+        <div class="subheader">Xabar oladiganlar</div>
+        <div class="h1 mb-0">{{ eligible }}</div>
+        <div class="text-muted small">daraja, yo'nalish va davlatni tanlagan, bildirishnomasi yoqilgan</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card"><div class="card-body">
+        <div class="subheader">Keyingi avtomatik yuborish</div>
+        <div class="h1 mb-0">{{ next_day }}</div>
+        <div class="text-muted small">{{ next_weekday }}, soat 10:00 (Toshkent)</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card"><div class="card-body">
+        <div class="subheader">So'nggi 7 kunda</div>
+        <div class="h1 mb-0">{{ week }}</div>
+        <div class="text-muted small">yuborilgan tavsiya</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card"><div class="card-body">
+        <div class="subheader">Jami yuborilgan</div>
+        <div class="h1 mb-0">{{ total }}</div>
+        <div class="text-muted small">boshidan beri</div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">Qanday ishlaydi</h3></div>
+    <div class="card-body">
+      <ul class="mb-0">
+        <li>Har seshanba 10:00 da har bir userga <b>bitta</b> xabar: unga hali yuborilmagan va u saqlamagan eng mos dastur (avval to'liq mos, keyin eng yangisi). Muddati o'tganlari yuborilmaydi.</li>
+        <li>Xabar: «✨ Siz tanlagan davlat va yo'nalish bo'yicha sizga mos dastur topildi!», dastur kartasi rasmi, qisqa ma'lumot va «📖 Dastur bilan tanishish» tugmasi. U Mini App qo'ng'iroqchasida ham turadi.</li>
+        <li>So'nggi {{ recent_days }} kun ichida tavsiya olgan userga qayta yuborilmaydi — qo'lda yuborsangiz, seshanba kuni takror ketmaydi.</li>
+      </ul>
+    </div>
+  </div>
+
+  {% if state.running %}
+  <div class="alert alert-info">
+    <div>Yuborilmoqda… ({{ state.by }} boshlagan). Sahifani birozdan keyin yangilang.</div>
+  </div>
+  {% elif state.result %}
+  <div class="alert alert-success">
+    <div>
+      Oxirgi qo'lda yuborish ({{ state.by }}): <b>{{ state.result.sent }}</b> kishiga yuborildi,
+      mos dastur yo'q — {{ state.result.no_match }}, yaqinda olgan — {{ state.result.recent }},
+      botni bloklagan — {{ state.result.blocked }}.
+    </div>
+  </div>
+  {% elif state.error %}
+  <div class="alert alert-danger"><div>Oxirgi qo'lda yuborish xato bilan to'xtadi: <code>{{ state.error }}</code></div></div>
+  {% endif %}
+
+  <div class="row row-cards mb-3">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">1. Namunani ko'rish</h3></div>
+        <div class="card-body">
+          <p class="text-muted">
+            Xabar bot adminlariga ({{ admins_count }}) keladi — Telegram'da qanday ko'rinishini tekshiring.
+            Hech kimga hisobga yozilmaydi. Profilingizda filtr bo'lsa, sizga mos dastur; bo'lmasa —
+            birinchi mos userning dasturi namuna sifatida.
+          </p>
+          <form method="post" action="{{ url_for('admin:view-match-notify-test') }}">
+            <button type="submit" class="btn btn-outline-primary" {% if not admins_count %}disabled{% endif %}>
+              <i class="fa-solid fa-flask me-1"></i>Menga namuna yuborish
+            </button>
+          </form>
+          {% if not admins_count %}
+          <div class="text-warning small mt-2">Bot adminlari ro'yxati bo'sh — avval «Bot adminlari»ga o'z ID'ingizni qo'shing.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header"><h3 class="card-title">2. Hozir yuborish</h3></div>
+        <div class="card-body">
+          <p class="text-muted">
+            Seshanbani kutmasdan hammaga yuboradi ({{ eligible }} kishigacha; mos dasturi
+            borlarga). Avval namunani ko'rib chiqing.
+          </p>
+          <form method="post" action="{{ url_for('admin:view-match-notify-run') }}">
+            <label class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="confirm" value="yes" required>
+              <span class="form-check-label">Ha, hozir hammaga yuboraman</span>
+            </label>
+            <button type="submit" class="btn btn-primary" {% if state.running %}disabled{% endif %}>
+              <i class="fa-solid fa-paper-plane me-1"></i>Hozir yuborish
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title">Oxirgi yuborilganlar</h3></div>
+    {% if not recent %}
+    <div class="card-body text-muted">Hali tavsiya yuborilmagan.</div>
+    {% else %}
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table">
+        <thead><tr><th>Sana</th><th>Foydalanuvchi</th><th>Dastur</th></tr></thead>
+        <tbody>
+          {% for r in recent %}
+          <tr>
+            <td class="text-nowrap">{{ r.at.strftime("%d.%m.%Y %H:%M") }}</td>
+            <td>{{ r.user }}</td>
+            <td>{{ r.program }} <span class="text-muted">· {{ r.university }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+</div>
+{% if state.running %}
+<script>setTimeout(function () { location.reload(); }, 5000);</script>
+{% endif %}
+{% endblock %}
